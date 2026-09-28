@@ -79,12 +79,46 @@ export class StorageService {
       }
     }
 
-    // Filter out old def_ex_* default exercises to satisfy wiping all existing default exercises
-    const cleaned = stored.filter((ex) => !ex.id.startsWith('def_ex_'));
-    if (cleaned.length !== stored.length || !raw) {
-      localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(cleaned));
+    // Filter out old def_ex_* default exercises
+    let list = stored.filter((ex) => !ex.id.startsWith('def_ex_'));
+    let changed = list.length !== stored.length;
+
+    // Idempotently seed DEFAULT_EXERCISES
+    const nameMap = new Map<string, Exercise>();
+    list.forEach((ex) => {
+      nameMap.set(ex.name.toLowerCase().trim(), ex);
+    });
+
+    DEFAULT_EXERCISES.forEach((def, idx) => {
+      const cleanName = def.name.toLowerCase().trim();
+      const existing = nameMap.get(cleanName);
+      if (existing) {
+        // Ensure it's marked global and has the updated muscle group
+        if (!existing.isDefault || existing.muscleGroup !== def.muscleGroup) {
+          existing.isDefault = true;
+          existing.muscleGroup = def.muscleGroup;
+          changed = true;
+        }
+      } else {
+        const newGlobal: Exercise = {
+          id: `global_ex_${idx + 1}`,
+          name: def.name,
+          muscleGroup: def.muscleGroup,
+          description: '',
+          isDefault: true,
+          userId: null,
+          createdAt: new Date().toISOString(),
+        };
+        list.push(newGlobal);
+        nameMap.set(cleanName, newGlobal);
+        changed = true;
+      }
+    });
+
+    if (changed || !raw) {
+      localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(list));
     }
-    return cleaned;
+    return list;
   }
 
   static async syncExercises(): Promise<Exercise[]> {
@@ -95,9 +129,12 @@ export class StorageService {
         const mapEx = new Map<string, Exercise>();
         all.forEach((e) => mapEx.set(e.id, e));
         cloudExercises.forEach((ce) => {
-          // Do not re-add old legacy def_ex_* exercises
           if (!ce.id.startsWith('def_ex_')) {
-            mapEx.set(ce.id, ce);
+            const existing = mapEx.get(ce.id);
+            mapEx.set(ce.id, {
+              ...existing,
+              ...ce,
+            });
           }
         });
         const merged = Array.from(mapEx.values());

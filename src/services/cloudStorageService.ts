@@ -622,24 +622,30 @@ export class CloudStorageService {
   static async ensureDefaultExercises(): Promise<void> {
     if (!isSupabaseConfigured() || !supabase) return;
     try {
-      if (DEFAULT_EXERCISES.length === 0) {
-        // Clean out legacy preset exercises
-        await supabase.from('exercises').delete().like('id', 'def_ex_%');
-        return;
+      if (DEFAULT_EXERCISES.length === 0) return;
+
+      const { data: existingRows } = await supabase.from('exercises').select('id, name');
+      const existingNames = new Map<string, string>();
+      (existingRows || []).forEach((r: any) => {
+        if (r.name) existingNames.set(r.name.toLowerCase().trim(), r.id);
+      });
+
+      const defaultRows = DEFAULT_EXERCISES.map((ex, idx) => {
+        const existingId = existingNames.get(ex.name.toLowerCase().trim());
+        return {
+          id: existingId || `global_ex_${idx + 1}`,
+          name: ex.name,
+          muscle_group: ex.muscleGroup,
+          description: ex.description || '',
+          is_default: true,
+          user_id: null,
+        };
+      });
+
+      for (let i = 0; i < defaultRows.length; i += 50) {
+        const chunk = defaultRows.slice(i, i + 50);
+        await supabase.from('exercises').upsert(chunk, { onConflict: 'id' });
       }
-
-      const defaultRows = DEFAULT_EXERCISES.map((ex, idx) => ({
-        id: `def_ex_${idx + 1}`,
-        name: ex.name,
-        muscle_group: ex.muscleGroup,
-        description: ex.description || '',
-        is_default: true,
-        user_id: null,
-      }));
-
-      await supabase
-        .from('exercises')
-        .upsert(defaultRows, { onConflict: 'id', ignoreDuplicates: true });
     } catch (err) {
       console.warn('ensureDefaultExercises error:', err);
     }

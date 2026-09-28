@@ -17,8 +17,11 @@ import {
   Trash2,
   Plus,
   Dumbbell,
+  Pencil,
+  X,
+  Search,
 } from 'lucide-react';
-import { UserRole, Exercise } from '../types/workout';
+import { UserRole, Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -39,8 +42,14 @@ export const ProfileView: React.FC = () => {
   // Admin menu state for managing global exercise database
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [newGlobalExName, setNewGlobalExName] = useState('');
+  const [newGlobalExMuscle, setNewGlobalExMuscle] = useState<MuscleGroup>('shoulders');
   const [isAddingGlobalEx, setIsAddingGlobalEx] = useState(false);
   const [globalExercises, setGlobalExercises] = useState<Exercise[]>([]);
+  const [adminSearch, setAdminSearch] = useState('');
+  const [editingExId, setEditingExId] = useState<string | null>(null);
+  const [editingExName, setEditingExName] = useState('');
+  const [editingExMuscle, setEditingExMuscle] = useState<MuscleGroup>('shoulders');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [adminToast, setAdminToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const refreshGlobalExercises = () => {
@@ -68,7 +77,7 @@ export const ProfileView: React.FC = () => {
     try {
       const created = StorageService.createGlobalExercise({
         name: cleanName,
-        muscleGroup: 'full_body',
+        muscleGroup: newGlobalExMuscle,
         description: '',
       });
       await CloudStorageService.saveExercise(created);
@@ -80,6 +89,49 @@ export const ProfileView: React.FC = () => {
     } finally {
       setIsAddingGlobalEx(false);
       setTimeout(() => setAdminToast(null), 3500);
+    }
+  };
+
+  const startEditGlobalExercise = (ex: Exercise) => {
+    setEditingExId(ex.id);
+    setEditingExName(ex.name);
+    setEditingExMuscle(ex.muscleGroup || 'shoulders');
+  };
+
+  const cancelEditGlobalExercise = () => {
+    setEditingExId(null);
+    setEditingExName('');
+  };
+
+  const handleSaveEditGlobalExercise = async (e: React.FormEvent, exerciseId: string) => {
+    e.preventDefault();
+    const cleanName = editingExName.trim();
+    if (!cleanName) {
+      setAdminToast({ text: 'Назва вправи не може бути порожньою', type: 'error' });
+      return;
+    }
+    const current = globalExercises.find((ex) => ex.id === exerciseId);
+    if (!current) return;
+
+    setIsSavingEdit(true);
+    try {
+      const updated: Exercise = {
+        ...current,
+        name: cleanName,
+        muscleGroup: editingExMuscle,
+        isDefault: true,
+        userId: null,
+      };
+      StorageService.updateExercise(updated);
+      await CloudStorageService.saveExercise(updated);
+      setEditingExId(null);
+      refreshGlobalExercises();
+      setAdminToast({ text: `Вправу "${cleanName}" успішно оновлено!`, type: 'success' });
+    } catch {
+      setAdminToast({ text: 'Помилка при оновленні вправи', type: 'error' });
+    } finally {
+      setIsSavingEdit(false);
+      setTimeout(() => setAdminToast(null), 3000);
     }
   };
 
@@ -455,12 +507,12 @@ export const ProfileView: React.FC = () => {
 
           {isAdminMenuOpen && (
             <div className="pt-3 border-t border-purple-100 dark:border-purple-900/40 space-y-4 animate-fade-in">
-              {/* Form to add exercise to global base: ONLY name input and submit */}
+              {/* Form to add exercise to global base: name and category select */}
               <form onSubmit={handleAddGlobalExercise} className="space-y-2">
                 <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                   Додати вправу в глобальну базу:
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     placeholder="Назва вправи (наприклад: Жим штанги лежачи)"
@@ -469,10 +521,22 @@ export const ProfileView: React.FC = () => {
                     disabled={isAddingGlobalEx}
                     className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
+                  <select
+                    value={newGlobalExMuscle}
+                    onChange={(e) => setNewGlobalExMuscle(e.target.value as MuscleGroup)}
+                    disabled={isAddingGlobalEx}
+                    className="h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer"
+                  >
+                    {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((g) => (
+                      <option key={g} value={g}>
+                        {MUSCLE_GROUPS[g].nameUk}
+                      </option>
+                    ))}
+                  </select>
                   <button
                     type="submit"
                     disabled={isAddingGlobalEx || !newGlobalExName.trim()}
-                    className="h-9 px-4 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center space-x-1.5"
+                    className="h-9 px-4 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center justify-center space-x-1.5"
                   >
                     {isAddingGlobalEx ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                     <span>Додати</span>
@@ -492,12 +556,22 @@ export const ProfileView: React.FC = () => {
                 </div>
               )}
 
-              {/* Global exercises list with count and delete buttons */}
+              {/* Global exercises list with search, count, edit and delete buttons */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
                   <span>
                     Вправ у глобальній базі: <strong className="text-zinc-900 dark:text-zinc-100">{globalExercises.length}</strong>
                   </span>
+                  <div className="relative w-full sm:w-56">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                    <input
+                      type="text"
+                      placeholder="Швидкий пошук у базі..."
+                      value={adminSearch}
+                      onChange={(e) => setAdminSearch(e.target.value)}
+                      className="w-full h-7.5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 pl-8 pr-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
                 </div>
 
                 {globalExercises.length === 0 ? (
@@ -505,23 +579,110 @@ export const ProfileView: React.FC = () => {
                     Глобальна база порожня. Додайте першу вправу вище.
                   </div>
                 ) : (
-                  <div className="max-h-60 overflow-y-auto space-y-1 rounded-lg border border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-50/50 dark:bg-zinc-950/50">
-                    {globalExercises.map((ex) => (
-                      <div
-                        key={ex.id}
-                        className="flex items-center justify-between p-2 rounded-md bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs"
-                      >
-                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{ex.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteGlobalExercise(ex.id, ex.name)}
-                          className="p-1 rounded text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
-                          title="Видалити з глобальної бази"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="max-h-72 overflow-y-auto space-y-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-50/50 dark:bg-zinc-950/50">
+                    {globalExercises
+                      .filter((ex) => {
+                        if (!adminSearch.trim()) return true;
+                        const q = adminSearch.toLowerCase().trim();
+                        const muscleName = (MUSCLE_GROUPS[ex.muscleGroup]?.nameUk || '').toLowerCase();
+                        return ex.name.toLowerCase().includes(q) || muscleName.includes(q);
+                      })
+                      .map((ex) => {
+                        const isEditingThis = editingExId === ex.id;
+                        const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
+
+                        if (isEditingThis) {
+                          return (
+                            <form
+                              key={ex.id}
+                              onSubmit={(e) => handleSaveEditGlobalExercise(e, ex.id)}
+                              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 p-2 rounded-lg bg-purple-50/60 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800 text-xs"
+                            >
+                              <input
+                                type="text"
+                                value={editingExName}
+                                onChange={(e) => setEditingExName(e.target.value)}
+                                disabled={isSavingEdit}
+                                className="flex-1 h-8 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                placeholder="Назва вправи"
+                                autoFocus
+                              />
+                              <select
+                                value={editingExMuscle}
+                                onChange={(e) => setEditingExMuscle(e.target.value as MuscleGroup)}
+                                disabled={isSavingEdit}
+                                className="h-8 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer"
+                              >
+                                {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((g) => (
+                                  <option key={g} value={g}>
+                                    {MUSCLE_GROUPS[g].nameUk}
+                                  </option>
+                                ))}
+                              </select>
+                              <div className="flex items-center space-x-1 shrink-0">
+                                <button
+                                  type="submit"
+                                  disabled={isSavingEdit || !editingExName.trim()}
+                                  className="h-8 px-2.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold inline-flex items-center space-x-1 transition cursor-pointer disabled:opacity-50"
+                                  title="Зберегти зміни"
+                                >
+                                  {isSavingEdit ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Check className="h-3.5 w-3.5" />
+                                  )}
+                                  <span>Зберегти</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={cancelEditGlobalExercise}
+                                  disabled={isSavingEdit}
+                                  className="h-8 px-2 rounded bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs transition cursor-pointer"
+                                  title="Скасувати"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </form>
+                          );
+                        }
+
+                        return (
+                          <div
+                            key={ex.id}
+                            className="flex items-center justify-between p-2 rounded-md bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs gap-2"
+                          >
+                            <div className="flex items-center space-x-2 min-w-0 flex-1">
+                              <span className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                                {ex.name}
+                              </span>
+                              <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 shrink-0">
+                                {muscleInfo.nameUk}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => startEditGlobalExercise(ex)}
+                                className="p-1 rounded text-zinc-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors cursor-pointer"
+                                title="Редагувати вправу (назву та категорію)"
+                                aria-label={`Редагувати ${ex.name}`}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteGlobalExercise(ex.id, ex.name)}
+                                className="p-1 rounded text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                                title="Видалити з глобальної бази"
+                                aria-label={`Видалити ${ex.name}`}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
               </div>
