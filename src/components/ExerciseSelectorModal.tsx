@@ -49,27 +49,62 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
     });
   }, [exercises, search, selectedMuscle]);
 
+  const backdropMouseDownRef = React.useRef(false);
+
+  // Pre-index past performances once when modal is open to eliminate 100+ JSON parses on render/keystrokes
+  const perfMap = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof StorageService.getLastExercisePerformance>>();
+    if (!isOpen) return map;
+    try {
+      const workouts = StorageService.getWorkouts(userId);
+      workouts.forEach((w) => {
+        (w.exercises || []).forEach((we) => {
+          if (!map.has(we.exerciseId) && we.sets && we.sets.some((s) => s.completedAt || (s.actualReps && s.actualReps > 0))) {
+            const perf = StorageService.getLastExercisePerformance(userId, we.exerciseId);
+            if (perf) map.set(we.exerciseId, perf);
+          }
+        });
+      });
+    } catch {}
+    return map;
+  }, [userId, isOpen]);
+
   if (!isOpen) return null;
 
-  const handleSelect = (e: React.MouseEvent, ex: Exercise) => {
+  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    backdropMouseDownRef.current = e.target === e.currentTarget;
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget && backdropMouseDownRef.current) {
+      onClose();
+    }
+    backdropMouseDownRef.current = false;
+  };
+
+  const handleSelect = (e: React.MouseEvent | React.TouchEvent, ex: Exercise) => {
     e.stopPropagation();
-    onSelect(ex);
+    try {
+      onSelect(ex);
+    } catch (err) {
+      console.error('Failed to select exercise:', err);
+    }
     onClose();
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 dark:bg-black/75 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fade-in"
+      onMouseDown={handleBackdropMouseDown}
+      onClick={handleBackdropClick}
+    >
       {/* Modal Dialog Content */}
       <div
         role="dialog"
         aria-modal="true"
         data-no-swipe="true"
         className="relative z-10 w-full max-w-xl max-h-[85vh] my-auto flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900">
@@ -163,7 +198,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           ) : (
             filtered.map((ex) => {
               const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
-              const lastPerf = StorageService.getLastExercisePerformance(userId, ex.id);
+              const lastPerf = perfMap.get(ex.id);
 
               return (
                 <button

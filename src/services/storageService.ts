@@ -700,96 +700,105 @@ export class StorageService {
    * COMPLETED workouts and historical completed sets are NEVER touched!
    */
   static syncFutureWorkouts(currentWorkout: WorkoutPlan): void {
-    const allWorkouts = this.getWorkouts(currentWorkout.userId);
-    const currentDate = currentWorkout.scheduledDate;
+    try {
+      if (!currentWorkout || !Array.isArray(currentWorkout.exercises)) return;
 
-    // Filter only strictly future/subsequent uncompleted workouts
-    const futureWorkouts = allWorkouts.filter(
-      (w) => w.id !== currentWorkout.id && w.status !== 'completed' && w.scheduledDate >= currentDate
-    );
+      const allWorkouts = this.getWorkouts(currentWorkout.userId);
+      if (!Array.isArray(allWorkouts)) return;
+      const currentDate = currentWorkout.scheduledDate;
 
-    if (futureWorkouts.length === 0) return;
+      // Filter only strictly future/subsequent uncompleted workouts
+      const futureWorkouts = allWorkouts.filter(
+        (w) => w && w.id !== currentWorkout.id && w.status !== 'completed' && w.scheduledDate >= currentDate
+      );
 
-    let modifiedAny = false;
+      if (futureWorkouts.length === 0) return;
 
-    currentWorkout.exercises.forEach((currentEx) => {
-      // Find latest completed or target set values from currentWorkout
-      const lastSet = currentEx.sets[currentEx.sets.length - 1];
-      // Use highest completed weight or current target weight
-      const completedSets = currentEx.sets.filter((s) => s.completedAt !== null && s.weight > 0);
-      const latestWeight = completedSets.length > 0
-        ? completedSets[completedSets.length - 1].weight
-        : (lastSet?.weight || 0);
+      let modifiedAny = false;
 
-      const targetRange = currentEx.targetRepsRange || lastSet?.targetRepsRange || '8-12';
-      const currentSetsCount = currentEx.sets.length;
+      currentWorkout.exercises.forEach((currentEx) => {
+        if (!currentEx || !Array.isArray(currentEx.sets) || currentEx.sets.length === 0) return;
+        // Find latest completed or target set values from currentWorkout
+        const lastSet = currentEx.sets[currentEx.sets.length - 1];
+        // Use highest completed weight or current target weight
+        const completedSets = currentEx.sets.filter((s) => s && s.completedAt !== null && s.weight > 0);
+        const latestWeight = completedSets.length > 0
+          ? completedSets[completedSets.length - 1].weight
+          : (lastSet?.weight || 0);
 
-      futureWorkouts.forEach((fw) => {
-        const matchingFutureEx = fw.exercises.find((fe) => fe.exerciseId === currentEx.exerciseId);
-        if (matchingFutureEx) {
-          // If future exercise has no completed sets, update target reps range, set count, and preset weights
-          const hasCompletedSets = matchingFutureEx.sets.some((s) => s.completedAt !== null || (s.actualReps !== null && s.actualReps > 0));
-          if (!hasCompletedSets) {
-            let exerciseChanged = false;
+        const targetRange = currentEx.targetRepsRange || lastSet?.targetRepsRange || '8-12';
+        const currentSetsCount = currentEx.sets.length;
 
-            // 1. Update target range
-            if (matchingFutureEx.targetRepsRange !== targetRange) {
-              matchingFutureEx.targetRepsRange = targetRange;
-              exerciseChanged = true;
-            }
+        futureWorkouts.forEach((fw) => {
+          if (!fw || !Array.isArray(fw.exercises)) return;
+          const matchingFutureEx = fw.exercises.find((fe) => fe && fe.exerciseId === currentEx.exerciseId);
+          if (matchingFutureEx && Array.isArray(matchingFutureEx.sets)) {
+            // If future exercise has no completed sets, update target reps range, set count, and preset weights
+            const hasCompletedSets = matchingFutureEx.sets.some((s) => s && (s.completedAt !== null || (s.actualReps !== null && s.actualReps > 0)));
+            if (!hasCompletedSets) {
+              let exerciseChanged = false;
 
-            // 2. Adjust sets count if current workout explicitly changed set count and future set count differs
-            if (currentSetsCount >= 2 && currentSetsCount <= 5 && matchingFutureEx.sets.length !== currentSetsCount) {
-              const newSets: WorkoutSet[] = [];
-              for (let i = 0; i < currentSetsCount; i++) {
-                const existing = matchingFutureEx.sets[i];
-                const refSet = currentEx.sets[i] || lastSet;
-                newSets.push({
-                  id: existing?.id || generateId('set'),
-                  workoutExerciseId: matchingFutureEx.id,
-                  setNumber: i + 1,
-                  targetRepsRange: targetRange,
-                  weight: existing?.weight && existing.weight > 0 ? existing.weight : (refSet?.weight || latestWeight || 20),
-                  actualReps: null,
-                  completedAt: null,
+              // 1. Update target range
+              if (matchingFutureEx.targetRepsRange !== targetRange) {
+                matchingFutureEx.targetRepsRange = targetRange;
+                exerciseChanged = true;
+              }
+
+              // 2. Adjust sets count if current workout explicitly changed set count and future set count differs
+              if (currentSetsCount >= 2 && currentSetsCount <= 5 && matchingFutureEx.sets.length !== currentSetsCount) {
+                const newSets: WorkoutSet[] = [];
+                for (let i = 0; i < currentSetsCount; i++) {
+                  const existing = matchingFutureEx.sets[i];
+                  const refSet = currentEx.sets[i] || lastSet;
+                  newSets.push({
+                    id: existing?.id || generateId('set'),
+                    workoutExerciseId: matchingFutureEx.id,
+                    setNumber: i + 1,
+                    targetRepsRange: targetRange,
+                    weight: existing?.weight && existing.weight > 0 ? existing.weight : (refSet?.weight || latestWeight || 20),
+                    actualReps: null,
+                    completedAt: null,
+                  });
+                }
+                matchingFutureEx.sets = newSets;
+                matchingFutureEx.setCount = currentSetsCount;
+                exerciseChanged = true;
+              } else {
+                // Update target reps range and weights on existing future sets
+                matchingFutureEx.sets.forEach((s, idx) => {
+                  if (!s) return;
+                  if (s.targetRepsRange !== targetRange) {
+                    s.targetRepsRange = targetRange;
+                    exerciseChanged = true;
+                  }
+                  const currentMatchingSet = currentEx.sets[idx] || lastSet;
+                  if (currentMatchingSet && (s.weight === 0 || s.weight === 20 || s.weight !== currentMatchingSet.weight)) {
+                    s.weight = currentMatchingSet.weight;
+                    exerciseChanged = true;
+                  }
                 });
               }
-              matchingFutureEx.sets = newSets;
-              matchingFutureEx.setCount = currentSetsCount;
-              exerciseChanged = true;
-            } else {
-              // Update target reps range and weights on existing future sets
-              matchingFutureEx.sets.forEach((s, idx) => {
-                if (s.targetRepsRange !== targetRange) {
-                  s.targetRepsRange = targetRange;
-                  exerciseChanged = true;
-                }
-                const currentMatchingSet = currentEx.sets[idx] || lastSet;
-                if (currentMatchingSet && (s.weight === 0 || s.weight === 20 || s.weight !== currentMatchingSet.weight)) {
-                  // Only update if future set is uncompleted
-                  s.weight = currentMatchingSet.weight;
-                  exerciseChanged = true;
-                }
-              });
-            }
 
-            if (exerciseChanged) {
-              modifiedAny = true;
+              if (exerciseChanged) {
+                modifiedAny = true;
+              }
             }
           }
-        }
+        });
       });
-    });
 
-    if (modifiedAny) {
-      // Save all updated future workouts
-      const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-      let all: WorkoutPlan[] = raw ? JSON.parse(raw) : [];
-      futureWorkouts.forEach((fw) => {
-        const idx = all.findIndex((w) => w.id === fw.id);
-        if (idx >= 0) all[idx] = fw;
-      });
-      localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(all));
+      if (modifiedAny) {
+        // Save all updated future workouts
+        const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
+        let all: WorkoutPlan[] = raw ? JSON.parse(raw) : [];
+        futureWorkouts.forEach((fw) => {
+          const idx = all.findIndex((w) => w.id === fw.id);
+          if (idx >= 0) all[idx] = fw;
+        });
+        localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(all));
+      }
+    } catch (err) {
+      console.warn('syncFutureWorkouts error:', err);
     }
   }
 
@@ -822,7 +831,48 @@ export class StorageService {
       }
     }
     const otherUsersWorkouts = all.filter((w) => w.userId !== userId);
-    const updated = [...otherUsersWorkouts, ...userWorkouts];
+    const localUserWorkouts = all.filter((w) => w.userId === userId);
+    const localMap = new Map<string, WorkoutPlan>();
+    localUserWorkouts.forEach((w) => localMap.set(w.id, w));
+
+    // Merge cloud workouts with local workouts to ensure exercises added locally are never wiped out
+    const mergedUserWorkouts = (userWorkouts || []).map((cw) => {
+      const local = localMap.get(cw.id);
+      if (!local) return cw;
+
+      const localExercises = Array.isArray(local.exercises) ? local.exercises : [];
+      const cloudExercises = Array.isArray(cw.exercises) ? cw.exercises : [];
+
+      if (localExercises.length > 0) {
+        if (cloudExercises.length === 0) {
+          return {
+            ...cw,
+            exercises: localExercises,
+          };
+        }
+
+        // If local has exercises not present in cloud (e.g. newly added exercises), preserve them!
+        const cloudExIds = new Set(cloudExercises.map((e) => e.id));
+        const missingLocal = localExercises.filter((le) => !cloudExIds.has(le.id));
+        if (missingLocal.length > 0) {
+          return {
+            ...cw,
+            exercises: [...cloudExercises, ...missingLocal],
+          };
+        }
+      }
+      return cw;
+    });
+
+    // Also preserve any newly created local workouts that haven't hit the cloud yet
+    const cloudIds = new Set((userWorkouts || []).map((w) => w.id));
+    localUserWorkouts.forEach((lw) => {
+      if (!cloudIds.has(lw.id)) {
+        mergedUserWorkouts.push(lw);
+      }
+    });
+
+    const updated = [...otherUsersWorkouts, ...mergedUserWorkouts];
     localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(updated));
   }
 

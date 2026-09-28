@@ -95,14 +95,21 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   autoOpenExerciseSelector = false,
   traineeName,
 }) => {
-  const [workout, setWorkout] = useState<WorkoutPlan>(initialWorkout);
+  const [workout, setWorkout] = useState<WorkoutPlan>(() => ({
+    ...initialWorkout,
+    exercises: Array.isArray(initialWorkout?.exercises) ? initialWorkout.exercises : [],
+  }));
   const workoutRef = useRef<WorkoutPlan>(workout);
   workoutRef.current = workout;
+
+  const currentExList = useMemo(() => {
+    return Array.isArray(workout.exercises) ? workout.exercises : [];
+  }, [workout.exercises]);
 
   const supersetColorMap = useMemo(() => {
     const map = new Map<string, (typeof SUPERSET_PALETTES)[0]>();
     const uniqueGroups: string[] = [];
-    (workout.exercises || []).forEach((e) => {
+    currentExList.forEach((e) => {
       if (e.supersetGroupId && !uniqueGroups.includes(e.supersetGroupId)) {
         uniqueGroups.push(e.supersetGroupId);
       }
@@ -111,7 +118,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       map.set(groupId, SUPERSET_PALETTES[idx % SUPERSET_PALETTES.length]);
     });
     return map;
-  }, [workout.exercises]);
+  }, [currentExList]);
 
   // Strictly respect requirement 6: Do NOT auto open exercise selector modal; show workout form directly!
   const [isSelectorOpen, setIsSelectorOpen] = useState(Boolean(autoOpenExerciseSelector));
@@ -124,28 +131,37 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
   // Sync state if initialWorkout changes (e.g. user selected another workout)
   useEffect(() => {
-    setWorkout(initialWorkout);
-    workoutRef.current = initialWorkout;
+    const normalized: WorkoutPlan = {
+      ...initialWorkout,
+      exercises: Array.isArray(initialWorkout?.exercises) ? initialWorkout.exercises : [],
+    };
+    setWorkout(normalized);
+    workoutRef.current = normalized;
   }, [initialWorkout.id]);
 
   // Auto-save helper
   const updateAndSave = (updated: WorkoutPlan) => {
-    const enrichedExercises = updated.exercises.map((we) => {
-      if (!we.exerciseName || !we.muscleGroup) {
-        const ex = StorageService.getExerciseById(we.exerciseId);
-        return {
-          ...we,
-          exerciseName: we.exerciseName || ex?.name || 'Вправа',
-          muscleGroup: we.muscleGroup || ex?.muscleGroup || 'full_body',
-        };
-      }
-      return we;
-    });
-    const enriched = { ...updated, exercises: enrichedExercises };
-    workoutRef.current = enriched;
-    setWorkout(enriched);
-    StorageService.saveWorkout(enriched);
-    onSave(enriched);
+    try {
+      const rawExercises = Array.isArray(updated.exercises) ? updated.exercises : [];
+      const enrichedExercises = rawExercises.map((we) => {
+        if (!we.exerciseName || !we.muscleGroup) {
+          const ex = StorageService.getExerciseById(we.exerciseId);
+          return {
+            ...we,
+            exerciseName: we.exerciseName || ex?.name || 'Вправа',
+            muscleGroup: we.muscleGroup || ex?.muscleGroup || 'full_body',
+          };
+        }
+        return we;
+      });
+      const enriched: WorkoutPlan = { ...updated, exercises: enrichedExercises };
+      workoutRef.current = enriched;
+      setWorkout(enriched);
+      StorageService.saveWorkout(enriched);
+      onSave(enriched);
+    } catch (err) {
+      console.error('Error in updateAndSave:', err);
+    }
   };
 
   // Workout Title & Metadata
@@ -173,76 +189,88 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
   // Add Exercise to Workout
   const handleSelectExercise = (exercise: Exercise) => {
-    const currentWorkout = workoutRef.current;
-    // Check if exercise has previous performance
-    const lastPerf = StorageService.getLastExercisePerformance(userId, exercise.id, currentWorkout.id);
+    try {
+      const currentWorkout = workoutRef.current || workout;
+      if (!currentWorkout) return;
 
-    // Initial sets: automatically pre-fill previous weights and reps from past workout
-    let initialSets: WorkoutSet[] = [];
-    const targetRange = (lastPerf?.sets[0]?.targetRepsRange || '8-12') as string;
+      // Check if exercise has previous performance
+      let lastPerf: PastExercisePerformance | null = null;
+      try {
+        lastPerf = StorageService.getLastExercisePerformance(userId, exercise.id, currentWorkout.id);
+      } catch (e) {
+        console.warn('Error getting last exercise performance:', e);
+      }
 
-    if (lastPerf && lastPerf.sets.length > 0) {
-      initialSets = lastPerf.sets.map((ps, idx) => ({
-        id: generateId('set'),
-        workoutExerciseId: '',
-        setNumber: idx + 1,
-        targetRepsRange: ps.targetRepsRange || targetRange,
-        weight: ps.weight,
-        actualReps: ps.actualReps,
-        completedAt: null,
-      }));
-    } else {
-      initialSets = [
-        {
+      // Initial sets: automatically pre-fill previous weights and reps from past workout
+      let initialSets: WorkoutSet[] = [];
+      const targetRange = (lastPerf?.sets?.[0]?.targetRepsRange || '8-12') as string;
+
+      if (lastPerf && Array.isArray(lastPerf.sets) && lastPerf.sets.length > 0) {
+        initialSets = lastPerf.sets.map((ps, idx) => ({
           id: generateId('set'),
           workoutExerciseId: '',
-          setNumber: 1,
-          targetRepsRange: targetRange,
-          weight: 20,
-          actualReps: 10,
+          setNumber: idx + 1,
+          targetRepsRange: ps.targetRepsRange || targetRange,
+          weight: Number(ps.weight) || 20,
+          actualReps: ps.actualReps !== null && ps.actualReps !== undefined ? Number(ps.actualReps) : 10,
           completedAt: null,
-        },
-        {
-          id: generateId('set'),
-          workoutExerciseId: '',
-          setNumber: 2,
-          targetRepsRange: targetRange,
-          weight: 20,
-          actualReps: 10,
-          completedAt: null,
-        },
-        {
-          id: generateId('set'),
-          workoutExerciseId: '',
-          setNumber: 3,
-          targetRepsRange: targetRange,
-          weight: 20,
-          actualReps: 10,
-          completedAt: null,
-        },
-      ];
+        }));
+      } else {
+        initialSets = [
+          {
+            id: generateId('set'),
+            workoutExerciseId: '',
+            setNumber: 1,
+            targetRepsRange: targetRange,
+            weight: 20,
+            actualReps: 10,
+            completedAt: null,
+          },
+          {
+            id: generateId('set'),
+            workoutExerciseId: '',
+            setNumber: 2,
+            targetRepsRange: targetRange,
+            weight: 20,
+            actualReps: 10,
+            completedAt: null,
+          },
+          {
+            id: generateId('set'),
+            workoutExerciseId: '',
+            setNumber: 3,
+            targetRepsRange: targetRange,
+            weight: 20,
+            actualReps: 10,
+            completedAt: null,
+          },
+        ];
+      }
+
+      const weId = generateId('we');
+      const currentExercises = Array.isArray(currentWorkout.exercises) ? currentWorkout.exercises : [];
+      const newWorkoutExercise: WorkoutExercise = {
+        id: weId,
+        workoutPlanId: currentWorkout.id,
+        exerciseId: exercise.id,
+        exerciseName: exercise.name,
+        muscleGroup: exercise.muscleGroup,
+        order: currentExercises.length + 1,
+        targetRepsRange: targetRange,
+        setCount: initialSets.length,
+        sets: initialSets.map((s) => ({ ...s, workoutExerciseId: weId })),
+      };
+
+      const updated: WorkoutPlan = {
+        ...currentWorkout,
+        exercises: [...currentExercises, newWorkoutExercise],
+      };
+
+      updateAndSave(updated);
+      setIsSelectorOpen(false);
+    } catch (err) {
+      console.error('Failed to add exercise to workout:', err);
     }
-
-    const weId = generateId('we');
-    const newWorkoutExercise: WorkoutExercise = {
-      id: weId,
-      workoutPlanId: currentWorkout.id,
-      exerciseId: exercise.id,
-      exerciseName: exercise.name,
-      muscleGroup: exercise.muscleGroup,
-      order: currentWorkout.exercises.length + 1,
-      targetRepsRange: targetRange,
-      setCount: initialSets.length,
-      sets: initialSets.map((s) => ({ ...s, workoutExerciseId: weId })),
-    };
-
-    const updated = {
-      ...currentWorkout,
-      exercises: [...currentWorkout.exercises, newWorkoutExercise],
-    };
-
-    updateAndSave(updated);
-    setIsSelectorOpen(false);
   };
 
   // Reorder exercise drag & drop
@@ -535,16 +563,16 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   };
 
   // Stats calculation
-  const totalSets = workout.exercises.reduce((acc, e) => acc + e.sets.length, 0);
-  const completedSets = workout.exercises.reduce(
-    (acc, e) => acc + e.sets.filter((s) => s.completedAt !== null).length,
+  const totalSets = currentExList.reduce((acc, e) => acc + (e.sets || []).length, 0);
+  const completedSets = currentExList.reduce(
+    (acc, e) => acc + (e.sets || []).filter((s) => s && s.completedAt !== null).length,
     0
   );
-  const totalVolumeKg = workout.exercises.reduce((acc, e) => {
+  const totalVolumeKg = currentExList.reduce((acc, e) => {
     return (
       acc +
-      e.sets.reduce((sAcc, s) => {
-        if (s.actualReps && s.weight) {
+      (e.sets || []).reduce((sAcc, s) => {
+        if (s && s.actualReps && s.weight) {
           return sAcc + s.weight * s.actualReps;
         }
         return sAcc;
@@ -665,7 +693,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       {/* Exercises List */}
       <div className="space-y-4">
-        {workout.exercises.length === 0 ? (
+        {currentExList.length === 0 ? (
           <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-8 sm:p-12 text-center">
             <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 mb-3">
               <Dumbbell className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -684,7 +712,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             </button>
           </div>
         ) : (
-          workout.exercises.map((weItem, weIndex) => {
+          currentExList.map((weItem, weIndex) => {
             const exercise = StorageService.getExerciseById(weItem.exerciseId);
             const exerciseName = exercise?.name || weItem.exerciseName || 'Вправа';
             const muscleGroupKey = exercise?.muscleGroup || weItem.muscleGroup || 'full_body';
@@ -747,7 +775,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   {/* Exercise Action Buttons */}
                   <div className="flex items-center space-x-1.5 shrink-0 flex-wrap gap-y-1">
                     {/* Superset toggle button on EVERY exercise if workout has > 1 exercises */}
-                    {workout.exercises.length > 1 && (
+                    {currentExList.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleToggleSuperset(weIndex)}
@@ -758,7 +786,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         title={
                           isSuperset
                             ? "Роз'єднати суперсет"
-                            : weIndex === workout.exercises.length - 1
+                            : weIndex === currentExList.length - 1
                             ? 'Обʼєднати з попередньою вправою в суперсет'
                             : 'Обʼєднати в суперсет'
                         }
@@ -779,7 +807,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     <button
                       type="button"
                       onClick={() => handleMoveExercise(weIndex, 'down')}
-                      disabled={weIndex === workout.exercises.length - 1}
+                      disabled={weIndex === currentExList.length - 1}
                       className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                       title="Вниз"
                     >
@@ -1224,7 +1252,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             <div className="flex items-center space-x-1">
               <Layers className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
               <span className="text-zinc-500 dark:text-zinc-400 text-[11px]">Вправ:</span>
-              <strong className="text-zinc-800 dark:text-zinc-100 font-mono text-xs">{workout.exercises.length}</strong>
+              <strong className="text-zinc-800 dark:text-zinc-100 font-mono text-xs">{currentExList.length}</strong>
             </div>
 
             <div className="flex items-center space-x-1">

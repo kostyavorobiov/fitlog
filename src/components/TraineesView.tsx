@@ -171,7 +171,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
       if (!isSubscribed) return;
       if (cloudWorkouts !== null) {
         StorageService.setWorkoutsForUser(selectedTrainee.id, cloudWorkouts);
-        setTraineeWorkouts(cloudWorkouts);
+        setTraineeWorkouts(StorageService.getWorkouts(selectedTrainee.id));
       }
     });
 

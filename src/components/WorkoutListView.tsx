@@ -35,7 +35,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
     CloudStorageService.fetchWorkouts(userId).then((cloudWorkouts) => {
       if (!isSubscribed || cloudWorkouts === null) return;
       StorageService.setWorkoutsForUser(userId, cloudWorkouts);
-      setWorkouts(cloudWorkouts);
+      setWorkouts(StorageService.getWorkouts(userId));
     });
 
     return () => {

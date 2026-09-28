@@ -205,6 +205,9 @@ export class CloudStorageService {
         const missing = exIds.filter((id) => !dbExSet.has(id));
 
         if (missing.length > 0) {
+          const { data: authData } = await supabase.auth.getUser();
+          const currentAuthId = authData?.user?.id || null;
+
           const missingRows = missing.map((id) => {
             const we = workout.exercises.find((e) => e.exerciseId === id);
             const local = StorageService.getExerciseById(id);
@@ -217,10 +220,13 @@ export class CloudStorageService {
               user_id: local?.userId || null,
             };
           });
-          try {
-            await supabase.from('exercises').insert(missingRows);
-          } catch (e) {
-            console.warn('Could not insert missing exercises:', e);
+          const { error: insErr } = await supabase.from('exercises').insert(missingRows);
+          if (insErr) {
+            console.warn('Could not insert missing exercises with user_id null, retrying with auth user:', insErr.message);
+            if (currentAuthId) {
+              const fallbackRows = missingRows.map((r) => ({ ...r, user_id: currentAuthId }));
+              await supabase.from('exercises').upsert(fallbackRows, { onConflict: 'id' });
+            }
           }
         }
 
@@ -685,9 +691,16 @@ export class CloudStorageService {
         };
       });
 
+      const { data: authData } = await supabase.auth.getUser();
+      const currentAuthId = authData?.user?.id || null;
+
       for (let i = 0; i < defaultRows.length; i += 50) {
         const chunk = defaultRows.slice(i, i + 50);
-        await supabase.from('exercises').upsert(chunk, { onConflict: 'id' });
+        const { error: upErr } = await supabase.from('exercises').upsert(chunk, { onConflict: 'id' });
+        if (upErr && currentAuthId) {
+          const fallbackChunk = chunk.map((r) => ({ ...r, user_id: currentAuthId }));
+          await supabase.from('exercises').upsert(fallbackChunk, { onConflict: 'id' });
+        }
       }
     } catch (err) {
       console.warn('ensureDefaultExercises error:', err);
