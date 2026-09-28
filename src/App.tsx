@@ -23,10 +23,7 @@ const MainContent: React.FC = () => {
   const [editingTrainee, setEditingTrainee] = useState<User | null>(null);
   const [selectedTraineeId, setSelectedTraineeId] = useState<string | null>(() => {
     try {
-      return (
-        new URLSearchParams(window.location.search).get('trainee') ||
-        localStorage.getItem('fitlog_selected_trainee_id')
-      );
+      return new URLSearchParams(window.location.search).get('trainee');
     } catch {
       return null;
     }
@@ -83,7 +80,6 @@ const MainContent: React.FC = () => {
     setEditingTrainee(trainee);
     setSelectedTraineeId(trainee.id);
     try {
-      localStorage.setItem('fitlog_selected_trainee_id', trainee.id);
       const url = new URL(window.location.href);
       url.searchParams.set('trainee', trainee.id);
       window.history.replaceState({}, '', url.toString());
@@ -195,17 +191,13 @@ const MainContent: React.FC = () => {
             onSelectTraineeId={(id) => {
               setSelectedTraineeId(id);
               try {
+                const url = new URL(window.location.href);
                 if (id) {
-                  localStorage.setItem('fitlog_selected_trainee_id', id);
-                  const url = new URL(window.location.href);
                   url.searchParams.set('trainee', id);
-                  window.history.replaceState({}, '', url.toString());
                 } else {
-                  localStorage.removeItem('fitlog_selected_trainee_id');
-                  const url = new URL(window.location.href);
                   url.searchParams.delete('trainee');
-                  window.history.replaceState({}, '', url.toString());
                 }
+                window.history.replaceState({}, '', url.toString());
               } catch (e) {
                 console.error(e);
               }

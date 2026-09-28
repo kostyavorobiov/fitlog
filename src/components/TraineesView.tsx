@@ -50,8 +50,8 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     const list = StorageService.getTrainees(coach.id);
     setTrainees(list);
 
-    // Determine selected trainee: prefer externalSelectedTraineeId or saved in localStorage
-    const savedId = externalSelectedTraineeId || localStorage.getItem('fitlog_selected_trainee_id');
+    // Determine selected trainee: prefer externalSelectedTraineeId
+    const savedId = externalSelectedTraineeId;
     const matched = list.find((t) => t.id === savedId);
 
     if (matched) {
@@ -68,7 +68,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
       if (!isMounted) return;
       if (cloudList && cloudList.length > 0) {
         setTrainees(cloudList);
-        const curSavedId = externalSelectedTraineeId || localStorage.getItem('fitlog_selected_trainee_id');
+        const curSavedId = externalSelectedTraineeId;
         const curMatched = cloudList.find((t) => t.id === curSavedId);
         if (curMatched) {
           setSelectedTrainee(curMatched);
@@ -85,9 +85,6 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
 
   const selectTrainee = (trainee: User) => {
     setSelectedTrainee(trainee);
-    try {
-      localStorage.setItem('fitlog_selected_trainee_id', trainee.id);
-    } catch {}
     if (externalOnSelectTraineeId) {
       externalOnSelectTraineeId(trainee.id);
     }
@@ -139,9 +136,6 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     setTrainees((prev) => prev.filter((t) => t.id !== removedId));
     if (selectedTrainee?.id === removedId) {
       setSelectedTrainee(null);
-      try {
-        localStorage.removeItem('fitlog_selected_trainee_id');
-      } catch {}
       if (externalOnSelectTraineeId) {
         externalOnSelectTraineeId(null);
       }

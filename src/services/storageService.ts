@@ -2,13 +2,6 @@ import { Exercise, WorkoutPlan, PastExercisePerformance, User, WorkoutSet } from
 import { DEFAULT_EXERCISES } from '../data/defaultExercises';
 import { CloudStorageService } from './cloudStorageService';
 
-const STORAGE_KEYS = {
-  USERS: 'workout_diary_users',
-  EXERCISES: 'workout_diary_exercises',
-  WORKOUTS: 'workout_diary_workouts',
-  ACTIVE_USER_ID: 'workout_diary_active_user_id',
-};
-
 // Generate robust unique IDs
 export const generateId = (prefix = 'id'): string => {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -22,112 +15,109 @@ export const generateCuid = (): string => {
   return `c${ts}0000${rnd1}${rnd2}`.substring(0, 25);
 };
 
+// In-memory application store
+interface MemoryStore {
+  users: User[];
+  exercises: Exercise[];
+  workouts: WorkoutPlan[];
+  activeUserId: string | null;
+  removedTraineesByCoach: Map<string, string[]>;
+}
+
+const memoryStore: MemoryStore = {
+  users: [],
+  exercises: [],
+  workouts: [],
+  activeUserId: null,
+  removedTraineesByCoach: new Map(),
+};
+
 export class StorageService {
   // --- USERS ---
   static getUsers(): User[] {
-    const raw = localStorage.getItem(STORAGE_KEYS.USERS);
-    if (!raw) return [];
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return [];
-    }
+    return [...memoryStore.users];
   }
 
   static saveUser(user: User): void {
-    const users = this.getUsers();
-    const index = users.findIndex((u) => u.id === user.id);
+    const index = memoryStore.users.findIndex((u) => u.id === user.id);
     if (index >= 0) {
-      const existing = users[index];
-      users[index] = {
+      const existing = memoryStore.users[index];
+      memoryStore.users[index] = {
         ...existing,
         ...user,
         traineeIds: user.traineeIds !== undefined ? user.traineeIds : existing.traineeIds,
         coachId: user.coachId !== undefined ? user.coachId : existing.coachId,
       };
     } else {
-      users.push(user);
+      memoryStore.users.push(user);
     }
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
   }
 
   static getUserById(id: string): User | undefined {
-    return this.getUsers().find((u) => u.id === id);
+    return memoryStore.users.find((u) => u.id === id);
   }
 
   static getActiveUserId(): string | null {
-    return localStorage.getItem(STORAGE_KEYS.ACTIVE_USER_ID);
+    return memoryStore.activeUserId;
   }
 
   static setActiveUserId(userId: string | null): void {
-    if (userId) {
-      localStorage.setItem(STORAGE_KEYS.ACTIVE_USER_ID, userId);
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.ACTIVE_USER_ID);
-    }
+    memoryStore.activeUserId = userId;
   }
 
   // --- EXERCISES ---
   static initializeExercises(): Exercise[] {
-    const raw = localStorage.getItem(STORAGE_KEYS.EXERCISES);
-    let stored: Exercise[] = [];
-    if (raw) {
-      try {
-        stored = JSON.parse(raw) as Exercise[];
-      } catch (e) {
-        console.error('Failed to parse exercises', e);
-      }
-    }
+    if (memoryStore.exercises.length === 0) {
+      memoryStore.exercises = DEFAULT_EXERCISES.map((def, idx) => ({
+        id: `global_ex_${idx + 1}`,
+        name: def.name,
+        muscleGroup: def.muscleGroup,
+        description: def.description || '',
+        isDefault: true,
+        userId: null,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      }));
+    } else {
+      // Ensure all DEFAULT_EXERCISES exist in memory
+      const nameMap = new Map<string, Exercise>();
+      memoryStore.exercises.forEach((ex) => {
+        nameMap.set(ex.name.toLowerCase().trim(), ex);
+      });
 
-    // Filter out old def_ex_* default exercises
-    let list = stored.filter((ex) => !ex.id.startsWith('def_ex_'));
-    let changed = list.length !== stored.length;
-
-    // Idempotently seed DEFAULT_EXERCISES
-    const nameMap = new Map<string, Exercise>();
-    list.forEach((ex) => {
-      nameMap.set(ex.name.toLowerCase().trim(), ex);
-    });
-
-    DEFAULT_EXERCISES.forEach((def, idx) => {
-      const cleanName = def.name.toLowerCase().trim();
-      const existing = nameMap.get(cleanName);
-      if (existing) {
-        // Ensure it's marked global and has the updated muscle group
-        if (!existing.isDefault || existing.muscleGroup !== def.muscleGroup) {
-          existing.isDefault = true;
-          existing.muscleGroup = def.muscleGroup;
-          changed = true;
+      DEFAULT_EXERCISES.forEach((def, idx) => {
+        const cleanName = def.name.toLowerCase().trim();
+        const existing = nameMap.get(cleanName);
+        if (existing) {
+          if (!existing.isDefault || existing.muscleGroup !== def.muscleGroup) {
+            existing.isDefault = true;
+            existing.muscleGroup = def.muscleGroup;
+          }
+        } else {
+          const newGlobal: Exercise = {
+            id: `global_ex_${idx + 1}`,
+            name: def.name,
+            muscleGroup: def.muscleGroup,
+            description: def.description || '',
+            isDefault: true,
+            userId: null,
+            createdAt: '2026-01-01T00:00:00.000Z',
+          };
+          memoryStore.exercises.push(newGlobal);
+          nameMap.set(cleanName, newGlobal);
         }
-      } else {
-        const newGlobal: Exercise = {
-          id: `global_ex_${idx + 1}`,
-          name: def.name,
-          muscleGroup: def.muscleGroup,
-          description: '',
-          isDefault: true,
-          userId: null,
-          createdAt: new Date().toISOString(),
-        };
-        list.push(newGlobal);
-        nameMap.set(cleanName, newGlobal);
-        changed = true;
-      }
-    });
-
-    if (changed || !raw) {
-      localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(list));
+      });
     }
-    return list;
+
+    return [...memoryStore.exercises];
   }
 
   static async syncExercises(): Promise<Exercise[]> {
     try {
       const cloudExercises = await CloudStorageService.fetchExercises();
       if (cloudExercises && cloudExercises.length > 0) {
-        const all = this.initializeExercises();
+        this.initializeExercises();
         const mapEx = new Map<string, Exercise>();
-        all.forEach((e) => mapEx.set(e.id, e));
+        memoryStore.exercises.forEach((e) => mapEx.set(e.id, e));
         cloudExercises.forEach((ce) => {
           if (!ce.id.startsWith('def_ex_')) {
             const existing = mapEx.get(ce.id);
@@ -137,9 +127,8 @@ export class StorageService {
             });
           }
         });
-        const merged = Array.from(mapEx.values());
-        localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(merged));
-        return merged;
+        memoryStore.exercises = Array.from(mapEx.values());
+        return [...memoryStore.exercises];
       }
     } catch (err) {
       console.warn('syncExercises error:', err);
@@ -148,18 +137,11 @@ export class StorageService {
   }
 
   static getWorkoutsForUserAndCoach(userId?: string | null, otherUserId?: string | null): WorkoutPlan[] {
-    const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-    if (!raw) return [];
-    try {
-      const all = JSON.parse(raw) as WorkoutPlan[];
-      return all.filter((w) => {
-        if (userId && (w.userId === userId || w.assignedByCoachId === userId)) return true;
-        if (otherUserId && (w.userId === otherUserId || w.assignedByCoachId === otherUserId)) return true;
-        return false;
-      });
-    } catch {
-      return [];
-    }
+    return memoryStore.workouts.filter((w) => {
+      if (userId && (w.userId === userId || w.assignedByCoachId === userId)) return true;
+      if (otherUserId && (w.userId === otherUserId || w.assignedByCoachId === otherUserId)) return true;
+      return false;
+    });
   }
 
   static getExercises(targetUserId: string | null): Exercise[] {
@@ -237,59 +219,51 @@ export class StorageService {
     if (byName) return byName;
 
     // Fallback: search stored workouts for an embedded exerciseName and muscleGroup
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-      if (raw) {
-        const workouts = JSON.parse(raw) as WorkoutPlan[];
-        for (const w of workouts) {
-          const matchWe = w.exercises?.find((we) => we.exerciseId === id || we.id === id);
-          if (matchWe && matchWe.exerciseName) {
-            const reconstructed: Exercise = {
-              id,
-              userId: null,
-              name: matchWe.exerciseName,
-              muscleGroup: matchWe.muscleGroup || 'full_body',
-              createdAt: '2026-01-01T00:00:00.000Z',
-            };
-            this.saveExercise(reconstructed);
-            return reconstructed;
-          }
-        }
+    for (const w of memoryStore.workouts) {
+      const matchWe = w.exercises?.find((we) => we.exerciseId === id || we.id === id);
+      if (matchWe && matchWe.exerciseName) {
+        const reconstructed: Exercise = {
+          id,
+          userId: null,
+          name: matchWe.exerciseName,
+          muscleGroup: matchWe.muscleGroup || 'full_body',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        };
+        this.saveExercise(reconstructed);
+        return reconstructed;
       }
-    } catch {}
+    }
 
     return undefined;
   }
 
   static saveExercise(exercise: Exercise): void {
-    const all = this.initializeExercises();
-    const idx = all.findIndex((e) => e.id === exercise.id);
+    this.initializeExercises();
+    const idx = memoryStore.exercises.findIndex((e) => e.id === exercise.id);
     if (idx >= 0) {
-      all[idx] = exercise;
+      memoryStore.exercises[idx] = exercise;
     } else {
-      all.push(exercise);
+      memoryStore.exercises.push(exercise);
     }
-    localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(all));
   }
 
   static createExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt'>): Exercise {
-    const all = this.initializeExercises();
+    this.initializeExercises();
     const newExercise: Exercise = {
       ...exerciseData,
       id: generateId('custom_ex'),
       isDefault: false,
       createdAt: new Date().toISOString(),
     };
-    all.push(newExercise);
-    localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(all));
+    memoryStore.exercises.push(newExercise);
     CloudStorageService.saveExercise(newExercise).catch((e) =>
-      console.warn('CloudStorageService.saveExercise background sync error:', e)
+      console.warn('CloudStorageService.saveExercise error:', e)
     );
     return newExercise;
   }
 
   static createGlobalExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt' | 'userId' | 'isDefault'>): Exercise {
-    const all = this.initializeExercises();
+    this.initializeExercises();
     const newExercise: Exercise = {
       ...exerciseData,
       id: generateId('global_ex'),
@@ -297,8 +271,7 @@ export class StorageService {
       isDefault: true,
       createdAt: new Date().toISOString(),
     };
-    all.push(newExercise);
-    localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(all));
+    memoryStore.exercises.push(newExercise);
     CloudStorageService.saveExercise(newExercise).catch((e) =>
       console.warn('CloudStorageService.saveExercise global exercise error:', e)
     );
@@ -306,34 +279,20 @@ export class StorageService {
   }
 
   static updateExercise(exercise: Exercise): void {
-    const all = this.initializeExercises();
-    const idx = all.findIndex((e) => e.id === exercise.id);
+    this.initializeExercises();
+    const idx = memoryStore.exercises.findIndex((e) => e.id === exercise.id);
     if (idx >= 0) {
-      all[idx] = exercise;
-      localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(all));
+      memoryStore.exercises[idx] = exercise;
 
-      // Also update embedded exerciseName and muscleGroup in existing workouts
-      try {
-        const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-        if (raw) {
-          const workouts = JSON.parse(raw) as WorkoutPlan[];
-          let updatedAny = false;
-          workouts.forEach((w) => {
-            (w.exercises || []).forEach((we) => {
-              if (we.exerciseId === exercise.id) {
-                we.exerciseName = exercise.name;
-                we.muscleGroup = exercise.muscleGroup;
-                updatedAny = true;
-              }
-            });
-          });
-          if (updatedAny) {
-            localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+      // Update embedded in workouts in memory
+      memoryStore.workouts.forEach((w) => {
+        (w.exercises || []).forEach((we) => {
+          if (we.exerciseId === exercise.id) {
+            we.exerciseName = exercise.name;
+            we.muscleGroup = exercise.muscleGroup;
           }
-        }
-      } catch (e) {
-        console.warn('Failed to update embedded exercise names in workouts:', e);
-      }
+        });
+      });
 
       CloudStorageService.saveExercise(exercise).catch((e) =>
         console.warn('CloudStorageService.saveExercise update error:', e)
@@ -342,9 +301,8 @@ export class StorageService {
   }
 
   static deleteExercise(exerciseId: string): void {
-    const all = this.initializeExercises();
-    const filtered = all.filter((e) => e.id !== exerciseId);
-    localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(filtered));
+    this.initializeExercises();
+    memoryStore.exercises = memoryStore.exercises.filter((e) => e.id !== exerciseId);
     CloudStorageService.deleteExercise(exerciseId).catch((e) =>
       console.warn('CloudStorageService.deleteExercise error:', e)
     );
@@ -352,17 +310,11 @@ export class StorageService {
 
   // --- COACH & TRAINEES RELATIONSHIPS ---
   static getRemovedTraineeIds(coachUserId: string): string[] {
-    const raw = localStorage.getItem(`fitlog_removed_trainees_${coachUserId}`);
-    if (!raw) return [];
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return [];
-    }
+    return memoryStore.removedTraineesByCoach.get(coachUserId) || [];
   }
 
   static setRemovedTraineeIds(coachUserId: string, ids: string[]): void {
-    localStorage.setItem(`fitlog_removed_trainees_${coachUserId}`, JSON.stringify(ids));
+    memoryStore.removedTraineesByCoach.set(coachUserId, ids);
   }
 
   static getTrainees(coachUserId: string): User[] {
@@ -415,7 +367,7 @@ export class StorageService {
     const upperInput = cleanInput.toUpperCase();
     const strippedUpper = upperInput.replace(/^U_/i, '');
 
-    // 1. Search locally in localStorage
+    // 1. Search in memory
     let trainee = users.find(
       (u) =>
         u.profileCode?.toUpperCase() === upperInput ||
@@ -426,7 +378,7 @@ export class StorageService {
         (u.id && u.id.replace(/[-_]/g, '').toUpperCase().startsWith(strippedUpper))
     );
 
-    // 2. If not found locally, query Supabase profiles
+    // 2. If not found in memory, query Supabase profiles
     if (!trainee) {
       try {
         const cloudTrainee = await CloudStorageService.findProfile(cleanInput);
@@ -464,11 +416,11 @@ export class StorageService {
       return { success: false, message: `${trainee.name} вже є у вашому списку підопічних` };
     }
 
-    // Update coach locally
+    // Update coach in memory
     coach.traineeIds = [...currentTrainees, trainee.id];
     this.saveUser(coach);
 
-    // Update trainee with coachId locally
+    // Update trainee with coachId in memory
     trainee.coachId = coach.id;
     this.saveUser(trainee);
 
@@ -561,7 +513,7 @@ export class StorageService {
       this.setRemovedTraineeIds(coachUserId, [...removedIds, traineeId]);
     }
 
-    // 2. Remove from coach locally
+    // 2. Remove from coach in memory
     const users = this.getUsers();
     const coach = users.find((u) => u.id === coachUserId);
     if (coach && coach.traineeIds) {
@@ -569,7 +521,7 @@ export class StorageService {
       this.saveUser(coach);
     }
 
-    // 3. Clear coachId on trainee locally
+    // 3. Clear coachId on trainee in memory
     const trainee = users.find((u) => u.id === traineeId);
     if (trainee && trainee.coachId === coachUserId) {
       trainee.coachId = null;
@@ -587,7 +539,7 @@ export class StorageService {
   }
 
   static async removeCoachFromAthlete(athleteId: string, coachId: string): Promise<boolean> {
-    // 1. Clear coachId locally on athlete
+    // 1. Clear coachId on athlete in memory
     const users = this.getUsers();
     const athlete = users.find((u) => u.id === athleteId);
     if (athlete) {
@@ -595,7 +547,7 @@ export class StorageService {
       this.saveUser(athlete);
     }
 
-    // 2. Remove athlete from coach's traineeIds locally
+    // 2. Remove athlete from coach's traineeIds in memory
     const coach = users.find((u) => u.id === coachId);
     if (coach && coach.traineeIds) {
       coach.traineeIds = coach.traineeIds.filter((id) => id !== athleteId);
@@ -618,7 +570,7 @@ export class StorageService {
     return cloudSuccess;
   }
 
-  // --- AUTHORIZATION CHECKS (Section 8) ---
+  // --- AUTHORIZATION CHECKS ---
   static canAccessUserData(requesterId?: string | null, targetUserId?: string | null): boolean {
     if (!requesterId || !targetUserId) return true; // Internal or unrestricted
     if (requesterId === targetUserId) return true;
@@ -642,48 +594,24 @@ export class StorageService {
       console.warn(`[Security] Unauthorized access attempt by ${requesterId} to ${userId} workouts`);
       return [];
     }
-    const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-    if (!raw) return [];
-    try {
-      const all = JSON.parse(raw) as WorkoutPlan[];
-      return all
-        .filter((w) => w.userId === userId)
-        .sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
-    } catch {
-      return [];
-    }
+    return memoryStore.workouts
+      .filter((w) => w.userId === userId)
+      .sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
   }
 
   static getWorkoutById(workoutId: string): WorkoutPlan | undefined {
-    const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-    if (!raw) return undefined;
-    try {
-      const all = JSON.parse(raw) as WorkoutPlan[];
-      return all.find((w) => w.id === workoutId);
-    } catch {
-      return undefined;
-    }
+    return memoryStore.workouts.find((w) => w.id === workoutId);
   }
 
   static saveWorkout(workout: WorkoutPlan): void {
-    const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-    let all: WorkoutPlan[] = [];
-    if (raw) {
-      try {
-        all = JSON.parse(raw);
-      } catch {
-        all = [];
-      }
-    }
-    const idx = all.findIndex((w) => w.id === workout.id);
+    const idx = memoryStore.workouts.findIndex((w) => w.id === workout.id);
     if (idx >= 0) {
-      all[idx] = workout;
+      memoryStore.workouts[idx] = workout;
     } else {
-      all.push(workout);
+      memoryStore.workouts.push(workout);
     }
-    localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(all));
 
-    // KEY LOGIC: Synchronize future/uncompleted workouts if any exercise parameters were updated
+    // Synchronize future/uncompleted workouts if any exercise parameters were updated
     this.syncFutureWorkouts(workout);
 
     // Sync to Supabase in the background
@@ -693,7 +621,7 @@ export class StorageService {
   }
 
   /**
-   * KEY LOGIC: Synchronizes future uncompleted workouts for the same user.
+   * Synchronizes future uncompleted workouts for the same user in memory.
    * If an exercise in day 1 is updated (e.g. 3x6-8 -> 3x8-10 or weights completed),
    * future planned workouts (scheduledDate >= current and status !== 'completed' and not already completed)
    * will automatically reflect the updated exercise target range, set count (2-5), and latest used weight.
@@ -714,13 +642,9 @@ export class StorageService {
 
       if (futureWorkouts.length === 0) return;
 
-      let modifiedAny = false;
-
       currentWorkout.exercises.forEach((currentEx) => {
         if (!currentEx || !Array.isArray(currentEx.sets) || currentEx.sets.length === 0) return;
-        // Find latest completed or target set values from currentWorkout
         const lastSet = currentEx.sets[currentEx.sets.length - 1];
-        // Use highest completed weight or current target weight
         const completedSets = currentEx.sets.filter((s) => s && s.completedAt !== null && s.weight > 0);
         const latestWeight = completedSets.length > 0
           ? completedSets[completedSets.length - 1].weight
@@ -733,18 +657,12 @@ export class StorageService {
           if (!fw || !Array.isArray(fw.exercises)) return;
           const matchingFutureEx = fw.exercises.find((fe) => fe && fe.exerciseId === currentEx.exerciseId);
           if (matchingFutureEx && Array.isArray(matchingFutureEx.sets)) {
-            // If future exercise has no completed sets, update target reps range, set count, and preset weights
             const hasCompletedSets = matchingFutureEx.sets.some((s) => s && (s.completedAt !== null || (s.actualReps !== null && s.actualReps > 0)));
             if (!hasCompletedSets) {
-              let exerciseChanged = false;
-
-              // 1. Update target range
               if (matchingFutureEx.targetRepsRange !== targetRange) {
                 matchingFutureEx.targetRepsRange = targetRange;
-                exerciseChanged = true;
               }
 
-              // 2. Adjust sets count if current workout explicitly changed set count and future set count differs
               if (currentSetsCount >= 2 && currentSetsCount <= 5 && matchingFutureEx.sets.length !== currentSetsCount) {
                 const newSets: WorkoutSet[] = [];
                 for (let i = 0; i < currentSetsCount; i++) {
@@ -762,76 +680,41 @@ export class StorageService {
                 }
                 matchingFutureEx.sets = newSets;
                 matchingFutureEx.setCount = currentSetsCount;
-                exerciseChanged = true;
               } else {
-                // Update target reps range and weights on existing future sets
                 matchingFutureEx.sets.forEach((s, idx) => {
                   if (!s) return;
                   if (s.targetRepsRange !== targetRange) {
                     s.targetRepsRange = targetRange;
-                    exerciseChanged = true;
                   }
                   const currentMatchingSet = currentEx.sets[idx] || lastSet;
                   if (currentMatchingSet && (s.weight === 0 || s.weight === 20 || s.weight !== currentMatchingSet.weight)) {
                     s.weight = currentMatchingSet.weight;
-                    exerciseChanged = true;
                   }
                 });
-              }
-
-              if (exerciseChanged) {
-                modifiedAny = true;
               }
             }
           }
         });
       });
-
-      if (modifiedAny) {
-        // Save all updated future workouts
-        const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-        let all: WorkoutPlan[] = raw ? JSON.parse(raw) : [];
-        futureWorkouts.forEach((fw) => {
-          const idx = all.findIndex((w) => w.id === fw.id);
-          if (idx >= 0) all[idx] = fw;
-        });
-        localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(all));
-      }
     } catch (err) {
       console.warn('syncFutureWorkouts error:', err);
     }
   }
 
   static deleteWorkout(workoutId: string): void {
-    const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-    if (!raw) return;
-    try {
-      const all = (JSON.parse(raw) as WorkoutPlan[]).filter((w) => w.id !== workoutId);
-      localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(all));
-      CloudStorageService.deleteWorkout(workoutId).catch((e) =>
-        console.warn('CloudStorageService.deleteWorkout background sync error:', e)
-      );
-    } catch (e) {
-      console.error(e);
-    }
+    memoryStore.workouts = memoryStore.workouts.filter((w) => w.id !== workoutId);
+    CloudStorageService.deleteWorkout(workoutId).catch((e) =>
+      console.warn('CloudStorageService.deleteWorkout background sync error:', e)
+    );
   }
 
   /**
-   * Authoritatively updates workouts for a given user in localStorage
+   * Authoritatively updates workouts for a given user in memory
    * without affecting other users' workouts and without resurrecting deleted workouts.
    */
   static setWorkoutsForUser(userId: string, userWorkouts: WorkoutPlan[]): void {
-    const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-    let all: WorkoutPlan[] = [];
-    if (raw) {
-      try {
-        all = JSON.parse(raw);
-      } catch {
-        all = [];
-      }
-    }
-    const otherUsersWorkouts = all.filter((w) => w.userId !== userId);
-    const localUserWorkouts = all.filter((w) => w.userId === userId);
+    const otherUsersWorkouts = memoryStore.workouts.filter((w) => w.userId !== userId);
+    const localUserWorkouts = memoryStore.workouts.filter((w) => w.userId === userId);
     const localMap = new Map<string, WorkoutPlan>();
     localUserWorkouts.forEach((w) => localMap.set(w.id, w));
 
@@ -872,8 +755,7 @@ export class StorageService {
       }
     });
 
-    const updated = [...otherUsersWorkouts, ...mergedUserWorkouts];
-    localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(updated));
+    memoryStore.workouts = [...otherUsersWorkouts, ...mergedUserWorkouts];
   }
 
   /**
@@ -896,7 +778,6 @@ export class StorageService {
       console.warn('syncWithCloud error:', err);
     }
   }
-
 
   // --- KEY LOGIC: LAST EXERCISE PERFORMANCE ---
   /**

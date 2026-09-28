@@ -91,10 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let authSubscription: { unsubscribe: () => void } | null = null;
 
     const initAuth = async () => {
-      // 1. Clean out any legacy mock/demo users from localStorage
+      // 1. Clean out any legacy mock/demo users
       const mockIds = new Set(['usr_trainee_1', 'usr_trainee_2', 'cmua8f1ka0000k9d82leirx01']);
       let storedUsers = StorageService.getUsers().filter((u) => !mockIds.has(u.id));
-      localStorage.setItem('workout_diary_users', JSON.stringify(storedUsers));
       setAllUsers(storedUsers);
 
       // 2. Check Supabase Cloud Auth if configured

@@ -11,21 +11,15 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const THEME_STORAGE_KEY = 'workout_diary_theme';
-
 const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') return 'dark';
   try {
-    const saved = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    if (saved === 'light' || saved === 'dark') {
-      return saved;
-    }
     // Fallback to prefers-color-scheme
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
       return 'light';
     }
   } catch (e) {
-    console.error('Error reading theme from localStorage', e);
+    console.error('Error reading theme preferences', e);
   }
   return 'dark'; // default to dark
 };
@@ -42,21 +36,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     applyTheme(theme);
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
-    } catch (e) {
-      console.error('Error writing theme to localStorage', e);
-    }
   }, [theme]);
 
-  // Listen to OS theme changes if user hasn't explicitly set preference
+  // Listen to OS theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
-      const saved = localStorage.getItem(THEME_STORAGE_KEY);
-      if (!saved) {
-        setThemeState(e.matches ? 'dark' : 'light');
-      }
+      setThemeState(e.matches ? 'dark' : 'light');
     };
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);

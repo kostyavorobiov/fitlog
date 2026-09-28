@@ -16,8 +16,7 @@
     <script>
       (function() {
         try {
-          var saved = localStorage.getItem('workout_diary_theme');
-          var isDark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
           if (isDark) {
             document.documentElement.classList.add('dark');
             document.documentElement.style.colorScheme = 'dark';
