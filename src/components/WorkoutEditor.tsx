@@ -130,6 +130,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const mobileDeleteWorkoutButtonRef = useRef<HTMLButtonElement>(null);
 
   // Sync state if initialWorkout changes (e.g. user selected another workout)
   useEffect(() => {
@@ -292,6 +293,25 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       updateAndSave(updated);
       setIsSelectorOpen(false);
+
+      // On mobile: smoothly scroll/center screen so that the bottom button "Видалити тренування" is visible
+      if (typeof window !== 'undefined' && window.innerWidth < 640) {
+        setTimeout(() => {
+          if (mobileDeleteWorkoutButtonRef.current) {
+            mobileDeleteWorkoutButtonRef.current.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+          } else {
+            setTimeout(() => {
+              mobileDeleteWorkoutButtonRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+              });
+            }, 150);
+          }
+        }, 150);
+      }
     } catch (err) {
       console.error('Failed to add exercise to workout:', err);
     }
@@ -794,10 +814,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 <div className="block sm:hidden">
                   {/* Зона 1 — налаштування вправи */}
                   <div className="p-3 space-y-2">
-                    {/* Верхня частина картки: номер вправи, назва вправи (повністю видима з автопереносом), кнопки дій */}
-                    <div className="flex items-start justify-between gap-1.5 min-w-0">
-                      <div className="flex items-start space-x-1.5 min-w-0 flex-1">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 font-mono border border-zinc-200 dark:border-zinc-700 mt-0.5">
+                    {/* Верхня частина картки: номер вправи, назва вправи (центрується відносно номера в 1 рядок або переноситься на 2 рядки), кнопки дій */}
+                    <div className="flex items-center justify-between gap-1.5 min-w-0">
+                      <div className="flex items-center space-x-1.5 min-w-0 flex-1">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 font-mono border border-zinc-200 dark:border-zinc-700">
                           #{weIndex + 1}
                         </span>
                         <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 break-words leading-snug flex-1">
@@ -805,7 +825,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         </h4>
                       </div>
 
-                      <div className="flex items-center space-x-1 shrink-0 mt-0.5">
+                      <div className="flex items-center space-x-1 shrink-0">
                         {currentExList.length > 1 && (
                           <button
                             type="button"
@@ -1462,6 +1482,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
         {/* Видалити тренування */}
         <button
+          ref={mobileDeleteWorkoutButtonRef}
           type="button"
           onClick={() => setIsDeleteModalOpen(true)}
           className="w-full flex items-center justify-center space-x-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 py-2.5 px-3 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-[0.99] transition-all cursor-pointer"
