@@ -229,8 +229,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const isAdmin = user?.email.toLowerCase() === 'kvorobiov9@gmail.com' || user?.role === 'admin';
-  // Strictly only role 'coach' has access to trainees tab
-  const isCoach = user?.role === 'coach';
+  const isCoach = user?.role === 'coach' || isAdmin;
 
   return (
     <AuthContext.Provider

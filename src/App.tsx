@@ -188,7 +188,7 @@ const MainContent: React.FC = () => {
           />
         )}
 
-        {currentTab === 'trainees' && user && user.role === 'coach' && (
+        {currentTab === 'trainees' && user && (user.role === 'coach' || isAdmin) && (
           <TraineesView
             coach={user}
             selectedTraineeId={selectedTraineeId}

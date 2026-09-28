@@ -120,7 +120,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Вправи</span>
               </button>
 
-              {user?.role === 'coach' && (
+              {(user?.role === 'coach' || isAdmin) && (
                 <button
                   type="button"
                   onClick={() => onSelectTab('trainees')}
@@ -200,7 +200,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           <span>Мій профіль</span>
                         </button>
 
-                        {user?.role === 'coach' && (
+                        {(user?.role === 'coach' || isAdmin) && (
                           <button
                             type="button"
                             onClick={() => {
@@ -321,7 +321,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="text-[10px]">Вправи</span>
         </button>
 
-        {user?.role === 'coach' && (
+        {(user?.role === 'coach' || isAdmin) && (
           <button
             type="button"
             onClick={() => onSelectTab('trainees')}
