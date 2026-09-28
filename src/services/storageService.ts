@@ -150,13 +150,32 @@ export class StorageService {
 
     return all.filter((ex) => {
       // 1. Global / default exercises are visible to all
-      if (ex.isDefault || ex.userId === null) return true;
+      if (ex.isDefault || ex.userId === null || ex.id.startsWith('global_ex') || ex.id.startsWith('def_ex')) return true;
 
-      // 2. Creator sees their own exercises
-      if (activeUserId && ex.userId === activeUserId) return true;
-      if (targetUserId && ex.userId === targetUserId) return true;
+      // 2. Creator sees their own exercises (by ID or profileCode)
+      if (
+        (activeUserId && ex.userId === activeUserId) ||
+        (targetUserId && ex.userId === targetUserId) ||
+        (activeUser?.profileCode && ex.userId === activeUser.profileCode) ||
+        (targetUser?.profileCode && ex.userId === targetUser.profileCode)
+      ) {
+        return true;
+      }
 
-      // 3. User sees custom exercise created by coach or trainee IF formed into a workout!
+      // 3. Trainee sees coach's custom exercises & Coach sees trainee's custom exercises
+      if (
+        (activeUser?.coachId && ex.userId === activeUser.coachId) ||
+        (targetUser?.coachId && ex.userId === targetUser.coachId) ||
+        (activeUser?.traineeIds && ex.userId && activeUser.traineeIds.includes(ex.userId)) ||
+        (targetUser?.traineeIds && ex.userId && targetUser.traineeIds.includes(ex.userId))
+      ) {
+        return true;
+      }
+
+      // 4. Custom exercises created locally without userId are visible to current user
+      if (ex.id.startsWith('custom_ex') && !ex.userId) return true;
+
+      // 5. User sees custom exercise created by coach or trainee IF formed into a workout!
       if (usedExerciseIds.has(ex.id)) return true;
 
       return false;
@@ -221,6 +240,7 @@ export class StorageService {
     const newExercise: Exercise = {
       ...exerciseData,
       id: generateId('custom_ex'),
+      isDefault: false,
       createdAt: new Date().toISOString(),
     };
     all.push(newExercise);

@@ -3,13 +3,26 @@ import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CreateExerciseModal } from './CreateExerciseModal';
 import { ExerciseHistoryModal } from './ExerciseHistoryModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import {
   Search,
   Plus,
   Dumbbell,
   Sparkles,
   ChevronRight,
+  Trash2,
 } from 'lucide-react';
+
+export const isCustomExercise = (ex: Exercise): boolean => {
+  if (!ex) return false;
+  if (ex.id.startsWith('global_ex') || ex.id.startsWith('def_ex')) return false;
+  if (ex.id.startsWith('custom_ex')) return true;
+  if (ex.userId && ex.userId !== 'null') return true;
+  if (ex.isDefault === false) return true;
+  if (ex.isDefault === true && !ex.userId) return false;
+  if (ex.userId === null) return false;
+  return false;
+};
 
 interface ExerciseCatalogViewProps {
   userId: string;
@@ -21,6 +34,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
   const [onlyCustom, setOnlyCustom] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
+  const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -33,6 +47,14 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
     return StorageService.getExercises(userId);
   }, [userId, refreshKey]);
 
+  const customCount = useMemo(() => {
+    return exercises.filter(isCustomExercise).length;
+  }, [exercises]);
+
+  const displayedBase = useMemo(() => {
+    return onlyCustom ? exercises.filter(isCustomExercise) : exercises;
+  }, [exercises, onlyCustom]);
+
   const filtered = useMemo(() => {
     return exercises.filter((ex) => {
       const matchSearch =
@@ -40,11 +62,19 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         (ex.description && ex.description.toLowerCase().includes(search.toLowerCase()));
 
       const matchMuscle = selectedMuscle === 'all' || ex.muscleGroup === selectedMuscle;
-      const matchCustom = !onlyCustom || !ex.isDefault;
+      const isCustom = isCustomExercise(ex);
+      const matchCustom = !onlyCustom || isCustom;
 
       return matchSearch && matchMuscle && matchCustom;
     });
   }, [exercises, search, selectedMuscle, onlyCustom]);
+
+  const handleConfirmDelete = () => {
+    if (!exerciseToDelete) return;
+    StorageService.deleteExercise(exerciseToDelete.id);
+    setExerciseToDelete(null);
+    setRefreshKey((prev) => prev + 1);
+  };
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto animate-fade-in pb-12">
@@ -97,9 +127,9 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
               type="checkbox"
               checked={onlyCustom}
               onChange={(e) => setOnlyCustom(e.target.checked)}
-              className="rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500"
+              className="rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500 cursor-pointer"
             />
-            <span>Тільки мої вправи</span>
+            <span>Тільки мої вправи ({customCount})</span>
           </label>
         </div>
 
@@ -114,11 +144,11 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                 : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
           >
-            Всі м'язи ({exercises.length})
+            Всі м'язи ({displayedBase.length})
           </button>
           {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => {
             const info = MUSCLE_GROUPS[groupKey];
-            const count = exercises.filter((e) => e.muscleGroup === groupKey).length;
+            const count = displayedBase.filter((e) => e.muscleGroup === groupKey).length;
             const isSelected = selectedMuscle === groupKey;
             return (
               <button
@@ -142,20 +172,25 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {filtered.length === 0 ? (
           <div className="col-span-full rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 p-10 text-center space-y-2">
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Вправ не знайдено.</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {onlyCustom
+                ? 'У вас ще немає створених власних вправ.'
+                : 'Вправ не знайдено.'}
+            </p>
             <button
               type="button"
               onClick={() => setIsCreateOpen(true)}
               className="inline-flex items-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
             >
               <Plus className="h-4 w-4" />
-              <span>Додати нову вправу</span>
+              <span>Додати власну вправу</span>
             </button>
           </div>
         ) : (
           filtered.map((ex) => {
             const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
             const lastPerf = StorageService.getLastExercisePerformance(userId, ex.id);
+            const isCustom = isCustomExercise(ex);
 
             return (
               <div
@@ -169,7 +204,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                       {ex.name}
                     </h3>
                     <div className="flex items-center space-x-1 shrink-0">
-                      {!ex.isDefault && (
+                      {isCustom && (
                         <span className="rounded border border-amber-200 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 dark:text-amber-300">
                           Власна
                         </span>
@@ -177,6 +212,20 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                       <span className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
                         {muscleInfo.nameUk}
                       </span>
+                      {isCustom && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExerciseToDelete(ex);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer ml-0.5"
+                          title="Видалити власну вправу"
+                          aria-label={`Видалити вправу ${ex.name}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -234,6 +283,16 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         userId={userId}
         isOpen={Boolean(historyModalExercise)}
         onClose={() => setHistoryModalExercise(null)}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={Boolean(exerciseToDelete)}
+        title="Видалити власну вправу?"
+        message={`Ви впевнені, що хочете видалити вправу "${exerciseToDelete?.name}"? Її буде вилучено з вашої бази вправ.`}
+        confirmLabel="Видалити"
+        cancelLabel="Скасувати"
+        onConfirm={handleConfirmDelete}
+        onClose={() => setExerciseToDelete(null)}
       />
     </div>
   );

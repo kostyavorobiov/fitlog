@@ -315,9 +315,14 @@ export class CloudStorageService {
       let effectiveUserId = exercise.userId;
       if (exercise.isDefault) {
         effectiveUserId = null;
-      } else if (!effectiveUserId) {
-        const { data: authData } = await supabase.auth.getUser();
-        effectiveUserId = authData?.user?.id || null;
+      } else {
+        const isUuid =
+          effectiveUserId &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(effectiveUserId);
+        if (!isUuid) {
+          const { data: authData } = await supabase.auth.getUser();
+          effectiveUserId = authData?.user?.id || null;
+        }
       }
 
       const { error } = await supabase.from('exercises').upsert(
