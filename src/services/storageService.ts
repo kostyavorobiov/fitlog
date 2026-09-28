@@ -311,6 +311,30 @@ export class StorageService {
     if (idx >= 0) {
       all[idx] = exercise;
       localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(all));
+
+      // Also update embedded exerciseName and muscleGroup in existing workouts
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
+        if (raw) {
+          const workouts = JSON.parse(raw) as WorkoutPlan[];
+          let updatedAny = false;
+          workouts.forEach((w) => {
+            (w.exercises || []).forEach((we) => {
+              if (we.exerciseId === exercise.id) {
+                we.exerciseName = exercise.name;
+                we.muscleGroup = exercise.muscleGroup;
+                updatedAny = true;
+              }
+            });
+          });
+          if (updatedAny) {
+            localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to update embedded exercise names in workouts:', e);
+      }
+
       CloudStorageService.saveExercise(exercise).catch((e) =>
         console.warn('CloudStorageService.saveExercise update error:', e)
       );
@@ -784,6 +808,25 @@ export class StorageService {
   }
 
   /**
+   * Authoritatively updates workouts for a given user in localStorage
+   * without affecting other users' workouts and without resurrecting deleted workouts.
+   */
+  static setWorkoutsForUser(userId: string, userWorkouts: WorkoutPlan[]): void {
+    const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
+    let all: WorkoutPlan[] = [];
+    if (raw) {
+      try {
+        all = JSON.parse(raw);
+      } catch {
+        all = [];
+      }
+    }
+    const otherUsersWorkouts = all.filter((w) => w.userId !== userId);
+    const updated = [...otherUsersWorkouts, ...userWorkouts];
+    localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(updated));
+  }
+
+  /**
    * Synchronize local state with Supabase cloud database
    */
   static async syncWithCloud(userId: string): Promise<void> {
@@ -794,13 +837,8 @@ export class StorageService {
       );
 
       const cloudWorkouts = await CloudStorageService.fetchWorkouts(userId);
-      if (cloudWorkouts && cloudWorkouts.length > 0) {
-        const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-        let localWorkouts: WorkoutPlan[] = raw ? JSON.parse(raw) : [];
-        const map = new Map<string, WorkoutPlan>();
-        localWorkouts.forEach((w) => map.set(w.id, w));
-        cloudWorkouts.forEach((cw) => map.set(cw.id, cw));
-        localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(Array.from(map.values())));
+      if (cloudWorkouts !== null) {
+        this.setWorkoutsForUser(userId, cloudWorkouts);
       }
 
       await this.syncExercises();

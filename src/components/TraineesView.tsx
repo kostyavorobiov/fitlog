@@ -165,18 +165,13 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     // 1. Initial local load
     setTraineeWorkouts(StorageService.getWorkouts(selectedTrainee.id));
 
-    // 2. Fetch from cloud and merge
+    // 2. Fetch from cloud and update authoritatively
     let isSubscribed = true;
     CloudStorageService.fetchWorkouts(selectedTrainee.id).then((cloudWorkouts: WorkoutPlan[] | null) => {
       if (!isSubscribed) return;
-      if (cloudWorkouts && cloudWorkouts.length > 0) {
-        const raw = localStorage.getItem('workout_diary_workouts');
-        let localWorkouts: WorkoutPlan[] = raw ? JSON.parse(raw) : [];
-        const map = new Map<string, WorkoutPlan>();
-        localWorkouts.forEach((w) => map.set(w.id, w));
-        cloudWorkouts.forEach((cw: WorkoutPlan) => map.set(cw.id, cw));
-        localStorage.setItem('workout_diary_workouts', JSON.stringify(Array.from(map.values())));
-        setTraineeWorkouts(StorageService.getWorkouts(selectedTrainee.id));
+      if (cloudWorkouts !== null) {
+        StorageService.setWorkoutsForUser(selectedTrainee.id, cloudWorkouts);
+        setTraineeWorkouts(cloudWorkouts);
       }
     });
 

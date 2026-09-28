@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   WorkoutPlan,
   WorkoutExercise,
@@ -8,6 +8,7 @@ import {
   PastExercisePerformance,
 } from '../types/workout';
 import { StorageService, generateId } from '../services/storageService';
+import { CloudStorageService } from '../services/cloudStorageService';
 import { ExerciseSelectorModal } from './ExerciseSelectorModal';
 import { CreateExerciseModal } from './CreateExerciseModal';
 import { ExerciseHistoryModal } from './ExerciseHistoryModal';
@@ -95,6 +96,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   traineeName,
 }) => {
   const [workout, setWorkout] = useState<WorkoutPlan>(initialWorkout);
+  const workoutRef = useRef<WorkoutPlan>(workout);
+  workoutRef.current = workout;
 
   const supersetColorMap = useMemo(() => {
     const map = new Map<string, (typeof SUPERSET_PALETTES)[0]>();
@@ -122,6 +125,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   // Sync state if initialWorkout changes (e.g. user selected another workout)
   useEffect(() => {
     setWorkout(initialWorkout);
+    workoutRef.current = initialWorkout;
   }, [initialWorkout.id]);
 
   // Auto-save helper
@@ -131,13 +135,14 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         const ex = StorageService.getExerciseById(we.exerciseId);
         return {
           ...we,
-          exerciseName: we.exerciseName || ex?.name,
+          exerciseName: we.exerciseName || ex?.name || 'Вправа',
           muscleGroup: we.muscleGroup || ex?.muscleGroup || 'full_body',
         };
       }
       return we;
     });
     const enriched = { ...updated, exercises: enrichedExercises };
+    workoutRef.current = enriched;
     setWorkout(enriched);
     StorageService.saveWorkout(enriched);
     onSave(enriched);
@@ -168,8 +173,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
   // Add Exercise to Workout
   const handleSelectExercise = (exercise: Exercise) => {
+    const currentWorkout = workoutRef.current;
     // Check if exercise has previous performance
-    const lastPerf = StorageService.getLastExercisePerformance(userId, exercise.id, workout.id);
+    const lastPerf = StorageService.getLastExercisePerformance(userId, exercise.id, currentWorkout.id);
 
     // Initial sets: automatically pre-fill previous weights and reps from past workout
     let initialSets: WorkoutSet[] = [];
@@ -220,19 +226,19 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     const weId = generateId('we');
     const newWorkoutExercise: WorkoutExercise = {
       id: weId,
-      workoutPlanId: workout.id,
+      workoutPlanId: currentWorkout.id,
       exerciseId: exercise.id,
       exerciseName: exercise.name,
       muscleGroup: exercise.muscleGroup,
-      order: workout.exercises.length + 1,
+      order: currentWorkout.exercises.length + 1,
       targetRepsRange: targetRange,
       setCount: initialSets.length,
       sets: initialSets.map((s) => ({ ...s, workoutExerciseId: weId })),
     };
 
     const updated = {
-      ...workout,
-      exercises: [...workout.exercises, newWorkoutExercise],
+      ...currentWorkout,
+      exercises: [...currentWorkout.exercises, newWorkoutExercise],
     };
 
     updateAndSave(updated);
@@ -479,24 +485,26 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   };
 
   // Explicitly save workout changes without completing
-  const handleSaveWorkout = () => {
-    updateAndSave(workout);
-    onSave(workout);
+  const handleSaveWorkout = async () => {
+    updateAndSave(workoutRef.current);
+    onSave(workoutRef.current);
+    await CloudStorageService.saveWorkout(workoutRef.current);
     setSaveNoticeMessage('Зміни в тренуванні успішно збережено!');
     setSaveSuccessNotice(true);
     setTimeout(() => setSaveSuccessNotice(false), 3000);
   };
 
   // Complete entire workout (marks status as 'completed')
-  const handleFinishWorkout = () => {
+  const handleFinishWorkout = async () => {
     const completedAt = new Date().toISOString();
     const updated: WorkoutPlan = {
-      ...workout,
+      ...workoutRef.current,
       status: 'completed',
       completedAt,
-      durationMinutes: workout.durationMinutes || 60,
+      durationMinutes: workoutRef.current.durationMinutes || 60,
     };
     updateAndSave(updated);
+    await CloudStorageService.saveWorkout(updated);
     playSuccessChime();
     setSaveNoticeMessage('Тренування успішно виконано! Результати зафіксовані.');
     setSaveSuccessNotice(true);
@@ -504,21 +512,23 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   };
 
   // Restore workout to in_progress status
-  const handleRestoreWorkout = () => {
+  const handleRestoreWorkout = async () => {
     const updated: WorkoutPlan = {
-      ...workout,
+      ...workoutRef.current,
       status: 'in_progress',
       completedAt: null,
     };
     updateAndSave(updated);
+    await CloudStorageService.saveWorkout(updated);
     setSaveNoticeMessage('Тренування відновлено в процесі');
     setSaveSuccessNotice(true);
     setTimeout(() => setSaveSuccessNotice(false), 3000);
   };
 
   // Delete current workout
-  const handleDeleteCurrentWorkout = () => {
+  const handleDeleteCurrentWorkout = async () => {
     StorageService.deleteWorkout(workout.id);
+    await CloudStorageService.deleteWorkout(workout.id);
     if (onDeleteWorkout) {
       onDeleteWorkout(workout.id);
     }

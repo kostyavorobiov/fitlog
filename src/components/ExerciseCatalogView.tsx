@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CreateExerciseModal } from './CreateExerciseModal';
+import { EditExerciseModal } from './EditExerciseModal';
 import { ExerciseHistoryModal } from './ExerciseHistoryModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import {
@@ -11,6 +12,7 @@ import {
   Sparkles,
   ChevronRight,
   Trash2,
+  Pencil,
 } from 'lucide-react';
 
 export const isCustomExercise = (ex: Exercise): boolean => {
@@ -33,6 +35,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
   const [onlyCustom, setOnlyCustom] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
   const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -191,6 +194,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
             const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
             const lastPerf = StorageService.getLastExercisePerformance(userId, ex.id);
             const isCustom = isCustomExercise(ex);
+            const canEdit = !ex.isDefault && (ex.userId === userId || !ex.userId);
 
             return (
               <div
@@ -212,7 +216,21 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                       <span className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
                         {muscleInfo.nameUk}
                       </span>
-                      {isCustom && (
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExerciseToEdit(ex);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ml-0.5"
+                          title="Редагувати власну вправу"
+                          aria-label={`Редагувати вправу ${ex.name}`}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {canEdit && (
                         <button
                           type="button"
                           onClick={(e) => {
@@ -275,6 +293,15 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         onCreated={(newEx) => {
           setRefreshKey((prev) => prev + 1);
           setHistoryModalExercise(newEx);
+        }}
+      />
+
+      <EditExerciseModal
+        exercise={exerciseToEdit}
+        isOpen={Boolean(exerciseToEdit)}
+        onClose={() => setExerciseToEdit(null)}
+        onSaved={() => {
+          setRefreshKey((prev) => prev + 1);
         }}
       />
 

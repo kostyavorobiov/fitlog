@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { WorkoutPlan } from '../types/workout';
 import { StorageService } from '../services/storageService';
+import { CloudStorageService } from '../services/cloudStorageService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 import {
@@ -26,8 +27,21 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
 }) => {
   const [workoutToDelete, setWorkoutToDelete] = useState<WorkoutPlan | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'in_progress' | 'completed'>('all');
+  const [workouts, setWorkouts] = useState<WorkoutPlan[]>(() => StorageService.getWorkouts(userId));
 
-  const workouts = StorageService.getWorkouts(userId);
+  React.useEffect(() => {
+    setWorkouts(StorageService.getWorkouts(userId));
+    let isSubscribed = true;
+    CloudStorageService.fetchWorkouts(userId).then((cloudWorkouts) => {
+      if (!isSubscribed || cloudWorkouts === null) return;
+      StorageService.setWorkoutsForUser(userId, cloudWorkouts);
+      setWorkouts(cloudWorkouts);
+    });
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [userId]);
 
   const filterTabs: ('all' | 'in_progress' | 'completed')[] = ['all', 'in_progress', 'completed'];
 
@@ -57,6 +71,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
     if (!workoutToDelete) return;
     StorageService.deleteWorkout(workoutToDelete.id);
     onDeleteWorkout(workoutToDelete.id);
+    setWorkouts((prev) => prev.filter((w) => w.id !== workoutToDelete.id));
     setWorkoutToDelete(null);
   };
 

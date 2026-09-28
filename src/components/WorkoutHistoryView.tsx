@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WorkoutPlan } from '../types/workout';
 import { StorageService, generateId } from '../services/storageService';
+import { CloudStorageService } from '../services/cloudStorageService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateWorkoutModal } from './CreateWorkoutModal';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
@@ -37,7 +38,21 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
   const [workoutToDelete, setWorkoutToDelete] = useState<WorkoutPlan | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const workouts = StorageService.getWorkouts(userId);
+  const [workouts, setWorkouts] = useState<WorkoutPlan[]>(() => StorageService.getWorkouts(userId));
+
+  useEffect(() => {
+    setWorkouts(StorageService.getWorkouts(userId));
+    let isSubscribed = true;
+    CloudStorageService.fetchWorkouts(userId).then((cloudWorkouts) => {
+      if (!isSubscribed || cloudWorkouts === null) return;
+      StorageService.setWorkoutsForUser(userId, cloudWorkouts);
+      setWorkouts(cloudWorkouts);
+    });
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [userId, reloadKey]);
 
   // Calendar Helpers (Ukrainian locale)
   const ukrainianMonths = [

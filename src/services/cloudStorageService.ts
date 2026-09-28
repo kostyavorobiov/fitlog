@@ -11,7 +11,7 @@ export class CloudStorageService {
     if (!isSupabaseConfigured() || !supabase) return null;
 
     try {
-      const { data: workoutsData, error } = await supabase
+      let query = supabase
         .from('workouts')
         .select(`
           id,
@@ -54,8 +54,13 @@ export class CloudStorageService {
               is_warmup
             )
           )
-        `)
-        .order('scheduled_date', { ascending: false });
+        `);
+
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+
+      const { data: workoutsData, error } = await query.order('scheduled_date', { ascending: false });
 
       if (error) {
         console.warn('CloudStorageService.fetchWorkouts error:', error.message);
@@ -173,26 +178,49 @@ export class CloudStorageService {
         return false;
       }
 
-      // 2. Upsert exercises & sets
+      // 2. Manage workout_exercises deletion of removed items
+      const currentWeIds = (workout.exercises || []).map((we) => we.id);
+
+      if (currentWeIds.length > 0) {
+        const { data: existingWe } = await supabase
+          .from('workout_exercises')
+          .select('id')
+          .eq('workout_id', workout.id);
+
+        const existingWeIds = (existingWe || []).map((r: any) => r.id);
+        const toDeleteWe = existingWeIds.filter((id: string) => !currentWeIds.includes(id));
+        if (toDeleteWe.length > 0) {
+          await supabase.from('workout_exercises').delete().in('id', toDeleteWe);
+        }
+      } else {
+        await supabase.from('workout_exercises').delete().eq('workout_id', workout.id);
+      }
+
+      // 3. Upsert current exercises and their sets
       if (workout.exercises && workout.exercises.length > 0) {
         // Ensure all referenced exercises exist in Supabase exercises table to prevent FK errors
-        for (const we of workout.exercises) {
-          const ex = StorageService.getExerciseById(we.exerciseId);
-          const nameToUse = we.exerciseName || ex?.name;
-          if (nameToUse) {
-            try {
-              await supabase.from('exercises').upsert(
-                {
-                  id: we.exerciseId,
-                  name: nameToUse,
-                  muscle_group: we.muscleGroup || ex?.muscleGroup || 'full_body',
-                  description: ex?.description || '',
-                  is_default: ex?.isDefault ?? false,
-                  user_id: ex?.userId || null,
-                },
-                { onConflict: 'id' }
-              );
-            } catch {}
+        const exIds = Array.from(new Set(workout.exercises.map((e) => e.exerciseId)));
+        const { data: dbExs } = await supabase.from('exercises').select('id').in('id', exIds);
+        const dbExSet = new Set((dbExs || []).map((x: any) => x.id));
+        const missing = exIds.filter((id) => !dbExSet.has(id));
+
+        if (missing.length > 0) {
+          const missingRows = missing.map((id) => {
+            const we = workout.exercises.find((e) => e.exerciseId === id);
+            const local = StorageService.getExerciseById(id);
+            return {
+              id,
+              name: we?.exerciseName || local?.name || 'Вправа',
+              muscle_group: we?.muscleGroup || local?.muscleGroup || 'full_body',
+              description: local?.description || '',
+              is_default: local?.isDefault ?? false,
+              user_id: local?.userId || null,
+            };
+          });
+          try {
+            await supabase.from('exercises').insert(missingRows);
+          } catch (e) {
+            console.warn('Could not insert missing exercises:', e);
           }
         }
 
@@ -214,6 +242,21 @@ export class CloudStorageService {
 
         if (weError) {
           console.warn('saveWorkout exercises error:', weError.message);
+        }
+
+        // 4. Clean up deleted sets and upsert current sets
+        const remainingWeIds = workout.exercises.map((we) => we.id);
+        const currentSetIds = workout.exercises.flatMap((we) => (we.sets || []).map((s) => s.id));
+
+        const { data: existingSets } = await supabase
+          .from('workout_sets')
+          .select('id')
+          .in('workout_exercise_id', remainingWeIds);
+
+        const existingSetIds = (existingSets || []).map((r: any) => r.id);
+        const setsToDelete = existingSetIds.filter((id: string) => !currentSetIds.includes(id));
+        if (setsToDelete.length > 0) {
+          await supabase.from('workout_sets').delete().in('id', setsToDelete);
         }
 
         // Collect all sets for upsert

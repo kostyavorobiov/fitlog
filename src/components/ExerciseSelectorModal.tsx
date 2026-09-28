@@ -26,9 +26,6 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    StorageService.syncExercises().then(() => {
-      setRefreshKey((prev) => prev + 1);
-    });
     const scrollY = window.scrollY;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -40,7 +37,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
 
   const exercises = useMemo(() => {
     return StorageService.getExercises(userId);
-  }, [userId, isOpen, refreshKey]);
+  }, [userId, isOpen]);
 
   const filtered = useMemo(() => {
     return exercises.filter((ex) => {
@@ -52,33 +49,27 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
     });
   }, [exercises, search, selectedMuscle]);
 
-  const backdropMouseDownRef = React.useRef(false);
-
-  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    backdropMouseDownRef.current = e.target === e.currentTarget;
-  };
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget && backdropMouseDownRef.current) {
-      onClose();
-    }
-    backdropMouseDownRef.current = false;
-  };
-
   if (!isOpen) return null;
 
+  const handleSelect = (e: React.MouseEvent, ex: Exercise) => {
+    e.stopPropagation();
+    onSelect(ex);
+    onClose();
+  };
+
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 dark:bg-black/75 backdrop-blur-sm animate-fade-in"
-      onMouseDown={handleBackdropMouseDown}
-      onClick={handleBackdropClick}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50 dark:bg-black/75 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      {/* Modal Dialog Content */}
       <div
         role="dialog"
         aria-modal="true"
         data-no-swipe="true"
-        className="relative w-full max-w-xl max-h-[85vh] my-auto flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
-        onClick={(e) => e.stopPropagation()}
+        className="relative z-10 w-full max-w-xl max-h-[85vh] my-auto flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900">
@@ -176,12 +167,10 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
 
               return (
                 <button
+                  type="button"
                   key={ex.id}
-                  onClick={() => {
-                    onSelect(ex);
-                    onClose();
-                  }}
-                  className="w-full text-left rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/90 hover:border-zinc-300 dark:hover:border-zinc-700 p-3 transition flex items-center justify-between group"
+                  onClick={(e) => handleSelect(e, ex)}
+                  className="w-full text-left rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/90 hover:border-zinc-300 dark:hover:border-zinc-700 p-3 transition flex items-center justify-between group touch-manipulation cursor-pointer active:scale-[0.99]"
                 >
                   <div className="flex-1 min-w-0 pr-3">
                     <div className="flex items-center space-x-2 mb-1">
