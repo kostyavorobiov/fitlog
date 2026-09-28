@@ -383,7 +383,17 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   // Delete exercise
   const handleRemoveExercise = (weId: string) => {
     const currentWorkout = workoutRef.current;
-    const currentScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    const deletedIndex = currentWorkout.exercises.findIndex((e) => e.id === weId);
+    const prevEx = deletedIndex > 0 ? currentWorkout.exercises[deletedIndex - 1] : null;
+
+    // Фіксуємо точну позицію попередньої картки у вікні перегляду до видалення
+    let prevCardTop: number | null = null;
+    if (prevEx && typeof window !== 'undefined') {
+      const prevEl = document.getElementById(`exercise-card-${prevEx.id}`);
+      if (prevEl) {
+        prevCardTop = prevEl.getBoundingClientRect().top;
+      }
+    }
 
     const updatedExercises = currentWorkout.exercises
       .filter((e) => e.id !== weId)
@@ -391,12 +401,24 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
     updateAndSave({ ...currentWorkout, exercises: updatedExercises });
 
-    // При видаленні вправи позиція попередньої картки не змінюється, а наступна просто підтягується
+    // Після оновлення DOM гарантуємо, що попередня картка не стрибає,
+    // а нижні кнопки підтягуються безпосередньо під попередню картку
     if (typeof window !== 'undefined') {
-      window.scrollTo({
-        top: currentScrollY,
-        behavior: 'auto',
-      });
+      const correctPosition = () => {
+        if (prevEx && prevCardTop !== null) {
+          const prevEl = document.getElementById(`exercise-card-${prevEx.id}`);
+          if (prevEl) {
+            const currentTop = prevEl.getBoundingClientRect().top;
+            const diff = currentTop - prevCardTop;
+            if (Math.abs(diff) > 0.5) {
+              window.scrollBy({ top: diff, behavior: 'instant' });
+            }
+          }
+        }
+      };
+
+      requestAnimationFrame(correctPosition);
+      setTimeout(correctPosition, 30);
     }
   };
 
@@ -662,7 +684,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   }, 0);
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-36 sm:pb-28 animate-fade-in max-w-5xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 pb-52 sm:pb-28 animate-fade-in max-w-5xl mx-auto">
       {/* Back button to return to workouts list */}
       {onBack && (
         <div className="flex items-center justify-between">
