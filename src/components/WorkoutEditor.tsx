@@ -736,12 +736,290 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     : 'border-zinc-200 dark:border-zinc-800'
                   }`}
               >
-                {/* Exercise Header */}
-                <div className="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2.5">
+                {/* ================= MOBILE VIEW (sm:hidden) ================= */}
+                <div className="block sm:hidden">
+                  {/* Зона 1 — налаштування вправи */}
+                  <div className="p-3 space-y-2">
+                    {/* Верхня частина картки: в одну лінію номер вправи, назва вправи, кнопки суперсет / вгору / вниз / видалити */}
+                    <div className="flex items-center justify-between gap-1.5 min-w-0">
+                      <div className="flex items-center space-x-1.5 min-w-0 flex-1">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 font-mono border border-zinc-200 dark:border-zinc-700">
+                          #{weIndex + 1}
+                        </span>
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate min-w-0">
+                          {exerciseName}
+                        </h4>
+                      </div>
+
+                      <div className="flex items-center space-x-1 shrink-0">
+                        {currentExList.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSuperset(weIndex)}
+                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer inline-flex items-center text-xs font-semibold ${
+                              isSuperset && supersetPalette
+                                ? supersetPalette.buttonActive
+                                : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+                            }`}
+                            title={isSuperset ? "Роз'єднати суперсет" : 'Обʼєднати в суперсет'}
+                          >
+                            {isSuperset ? <Unlink className="h-3.5 w-3.5" /> : <Link className="h-3.5 w-3.5" />}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleMoveExercise(weIndex, 'up')}
+                          disabled={weIndex === 0}
+                          className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                          title="Вгору"
+                        >
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveExercise(weIndex, 'down')}
+                          disabled={weIndex === currentExList.length - 1}
+                          className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                          title="Вниз"
+                        >
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExercise(weItem.id)}
+                          className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                          title="Видалити вправу"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Налаштування: діапазон повторень та кількість підходів */}
+                    <div className="space-y-1.5">
+                      {/* Діапазон повторень: додано 10-12 */}
+                      <div className="flex items-center justify-between gap-1.5 bg-zinc-50 dark:bg-zinc-800/40 rounded-lg p-1.5 border border-zinc-200 dark:border-zinc-800">
+                        <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 whitespace-nowrap pl-1">
+                          Діапазон:
+                        </span>
+                        <div className="flex items-center space-x-1 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-950 p-0.5 overflow-x-auto no-scrollbar">
+                          {(['4-6', '6-8', '8-12', '10-12', '10-15'] as const).map((range) => {
+                            const isSelected = (weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12') === range;
+                            return (
+                              <button
+                                key={range}
+                                type="button"
+                                onClick={() => handleTargetRepsRangeChange(weItem.id, range)}
+                                className={`px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer shrink-0 ${
+                                  isSelected
+                                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
+                                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                                }`}
+                              >
+                                {range}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Рядок вибору кількості підходів такого ж розміру та стилю */}
+                      <div className="flex items-center justify-between gap-1.5 bg-zinc-50 dark:bg-zinc-800/40 rounded-lg p-1.5 border border-zinc-200 dark:border-zinc-800">
+                        <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 whitespace-nowrap pl-1">
+                          Підходи:
+                        </span>
+                        <div className="flex items-center space-x-1 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-950 p-0.5">
+                          {[2, 3, 4, 5].map((cnt) => {
+                            const active = (weItem.setCount || weItem.sets.length) === cnt;
+                            return (
+                              <button
+                                key={cnt}
+                                type="button"
+                                onClick={() => handleSetCountChange(weItem.id, cnt)}
+                                className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-colors flex items-center justify-center cursor-pointer ${
+                                  active
+                                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
+                                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                                }`}
+                                title={`Встановити ${cnt} підходи`}
+                              >
+                                {cnt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Тонка горизонтальна лінія між зонами, яка не доходить до країв картки */}
+                  <div className="mx-3.5 border-t border-zinc-200 dark:border-zinc-800 my-1" />
+
+                  {/* Зона 2 — самі підходи */}
+                  <div className="p-3 pt-1 space-y-1">
+                    {/* Заголовок колонок підходів */}
+                    <div className="flex items-center justify-between gap-1.5 px-0.5 pb-1 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                      <span className="w-5 text-center">№</span>
+                      <span className="flex-1 text-center">Вага (кг)</span>
+                      <span className="flex-1 text-center">Повторення</span>
+                      <span className="w-7 text-center">Готово</span>
+                      <span className="w-6"></span>
+                    </div>
+
+                    {weItem.sets.map((setItem) => {
+                      const isDone = Boolean(setItem.completedAt);
+                      return (
+                        <div
+                          key={setItem.id}
+                          className={`flex items-center justify-between gap-1.5 py-1.5 border-b border-zinc-100 dark:border-zinc-800/60 last:border-b-0 ${
+                            isDone ? 'opacity-90' : ''
+                          }`}
+                        >
+                          {/* Номер підходу */}
+                          <span className="w-5 text-center font-mono text-xs font-bold text-zinc-500 dark:text-zinc-400 shrink-0">
+                            #{setItem.setNumber}
+                          </span>
+
+                          {/* Вага */}
+                          <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleUpdateSet(
+                                  weItem.id,
+                                  setItem.id,
+                                  'weight',
+                                  Math.max(0, (setItem.weight || 0) - 2.5)
+                                )
+                              }
+                              className="h-7 w-6 rounded bg-white dark:bg-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
+                              title="Зменшити вагу на 2.5 кг"
+                            >
+                              <Minus className="h-3 w-3 stroke-[2.5]" />
+                            </button>
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              step="0.5"
+                              min="0"
+                              value={setItem.weight === 0 ? '' : setItem.weight}
+                              onChange={(e) =>
+                                handleUpdateSet(
+                                  weItem.id,
+                                  setItem.id,
+                                  'weight',
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
+                              className="w-11 text-center bg-transparent font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleUpdateSet(
+                                  weItem.id,
+                                  setItem.id,
+                                  'weight',
+                                  (setItem.weight || 0) + 2.5
+                                )
+                              }
+                              className="h-7 w-6 rounded bg-white dark:bg-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
+                              title="Збільшити вагу на 2.5 кг"
+                            >
+                              <Plus className="h-3 w-3 stroke-[2.5]" />
+                            </button>
+                          </div>
+
+                          {/* Кількість повторень */}
+                          <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleUpdateSet(
+                                  weItem.id,
+                                  setItem.id,
+                                  'actualReps',
+                                  Math.max(0, (setItem.actualReps || 0) - 1)
+                                )
+                              }
+                              className="h-7 w-6 rounded bg-white dark:bg-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
+                              title="Зменшити повторення"
+                            >
+                              <Minus className="h-3 w-3 stroke-[2.5]" />
+                            </button>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              max="200"
+                              value={setItem.actualReps === null ? '' : setItem.actualReps}
+                              onChange={(e) =>
+                                handleUpdateSet(
+                                  weItem.id,
+                                  setItem.id,
+                                  'actualReps',
+                                  e.target.value === '' ? null : parseInt(e.target.value, 10)
+                                )
+                              }
+                              className="w-9 text-center bg-transparent font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleUpdateSet(
+                                  weItem.id,
+                                  setItem.id,
+                                  'actualReps',
+                                  (setItem.actualReps || 0) + 1
+                                )
+                              }
+                              className="h-7 w-6 rounded bg-white dark:bg-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
+                              title="Збільшити повторення"
+                            >
+                              <Plus className="h-3 w-3 stroke-[2.5]" />
+                            </button>
+                          </div>
+
+                          {/* Галочка виконання */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCompleteSet(weItem.id, setItem)}
+                            className={`h-7 w-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                              isDone
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-white'
+                            }`}
+                            title={isDone ? 'Позначити як незавершений' : 'Завершити підхід'}
+                          >
+                            {isDone ? (
+                              <Check className="h-4 w-4 stroke-[2.5]" />
+                            ) : (
+                              <Circle className="h-4 w-4" />
+                            )}
+                          </button>
+
+                          {/* Видалення */}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSet(weItem.id, setItem.id)}
+                            className="h-7 w-6 flex items-center justify-center text-zinc-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 cursor-pointer shrink-0 transition-colors"
+                            title="Видалити підхід"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ================= DESKTOP VIEW (hidden sm:block) ================= */}
+                {/* Desktop Exercise Header */}
+                <div className="hidden sm:flex p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex-wrap items-center justify-between gap-2.5">
                   <div className="flex items-center space-x-2.5 min-w-0 flex-1">
                     {/* Drag Handle */}
                     <div
-                      className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors hidden sm:flex items-center"
+                      className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors flex items-center"
                       title="Перетягніть картку вправи для зміни порядку"
                     >
                       <GripVertical className="h-4 w-4" />
@@ -825,15 +1103,15 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   </div>
                 </div>
 
-                {/* EXERCISE CONFIG BAR: Balanced and aligned for 320-430px mobile & desktop */}
-                <div className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 p-2.5 sm:px-4 sm:py-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                  {/* Target Rep Range (4-6, 6-8, 8-12, 10-15) */}
+                {/* Desktop Exercise Config Bar */}
+                <div className="hidden sm:grid bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 p-2.5 sm:px-4 sm:py-2.5 grid-cols-2 gap-3">
+                  {/* Target Rep Range (4-6, 6-8, 8-12, 10-12, 10-15) */}
                   <div className="flex items-center justify-between gap-2 bg-white dark:bg-zinc-900 rounded-lg p-2 border border-zinc-200 dark:border-zinc-800">
                     <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
                       Діапазон:
                     </span>
                     <div className="flex items-center space-x-1 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-950 p-0.5">
-                      {(['4-6', '6-8', '8-12', '10-15'] as const).map((range) => {
+                      {(['4-6', '6-8', '8-12', '10-12', '10-15'] as const).map((range) => {
                         const isSelected = (weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12') === range;
                         return (
                           <button
@@ -877,170 +1155,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       })}
                     </div>
                   </div>
-                </div>
-
-                {/* MOBILE VIEW FOR SETS (No horizontal scrolling required!) */}
-                <div className="block sm:hidden p-3 space-y-2.5">
-                  {weItem.sets.map((setItem) => {
-                    const isDone = Boolean(setItem.completedAt);
-
-                    return (
-                      <div
-                        key={setItem.id}
-                        className={`rounded-lg border p-2.5 transition-colors ${isDone
-                          ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
-                          : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'
-                          }`}
-                      >
-                        {/* Mobile Set Header */}
-                        <div className="flex items-center justify-between gap-1 mb-2">
-                          <div className="flex items-center space-x-2">
-                            <span
-                              className={`inline-flex h-5 w-5 items-center justify-center rounded font-mono text-[11px] font-bold ${isDone
-                                ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700'
-                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700'
-                                }`}
-                            >
-                              #{setItem.setNumber}
-                            </span>
-                            <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
-                              {setItem.targetRepsRange} повт.
-                            </span>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSet(weItem.id, setItem.id)}
-                            className="p-1 text-zinc-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 cursor-pointer"
-                            title="Видалити підхід"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-
-                        {/* Mobile Inputs row (Weight + Reps + Checkmark) */}
-                        <div className="grid grid-cols-12 gap-1.5 items-center">
-                          {/* Weight Stepper: 5 cols */}
-                          <div className="col-span-5 flex items-center justify-between bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-0.5 shadow-2xs">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleUpdateSet(
-                                  weItem.id,
-                                  setItem.id,
-                                  'weight',
-                                  Math.max(0, (setItem.weight || 0) - 2.5)
-                                )
-                              }
-                              className="h-7 w-7 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
-                              title="Зменшити вагу на 2.5 кг"
-                            >
-                              <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
-                            </button>
-                            <input
-                              type="number"
-                              inputMode="decimal"
-                              step="0.5"
-                              min="0"
-                              value={setItem.weight === 0 ? '' : setItem.weight}
-                              onChange={(e) =>
-                                handleUpdateSet(
-                                  weItem.id,
-                                  setItem.id,
-                                  'weight',
-                                  parseFloat(e.target.value) || 0
-                                )
-                              }
-                              className="w-full text-center bg-transparent font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none px-0.5"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleUpdateSet(
-                                  weItem.id,
-                                  setItem.id,
-                                  'weight',
-                                  (setItem.weight || 0) + 2.5
-                                )
-                              }
-                              className="h-7 w-7 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
-                              title="Збільшити вагу на 2.5 кг"
-                            >
-                              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-                            </button>
-                          </div>
-
-                          {/* Reps Stepper: 4 cols */}
-                          <div className="col-span-4 flex items-center justify-between bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-0.5 shadow-2xs">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleUpdateSet(
-                                  weItem.id,
-                                  setItem.id,
-                                  'actualReps',
-                                  Math.max(0, (setItem.actualReps || 0) - 1)
-                                )
-                              }
-                              className="h-7 w-7 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
-                              title="Зменшити повторення"
-                            >
-                              <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
-                            </button>
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              min="0"
-                              max="200"
-                              value={setItem.actualReps === null ? '' : setItem.actualReps}
-                              onChange={(e) =>
-                                handleUpdateSet(
-                                  weItem.id,
-                                  setItem.id,
-                                  'actualReps',
-                                  e.target.value === '' ? null : parseInt(e.target.value, 10)
-                                )
-                              }
-                              className="w-full text-center bg-transparent font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none px-0.5"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleUpdateSet(
-                                  weItem.id,
-                                  setItem.id,
-                                  'actualReps',
-                                  (setItem.actualReps || 0) + 1
-                                )
-                              }
-                              className="h-7 w-7 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
-                              title="Збільшити повторення"
-                            >
-                              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-                            </button>
-                          </div>
-
-                          {/* Completion Checkmark: 3 cols */}
-                          <div className="col-span-3">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleCompleteSet(weItem.id, setItem)}
-                              className={`w-full h-8 flex items-center justify-center rounded-lg transition-colors font-bold text-xs cursor-pointer ${isDone
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-white'
-                                }`}
-                            >
-                              {isDone ? (
-                                <Check className="h-4 w-4 stroke-[2.5]" />
-                              ) : (
-                                <Circle className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
 
                 {/* DESKTOP VIEW FOR SETS (Clean tabular layout for tablet & PC) */}
@@ -1223,8 +1337,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   </table>
                 </div>
 
-                {/* Add Set Button */}
-                <div className="p-3 sm:px-4 sm:py-3 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40">
+                {/* Add Set Button (Desktop Only) */}
+                <div className="hidden sm:flex p-3 sm:px-4 sm:py-3 items-center justify-between border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40">
                   <button
                     type="button"
                     onClick={() => handleAddSet(weItem.id)}
