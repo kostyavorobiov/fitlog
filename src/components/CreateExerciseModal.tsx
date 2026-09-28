@@ -152,11 +152,11 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-              Опис / Техніка виконання (необов'язково)
+              Опис (необов'язково)
             </label>
             <textarea
               rows={2}
-              placeholder="Положення ліктів, акцент скорочення..."
+              placeholder="Короткі нотатки чи примітки до вправи..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 resize-none"

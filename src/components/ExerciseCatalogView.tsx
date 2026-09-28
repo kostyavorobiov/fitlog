@@ -55,7 +55,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
             База вправ
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            Каталог вправ із персональною статистикою, історією та технікою виконання
+            Каталог вправ із персональною статистикою та історією підходів
           </p>
         </div>
 
@@ -208,7 +208,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                     }}
                     className="flex items-center space-x-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-colors"
                   >
-                    <span>Дані та техніка</span>
+                    <span>Історія та рекорди</span>
                     <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
                   </button>
                 </div>
@@ -234,7 +234,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         userId={userId}
         isOpen={Boolean(historyModalExercise)}
         onClose={() => setHistoryModalExercise(null)}
-        initialTab="history"
       />
     </div>
   );

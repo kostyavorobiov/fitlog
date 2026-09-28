@@ -615,7 +615,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
         userId={userId}
         isOpen={Boolean(selectedExercise)}
         onClose={() => setSelectedExercise(null)}
-        initialTab="history"
       />
     </div>
   );
