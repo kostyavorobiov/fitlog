@@ -141,10 +141,42 @@ export class CloudStorageService {
     }
   }
 
+  private static workoutSavePromises = new Map<string, Promise<boolean>>();
+  private static pendingWorkoutSaves = new Map<string, WorkoutPlan>();
+
   /**
-   * Upsert a complete workout to Supabase
+   * Upsert a complete workout to Supabase with automatic serialization & trailing queue
    */
   static async saveWorkout(workout: WorkoutPlan): Promise<boolean> {
+    if (!isSupabaseConfigured() || !supabase) return false;
+
+    if (this.workoutSavePromises.has(workout.id)) {
+      this.pendingWorkoutSaves.set(workout.id, workout);
+      return this.workoutSavePromises.get(workout.id)!;
+    }
+
+    const runSave = async (wToSave: WorkoutPlan): Promise<boolean> => {
+      try {
+        return await this.executeSaveWorkout(wToSave);
+      } finally {
+        const next = this.pendingWorkoutSaves.get(wToSave.id);
+        if (next) {
+          this.pendingWorkoutSaves.delete(wToSave.id);
+          const nextPromise = runSave(next);
+          this.workoutSavePromises.set(wToSave.id, nextPromise);
+          await nextPromise;
+        } else {
+          this.workoutSavePromises.delete(wToSave.id);
+        }
+      }
+    };
+
+    const promise = runSave(workout);
+    this.workoutSavePromises.set(workout.id, promise);
+    return promise;
+  }
+
+  private static async executeSaveWorkout(workout: WorkoutPlan): Promise<boolean> {
     if (!isSupabaseConfigured() || !supabase) return false;
 
     try {

@@ -128,6 +128,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [saveNoticeMessage, setSaveNoticeMessage] = useState('Зміни в тренуванні успішно збережено!');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync state if initialWorkout changes (e.g. user selected another workout)
   useEffect(() => {
@@ -139,7 +141,16 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     workoutRef.current = normalized;
   }, [initialWorkout.id]);
 
-  // Auto-save helper
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Auto-save helper: automatically persists changes immediately to memory and cloud
   const updateAndSave = (updated: WorkoutPlan) => {
     try {
       const rawExercises = Array.isArray(updated.exercises) ? updated.exercises : [];
@@ -159,22 +170,35 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       setWorkout(enriched);
       StorageService.saveWorkout(enriched);
       onSave(enriched);
+
+      // Visual feedback: real-time autosave indicator
+      setAutoSaveStatus('saving');
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+      autoSaveTimerRef.current = setTimeout(() => {
+        setAutoSaveStatus('saved');
+        autoSaveTimerRef.current = setTimeout(() => {
+          setAutoSaveStatus('idle');
+        }, 2000);
+      }, 400);
     } catch (err) {
       console.error('Error in updateAndSave:', err);
+      setAutoSaveStatus('idle');
     }
   };
 
   // Workout Title & Metadata
   const handleTitleChange = (title: string) => {
-    updateAndSave({ ...workout, title });
+    updateAndSave({ ...workoutRef.current, title });
   };
 
   const handleDateChange = (scheduledDate: string) => {
-    updateAndSave({ ...workout, scheduledDate });
+    updateAndSave({ ...workoutRef.current, scheduledDate });
   };
 
   const handleNotesChange = (notes: string) => {
-    updateAndSave({ ...workout, notes });
+    updateAndSave({ ...workoutRef.current, notes });
   };
 
   // Preset workout titles
@@ -282,7 +306,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index) return;
 
-    const items = Array.from(workout.exercises);
+    const currentWorkout = workoutRef.current;
+    const items = Array.from(currentWorkout.exercises);
     const [reorderedItem] = items.splice(draggedIndex, 1);
     items.splice(index, 0, reorderedItem);
 
@@ -292,7 +317,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     }));
 
     setDraggedIndex(index);
-    updateAndSave({ ...workout, exercises: renumbered });
+    updateAndSave({ ...currentWorkout, exercises: renumbered });
   };
 
   const handleDragEnd = () => {
@@ -301,10 +326,11 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
   // Move Exercise Up/Down manually
   const handleMoveExercise = (index: number, direction: 'up' | 'down') => {
+    const currentWorkout = workoutRef.current;
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= workout.exercises.length) return;
+    if (targetIndex < 0 || targetIndex >= currentWorkout.exercises.length) return;
 
-    const items = [...workout.exercises];
+    const items = [...currentWorkout.exercises];
     const temp = items[index];
     items[index] = items[targetIndex];
     items[targetIndex] = temp;
@@ -314,21 +340,23 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       order: idx + 1,
     }));
 
-    updateAndSave({ ...workout, exercises: renumbered });
+    updateAndSave({ ...currentWorkout, exercises: renumbered });
   };
 
   // Delete exercise
   const handleRemoveExercise = (weId: string) => {
-    const updatedExercises = workout.exercises
+    const currentWorkout = workoutRef.current;
+    const updatedExercises = currentWorkout.exercises
       .filter((e) => e.id !== weId)
       .map((e, idx) => ({ ...e, order: idx + 1 }));
 
-    updateAndSave({ ...workout, exercises: updatedExercises });
+    updateAndSave({ ...currentWorkout, exercises: updatedExercises });
   };
 
   // Target Rep Range change (e.g. '8-12' -> '6-8')
   const handleTargetRepsRangeChange = (weId: string, range: string) => {
-    const updatedExercises = workout.exercises.map((e) => {
+    const currentWorkout = workoutRef.current;
+    const updatedExercises = currentWorkout.exercises.map((e) => {
       if (e.id === weId) {
         const updatedSets = e.sets.map((s) => ({ ...s, targetRepsRange: range }));
         return { ...e, targetRepsRange: range, sets: updatedSets };
@@ -336,12 +364,13 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       return e;
     });
 
-    updateAndSave({ ...workout, exercises: updatedExercises });
+    updateAndSave({ ...currentWorkout, exercises: updatedExercises });
   };
 
   // Fast set count selector (2, 3, 4, 5)
   const handleSetCountChange = (weId: string, count: number) => {
-    const updatedExercises = workout.exercises.map((e) => {
+    const currentWorkout = workoutRef.current;
+    const updatedExercises = currentWorkout.exercises.map((e) => {
       if (e.id === weId) {
         let sets = [...e.sets];
         if (count > sets.length) {
@@ -365,12 +394,13 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       return e;
     });
 
-    updateAndSave({ ...workout, exercises: updatedExercises });
+    updateAndSave({ ...currentWorkout, exercises: updatedExercises });
   };
 
   // Add individual set
   const handleAddSet = (weId: string) => {
-    const updatedExercises = workout.exercises.map((e) => {
+    const currentWorkout = workoutRef.current;
+    const updatedExercises = currentWorkout.exercises.map((e) => {
       if (e.id === weId) {
         const lastSet = e.sets[e.sets.length - 1];
         const newSet: WorkoutSet = {
@@ -388,12 +418,13 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       return e;
     });
 
-    updateAndSave({ ...workout, exercises: updatedExercises });
+    updateAndSave({ ...currentWorkout, exercises: updatedExercises });
   };
 
   // Remove individual set
   const handleRemoveSet = (weId: string, setId: string) => {
-    const updatedExercises = workout.exercises.map((e) => {
+    const currentWorkout = workoutRef.current;
+    const updatedExercises = currentWorkout.exercises.map((e) => {
       if (e.id === weId) {
         const filtered = e.sets.filter((s) => s.id !== setId);
         const renumbered = filtered.map((s, idx) => ({ ...s, setNumber: idx + 1 }));
@@ -402,7 +433,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       return e;
     });
 
-    updateAndSave({ ...workout, exercises: updatedExercises });
+    updateAndSave({ ...currentWorkout, exercises: updatedExercises });
   };
 
   // Update set weight / actual reps
@@ -412,7 +443,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     field: 'weight' | 'actualReps',
     value: number | null
   ) => {
-    const updatedExercises = workout.exercises.map((e) => {
+    const currentWorkout = workoutRef.current;
+    const updatedExercises = currentWorkout.exercises.map((e) => {
       if (e.id === weId) {
         const updatedSets = e.sets.map((s) => {
           if (s.id === setId) {
@@ -425,15 +457,16 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       return e;
     });
 
-    updateAndSave({ ...workout, exercises: updatedExercises });
+    updateAndSave({ ...currentWorkout, exercises: updatedExercises });
   };
 
   // Toggle complete set
   const handleToggleCompleteSet = (weId: string, setItem: WorkoutSet) => {
+    const currentWorkout = workoutRef.current;
     const isNowCompleted = !setItem.completedAt;
     const completedAt = isNowCompleted ? new Date().toISOString() : null;
 
-    const updatedExercises = workout.exercises.map((e) => {
+    const updatedExercises = currentWorkout.exercises.map((e) => {
       if (e.id === weId) {
         const updatedSets = e.sets.map((s) => {
           if (s.id === setItem.id) {
@@ -447,7 +480,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     });
 
     const updatedWorkout = {
-      ...workout,
+      ...currentWorkout,
       status: 'in_progress' as const,
       exercises: updatedExercises,
     };
@@ -463,13 +496,14 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
   // Group exercise into superset or unlink
   const handleToggleSuperset = (weIndex: number) => {
-    const current = workout.exercises[weIndex];
+    const currentWorkout = workoutRef.current;
+    const current = currentWorkout.exercises[weIndex];
     if (!current) return;
 
     if (current.supersetGroupId) {
       // Unlink current exercise from superset
       const oldGroup = current.supersetGroupId;
-      const updated = workout.exercises.map((e) => {
+      const updated = currentWorkout.exercises.map((e) => {
         if (e.id === current.id) {
           return { ...e, supersetGroupId: null };
         }
@@ -484,30 +518,30 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
           }
         });
       }
-      updateAndSave({ ...workout, exercises: updated });
+      updateAndSave({ ...currentWorkout, exercises: updated });
     } else {
       // Pair with next exercise, or with previous if at the end of the list
-      const next = workout.exercises[weIndex + 1];
-      const prev = workout.exercises[weIndex - 1];
+      const next = currentWorkout.exercises[weIndex + 1];
+      const prev = currentWorkout.exercises[weIndex - 1];
 
       if (next) {
         const newGroupId = next.supersetGroupId || `SS-${generateId('grp').slice(0, 4)}`;
-        const updated = workout.exercises.map((e, idx) => {
+        const updated = currentWorkout.exercises.map((e, idx) => {
           if (idx === weIndex || idx === weIndex + 1) {
             return { ...e, supersetGroupId: newGroupId };
           }
           return e;
         });
-        updateAndSave({ ...workout, exercises: updated });
+        updateAndSave({ ...currentWorkout, exercises: updated });
       } else if (prev) {
         const newGroupId = prev.supersetGroupId || `SS-${generateId('grp').slice(0, 4)}`;
-        const updated = workout.exercises.map((e, idx) => {
+        const updated = currentWorkout.exercises.map((e, idx) => {
           if (idx === weIndex || idx === weIndex - 1) {
             return { ...e, supersetGroupId: newGroupId };
           }
           return e;
         });
-        updateAndSave({ ...workout, exercises: updated });
+        updateAndSave({ ...currentWorkout, exercises: updated });
       }
     }
   };
@@ -631,6 +665,26 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 <span className="inline-flex items-center space-x-1 rounded-md px-2 py-0.5 text-[10px] font-semibold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                   <Award className="h-3 w-3" />
                   <span>Призначено тренером</span>
+                </span>
+              )}
+            </div>
+
+            {/* Autosave Real-time Status Badge */}
+            <div className="flex items-center space-x-1.5 text-[10px] sm:text-[11px] font-semibold shrink-0">
+              {autoSaveStatus === 'saving' ? (
+                <span className="inline-flex items-center space-x-1 rounded-md px-2 py-0.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 animate-pulse">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
+                  <span>Збереження...</span>
+                </span>
+              ) : autoSaveStatus === 'saved' ? (
+                <span className="inline-flex items-center space-x-1 rounded-md px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 animate-fade-in">
+                  <Check className="h-3 w-3 stroke-[2.5]" />
+                  <span>Збережено</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center space-x-1 rounded-md px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                  <Check className="h-3 w-3" />
+                  <span>Автозбереження</span>
                 </span>
               )}
             </div>
