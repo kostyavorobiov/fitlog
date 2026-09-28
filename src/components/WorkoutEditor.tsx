@@ -740,18 +740,18 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 <div className="block sm:hidden">
                   {/* Зона 1 — налаштування вправи */}
                   <div className="p-3 space-y-2">
-                    {/* Верхня частина картки: в одну лінію номер вправи, назва вправи, кнопки суперсет / вгору / вниз / видалити */}
-                    <div className="flex items-center justify-between gap-1.5 min-w-0">
-                      <div className="flex items-center space-x-1.5 min-w-0 flex-1">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 font-mono border border-zinc-200 dark:border-zinc-700">
+                    {/* Верхня частина картки: номер вправи, назва вправи (повністю видима з автопереносом), кнопки дій */}
+                    <div className="flex items-start justify-between gap-1.5 min-w-0">
+                      <div className="flex items-start space-x-1.5 min-w-0 flex-1">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 font-mono border border-zinc-200 dark:border-zinc-700 mt-0.5">
                           #{weIndex + 1}
                         </span>
-                        <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate min-w-0">
+                        <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 break-words leading-snug flex-1">
                           {exerciseName}
                         </h4>
                       </div>
 
-                      <div className="flex items-center space-x-1 shrink-0">
+                      <div className="flex items-center space-x-1 shrink-0 mt-0.5">
                         {currentExList.length > 1 && (
                           <button
                             type="button"
@@ -1358,11 +1358,71 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         )}
       </div>
 
-      {/* Floating / Bottom Action Bar (Fully responsive for mobile) */}
-      <div className="fixed sm:sticky bottom-14 sm:bottom-4 left-0 right-0 z-30 sm:rounded-xl border-t sm:border border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 p-3 sm:p-4 shadow-lg backdrop-blur-xs transition-colors">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+      {/* Mobile Action Buttons (in document flow right after the exercises list) */}
+      <div className="block sm:hidden mt-4 space-y-2.5 pb-6">
+        {/* Додати вправу */}
+        <button
+          type="button"
+          onClick={() => setIsSelectorOpen(true)}
+          className="w-full flex items-center justify-center space-x-2 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-3 px-4 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 dark:hover:border-zinc-600 active:scale-[0.99] transition-all cursor-pointer shadow-2xs"
+          title="Додати вправу до тренування"
+        >
+          <Plus className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+          <span>Додати вправу</span>
+        </button>
+
+        {/* Row: Зберегти + Виконано / Відновити */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={handleSaveWorkout}
+            className="flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white py-2.5 px-3 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer shadow-xs"
+            title="Зберегти поточний стан тренування"
+          >
+            <Save className="h-4 w-4" />
+            <span>Зберегти</span>
+          </button>
+
+          {workout.status !== 'completed' ? (
+            <button
+              type="button"
+              onClick={handleFinishWorkout}
+              className="flex items-center justify-center space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-3 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer shadow-xs"
+              title="Позначити тренування як виконане"
+            >
+              <Check className="h-4 w-4 stroke-[2.5]" />
+              <span>Виконано</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleRestoreWorkout}
+              className="flex items-center justify-center space-x-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white py-2.5 px-3 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer shadow-xs"
+              title="Відновити тренування (продовжити виконання)"
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span>Відновити</span>
+            </button>
+          )}
+        </div>
+
+        {/* Видалити тренування */}
+        <button
+          type="button"
+          onClick={() => setIsDeleteModalOpen(true)}
+          className="w-full flex items-center justify-center space-x-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 py-2.5 px-3 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-[0.99] transition-all cursor-pointer"
+          title="Видалити це тренування"
+        >
+          <Trash2 className="h-4 w-4" />
+          <span>Видалити тренування</span>
+        </button>
+      </div>
+
+      {/* Desktop Sticky Action Bar (hidden on mobile) */}
+      <div className="hidden sm:block sticky bottom-4 left-0 right-0 z-30 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 p-4 shadow-lg backdrop-blur-xs transition-colors">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2.5">
           {/* Workout quick stats */}
-          <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-4 text-xs border-b sm:border-b-0 border-zinc-100 dark:border-zinc-800 pb-2 sm:pb-0">
+          <div className="flex items-center justify-start gap-4 text-xs">
             <div className="flex items-center space-x-1">
               <Layers className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
               <span className="text-zinc-500 dark:text-zinc-400 text-[11px]">Вправ:</span>
@@ -1384,7 +1444,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             </div>
           </div>
 
-          {/* Buttons */}
+          {/* Desktop Buttons */}
           <div className="flex items-center space-x-2">
             <button
               type="button"
@@ -1393,13 +1453,13 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               title="Додати вправу до тренування"
             >
               <Plus className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-              <span className="hidden sm:inline">Вправа</span>
+              <span>Вправа</span>
             </button>
 
             <button
               type="button"
               onClick={handleSaveWorkout}
-              className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
+              className="flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
               title="Зберегти поточний стан тренування"
             >
               <Save className="h-4 w-4" />
@@ -1410,7 +1470,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               <button
                 type="button"
                 onClick={handleFinishWorkout}
-                className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
+                className="flex items-center justify-center space-x-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
                 title="Позначити тренування як виконане"
               >
                 <Check className="h-4 w-4 stroke-[2.5]" />
@@ -1420,7 +1480,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               <button
                 type="button"
                 onClick={handleRestoreWorkout}
-                className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
+                className="flex items-center justify-center space-x-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
                 title="Відновити тренування (продовжити виконання)"
               >
                 <RotateCcw className="h-4 w-4" />
