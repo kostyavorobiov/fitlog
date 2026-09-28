@@ -212,6 +212,37 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     'Тяга / Жим / Ноги',
   ];
 
+  // Position exercise card top edge slightly below the top navbar without smooth scrolling
+  const scrollToExerciseCard = (exerciseId: string) => {
+    if (typeof window === 'undefined') return;
+
+    window.dispatchEvent(new CustomEvent('show-navbar'));
+
+    const alignCard = () => {
+      const cardEl = document.getElementById(`exercise-card-${exerciseId}`);
+      if (cardEl) {
+        const navHeader = document.querySelector('header');
+        const navHeight = navHeader ? navHeader.offsetHeight : (window.innerWidth < 640 ? 56 : 64);
+        const offset = window.innerWidth < 640 ? 10 : 14;
+        const rect = cardEl.getBoundingClientRect();
+        const targetScrollY = Math.max(0, window.scrollY + rect.top - navHeight - offset);
+
+        window.scrollTo({
+          top: targetScrollY,
+          behavior: 'auto',
+        });
+        return true;
+      }
+      return false;
+    };
+
+    setTimeout(() => {
+      if (!alignCard()) {
+        setTimeout(alignCard, 100);
+      }
+    }, 60);
+  };
+
   // Add Exercise to Workout
   const handleSelectExercise = (exercise: Exercise) => {
     try {
@@ -294,23 +325,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       updateAndSave(updated);
       setIsSelectorOpen(false);
 
-      // On mobile: smoothly scroll/center screen so that the bottom button "Видалити тренування" is visible
+      // On mobile: position newly added exercise slightly below the top navbar without smooth scroll
       if (typeof window !== 'undefined' && window.innerWidth < 640) {
-        setTimeout(() => {
-          if (mobileDeleteWorkoutButtonRef.current) {
-            mobileDeleteWorkoutButtonRef.current.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-            });
-          } else {
-            setTimeout(() => {
-              mobileDeleteWorkoutButtonRef.current?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-              });
-            }, 150);
-          }
-        }, 150);
+        scrollToExerciseCard(weId);
       }
     } catch (err) {
       console.error('Failed to add exercise to workout:', err);
@@ -385,24 +402,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
     updateAndSave({ ...currentWorkout, exercises: updatedExercises });
 
-    // On mobile: smoothly scroll/center screen to the target exercise reusing the same effect as adding an exercise
+    // On mobile: position target exercise slightly below the top navbar without smooth scroll
     if (typeof window !== 'undefined' && window.innerWidth < 640 && targetExerciseId) {
-      setTimeout(() => {
-        const cardEl = document.getElementById(`exercise-card-${targetExerciseId}`);
-        if (cardEl) {
-          cardEl.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-          });
-        } else {
-          setTimeout(() => {
-            document.getElementById(`exercise-card-${targetExerciseId}`)?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-            });
-          }, 150);
-        }
-      }, 150);
+      scrollToExerciseCard(targetExerciseId);
     }
   };
 
