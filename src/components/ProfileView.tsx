@@ -199,27 +199,22 @@ export const ProfileView: React.FC = () => {
               <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                 Роль користувача
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['athlete', 'coach', 'admin'] as UserRole[]).map((r) => {
+              <div className={`grid ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
+                {((isAdmin ? ['athlete', 'coach', 'admin'] : ['athlete', 'coach']) as UserRole[]).map((r) => {
                   const info = roleLabels[r];
                   const isCurrent = selectedRole === r;
-                  const isRestrictedAdmin = r === 'admin' && user.email.toLowerCase() !== 'kvorobiov9@gmail.com';
                   return (
                     <button
                       key={r}
                       type="button"
-                      disabled={isRestrictedAdmin}
                       onClick={() => setSelectedRole(r)}
-                      className={`rounded-lg p-2 text-xs font-semibold border transition-colors text-center cursor-pointer ${
+                      className={`rounded-lg p-2.5 text-xs font-semibold border transition-colors text-center cursor-pointer ${
                         isCurrent
-                          ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950'
+                          ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
                           : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                      } ${isRestrictedAdmin ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      }`}
                     >
                       <div>{info.title}</div>
-                      {isRestrictedAdmin && (
-                        <div className="text-[9px] text-zinc-400 mt-0.5">kvorobiov9 only</div>
-                      )}
                     </button>
                   );
                 })}

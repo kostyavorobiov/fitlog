@@ -9,7 +9,6 @@ import {
   Activity,
   User,
   LogOut,
-  Sparkles,
   Users,
   Sun,
   Moon,
@@ -121,7 +120,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Вправи</span>
               </button>
 
-              {(isCoach || isAdmin) && (
+              {user?.role === 'coach' && (
                 <button
                   type="button"
                   onClick={() => onSelectTab('trainees')}
@@ -201,7 +200,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           <span>Мій профіль</span>
                         </button>
 
-                        {(isCoach || isAdmin) && (
+                        {user?.role === 'coach' && (
                           <button
                             type="button"
                             onClick={() => {
@@ -230,18 +229,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                           <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
                             {isDark ? 'Темна' : 'Світла'}
                           </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUserDropdown(false);
-                            onOpenAuthModal();
-                          }}
-                          className="w-full flex items-center space-x-2 rounded-lg px-3 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-                        >
-                          <Sparkles className="h-4 w-4 text-zinc-400" />
-                          <span>Змінити акаунт</span>
                         </button>
 
                         <button
@@ -334,7 +321,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="text-[10px]">Вправи</span>
         </button>
 
-        {(isCoach || isAdmin) && (
+        {user?.role === 'coach' && (
           <button
             type="button"
             onClick={() => onSelectTab('trainees')}

@@ -12,7 +12,6 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { ProfileView } from './components/ProfileView';
 import { TraineesView } from './components/TraineesView';
 import { GoogleAuthModal } from './components/GoogleAuthModal';
-import { RestTimerWidget } from './components/RestTimerWidget';
 
 const MainContent: React.FC = () => {
   const { user, isLoading, isCoach, isAdmin } = useAuth();
@@ -33,7 +32,6 @@ const MainContent: React.FC = () => {
     }
   });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [timerTriggerCount, setTimerTriggerCount] = useState(0);
 
   // Restore trainee reference if activeWorkout belongs to a trainee
   useEffect(() => {
@@ -162,7 +160,6 @@ const MainContent: React.FC = () => {
                 userId={activeWorkout.userId || user.id}
                 traineeName={editingTrainee ? (editingTrainee.name || editingTrainee.email) : undefined}
                 onSave={(saved) => setActiveWorkout(saved)}
-                onTriggerRestTimer={() => setTimerTriggerCount((prev) => prev + 1)}
                 onDeleteWorkout={handleDeleteWorkout}
                 onBack={handleBackFromWorkout}
               />
@@ -191,7 +188,7 @@ const MainContent: React.FC = () => {
           />
         )}
 
-        {currentTab === 'trainees' && user && (isCoach || isAdmin) && (
+        {currentTab === 'trainees' && user && user.role === 'coach' && (
           <TraineesView
             coach={user}
             selectedTraineeId={selectedTraineeId}
@@ -229,9 +226,6 @@ const MainContent: React.FC = () => {
           <ProfileView />
         )}
       </main>
-
-      {/* Floating Rest Timer */}
-      <RestTimerWidget autoStartTrigger={timerTriggerCount} />
 
       {/* Google Auth Modal */}
       <GoogleAuthModal
