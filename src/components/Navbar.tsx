@@ -52,7 +52,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   // Handle mobile navbar auto-hide on scroll
   useEffect(() => {
     let ticking = false;
-    let suppressHideUntil = 0;
 
     const handleScroll = () => {
       if (!ticking) {
@@ -65,10 +64,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             setIsNavVisible(true);
           } else if (diff > 8) {
             // Scrolling down the page (swiping up) -> hide navbar
-            if (Date.now() >= suppressHideUntil) {
-              setIsNavVisible(false);
-              setUserDropdown(false);
-            }
+            setIsNavVisible(false);
+            setUserDropdown(false);
           } else if (diff < -8) {
             // Scrolling up the page (swiping down) -> immediately show navbar
             setIsNavVisible(true);
@@ -81,16 +78,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       }
     };
 
-    const handleShowNavbar = () => {
-      setIsNavVisible(true);
-      suppressHideUntil = Date.now() + 1000;
-    };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('show-navbar', handleShowNavbar);
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('show-navbar', handleShowNavbar);
     };
   }, []);
 
