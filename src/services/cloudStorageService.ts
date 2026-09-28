@@ -35,9 +35,12 @@ export class CloudStorageService {
             superset_group_id,
             exercises (
               id,
+              user_id,
               name,
               muscle_group,
-              description
+              description,
+              is_default,
+              created_at
             ),
             workout_sets (
               id,
@@ -70,11 +73,12 @@ export class CloudStorageService {
               try {
                 StorageService.saveExercise({
                   id: exObj.id || we.exercise_id,
-                  userId: null,
+                  userId: exObj.user_id || null,
                   name: exObj.name,
                   muscleGroup: exObj.muscle_group || 'full_body',
                   description: exObj.description || '',
-                  createdAt: '2026-01-01T00:00:00.000Z',
+                  isDefault: Boolean(exObj.is_default),
+                  createdAt: exObj.created_at || '2026-01-01T00:00:00.000Z',
                 });
               } catch {}
             }
@@ -262,14 +266,13 @@ export class CloudStorageService {
   /**
    * Fetch custom and global exercises
    */
-  static async fetchExercises(userId: string): Promise<Exercise[] | null> {
+  static async fetchExercises(_userId?: string): Promise<Exercise[] | null> {
     if (!isSupabaseConfigured() || !supabase) return null;
 
     try {
       const { data, error } = await supabase
         .from('exercises')
         .select('*')
-        .or(`user_id.is.null,user_id.eq.${userId}`)
         .order('name');
 
       if (error) {
@@ -301,10 +304,16 @@ export class CloudStorageService {
     if (!isSupabaseConfigured() || !supabase) return false;
 
     try {
+      let effectiveUserId = exercise.userId;
+      if (!effectiveUserId) {
+        const { data: authData } = await supabase.auth.getUser();
+        effectiveUserId = authData?.user?.id || null;
+      }
+
       const { error } = await supabase.from('exercises').upsert(
         {
           id: exercise.id,
-          user_id: exercise.userId,
+          user_id: effectiveUserId,
           name: exercise.name,
           muscle_group: exercise.muscleGroup,
           description: exercise.description || '',

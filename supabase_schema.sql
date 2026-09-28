@@ -113,33 +113,68 @@ create policy "Users can insert their own profile"
   to authenticated
   with check (auth.uid() = id);
 
--- Exercises: Read global default exercises, own custom exercises, or assigned trainees' exercises
-create policy "Read default and own custom exercises"
+-- Exercises: Authenticated users can read default exercises and custom exercises created by themselves, coaches, or trainees
+drop policy if exists "Read default and own custom exercises" on public.exercises;
+drop policy if exists "Read default and custom exercises" on public.exercises;
+create policy "Read default and custom exercises"
   on public.exercises for select
   to authenticated
-  using (
-    user_id is null or
+  using (true);
+
+drop policy if exists "Create own custom exercises" on public.exercises;
+drop policy if exists "Create custom exercises" on public.exercises;
+create policy "Create custom exercises"
+  on public.exercises for insert
+  to authenticated
+  with check (
     user_id = auth.uid() or
+    user_id is null or
     exists (
       select 1 from public.profiles
-      where profiles.id = exercises.user_id and profiles.coach_id = auth.uid()
+      where (profiles.id = exercises.user_id and profiles.coach_id = auth.uid())
+         or (profiles.id = auth.uid() and profiles.coach_id = exercises.user_id)
+    ) or
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
     )
   );
 
-create policy "Create own custom exercises"
-  on public.exercises for insert
-  to authenticated
-  with check (user_id = auth.uid());
-
-create policy "Update own custom exercises"
+drop policy if exists "Update own custom exercises" on public.exercises;
+drop policy if exists "Update custom exercises" on public.exercises;
+create policy "Update custom exercises"
   on public.exercises for update
   to authenticated
-  using (user_id = auth.uid());
+  using (
+    user_id = auth.uid() or
+    exists (
+      select 1 from public.profiles
+      where (profiles.id = exercises.user_id and profiles.coach_id = auth.uid())
+         or (profiles.id = auth.uid() and profiles.coach_id = exercises.user_id)
+    ) or
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );
 
-create policy "Delete own custom exercises"
+drop policy if exists "Delete own custom exercises" on public.exercises;
+drop policy if exists "Delete custom exercises" on public.exercises;
+create policy "Delete custom exercises"
   on public.exercises for delete
   to authenticated
-  using (user_id = auth.uid());
+  using (
+    user_id = auth.uid() or
+    exists (
+      select 1 from public.profiles
+      where (profiles.id = exercises.user_id and profiles.coach_id = auth.uid())
+         or (profiles.id = auth.uid() and profiles.coach_id = exercises.user_id)
+    ) or
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );
 
 -- Workouts: Athletes can read/write their own; Coaches can read/write their trainees' workouts
 create policy "Read workouts"

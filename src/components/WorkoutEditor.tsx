@@ -1113,7 +1113,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 text-sm font-bold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
             >
               <Check className="h-5 w-5 stroke-[2.5]" />
-              <span>Виконано (Завершити тренування)</span>
+              <span>Виконано (Завершити тренування)</span> б
             </button>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
               Натисніть «Виконано», коли всі підходи виконані, щоб зафіксувати результати тренування.

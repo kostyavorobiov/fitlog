@@ -21,9 +21,13 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
 }) => {
   const [search, setSearch] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!isOpen) return;
+    StorageService.syncExercises().then(() => {
+      setRefreshKey((prev) => prev + 1);
+    });
     const scrollY = window.scrollY;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -35,7 +39,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
 
   const exercises = useMemo(() => {
     return StorageService.getExercises(userId);
-  }, [userId, isOpen]);
+  }, [userId, isOpen, refreshKey]);
 
   const filtered = useMemo(() => {
     return exercises.filter((ex) => {

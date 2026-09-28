@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CreateExerciseModal } from './CreateExerciseModal';
@@ -22,6 +22,12 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    StorageService.syncExercises().then(() => {
+      setRefreshKey((prev) => prev + 1);
+    });
+  }, [userId]);
 
   const exercises = useMemo(() => {
     return StorageService.getExercises(userId);

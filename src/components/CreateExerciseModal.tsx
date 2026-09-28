@@ -41,8 +41,10 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
       return;
     }
 
+    const creatorId = StorageService.getActiveUserId() || userId;
+
     const created = StorageService.createExercise({
-      userId,
+      userId: creatorId,
       name: name.trim(),
       muscleGroup,
       description: description.trim() || undefined,
