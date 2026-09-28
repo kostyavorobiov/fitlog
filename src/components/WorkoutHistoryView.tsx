@@ -4,7 +4,6 @@ import { StorageService, generateId } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateWorkoutModal } from './CreateWorkoutModal';
-import { useSwipeGesture } from '../utils/useSwipeGesture';
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -81,14 +80,6 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
     setCurrentCalendarDate(new Date(year, month + 1, 1));
   };
 
-  // Swipe navigation for calendar month:
-  // Swipe Left -> next month (вперед)
-  // Swipe Right -> previous month (назад)
-  const calendarSwipeRef = useSwipeGesture<HTMLDivElement>({
-    onSwipeLeft: handleNextMonth,
-    onSwipeRight: handlePrevMonth,
-    threshold: 60,
-  });
 
   const handleToday = () => {
     const today = new Date();
@@ -183,9 +174,6 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
           <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
             Календар
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            Перегляд графіка тренувань та планування занять на будь-яку дату
-          </p>
         </div>
 
         {/* Add Workout Button */}
@@ -207,7 +195,6 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
 
       {/* CALENDAR CARD - Minimal Flat */}
       <div
-        ref={calendarSwipeRef}
         className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
       >
         {/* Month & Year Navigation */}
@@ -279,27 +266,25 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
               <div
                 key={`day-${dayNum}`}
                 onClick={() => setSelectedCalendarDateStr(dateStr)}
-                className={`h-14 sm:h-20 rounded-lg border p-1 sm:p-1.5 cursor-pointer transition-colors flex flex-col justify-between ${
-                  isSelected
+                className={`h-14 sm:h-20 rounded-lg border p-1 sm:p-1.5 cursor-pointer transition-colors flex flex-col justify-between ${isSelected
                     ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900 dark:ring-zinc-100'
                     : isToday
-                    ? 'border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900'
-                    : dayWorkouts.length > 0
-                    ? 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
-                    : 'border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
-                }`}
+                      ? 'border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900'
+                      : dayWorkouts.length > 0
+                        ? 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
+                        : 'border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <span
-                    className={`text-[11px] sm:text-xs font-bold ${
-                      isSelected
+                    className={`text-[11px] sm:text-xs font-bold ${isSelected
                         ? 'text-zinc-950 dark:text-zinc-50'
                         : isToday
-                        ? 'text-zinc-900 dark:text-zinc-100 font-extrabold'
-                        : dayWorkouts.length > 0
-                        ? 'text-zinc-800 dark:text-zinc-200'
-                        : 'text-zinc-400 dark:text-zinc-500'
-                    }`}
+                          ? 'text-zinc-900 dark:text-zinc-100 font-extrabold'
+                          : dayWorkouts.length > 0
+                            ? 'text-zinc-800 dark:text-zinc-200'
+                            : 'text-zinc-400 dark:text-zinc-500'
+                      }`}
                   >
                     {dayNum}
                   </span>
@@ -318,11 +303,10 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                     return (
                       <div
                         key={dw.id}
-                        className={`truncate rounded px-1 py-0.5 text-[8px] sm:text-[9px] font-semibold border ${
-                          isDone
+                        className={`truncate rounded px-1 py-0.5 text-[8px] sm:text-[9px] font-semibold border ${isDone
                             ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
                             : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
-                        }`}
+                          }`}
                         title={dw.title}
                       >
                         <span className="hidden sm:inline">{dw.title || 'Тренування'}</span>
@@ -405,19 +389,18 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                   <div className="space-y-1 min-w-0 flex-1">
                     <div className="flex items-center space-x-2 text-xs">
                       <span
-                        className={`font-semibold ${
-                          isDone
+                        className={`font-semibold ${isDone
                             ? 'text-emerald-600 dark:text-emerald-400'
                             : w.status === 'in_progress'
-                            ? 'text-amber-600 dark:text-amber-400'
-                            : 'text-zinc-500 dark:text-zinc-400'
-                        }`}
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-zinc-500 dark:text-zinc-400'
+                          }`}
                       >
                         {isDone
                           ? 'Завершено'
                           : w.status === 'in_progress'
-                          ? 'У процесі'
-                          : 'Заплановано'}
+                            ? 'У процесі'
+                            : 'Заплановано'}
                       </span>
                       {w.assignedByCoachId && (
                         <>

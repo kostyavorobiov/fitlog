@@ -168,7 +168,8 @@ const MainContent: React.FC = () => {
   const swipeRef = useSwipeGesture<HTMLElement>({
     onSwipeLeft: handleSwipeLeft,
     onSwipeRight: handleSwipeRight,
-    threshold: 50,
+    threshold: 45,
+    disabled: !user || isAuthModalOpen || isLoading,
   });
 
   if (isLoading) {
