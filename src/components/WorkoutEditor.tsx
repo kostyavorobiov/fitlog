@@ -383,28 +383,20 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   // Delete exercise
   const handleRemoveExercise = (weId: string) => {
     const currentWorkout = workoutRef.current;
-    const deletedIndex = currentWorkout.exercises.findIndex((e) => e.id === weId);
+    const currentScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
 
     const updatedExercises = currentWorkout.exercises
       .filter((e) => e.id !== weId)
       .map((e, idx) => ({ ...e, order: idx + 1 }));
 
-    // Target exercise for smooth centering on mobile:
-    // Попередня вправа (безпосередньо перед видаленою), або наступна, якщо видалена перша
-    let targetExerciseId: string | null = null;
-    if (updatedExercises.length > 0) {
-      if (deletedIndex > 0) {
-        targetExerciseId = currentWorkout.exercises[deletedIndex - 1]?.id || updatedExercises[0].id;
-      } else {
-        targetExerciseId = updatedExercises[0]?.id || null;
-      }
-    }
-
     updateAndSave({ ...currentWorkout, exercises: updatedExercises });
 
-    // On mobile: position target exercise slightly below the top navbar without smooth scroll
-    if (typeof window !== 'undefined' && window.innerWidth < 640 && targetExerciseId) {
-      scrollToExerciseCard(targetExerciseId);
+    // При видаленні вправи позиція попередньої картки не змінюється, а наступна просто підтягується
+    if (typeof window !== 'undefined') {
+      window.scrollTo({
+        top: currentScrollY,
+        behavior: 'auto',
+      });
     }
   };
 
