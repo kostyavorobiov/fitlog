@@ -3,14 +3,15 @@ import { WorkoutPlan } from '../types/workout';
 import { StorageService, generateId } from '../services/storageService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateWorkoutModal } from './CreateWorkoutModal';
+import { useSwipeGesture } from '../utils/useSwipeGesture';
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Plus,
-  ChevronRight as ArrowRight,
-  Award,
   Trash2,
+  ChevronRight as ArrowRight,
+  Layers,
 } from 'lucide-react';
 
 interface WorkoutHistoryViewProps {
@@ -64,6 +65,15 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
   const handleNextMonth = () => {
     setCurrentCalendarDate(new Date(year, month + 1, 1));
   };
+
+  // Swipe navigation for calendar month:
+  // Swipe Left -> next month (вперед)
+  // Swipe Right -> previous month (назад)
+  const calendarSwipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: handleNextMonth,
+    onSwipeRight: handlePrevMonth,
+    threshold: 60,
+  });
 
   const handleToday = () => {
     const today = new Date();
@@ -153,17 +163,12 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
   return (
     <div className="space-y-5 max-w-5xl mx-auto animate-fade-in pb-12" key={reloadKey}>
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
-          <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
-              <CalendarIcon className="h-5 w-5" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Календар
-            </h1>
-          </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+            Календар
+          </h1>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
             Перегляд графіка тренувань та планування занять на будь-яку дату
           </p>
         </div>
@@ -171,35 +176,44 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
         {/* Add Workout Button */}
         <button
           type="button"
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center justify-center space-x-2 rounded-xl bg-amber-500 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-950 hover:bg-amber-400 active:scale-[0.98] transition shrink-0"
+          onClick={() => {
+            if (onCreateWorkout) {
+              onCreateWorkout('', selectedCalendarDateStr);
+            } else {
+              setIsCreateModalOpen(true);
+            }
+          }}
+          className="inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs sm:text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0"
         >
-          <Plus className="h-4 w-4 stroke-[2.5]" />
+          <Plus className="h-4 w-4" />
           <span>Додати тренування</span>
         </button>
       </div>
 
-      {/* CALENDAR CARD */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5 space-y-4">
+      {/* CALENDAR CARD - Minimal Flat */}
+      <div
+        ref={calendarSwipeRef}
+        className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
+      >
         {/* Month & Year Navigation */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-2 rounded-xl border border-slate-800 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+              className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               title="Попередній місяць"
               aria-label="Попередній місяць"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <h3 className="text-base sm:text-lg font-bold text-white min-w-[170px] text-center select-none">
+            <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 min-w-[150px] text-center select-none">
               {ukrainianMonths[month]} {year}
             </h3>
             <button
               type="button"
               onClick={handleNextMonth}
-              className="p-2 rounded-xl border border-slate-800 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+              className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               title="Наступний місяць"
               aria-label="Наступний місяць"
             >
@@ -210,31 +224,31 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
           <button
             type="button"
             onClick={handleToday}
-            className="rounded-xl border border-slate-700 bg-slate-800/90 px-3.5 py-1.5 text-xs font-bold text-amber-400 hover:bg-slate-700 hover:text-amber-300 transition shadow-sm"
+            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
           >
             Сьогодні
           </button>
         </div>
 
-        {/* Weekdays header (Mon - Sun) */}
-        <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] sm:text-xs text-slate-400 pb-1 border-b border-slate-800/60">
+        {/* Weekdays header */}
+        <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] sm:text-xs text-zinc-400 dark:text-zinc-500 pb-2 border-b border-zinc-100 dark:border-zinc-800">
           <div>Пн</div>
           <div>Вт</div>
           <div>Ср</div>
           <div>Чт</div>
           <div>Пт</div>
-          <div className="text-amber-400">Сб</div>
-          <div className="text-rose-400">Нд</div>
+          <div className="text-zinc-600 dark:text-zinc-400">Сб</div>
+          <div className="text-zinc-600 dark:text-zinc-400">Нд</div>
         </div>
 
         {/* Calendar Days Grid */}
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
           {calendarCells.map((dayNum, idx) => {
             if (dayNum === null) {
               return (
                 <div
                   key={`empty-${idx}`}
-                  className="h-16 sm:h-24 rounded-2xl bg-transparent"
+                  className="h-14 sm:h-20 rounded bg-transparent"
                 />
               );
             }
@@ -250,62 +264,62 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
               <div
                 key={`day-${dayNum}`}
                 onClick={() => setSelectedCalendarDateStr(dateStr)}
-                className={`h-16 sm:h-24 rounded-2xl border p-1.5 sm:p-2 cursor-pointer transition-all flex flex-col justify-between ${
+                className={`h-14 sm:h-20 rounded-lg border p-1 sm:p-1.5 cursor-pointer transition-colors flex flex-col justify-between ${
                   isSelected
-                    ? 'border-amber-400 bg-amber-500/15 ring-2 ring-amber-400/40 shadow-md shadow-amber-500/10'
+                    ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900 dark:ring-zinc-100'
                     : isToday
-                    ? 'border-amber-500/40 bg-slate-800/90 hover:bg-slate-800'
+                    ? 'border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-850'
                     : dayWorkouts.length > 0
-                    ? 'border-slate-700/80 bg-slate-850/80 hover:border-slate-600'
-                    : 'border-slate-800/60 bg-slate-900/40 hover:bg-slate-850/50 text-slate-500'
+                    ? 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
+                    : 'border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span
-                    className={`text-xs font-bold ${
+                    className={`text-[11px] sm:text-xs font-bold ${
                       isSelected
-                        ? 'text-amber-400 font-extrabold'
+                        ? 'text-zinc-950 dark:text-zinc-50'
                         : isToday
-                        ? 'text-white'
+                        ? 'text-zinc-900 dark:text-zinc-100 font-extrabold'
                         : dayWorkouts.length > 0
-                        ? 'text-slate-200'
-                        : 'text-slate-500'
+                        ? 'text-zinc-800 dark:text-zinc-200'
+                        : 'text-zinc-400 dark:text-zinc-500'
                     }`}
                   >
                     {dayNum}
                   </span>
                   {isToday && (
                     <span
-                      className="h-1.5 w-1.5 rounded-full bg-amber-400"
+                      className="h-1.5 w-1.5 rounded-full bg-amber-500"
                       title="Сьогодні"
                     />
                   )}
                 </div>
 
-                {/* Workout pills / indicators inside calendar day cell */}
-                <div className="space-y-1 overflow-hidden">
+                {/* Workout indicators */}
+                <div className="space-y-0.5 overflow-hidden">
                   {dayWorkouts.slice(0, 2).map((dw) => {
                     const isDone = dw.status === 'completed';
                     return (
                       <div
                         key={dw.id}
-                        className={`truncate rounded px-1 py-0.5 text-[9px] font-bold ${
+                        className={`truncate rounded px-1 py-0.5 text-[8px] sm:text-[9px] font-semibold border ${
                           isDone
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
                         }`}
                         title={dw.title}
                       >
-                        <span className="hidden sm:inline">{dw.title}</span>
+                        <span className="hidden sm:inline">{dw.title || 'Тренування'}</span>
                         <span className="sm:hidden">
-                          {isDone ? '✓' : '•'} {dw.exercises?.length || 0} впр
+                          {isDone ? '✓' : '•'} {dw.exercises?.length || 0}
                         </span>
                       </div>
                     );
                   })}
                   {dayWorkouts.length > 2 && (
-                    <div className="text-[8px] text-slate-400 font-mono text-center">
-                      +{dayWorkouts.length - 2} ще
+                    <div className="text-[8px] text-zinc-400 font-mono text-center">
+                      +{dayWorkouts.length - 2}
                     </div>
                   )}
                 </div>
@@ -316,43 +330,49 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
       </div>
 
       {/* SELECTED DATE DETAILS & WORKOUTS */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <div>
             <div className="flex items-center space-x-2">
-              <CalendarIcon className="h-4 w-4 text-amber-400" />
-              <h3 className="text-sm sm:text-base font-bold text-white">
+              <CalendarIcon className="h-4 w-4 text-zinc-500" />
+              <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
                 {formatUkDate(selectedCalendarDateStr)}
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
               {selectedDateWorkouts.length === 0
                 ? 'На цей день немає тренувань'
-                : `Заплановано / виконано тренувань: ${selectedDateWorkouts.length}`}
+                : `Тренувань на дату: ${selectedDateWorkouts.length}`}
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center justify-center space-x-1.5 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 transition shadow-md shrink-0"
+            onClick={() => {
+              if (onCreateWorkout) {
+                onCreateWorkout('', selectedCalendarDateStr);
+              } else {
+                setIsCreateModalOpen(true);
+              }
+            }}
+            className="inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0"
           >
-            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+            <Plus className="h-3.5 w-3.5" />
             <span>Додати тренування на цей день</span>
           </button>
         </div>
 
         {selectedDateWorkouts.length === 0 ? (
-          <div className="py-8 text-center text-xs text-slate-400 space-y-2">
-            <p className="text-slate-300 font-medium">
+          <div className="py-8 text-center text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
+            <p className="font-semibold text-zinc-700 dark:text-zinc-300">
               На обрану дату немає тренувань.
             </p>
-            <p className="text-slate-500 text-[11px] max-w-sm mx-auto">
-              Натисніть кнопку «Додати тренування на цей день», щоб скласти програму занять.
+            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 max-w-sm mx-auto">
+              Натисніть кнопку вище, щоб одразу скласти нову програму занять.
             </p>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {selectedDateWorkouts.map((w) => {
               const isDone = w.status === 'completed';
               const exercisesCount = w.exercises?.length || 0;
@@ -365,37 +385,39 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 <div
                   key={w.id}
                   onClick={() => onSelectWorkout(w)}
-                  className="group cursor-pointer rounded-2xl border border-slate-800 bg-slate-850/80 p-3.5 hover:border-amber-500/50 hover:bg-slate-800 transition flex items-center justify-between gap-3 shadow-md"
+                  className="group cursor-pointer rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors flex items-center justify-between gap-3"
                 >
                   <div className="space-y-1 min-w-0 flex-1">
-                    <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <div className="flex items-center space-x-2 text-xs">
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold border ${
+                        className={`font-semibold ${
                           isDone
-                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                            ? 'text-emerald-600 dark:text-emerald-400'
                             : w.status === 'in_progress'
-                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
-                            : 'border-slate-700 bg-slate-800 text-slate-400'
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-zinc-500 dark:text-zinc-400'
                         }`}
                       >
                         {isDone
-                          ? 'Завершено ✓'
+                          ? 'Завершено'
                           : w.status === 'in_progress'
-                          ? 'У процесі ⚡'
+                          ? 'У процесі'
                           : 'Заплановано'}
                       </span>
                       {w.assignedByCoachId && (
-                        <span className="rounded-full px-2 py-0.5 text-[9px] font-semibold border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 flex items-center space-x-1">
-                          <Award className="h-3 w-3" />
-                          <span>Від тренера</span>
-                        </span>
+                        <>
+                          <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                          <span className="text-indigo-600 dark:text-indigo-400 text-xs font-medium">
+                            Від тренера
+                          </span>
+                        </>
                       )}
                     </div>
-                    <h4 className="text-sm sm:text-base font-bold text-white group-hover:text-amber-400 transition truncate">
+                    <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white transition-colors truncate">
                       {w.title || 'Тренування без назви'}
                     </h4>
-                    <p className="text-[11px] text-slate-400">
-                      {exercisesCount} вправ • {setsCount} підходів
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      {exercisesCount} вправ · {setsCount} підходів
                     </p>
                   </div>
 
@@ -406,7 +428,7 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setWorkoutToDelete(w)}
-                      className="p-2 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                       title="Видалити тренування"
                       aria-label="Видалити тренування"
                     >
@@ -416,10 +438,10 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                     <button
                       type="button"
                       onClick={() => onSelectWorkout(w)}
-                      className="flex items-center space-x-1 rounded-xl bg-slate-800 group-hover:bg-amber-500 group-hover:text-slate-950 px-3 py-1.5 text-xs font-bold text-slate-300 transition"
+                      className="flex items-center space-x-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors"
                     >
                       <span>{isDone ? 'Переглянути' : 'Відкрити'}</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
+                      <ArrowRight className="h-3.5 w-3.5 text-zinc-400" />
                     </button>
                   </div>
                 </div>
@@ -429,7 +451,7 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
         )}
       </div>
 
-      {/* Create Workout Modal (pre-filled with the selected date) */}
+      {/* Create Workout Modal fallback */}
       <CreateWorkoutModal
         isOpen={isCreateModalOpen}
         initialDate={selectedCalendarDateStr}

@@ -69,41 +69,45 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fade-in"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
     >
       <div
-        className="relative w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] my-auto overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        data-no-swipe="true"
+        className="relative w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] my-auto overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
+          type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+          className="absolute right-4 top-4 rounded-lg p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
 
-        <div className="flex items-center space-x-3 mb-5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
-            <Dumbbell className="h-5 w-5" />
+        <div className="flex items-center space-x-2.5 mb-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+            <Dumbbell className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Нова вправа в базу</h3>
-            <p className="text-xs text-slate-400">Вправа буде доступна для вибору у всіх ваших тренуваннях</p>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Нова вправа в базу</h3>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Вправа буде доступна для вибору у всіх тренуваннях</p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+          <div className="mb-3 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 p-2.5 text-xs text-rose-700 dark:text-rose-300">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Назва вправи <span className="text-amber-400">*</span>
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+              Назва вправи *
             </label>
             <input
               type="text"
@@ -114,15 +118,15 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
                 setName(e.target.value);
                 if (error) setError('');
               }}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="w-full h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
               Цільова м'язова група
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => {
                 const info = MUSCLE_GROUPS[groupKey];
                 const isSelected = muscleGroup === groupKey;
@@ -131,10 +135,10 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
                     key={groupKey}
                     type="button"
                     onClick={() => setMuscleGroup(groupKey)}
-                    className={`rounded-xl px-2.5 py-2 text-xs font-medium border text-center transition ${
+                    className={`rounded-md p-2 text-xs font-semibold border text-center transition-colors cursor-pointer ${
                       isSelected
-                        ? `${info.badgeBg} ${info.badgeBorder} ring-1 ring-amber-400/50 text-white font-semibold`
-                        : 'border-slate-800 bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                        ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950'
+                        : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
                   >
                     {info.nameUk}
@@ -145,29 +149,29 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
               Опис / Техніка виконання (необов'язково)
             </label>
             <textarea
               rows={2}
-              placeholder="Положення ліктів, акцент скорочення, налаштування..."
+              placeholder="Положення ліктів, акцент скорочення..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none resize-none"
+              className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 resize-none"
             />
           </div>
 
-          <div className="flex space-x-3 pt-2">
+          <div className="flex items-center space-x-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-slate-700 bg-slate-800 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700 transition"
+              className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
             >
               Скасувати
             </button>
             <button
               type="submit"
-              className="flex-1 flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-2.5 text-sm font-bold text-slate-950 hover:from-amber-400 hover:to-orange-400 transition shadow-lg shadow-amber-500/20"
+              className="flex-1 h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>Зберегти вправу</span>

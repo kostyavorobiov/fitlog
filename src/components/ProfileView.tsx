@@ -1,25 +1,24 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { UserAvatar } from './UserAvatar';
 import {
-  User,
   Copy,
   Check,
-  ShieldAlert,
   Award,
   Users,
   Edit2,
   Save,
-  X,
   Mail,
-  Calendar,
-  Sparkles,
-  UserCheck,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { UserRole } from '../types/workout';
 import { StorageService } from '../services/storageService';
 
 export const ProfileView: React.FC = () => {
   const { user, updateUserProfile, isAdmin, isCoach } = useAuth();
+  const { theme, toggleTheme, setTheme, isDark } = useTheme();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [firstName, setFirstName] = useState(user?.firstName || '');
@@ -33,7 +32,7 @@ export const ProfileView: React.FC = () => {
     const idToCopy = user.profileCode || user.id;
     navigator.clipboard.writeText(idToCopy);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -48,120 +47,115 @@ export const ProfileView: React.FC = () => {
     setTimeout(() => setSaveToast(false), 3000);
   };
 
-  // Trainees count if coach
   const traineesCount = user.traineeIds?.length || 0;
-
-  // Coach name if athlete
   const coach = user.coachId ? StorageService.getUsers().find((u) => u.id === user.coachId) : null;
 
   const roleLabels: Record<UserRole, { title: string; color: string; bg: string; border: string }> = {
     admin: {
       title: 'Адміністратор',
-      color: 'text-rose-400',
-      bg: 'bg-rose-500/15',
-      border: 'border-rose-500/30',
+      color: 'text-rose-700 dark:text-rose-400',
+      bg: 'bg-rose-50 dark:bg-rose-950/40',
+      border: 'border-rose-200 dark:border-rose-800',
     },
     coach: {
       title: 'Тренер',
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/15',
-      border: 'border-amber-500/30',
+      color: 'text-indigo-700 dark:text-indigo-400',
+      bg: 'bg-indigo-50 dark:bg-indigo-950/40',
+      border: 'border-indigo-200 dark:border-indigo-800',
     },
     athlete: {
       title: 'Атлет',
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/15',
-      border: 'border-emerald-500/30',
+      color: 'text-emerald-700 dark:text-emerald-400',
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+      border: 'border-emerald-200 dark:border-emerald-800',
     },
   };
 
   const currentRoleInfo = roleLabels[user.role] || roleLabels.athlete;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-16">
+    <div className="max-w-4xl mx-auto space-y-5 animate-fade-in pb-16">
       {/* Toast Alert */}
       {saveToast && (
-        <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/80 p-3.5 flex items-center space-x-2 text-emerald-300 text-xs font-semibold animate-fade-in shadow-xl backdrop-blur-md">
-          <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+        <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-3 flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
+          <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>Профіль користувача успішно оновлено!</span>
         </div>
       )}
 
-      {/* Main Glassmorphism Profile Card */}
-      <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-        {/* Glow ambient background */}
-        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-
-        <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          {/* Avatar with role ring */}
-          <div className="relative group">
-            <img
+      {/* Main Profile Card - Minimal Functional Flat */}
+      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+          {/* Avatar with Role Badge */}
+          <div className="relative shrink-0">
+            <UserAvatar
               src={user.image}
               alt={user.name}
-              className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl border-2 border-white/20 object-cover shadow-2xl ring-4 ring-amber-500/20"
+              size="xl"
             />
-            <div className={`absolute -bottom-2 -right-2 rounded-full px-2.5 py-0.5 text-[10px] font-bold border shadow-lg ${currentRoleInfo.bg} ${currentRoleInfo.border} ${currentRoleInfo.color}`}>
+            <div className={`absolute -bottom-1.5 -right-1.5 rounded border px-2 py-0.5 text-[10px] font-bold ${currentRoleInfo.bg} ${currentRoleInfo.border} ${currentRoleInfo.color}`}>
               {currentRoleInfo.title}
             </div>
           </div>
 
           {/* User Details */}
-          <div className="flex-1 text-center sm:text-left space-y-2">
+          <div className="flex-1 text-center sm:text-left space-y-2 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                   {user.firstName || user.name} {user.lastName || ''}
                 </h2>
-                <div className="flex items-center justify-center sm:justify-start space-x-2 text-xs text-slate-400 mt-1">
-                  <Mail className="h-3.5 w-3.5 text-slate-500" />
+                <div className="flex items-center justify-center sm:justify-start space-x-1.5 text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  <Mail className="h-3.5 w-3.5" />
                   <span>{user.email}</span>
                 </div>
               </div>
 
               {!isEditing && (
                 <button
+                  type="button"
                   onClick={() => {
                     setFirstName(user.firstName || '');
                     setLastName(user.lastName || '');
                     setSelectedRole(user.role);
                     setIsEditing(true);
                   }}
-                  className="inline-flex items-center justify-center space-x-1.5 rounded-xl border border-white/10 bg-slate-800/80 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition shadow-sm"
+                  className="inline-flex items-center justify-center space-x-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer self-center sm:self-auto"
                 >
-                  <Edit2 className="h-3.5 w-3.5 text-amber-400" />
+                  <Edit2 className="h-3.5 w-3.5" />
                   <span>Редагувати профіль</span>
                 </button>
               )}
             </div>
 
-            {/* Profile ID Card (CRITICAL REQUIREMENT) */}
-            <div className="pt-3">
-              <div className="inline-flex flex-wrap items-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs">
-                <span className="text-slate-400 font-medium">Унікальний ID профілю:</span>
-                <span className="font-mono text-sm sm:text-base font-extrabold text-amber-400 tracking-wider">
+            {/* Profile ID Card */}
+            <div className="pt-2">
+              <div className="inline-flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs">
+                <span className="text-zinc-500 dark:text-zinc-400 font-medium">Унікальний ID профілю:</span>
+                <span className="font-mono text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 select-all">
                   {user.profileCode || user.id}
                 </span>
                 <button
+                  type="button"
                   onClick={handleCopyId}
-                  className="ml-1 inline-flex items-center space-x-1 rounded-lg bg-amber-500/20 border border-amber-500/40 px-2 py-1 text-[11px] font-bold text-amber-300 hover:bg-amber-500/30 active:scale-95 transition"
+                  className="inline-flex items-center space-x-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 py-0.5 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                   title="Скопіювати ID для прив'язки тренером"
                 >
                   {copied ? (
                     <>
-                      <Check className="h-3.5 w-3.5 text-emerald-400" />
-                      <span className="text-emerald-300">Скопійовано!</span>
+                      <Check className="h-3 w-3 text-emerald-500" />
+                      <span className="text-emerald-600 dark:text-emerald-400">Скопійовано!</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="h-3.5 w-3.5 text-amber-400" />
+                      <Copy className="h-3 w-3" />
                       <span>Скопіювати ID</span>
                     </>
                   )}
                 </button>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Цей унікальний ID використовується для прив'язки підопічного до тренера та розподілу ролей.
+              <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">
+                Цей ID використовується для зв'язку тренера з підопічним.
               </p>
             </div>
           </div>
@@ -169,15 +163,14 @@ export const ProfileView: React.FC = () => {
 
         {/* Edit Profile Form */}
         {isEditing && (
-          <form onSubmit={handleSaveProfile} className="mt-6 pt-6 border-t border-white/10 space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-              <Edit2 className="h-4 w-4 text-amber-400" />
-              <span>Редагування персональних даних</span>
+          <form onSubmit={handleSaveProfile} className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-3.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Редагування персональних даних
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                   Ім'я
                 </label>
                 <input
@@ -185,28 +178,26 @@ export const ProfileView: React.FC = () => {
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Костянтин"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800/90 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none"
+                  className="w-full h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                   Прізвище
                 </label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Воробйов"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800/90 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none"
+                  className="w-full h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Призначення ролі
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                Роль користувача
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {(['athlete', 'coach', 'admin'] as UserRole[]).map((r) => {
@@ -219,15 +210,15 @@ export const ProfileView: React.FC = () => {
                       type="button"
                       disabled={isRestrictedAdmin}
                       onClick={() => setSelectedRole(r)}
-                      className={`rounded-xl p-2.5 text-xs font-bold border transition text-center ${
+                      className={`rounded-lg p-2 text-xs font-semibold border transition-colors text-center cursor-pointer ${
                         isCurrent
-                          ? `${info.bg} ${info.border} ${info.color} ring-1 ring-amber-400/50`
-                          : 'border-slate-800 bg-slate-800/60 text-slate-400 hover:text-white'
+                          ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950'
+                          : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                       } ${isRestrictedAdmin ? 'opacity-40 cursor-not-allowed' : ''}`}
                     >
                       <div>{info.title}</div>
                       {isRestrictedAdmin && (
-                        <div className="text-[9px] text-slate-500 mt-0.5">kvorobiov9 only</div>
+                        <div className="text-[9px] text-zinc-400 mt-0.5">kvorobiov9 only</div>
                       )}
                     </button>
                   );
@@ -235,17 +226,17 @@ export const ProfileView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2.5 pt-2">
+            <div className="flex items-center space-x-2 pt-2">
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="flex-1 rounded-xl border border-slate-700 bg-slate-800 py-2.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
+                className="h-9 px-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 Скасувати
               </button>
               <button
                 type="submit"
-                className="flex-1 flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-2.5 text-xs font-bold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-orange-400 transition"
+                className="h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
               >
                 <Save className="h-4 w-4" />
                 <span>Зберегти зміни</span>
@@ -255,77 +246,111 @@ export const ProfileView: React.FC = () => {
         )}
       </div>
 
-      {/* Role specific blocks */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Theme Settings Card */}
+      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center space-x-2">
+            {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            <span>Тема інтерфейсу</span>
+          </h3>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            Виберіть оформлення програми: світлу або темну тему (вибір зберігається автоматично)
+          </p>
+        </div>
+
+        <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-0.5 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setTheme('light')}
+            className={`inline-flex items-center space-x-1.5 rounded px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+              !isDark
+                ? 'bg-white text-zinc-950 shadow-sm border border-zinc-200'
+                : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
+            }`}
+          >
+            <Sun className="h-3.5 w-3.5" />
+            <span>Світла</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTheme('dark')}
+            className={`inline-flex items-center space-x-1.5 rounded px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+              isDark
+                ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
+                : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
+            }`}
+          >
+            <Moon className="h-3.5 w-3.5" />
+            <span>Темна</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Role Privileges and Coach Connection Status */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Role Privileges Card */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-xl backdrop-blur-md space-y-3">
-          <div className="flex items-center space-x-2 text-white font-bold text-sm">
-            <Award className="h-4 w-4 text-amber-400" />
-            <span>Ваші права та можливості ({currentRoleInfo.title})</span>
+        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5">
+          <div className="flex items-center space-x-2 text-zinc-900 dark:text-zinc-100 font-bold text-xs uppercase tracking-wider">
+            <Award className="h-4 w-4" />
+            <span>Можливості ролі ({currentRoleInfo.title})</span>
           </div>
-          <ul className="text-xs text-slate-300 space-y-2">
+          <ul className="text-xs text-zinc-600 dark:text-zinc-400 space-y-1.5">
             <li className="flex items-center space-x-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              <span>Ведення персонального щоденника тренувань і підходів</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span>Ведення щоденника тренувань і підходів</span>
             </li>
             <li className="flex items-center space-x-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              <span>Доступ до глобальної бази вправ та історії ваг</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span>База вправ, історія ваг та персональні рекорди</span>
             </li>
             {isCoach && (
-              <li className="flex items-center space-x-2 text-amber-300 font-semibold">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                <span>Розділ «Підопічні»: створення тренувальних планів та контроль</span>
+              <li className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                <span>Розділ «Підопічні»: складання планів та контроль</span>
               </li>
             )}
             {isAdmin && (
-              <li className="flex items-center space-x-2 text-rose-300 font-semibold">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-                <span>Адмін-меню: керування глобальною базою вправ (створення та видалення)</span>
+              <li className="flex items-center space-x-2 text-rose-600 dark:text-rose-400 font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                <span>Адмін-доступ: глобальне керування базою</span>
               </li>
             )}
           </ul>
         </div>
 
         {/* Coach / Trainee Relationship Status */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-xl backdrop-blur-md space-y-3">
-          <div className="flex items-center space-x-2 text-white font-bold text-sm">
-            <Users className="h-4 w-4 text-indigo-400" />
+        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5">
+          <div className="flex items-center space-x-2 text-zinc-900 dark:text-zinc-100 font-bold text-xs uppercase tracking-wider">
+            <Users className="h-4 w-4" />
             <span>Тренерський статус</span>
           </div>
 
           {isCoach ? (
-            <div className="space-y-2">
-              <p className="text-xs text-slate-300">
-                Ви зареєстровані як <strong className="text-amber-400">Тренер</strong>. Ви можете додавати підопічних за їхнім кодом профілю та планувати для них тренування.
+            <div className="space-y-2 text-xs">
+              <p className="text-zinc-600 dark:text-zinc-400">
+                Ви зареєстровані як <strong>Тренер</strong>. Ви можете додавати спортсменів за їхнім ID.
               </p>
-              <div className="rounded-xl border border-slate-800 bg-slate-800/40 p-3 text-xs flex items-center justify-between">
-                <span className="text-slate-400">Прив'язаних підопічних:</span>
-                <span className="font-mono text-sm font-bold text-white">{traineesCount}</span>
+              <div className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 flex items-center justify-between">
+                <span className="text-zinc-500 dark:text-zinc-400">Прив'язаних підопічних:</span>
+                <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{traineesCount}</span>
               </div>
             </div>
           ) : coach ? (
-            <div className="space-y-2">
-              <p className="text-xs text-slate-300">
-                Ваш призначений тренер:
-              </p>
-              <div className="flex items-center space-x-3 rounded-xl border border-slate-800 bg-slate-800/40 p-3">
-                <img
-                  src={coach.image}
-                  alt={coach.name}
-                  className="h-9 w-9 rounded-full object-cover border border-amber-500/40"
-                />
+            <div className="space-y-2 text-xs">
+              <p className="text-zinc-600 dark:text-zinc-400">Ваш призначений тренер:</p>
+              <div className="flex items-center space-x-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5">
+                <UserAvatar src={coach.image} alt={coach.name} size="sm" />
                 <div>
-                  <div className="text-xs font-bold text-white">{coach.name}</div>
-                  <div className="text-[11px] text-slate-400">{coach.email}</div>
+                  <div className="font-bold text-zinc-900 dark:text-zinc-100">{coach.name}</div>
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{coach.email}</div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-2 text-xs text-slate-400">
-              <p>У вас ще немає призначеного тренера.</p>
+            <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
+              <p>У вас немає призначеного тренера.</p>
               <p>
-                Повідомте свій ID <strong className="text-amber-400 font-mono">{user.profileCode || user.id}</strong> вашому тренеру, щоб він міг додати вас до підопічних і складати персональні плани!
+                Повідомте ваш ID <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{user.profileCode || user.id}</span> тренеру для прикріплення.
               </p>
             </div>
           )}

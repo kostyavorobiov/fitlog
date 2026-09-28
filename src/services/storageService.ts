@@ -1,5 +1,6 @@
 import { Exercise, WorkoutPlan, PastExercisePerformance, User, WorkoutSet } from '../types/workout';
 import { DEFAULT_EXERCISES } from '../data/defaultExercises';
+import { CloudStorageService } from './cloudStorageService';
 
 const STORAGE_KEYS = {
   USERS: 'workout_diary_users',
@@ -99,6 +100,9 @@ export class StorageService {
     };
     all.push(newExercise);
     localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(all));
+    CloudStorageService.saveExercise(newExercise).catch((e) =>
+      console.warn('CloudStorageService.saveExercise background sync error:', e)
+    );
     return newExercise;
   }
 
@@ -269,6 +273,11 @@ export class StorageService {
 
     // KEY LOGIC: Synchronize future/uncompleted workouts if any exercise parameters were updated
     this.syncFutureWorkouts(workout);
+
+    // Sync to Supabase in the background
+    CloudStorageService.saveWorkout(workout).catch((e) =>
+      console.warn('CloudStorageService.saveWorkout background sync error:', e)
+    );
   }
 
   /**
@@ -378,8 +387,40 @@ export class StorageService {
     try {
       const all = (JSON.parse(raw) as WorkoutPlan[]).filter((w) => w.id !== workoutId);
       localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(all));
+      CloudStorageService.deleteWorkout(workoutId).catch((e) =>
+        console.warn('CloudStorageService.deleteWorkout background sync error:', e)
+      );
     } catch (e) {
       console.error(e);
+    }
+  }
+
+  /**
+   * Synchronize local state with Supabase cloud database
+   */
+  static async syncWithCloud(userId: string): Promise<void> {
+    try {
+      const cloudWorkouts = await CloudStorageService.fetchWorkouts(userId);
+      if (cloudWorkouts && cloudWorkouts.length > 0) {
+        const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
+        let localWorkouts: WorkoutPlan[] = raw ? JSON.parse(raw) : [];
+        const map = new Map<string, WorkoutPlan>();
+        localWorkouts.forEach((w) => map.set(w.id, w));
+        cloudWorkouts.forEach((cw) => map.set(cw.id, cw));
+        localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(Array.from(map.values())));
+      }
+
+      const cloudExercises = await CloudStorageService.fetchExercises(userId);
+      if (cloudExercises && cloudExercises.length > 0) {
+        const rawEx = localStorage.getItem(STORAGE_KEYS.EXERCISES);
+        let localExercises: Exercise[] = rawEx ? JSON.parse(rawEx) : [];
+        const mapEx = new Map<string, Exercise>();
+        localExercises.forEach((e) => mapEx.set(e.id, e));
+        cloudExercises.forEach((ce) => mapEx.set(ce.id, ce));
+        localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(Array.from(mapEx.values())));
+      }
+    } catch (err) {
+      console.warn('syncWithCloud error:', err);
     }
   }
 

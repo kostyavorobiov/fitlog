@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { WorkoutPlan } from './types/workout';
+import { ThemeProvider } from './context/ThemeContext';
+import { WorkoutPlan, User } from './types/workout';
 import { StorageService, generateId } from './services/storageService';
 import { Navbar } from './components/Navbar';
 import { WorkoutListView } from './components/WorkoutListView';
@@ -12,7 +13,6 @@ import { ProfileView } from './components/ProfileView';
 import { TraineesView } from './components/TraineesView';
 import { GoogleAuthModal } from './components/GoogleAuthModal';
 import { RestTimerWidget } from './components/RestTimerWidget';
-import { Dumbbell } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { user, isLoading, isCoach, isAdmin } = useAuth();
@@ -21,12 +21,36 @@ const MainContent: React.FC = () => {
   >('editor');
   const [workoutViewMode, setWorkoutViewMode] = useState<'list' | 'editor'>('list');
   const [activeWorkout, setActiveWorkout] = useState<WorkoutPlan | null>(null);
+  const [editingTrainee, setEditingTrainee] = useState<User | null>(null);
+  const [selectedTraineeId, setSelectedTraineeId] = useState<string | null>(() => {
+    try {
+      return (
+        new URLSearchParams(window.location.search).get('trainee') ||
+        localStorage.getItem('fitlog_selected_trainee_id')
+      );
+    } catch {
+      return null;
+    }
+  });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [timerTriggerCount, setTimerTriggerCount] = useState(0);
+
+  // Restore trainee reference if activeWorkout belongs to a trainee
+  useEffect(() => {
+    if (activeWorkout && user && activeWorkout.userId && activeWorkout.userId !== user.id) {
+      const trainees = StorageService.getTrainees(user.id);
+      const matched = trainees.find((t) => t.id === activeWorkout.userId);
+      if (matched) {
+        setEditingTrainee(matched);
+        setSelectedTraineeId(matched.id);
+      }
+    }
+  }, [activeWorkout, user]);
 
   // Helper to create a fresh workout
   const handleCreateNewWorkout = (title: string, scheduledDate: string) => {
     if (!user) return;
+    setEditingTrainee(null);
     const newWorkout: WorkoutPlan = {
       id: generateId('workout'),
       userId: user.id,
@@ -44,44 +68,83 @@ const MainContent: React.FC = () => {
   };
 
   const handleSelectWorkout = (workout: WorkoutPlan) => {
+    setEditingTrainee(null);
     setActiveWorkout(workout);
     setWorkoutViewMode('editor');
   };
 
   const handleSelectWorkoutFromHistory = (workout: WorkoutPlan) => {
+    setEditingTrainee(null);
     setActiveWorkout(workout);
     setWorkoutViewMode('editor');
     setCurrentTab('editor');
+  };
+
+  // Trainee Plan creation and editing handler
+  const handleOpenTraineeWorkout = (traineeWorkout: WorkoutPlan, trainee: User) => {
+    setEditingTrainee(trainee);
+    setSelectedTraineeId(trainee.id);
+    try {
+      localStorage.setItem('fitlog_selected_trainee_id', trainee.id);
+      const url = new URL(window.location.href);
+      url.searchParams.set('trainee', trainee.id);
+      window.history.replaceState({}, '', url.toString());
+    } catch (e) {
+      console.error(e);
+    }
+    setActiveWorkout(traineeWorkout);
+    setWorkoutViewMode('editor');
+    setCurrentTab('editor');
+  };
+
+  // Handle returning from WorkoutEditor back to appropriate context
+  const handleBackFromWorkout = () => {
+    if (editingTrainee) {
+      // Crucial UX requirement: Return to that trainee's workouts!
+      setCurrentTab('trainees');
+      setActiveWorkout(null);
+      setWorkoutViewMode('list');
+    } else {
+      setWorkoutViewMode('list');
+      setActiveWorkout(null);
+    }
   };
 
   const handleDeleteWorkout = (deletedId: string) => {
     if (!user) return;
     StorageService.deleteWorkout(deletedId);
     if (activeWorkout?.id === deletedId) {
-      setActiveWorkout(null);
-      setWorkoutViewMode('list');
+      if (editingTrainee) {
+        setCurrentTab('trainees');
+        setActiveWorkout(null);
+        setWorkoutViewMode('list');
+      } else {
+        setActiveWorkout(null);
+        setWorkoutViewMode('list');
+      }
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
         <div className="flex flex-col items-center space-y-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
-          <p className="text-xs text-slate-400 font-mono">Завантаження щоденника...</p>
+          <div className="h-9 w-9 animate-spin rounded-full border-2 border-zinc-300 dark:border-zinc-700 border-t-zinc-900 dark:border-t-zinc-100" />
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">Завантаження щоденника...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-150">
       {/* Navigation */}
       <Navbar
         currentTab={currentTab}
         onSelectTab={(tab) => {
           setCurrentTab(tab);
           if (tab === 'editor') {
+            setEditingTrainee(null);
             setWorkoutViewMode('list');
           }
         }}
@@ -89,7 +152,7 @@ const MainContent: React.FC = () => {
         hasActiveWorkout={Boolean(activeWorkout && activeWorkout.status === 'in_progress')}
       />
 
-      {/* Main View Container (with bottom padding for mobile tab bar) */}
+      {/* Main View Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-8">
         {currentTab === 'editor' && user && (
           <div>
@@ -97,10 +160,11 @@ const MainContent: React.FC = () => {
               <WorkoutEditor
                 workout={activeWorkout}
                 userId={activeWorkout.userId || user.id}
+                traineeName={editingTrainee ? (editingTrainee.name || editingTrainee.email) : undefined}
                 onSave={(saved) => setActiveWorkout(saved)}
                 onTriggerRestTimer={() => setTimerTriggerCount((prev) => prev + 1)}
                 onDeleteWorkout={handleDeleteWorkout}
-                onBack={() => setWorkoutViewMode('list')}
+                onBack={handleBackFromWorkout}
               />
             ) : (
               <WorkoutListView
@@ -119,6 +183,7 @@ const MainContent: React.FC = () => {
             onSelectWorkout={handleSelectWorkoutFromHistory}
             onCreateWorkout={handleCreateNewWorkout}
             onCreateNew={() => {
+              setEditingTrainee(null);
               setCurrentTab('editor');
               setWorkoutViewMode('list');
             }}
@@ -129,11 +194,26 @@ const MainContent: React.FC = () => {
         {currentTab === 'trainees' && user && (isCoach || isAdmin) && (
           <TraineesView
             coach={user}
-            onOpenWorkoutEditor={(traineeWorkout) => {
-              setActiveWorkout(traineeWorkout);
-              setWorkoutViewMode('editor');
-              setCurrentTab('editor');
+            selectedTraineeId={selectedTraineeId}
+            onSelectTraineeId={(id) => {
+              setSelectedTraineeId(id);
+              try {
+                if (id) {
+                  localStorage.setItem('fitlog_selected_trainee_id', id);
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('trainee', id);
+                  window.history.replaceState({}, '', url.toString());
+                } else {
+                  localStorage.removeItem('fitlog_selected_trainee_id');
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete('trainee');
+                  window.history.replaceState({}, '', url.toString());
+                }
+              } catch (e) {
+                console.error(e);
+              }
             }}
+            onOpenWorkoutEditor={handleOpenTraineeWorkout}
           />
         )}
 
@@ -164,8 +244,10 @@ const MainContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <MainContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <MainContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

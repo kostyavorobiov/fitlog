@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, Trash2, X } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
@@ -42,55 +42,60 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-full h-[100dvh] z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overscroll-contain animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs overscroll-contain animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md my-auto rounded-2xl border border-rose-500/30 bg-slate-900 p-5 sm:p-6 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        data-no-swipe="true"
+        className="relative w-full max-w-md my-auto rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute right-3.5 top-3.5 rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+          className="absolute right-3.5 top-3.5 rounded-lg p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           aria-label="Закрити"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
 
-        <div className="flex items-start space-x-3.5 mb-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400">
-            <Trash2 className="h-6 w-6" />
+        <div className="flex items-start space-x-3 mb-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400">
+            <Trash2 className="h-5 w-5" />
           </div>
           <div className="pr-4">
-            <h3 className="text-lg font-bold text-white leading-tight">{title}</h3>
-            <p className="text-xs text-slate-400 mt-1">{message}</p>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{title}</h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{message}</p>
           </div>
         </div>
 
         {/* Workout preview card */}
         {(workoutTitle || workoutDate) && (
-          <div className="rounded-xl border border-slate-800 bg-slate-850/80 p-3 mb-5">
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 mb-4">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-white truncate max-w-[200px] sm:max-w-[260px]">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200 truncate max-w-[200px] sm:max-w-[260px]">
                 {workoutTitle || 'Тренування'}
               </span>
               {isCompleted && (
-                <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                <span className="rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
                   Завершене
                 </span>
               )}
             </div>
             {workoutDate && (
-              <div className="text-[11px] text-slate-400 mt-1 font-mono">Дата: {workoutDate}</div>
+              <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 font-mono">
+                Дата: {workoutDate}
+              </div>
             )}
           </div>
         )}
 
-        <div className="flex items-center space-x-2.5">
+        <div className="flex items-center space-x-2">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-slate-700 bg-slate-800 py-2.5 text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition"
+            className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
           >
             {cancelLabel}
           </button>
@@ -100,7 +105,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
               onConfirm();
               onClose();
             }}
-            className="flex-1 flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-rose-600/30 hover:from-rose-500 hover:to-red-500 transition"
+            className="flex-1 h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors cursor-pointer"
           >
             <Trash2 className="h-4 w-4" />
             <span>{confirmLabel}</span>
