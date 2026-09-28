@@ -276,6 +276,52 @@ export class StorageService {
     }
   }
 
+  /**
+   * Delete all exercises except those that are already used or recorded in workouts
+   */
+  static async cleanupUnusedExercises(): Promise<{ deletedCount: number; keptCount: number }> {
+    // 1. Gather all exercise IDs and names referenced in any workouts in memory
+    const usedIds = new Set<string>();
+    const usedNames = new Set<string>();
+
+    memoryStore.workouts.forEach((w) => {
+      (w.exercises || []).forEach((we) => {
+        if (we.exerciseId) usedIds.add(we.exerciseId);
+        if (we.exerciseName) usedNames.add(we.exerciseName.toLowerCase().trim());
+      });
+    });
+
+    // 2. Perform cleanup in Supabase cloud
+    let cloudResult = { deletedCount: 0, keptCount: 0 };
+    try {
+      cloudResult = await CloudStorageService.cleanupUnusedExercises();
+    } catch (e) {
+      console.warn('Cloud cleanup error:', e);
+    }
+
+    // 3. Filter memoryStore.exercises: keep only used ones
+    const initialCount = memoryStore.exercises.length;
+    memoryStore.exercises = memoryStore.exercises.filter((ex) => {
+      return usedIds.has(ex.id) || usedNames.has(ex.name.toLowerCase().trim());
+    });
+    const memoryDeleted = initialCount - memoryStore.exercises.length;
+
+    // 4. If Supabase is connected, refresh from cloud
+    try {
+      const refreshed = await CloudStorageService.fetchExercises();
+      if (refreshed) {
+        memoryStore.exercises = refreshed;
+      }
+    } catch (e) {
+      console.warn('Refresh after cleanup error:', e);
+    }
+
+    return {
+      deletedCount: Math.max(cloudResult.deletedCount, memoryDeleted),
+      keptCount: memoryStore.exercises.length,
+    };
+  }
+
   // --- COACH & TRAINEES RELATIONSHIPS ---
   static getRemovedTraineeIds(coachUserId: string): string[] {
     return memoryStore.removedTraineesByCoach.get(coachUserId) || [];
@@ -731,16 +777,13 @@ export class StorageService {
    */
   static async syncWithCloud(userId: string): Promise<void> {
     try {
-      // Ensure default exercises exist in Supabase
-      CloudStorageService.ensureDefaultExercises().catch((e) =>
-        console.warn('ensureDefaultExercises error:', e)
-      );
-
       const cloudWorkouts = await CloudStorageService.fetchWorkouts(userId);
       if (cloudWorkouts !== null) {
         this.setWorkoutsForUser(userId, cloudWorkouts);
       }
 
+      // Automatically clean up any unused exercises in Supabase & memory
+      await this.cleanupUnusedExercises();
       await this.syncExercises();
     } catch (err) {
       console.warn('syncWithCloud error:', err);

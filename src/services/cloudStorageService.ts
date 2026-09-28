@@ -707,6 +707,57 @@ export class CloudStorageService {
   }
 
   /**
+   * Delete all exercises from Supabase except those currently used in workout_exercises
+   */
+  static async cleanupUnusedExercises(): Promise<{ deletedCount: number; keptCount: number }> {
+    if (!isSupabaseConfigured() || !supabase) return { deletedCount: 0, keptCount: 0 };
+    try {
+      // 1. Fetch all distinct exercise_ids used in workout_exercises
+      const { data: usedRows, error: weErr } = await supabase
+        .from('workout_exercises')
+        .select('exercise_id');
+
+      if (weErr) {
+        console.warn('cleanupUnusedExercises error fetching workout_exercises:', weErr);
+        return { deletedCount: 0, keptCount: 0 };
+      }
+
+      const usedIdSet = new Set(
+        (usedRows || []).map((r: any) => r.exercise_id).filter(Boolean)
+      );
+
+      // 2. Fetch all exercises from exercises table
+      const { data: allExercises, error: exErr } = await supabase
+        .from('exercises')
+        .select('id, name');
+
+      if (exErr || !allExercises) {
+        console.warn('cleanupUnusedExercises error fetching exercises:', exErr);
+        return { deletedCount: 0, keptCount: 0 };
+      }
+
+      const unusedExercises = allExercises.filter((ex: any) => !usedIdSet.has(ex.id));
+
+      if (unusedExercises.length === 0) {
+        return { deletedCount: 0, keptCount: allExercises.length };
+      }
+
+      const unusedIds = unusedExercises.map((ex: any) => ex.id);
+
+      // 3. Delete unused exercises from database in chunks of 50
+      for (let i = 0; i < unusedIds.length; i += 50) {
+        const chunk = unusedIds.slice(i, i + 50);
+        await supabase.from('exercises').delete().in('id', chunk);
+      }
+
+      return { deletedCount: unusedIds.length, keptCount: usedIdSet.size };
+    } catch (err) {
+      console.warn('cleanupUnusedExercises error:', err);
+      return { deletedCount: 0, keptCount: 0 };
+    }
+  }
+
+  /**
    * Fetch trainees for coach
    */
   static async fetchTrainees(coachId: string): Promise<User[]> {
