@@ -153,11 +153,39 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     setRefreshKey((k) => k + 1);
   };
 
-  // Trainee Workouts
-  const traineeWorkouts = selectedTrainee ? StorageService.getWorkouts(selectedTrainee.id) : [];
+  // Trainee Workouts: keep in reactive state and sync with Supabase cloud
+  const [traineeWorkouts, setTraineeWorkouts] = useState<WorkoutPlan[]>([]);
+
+  useEffect(() => {
+    if (!selectedTrainee) {
+      setTraineeWorkouts([]);
+      return;
+    }
+    // 1. Initial local load
+    setTraineeWorkouts(StorageService.getWorkouts(selectedTrainee.id));
+
+    // 2. Fetch from cloud and merge
+    let isSubscribed = true;
+    CloudStorageService.fetchWorkouts(selectedTrainee.id).then((cloudWorkouts) => {
+      if (!isSubscribed) return;
+      if (cloudWorkouts && cloudWorkouts.length > 0) {
+        const raw = localStorage.getItem('workout_diary_workouts');
+        let localWorkouts: WorkoutPlan[] = raw ? JSON.parse(raw) : [];
+        const map = new Map<string, WorkoutPlan>();
+        localWorkouts.forEach((w) => map.set(w.id, w));
+        cloudWorkouts.forEach((cw) => map.set(cw.id, cw));
+        localStorage.setItem('workout_diary_workouts', JSON.stringify(Array.from(map.values())));
+        setTraineeWorkouts(StorageService.getWorkouts(selectedTrainee.id));
+      }
+    });
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [selectedTrainee?.id, refreshKey]);
 
   // Create new plan for selected trainee using the unified workout editor
-  const handleCreatePlanForTrainee = () => {
+  const handleCreatePlanForTrainee = async () => {
     if (!selectedTrainee) return;
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -177,12 +205,16 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     };
 
     StorageService.saveWorkout(newWorkout);
+    // Explicitly await cloud save to guarantee it's in Supabase
+    await CloudStorageService.saveWorkout(newWorkout);
+    setRefreshKey((k) => k + 1);
     onOpenWorkoutEditor(newWorkout, selectedTrainee);
   };
 
-  const handleConfirmDeleteWorkout = () => {
+  const handleConfirmDeleteWorkout = async () => {
     if (!workoutToDelete) return;
     StorageService.deleteWorkout(workoutToDelete.id);
+    await CloudStorageService.deleteWorkout(workoutToDelete.id);
     setWorkoutToDelete(null);
     setRefreshKey((k) => k + 1);
     showToast('Тренування видалено', 'success');

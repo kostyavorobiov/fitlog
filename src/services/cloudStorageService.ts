@@ -143,12 +143,20 @@ export class CloudStorageService {
     if (!isSupabaseConfigured() || !supabase) return false;
 
     try {
+      let effectiveCoachId = workout.assignedByCoachId || null;
+      if (!effectiveCoachId) {
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user?.id && authData.user.id !== workout.userId) {
+          effectiveCoachId = authData.user.id;
+        }
+      }
+
       // 1. Upsert Workout row
       const { error: wError } = await supabase.from('workouts').upsert(
         {
           id: workout.id,
           user_id: workout.userId,
-          assigned_by_coach_id: workout.assignedByCoachId || null,
+          assigned_by_coach_id: effectiveCoachId,
           title: workout.title || 'Тренування',
           scheduled_date: workout.scheduledDate,
           status: workout.status,
@@ -305,7 +313,9 @@ export class CloudStorageService {
 
     try {
       let effectiveUserId = exercise.userId;
-      if (!effectiveUserId) {
+      if (exercise.isDefault) {
+        effectiveUserId = null;
+      } else if (!effectiveUserId) {
         const { data: authData } = await supabase.auth.getUser();
         effectiveUserId = authData?.user?.id || null;
       }
@@ -330,6 +340,24 @@ export class CloudStorageService {
       return true;
     } catch (err) {
       console.warn('Failed to save exercise in cloud:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Delete exercise from cloud
+   */
+  static async deleteExercise(exerciseId: string): Promise<boolean> {
+    if (!isSupabaseConfigured() || !supabase) return false;
+    try {
+      const { error } = await supabase.from('exercises').delete().eq('id', exerciseId);
+      if (error) {
+        console.warn('deleteExercise error:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Failed to delete exercise in cloud:', err);
       return false;
     }
   }
@@ -589,6 +617,12 @@ export class CloudStorageService {
   static async ensureDefaultExercises(): Promise<void> {
     if (!isSupabaseConfigured() || !supabase) return;
     try {
+      if (DEFAULT_EXERCISES.length === 0) {
+        // Clean out legacy preset exercises
+        await supabase.from('exercises').delete().like('id', 'def_ex_%');
+        return;
+      }
+
       const defaultRows = DEFAULT_EXERCISES.map((ex, idx) => ({
         id: `def_ex_${idx + 1}`,
         name: ex.name,

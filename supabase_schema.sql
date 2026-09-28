@@ -186,6 +186,10 @@ create policy "Read workouts"
     exists (
       select 1 from public.profiles
       where profiles.id = workouts.user_id and profiles.coach_id = auth.uid()
+    ) or
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
     )
   );
 
@@ -194,9 +198,14 @@ create policy "Insert workouts"
   to authenticated
   with check (
     user_id = auth.uid() or
+    assigned_by_coach_id = auth.uid() or
     exists (
       select 1 from public.profiles
       where profiles.id = workouts.user_id and profiles.coach_id = auth.uid()
+    ) or
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
     )
   );
 
@@ -209,6 +218,10 @@ create policy "Update workouts"
     exists (
       select 1 from public.profiles
       where profiles.id = workouts.user_id and profiles.coach_id = auth.uid()
+    ) or
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
     )
   );
 
@@ -221,6 +234,10 @@ create policy "Delete workouts"
     exists (
       select 1 from public.profiles
       where profiles.id = workouts.user_id and profiles.coach_id = auth.uid()
+    ) or
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
     )
   );
 
@@ -237,6 +254,27 @@ create policy "Manage workout exercises"
         exists (
           select 1 from public.profiles
           where profiles.id = workouts.user_id and profiles.coach_id = auth.uid()
+        ) or
+        exists (
+          select 1 from public.profiles
+          where profiles.id = auth.uid() and profiles.role = 'admin'
+        )
+      )
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.workouts
+      where workouts.id = workout_exercises.workout_id and (
+        workouts.user_id = auth.uid() or
+        workouts.assigned_by_coach_id = auth.uid() or
+        exists (
+          select 1 from public.profiles
+          where profiles.id = workouts.user_id and profiles.coach_id = auth.uid()
+        ) or
+        exists (
+          select 1 from public.profiles
+          where profiles.id = auth.uid() and profiles.role = 'admin'
         )
       )
     )
@@ -255,6 +293,28 @@ create policy "Manage workout sets"
         exists (
           select 1 from public.profiles
           where profiles.id = workouts.user_id and profiles.coach_id = auth.uid()
+        ) or
+        exists (
+          select 1 from public.profiles
+          where profiles.id = auth.uid() and profiles.role = 'admin'
+        )
+      )
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.workout_exercises
+      join public.workouts on workouts.id = workout_exercises.workout_id
+      where workout_exercises.id = workout_sets.workout_exercise_id and (
+        workouts.user_id = auth.uid() or
+        workouts.assigned_by_coach_id = auth.uid() or
+        exists (
+          select 1 from public.profiles
+          where profiles.id = workouts.user_id and profiles.coach_id = auth.uid()
+        ) or
+        exists (
+          select 1 from public.profiles
+          where profiles.id = auth.uid() and profiles.role = 'admin'
         )
       )
     )

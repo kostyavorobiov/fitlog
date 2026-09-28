@@ -13,8 +13,12 @@ import {
   Sun,
   Moon,
   Loader2,
+  Shield,
+  Trash2,
+  Plus,
+  Dumbbell,
 } from 'lucide-react';
-import { UserRole } from '../types/workout';
+import { UserRole, Exercise } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -31,6 +35,61 @@ export const ProfileView: React.FC = () => {
   const [coachInputCode, setCoachInputCode] = useState('');
   const [isLinkingCoach, setIsLinkingCoach] = useState(false);
   const [coachToast, setCoachToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Admin menu state for managing global exercise database
+  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+  const [newGlobalExName, setNewGlobalExName] = useState('');
+  const [isAddingGlobalEx, setIsAddingGlobalEx] = useState(false);
+  const [globalExercises, setGlobalExercises] = useState<Exercise[]>([]);
+  const [adminToast, setAdminToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const refreshGlobalExercises = () => {
+    const list = StorageService.initializeExercises().filter(
+      (e) => e.isDefault || e.userId === null
+    );
+    setGlobalExercises(list);
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      refreshGlobalExercises();
+    }
+  }, [isAdmin]);
+
+  const handleAddGlobalExercise = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanName = newGlobalExName.trim();
+    if (!cleanName) {
+      setAdminToast({ text: 'Введіть назву вправи', type: 'error' });
+      return;
+    }
+
+    setIsAddingGlobalEx(true);
+    try {
+      const created = StorageService.createGlobalExercise({
+        name: cleanName,
+        muscleGroup: 'full_body',
+        description: '',
+      });
+      await CloudStorageService.saveExercise(created);
+      setNewGlobalExName('');
+      refreshGlobalExercises();
+      setAdminToast({ text: `Вправу "${cleanName}" додано до глобальної бази!`, type: 'success' });
+    } catch {
+      setAdminToast({ text: 'Помилка при додаванні вправи', type: 'error' });
+    } finally {
+      setIsAddingGlobalEx(false);
+      setTimeout(() => setAdminToast(null), 3500);
+    }
+  };
+
+  const handleDeleteGlobalExercise = async (exerciseId: string, name: string) => {
+    StorageService.deleteExercise(exerciseId);
+    await CloudStorageService.deleteExercise(exerciseId);
+    refreshGlobalExercises();
+    setAdminToast({ text: `Вправу "${name}" видалено`, type: 'success' });
+    setTimeout(() => setAdminToast(null), 3000);
+  };
 
   if (!user) return null;
 
@@ -362,6 +421,114 @@ export const ProfileView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Admin Menu: Visible only to Administrators */}
+      {isAdmin && (
+        <div className="rounded-lg border border-purple-200 dark:border-purple-900/60 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center space-x-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
+                <Shield className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center space-x-2">
+                  <span>Меню адміністратора</span>
+                  <span className="text-[10px] bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold px-2 py-0.5 rounded">
+                    Лише для адміна
+                  </span>
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Управління глобальною базою вправ, доступною для всіх користувачів
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsAdminMenuOpen(!isAdminMenuOpen)}
+              className="h-8 px-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold transition-colors cursor-pointer inline-flex items-center space-x-1.5 self-start sm:self-auto"
+            >
+              <Dumbbell className="h-3.5 w-3.5" />
+              <span>{isAdminMenuOpen ? 'Згорнути панель' : 'Відкрити базу вправ'}</span>
+            </button>
+          </div>
+
+          {isAdminMenuOpen && (
+            <div className="pt-3 border-t border-purple-100 dark:border-purple-900/40 space-y-4 animate-fade-in">
+              {/* Form to add exercise to global base: ONLY name input and submit */}
+              <form onSubmit={handleAddGlobalExercise} className="space-y-2">
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                  Додати вправу в глобальну базу:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Назва вправи (наприклад: Жим штанги лежачи)"
+                    value={newGlobalExName}
+                    onChange={(e) => setNewGlobalExName(e.target.value)}
+                    disabled={isAddingGlobalEx}
+                    className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isAddingGlobalEx || !newGlobalExName.trim()}
+                    className="h-9 px-4 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center space-x-1.5"
+                  >
+                    {isAddingGlobalEx ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                    <span>Додати</span>
+                  </button>
+                </div>
+              </form>
+
+              {adminToast && (
+                <div
+                  className={`p-2.5 rounded-lg text-xs font-medium ${
+                    adminToast.type === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                      : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                  }`}
+                >
+                  {adminToast.text}
+                </div>
+              )}
+
+              {/* Global exercises list with count and delete buttons */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+                  <span>
+                    Вправ у глобальній базі: <strong className="text-zinc-900 dark:text-zinc-100">{globalExercises.length}</strong>
+                  </span>
+                </div>
+
+                {globalExercises.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 p-6 text-center text-xs text-zinc-400">
+                    Глобальна база порожня. Додайте першу вправу вище.
+                  </div>
+                ) : (
+                  <div className="max-h-60 overflow-y-auto space-y-1 rounded-lg border border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-50/50 dark:bg-zinc-950/50">
+                    {globalExercises.map((ex) => (
+                      <div
+                        key={ex.id}
+                        className="flex items-center justify-between p-2 rounded-md bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs"
+                      >
+                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{ex.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGlobalExercise(ex.id, ex.name)}
+                          className="p-1 rounded text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                          title="Видалити з глобальної бази"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Role Privileges and Coach Connection Status */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -38,11 +38,21 @@ export class StorageService {
     const users = this.getUsers();
     const index = users.findIndex((u) => u.id === user.id);
     if (index >= 0) {
-      users[index] = user;
+      const existing = users[index];
+      users[index] = {
+        ...existing,
+        ...user,
+        traineeIds: user.traineeIds !== undefined ? user.traineeIds : existing.traineeIds,
+        coachId: user.coachId !== undefined ? user.coachId : existing.coachId,
+      };
     } else {
       users.push(user);
     }
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  }
+
+  static getUserById(id: string): User | undefined {
+    return this.getUsers().find((u) => u.id === id);
   }
 
   static getActiveUserId(): string | null {
@@ -60,24 +70,21 @@ export class StorageService {
   // --- EXERCISES ---
   static initializeExercises(): Exercise[] {
     const raw = localStorage.getItem(STORAGE_KEYS.EXERCISES);
+    let stored: Exercise[] = [];
     if (raw) {
       try {
-        const stored = JSON.parse(raw) as Exercise[];
-        if (stored.length > 0) return stored;
+        stored = JSON.parse(raw) as Exercise[];
       } catch (e) {
         console.error('Failed to parse exercises', e);
       }
     }
 
-    // Seed default exercises with stable IDs
-    const seeded: Exercise[] = DEFAULT_EXERCISES.map((ex, idx) => ({
-      ...ex,
-      id: `def_ex_${idx + 1}`,
-      createdAt: '2026-01-01T00:00:00.000Z',
-    }));
-
-    localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(seeded));
-    return seeded;
+    // Filter out old def_ex_* default exercises to satisfy wiping all existing default exercises
+    const cleaned = stored.filter((ex) => !ex.id.startsWith('def_ex_'));
+    if (cleaned.length !== stored.length || !raw) {
+      localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(cleaned));
+    }
+    return cleaned;
   }
 
   static async syncExercises(): Promise<Exercise[]> {
@@ -87,7 +94,12 @@ export class StorageService {
         const all = this.initializeExercises();
         const mapEx = new Map<string, Exercise>();
         all.forEach((e) => mapEx.set(e.id, e));
-        cloudExercises.forEach((ce) => mapEx.set(ce.id, ce));
+        cloudExercises.forEach((ce) => {
+          // Do not re-add old legacy def_ex_* exercises
+          if (!ce.id.startsWith('def_ex_')) {
+            mapEx.set(ce.id, ce);
+          }
+        });
         const merged = Array.from(mapEx.values());
         localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(merged));
         return merged;
@@ -98,60 +110,56 @@ export class StorageService {
     return this.initializeExercises();
   }
 
-  static getExercises(userId: string | null): Exercise[] {
+  static getWorkoutsForUserAndCoach(userId?: string | null, otherUserId?: string | null): WorkoutPlan[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
+    if (!raw) return [];
+    try {
+      const all = JSON.parse(raw) as WorkoutPlan[];
+      return all.filter((w) => {
+        if (userId && (w.userId === userId || w.assignedByCoachId === userId)) return true;
+        if (otherUserId && (w.userId === otherUserId || w.assignedByCoachId === otherUserId)) return true;
+        return false;
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  static getExercises(targetUserId: string | null): Exercise[] {
     const all = this.initializeExercises();
-    if (!userId) return all;
 
-    const users = this.getUsers();
     const activeUserId = this.getActiveUserId();
+    const users = this.getUsers();
 
-    const targetUser = users.find((u) => u.id === userId);
     const activeUser = users.find((u) => u.id === activeUserId);
+    const targetUser = users.find((u) => u.id === targetUserId);
 
     // Admins see all exercises
-    if (targetUser?.role === 'admin' || activeUser?.role === 'admin') {
+    if (activeUser?.role === 'admin' || targetUser?.role === 'admin') {
       return all;
     }
 
-    // Set of allowed user IDs whose custom exercises should be visible
-    const allowedUserIds = new Set<string>();
-    if (userId) allowedUserIds.add(userId);
-    if (activeUserId) allowedUserIds.add(activeUserId);
-
-    // If targetUser has a coach, include the coach's exercises
-    if (targetUser?.coachId) {
-      allowedUserIds.add(targetUser.coachId);
-    }
-    // If activeUser has a coach, include the coach's exercises
-    if (activeUser?.coachId) {
-      allowedUserIds.add(activeUser.coachId);
-    }
-
-    // If targetUser or activeUser has traineeIds, include their trainees' exercises
-    if (targetUser?.traineeIds && Array.isArray(targetUser.traineeIds)) {
-      targetUser.traineeIds.forEach((id) => allowedUserIds.add(id));
-    }
-    if (activeUser?.traineeIds && Array.isArray(activeUser.traineeIds)) {
-      activeUser.traineeIds.forEach((id) => allowedUserIds.add(id));
-    }
-
-    // Cross-check all known users for coach/trainee linkage
-    users.forEach((u) => {
-      // If user u is coached by targetUser or activeUser
-      if ((targetUser && u.coachId === targetUser.id) || (activeUser && u.coachId === activeUser.id)) {
-        allowedUserIds.add(u.id);
-      }
-      // If targetUser or activeUser is coached by u
-      if ((targetUser && targetUser.coachId === u.id) || (activeUser && activeUser.coachId === u.id)) {
-        allowedUserIds.add(u.id);
-      }
+    // Collect all exercise IDs used in workouts accessible to activeUser or targetUser
+    const relevantWorkouts = this.getWorkoutsForUserAndCoach(targetUserId, activeUserId);
+    const usedExerciseIds = new Set<string>();
+    relevantWorkouts.forEach((w) => {
+      (w.exercises || []).forEach((we) => {
+        if (we.exerciseId) usedExerciseIds.add(we.exerciseId);
+      });
     });
 
     return all.filter((ex) => {
-      // Default/global exercises are visible to all
-      if (ex.userId === null || ex.isDefault) return true;
-      // Custom exercises created by the user, their coach, or their trainee
-      return allowedUserIds.has(ex.userId);
+      // 1. Global / default exercises are visible to all
+      if (ex.isDefault || ex.userId === null) return true;
+
+      // 2. Creator sees their own exercises
+      if (activeUserId && ex.userId === activeUserId) return true;
+      if (targetUserId && ex.userId === targetUserId) return true;
+
+      // 3. User sees custom exercise created by coach or trainee IF formed into a workout!
+      if (usedExerciseIds.has(ex.id)) return true;
+
+      return false;
     });
   }
 
@@ -234,6 +242,9 @@ export class StorageService {
     };
     all.push(newExercise);
     localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(all));
+    CloudStorageService.saveExercise(newExercise).catch((e) =>
+      console.warn('CloudStorageService.saveExercise global exercise error:', e)
+    );
     return newExercise;
   }
 
@@ -243,6 +254,9 @@ export class StorageService {
     if (idx >= 0) {
       all[idx] = exercise;
       localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(all));
+      CloudStorageService.saveExercise(exercise).catch((e) =>
+        console.warn('CloudStorageService.saveExercise update error:', e)
+      );
     }
   }
 
@@ -250,6 +264,9 @@ export class StorageService {
     const all = this.initializeExercises();
     const filtered = all.filter((e) => e.id !== exerciseId);
     localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(filtered));
+    CloudStorageService.deleteExercise(exerciseId).catch((e) =>
+      console.warn('CloudStorageService.deleteExercise error:', e)
+    );
   }
 
   // --- COACH & TRAINEES RELATIONSHIPS ---

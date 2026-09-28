@@ -55,6 +55,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await CloudStorageService.updateProfile(profile.id, { role: 'admin' });
       }
 
+      if (profile.role === 'coach' || profile.role === 'admin') {
+        try {
+          const cloudTrainees = await CloudStorageService.fetchTrainees(profile.id);
+          const removed = StorageService.getRemovedTraineeIds(profile.id);
+          const activeCloudIds = (cloudTrainees || []).map((t) => t.id).filter((id) => !removed.includes(id));
+          const existingUser = StorageService.getUserById(profile.id);
+          profile.traineeIds = Array.from(
+            new Set([
+              ...(existingUser?.traineeIds || []).filter((id) => !removed.includes(id)),
+              ...activeCloudIds,
+            ])
+          );
+        } catch (e) {
+          console.warn('Failed to load cloud trainees in handleSupabaseUser:', e);
+        }
+      }
+
       setUser(profile);
       StorageService.saveUser(profile);
       StorageService.setActiveUserId(profile.id);

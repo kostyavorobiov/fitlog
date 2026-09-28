@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Activity,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Search,
 } from 'lucide-react';
@@ -23,6 +24,7 @@ export type AnalyticsPeriod = 'day' | 'week' | 'month';
 
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>('week');
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [viewMode, setViewMode] = useState<'prs' | 'all'>('prs');
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +37,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
     const currentIndex = periods.indexOf(selectedPeriod);
     if (currentIndex < periods.length - 1) {
       setSelectedPeriod(periods[currentIndex + 1]);
+      setCurrentDate(new Date());
     }
   };
 
@@ -42,6 +45,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
     const currentIndex = periods.indexOf(selectedPeriod);
     if (currentIndex > 0) {
       setSelectedPeriod(periods[currentIndex - 1]);
+      setCurrentDate(new Date());
     }
   };
 
@@ -53,31 +57,144 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
 
   const workouts = useMemo(() => StorageService.getWorkouts(userId), [userId]);
 
-  // Helper to determine the local time range for the period
-  const periodRange = useMemo(() => {
-    const now = new Date();
-    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  // Navigate date backwards/forwards for Day, Week, Month
+  const handlePrevDate = () => {
+    setCurrentDate((prev) => {
+      const d = new Date(prev);
+      if (selectedPeriod === 'day') {
+        d.setDate(d.getDate() - 1);
+      } else if (selectedPeriod === 'week') {
+        d.setDate(d.getDate() - 7);
+      } else {
+        d.setMonth(d.getMonth() - 1);
+      }
+      return d;
+    });
+  };
+
+  const handleNextDate = () => {
+    setCurrentDate((prev) => {
+      const d = new Date(prev);
+      if (selectedPeriod === 'day') {
+        d.setDate(d.getDate() + 1);
+      } else if (selectedPeriod === 'week') {
+        d.setDate(d.getDate() + 7);
+      } else {
+        d.setMonth(d.getMonth() + 1);
+      }
+      return d;
+    });
+  };
+
+  const handleToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Helper to determine the local time range and formatted strings for the period
+  const periodInfo = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const date = currentDate.getDate();
 
     if (selectedPeriod === 'day') {
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-      return { start, end, titleUk: '1 день (Сьогодні)' };
+      const start = new Date(year, month, date, 0, 0, 0, 0);
+      const end = new Date(year, month, date, 23, 59, 59, 999);
+      const targetDayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+
+      const today = new Date();
+      const isToday =
+        today.getFullYear() === year &&
+        today.getMonth() === month &&
+        today.getDate() === date;
+
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const isYesterday =
+        yesterday.getFullYear() === year &&
+        yesterday.getMonth() === month &&
+        yesterday.getDate() === date;
+
+      const formatter = new Intl.DateTimeFormat('uk-UA', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      const formatted = formatter.format(currentDate);
+
+      const titleUk = isToday
+        ? `Сьогодні, ${formatted}`
+        : isYesterday
+        ? `Вчора, ${formatted}`
+        : formatted;
+
+      return {
+        type: 'day' as const,
+        start,
+        end,
+        targetDayStr,
+        titleUk,
+        isCurrent: isToday,
+      };
     }
 
     if (selectedPeriod === 'week') {
-      const day = now.getDay();
-      const diffToMonday = (day + 6) % 7;
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday, 0, 0, 0, 0);
-      return { start, end, titleUk: '1 тиждень (з Пн)' };
+      const dayOfWeek = currentDate.getDay();
+      const diffToMonday = (dayOfWeek + 6) % 7;
+      const monday = new Date(year, month, date - diffToMonday, 0, 0, 0, 0);
+      const sunday = new Date(year, month, date - diffToMonday + 6, 23, 59, 59, 999);
+
+      const mY = monday.getFullYear();
+      const mM = String(monday.getMonth() + 1).padStart(2, '0');
+      const mD = String(monday.getDate()).padStart(2, '0');
+      const weekStartStr = `${mY}-${mM}-${mD}`;
+
+      const sY = sunday.getFullYear();
+      const sM = String(sunday.getMonth() + 1).padStart(2, '0');
+      const sD = String(sunday.getDate()).padStart(2, '0');
+      const weekEndStr = `${sY}-${sM}-${sD}`;
+
+      const now = new Date();
+      const isCurrentWeek = now >= monday && now <= sunday;
+
+      const f = new Intl.DateTimeFormat('uk-UA', { day: 'numeric', month: 'short' });
+      const titleUk = `${f.format(monday)} — ${f.format(sunday)} ${sunday.getFullYear()}`;
+
+      return {
+        type: 'week' as const,
+        start: monday,
+        end: sunday,
+        weekStartStr,
+        weekEndStr,
+        titleUk,
+        isCurrent: isCurrentWeek,
+      };
     }
 
-    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    return { start, end, titleUk: '1 місяць (з 1-го числа)' };
-  }, [selectedPeriod]);
+    // Month
+    const start = new Date(year, month, 1, 0, 0, 0, 0);
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const end = new Date(year, month, lastDay, 23, 59, 59, 999);
+    const targetMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-  // Compute stats filtered by selected period
+    const now = new Date();
+    const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month;
+
+    const f = new Intl.DateTimeFormat('uk-UA', { month: 'long', year: 'numeric' });
+    const formatted = f.format(currentDate);
+    const capitalized = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+
+    return {
+      type: 'month' as const,
+      start,
+      end,
+      targetMonthStr,
+      titleUk: capitalized,
+      isCurrent: isCurrentMonth,
+    };
+  }, [selectedPeriod, currentDate]);
+
+  // Compute stats filtered strictly by selected period & workout date
   const stats = useMemo(() => {
-    const { start, end } = periodRange;
-
     let periodVolumeKg = 0;
     let periodCompletedSets = 0;
     const periodWorkoutsSet = new Set<string>();
@@ -89,43 +206,65 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
     > = {};
 
     workouts.forEach((w) => {
+      // Determine workout date in YYYY-MM-DD
+      const workoutDateStr =
+        w.scheduledDate ||
+        (w.completedAt ? w.completedAt.split('T')[0] : '') ||
+        (w.createdAt ? w.createdAt.split('T')[0] : '');
+
+      if (!workoutDateStr) return;
+
+      // Filter workout by period
+      let workoutInPeriod = false;
+      if (periodInfo.type === 'day') {
+        workoutInPeriod = workoutDateStr === periodInfo.targetDayStr;
+      } else if (periodInfo.type === 'week') {
+        workoutInPeriod =
+          workoutDateStr >= periodInfo.weekStartStr &&
+          workoutDateStr <= periodInfo.weekEndStr;
+      } else if (periodInfo.type === 'month') {
+        workoutInPeriod = workoutDateStr.startsWith(periodInfo.targetMonthStr);
+      }
+
+      if (!workoutInPeriod) return;
+
       let workoutHasPeriodActivity = false;
 
       (w.exercises || []).forEach((we) => {
         const ex = StorageService.getExerciseById(we.exerciseId);
-        const muscle = ex?.muscleGroup || 'full_body';
+        const muscle = ex?.muscleGroup || we.muscleGroup || 'full_body';
 
         (we.sets || []).forEach((s) => {
-          if (s.completedAt && s.weight !== undefined && s.weight !== null && s.actualReps && s.actualReps > 0) {
-            const setDate = new Date(s.completedAt);
+          const isSetDone = Boolean(s.completedAt) || w.status === 'completed';
+          const reps = s.actualReps !== null && s.actualReps !== undefined ? s.actualReps : 0;
+          const weight = s.weight !== null && s.weight !== undefined ? s.weight : 0;
 
-            if (setDate >= start && setDate <= end) {
-              const vol = s.weight * s.actualReps;
-              periodVolumeKg += vol;
-              periodCompletedSets += 1;
-              workoutHasPeriodActivity = true;
+          if (isSetDone && reps > 0) {
+            const vol = weight * reps;
+            periodVolumeKg += vol;
+            periodCompletedSets += 1;
+            workoutHasPeriodActivity = true;
 
-              muscleSetsMap[muscle] = (muscleSetsMap[muscle] || 0) + 1;
+            muscleSetsMap[muscle] = (muscleSetsMap[muscle] || 0) + 1;
 
-              if (ex) {
-                const currentEx = exerciseMaxMap[ex.id];
-                if (!currentEx || s.weight > currentEx.maxWeight) {
-                  exerciseMaxMap[ex.id] = {
-                    id: ex.id,
-                    name: ex.name,
-                    maxWeight: s.weight,
-                    reps: s.actualReps,
-                    muscle,
-                    exercise: ex,
-                  };
-                }
+            if (ex && weight > 0) {
+              const currentEx = exerciseMaxMap[ex.id];
+              if (!currentEx || weight > currentEx.maxWeight || (weight === currentEx.maxWeight && reps > currentEx.reps)) {
+                exerciseMaxMap[ex.id] = {
+                  id: ex.id,
+                  name: ex.name,
+                  maxWeight: weight,
+                  reps,
+                  muscle,
+                  exercise: ex,
+                };
               }
             }
           }
         });
       });
 
-      if (workoutHasPeriodActivity) {
+      if (workoutHasPeriodActivity || w.status === 'completed') {
         periodWorkoutsSet.add(w.id);
       }
     });
@@ -142,7 +281,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       allTrackedExercises: allTracked,
       topPRs,
     };
-  }, [workouts, periodRange]);
+  }, [workouts, periodInfo]);
 
   const displayedExercises = useMemo(() => {
     let list = viewMode === 'prs' ? stats.topPRs : stats.allTrackedExercises;
@@ -183,17 +322,62 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
               <button
                 key={p.key}
                 type="button"
-                onClick={() => setSelectedPeriod(p.key)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${isActive
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                onClick={() => {
+                  setSelectedPeriod(p.key);
+                  setCurrentDate(new Date());
+                }}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+                  isActive
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                  }`}
+                }`}
               >
                 {p.label}
               </button>
             );
           })}
         </div>
+      </div>
+
+      {/* Date Navigation Bar (Allows switching days, weeks, months) */}
+      <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2.5 shadow-2xs">
+        <div className="flex items-center space-x-1">
+          <button
+            type="button"
+            onClick={handlePrevDate}
+            className="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            title="Попередній період"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleNextDate}
+            className="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            title="Наступний період"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-4 w-4 text-zinc-400" />
+          <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100">
+            {periodInfo.titleUk}
+          </span>
+        </div>
+
+        {!periodInfo.isCurrent ? (
+          <button
+            type="button"
+            onClick={handleToday}
+            className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded cursor-pointer"
+          >
+            Сьогодні
+          </button>
+        ) : (
+          <div className="w-14" />
+        )}
       </div>
 
       {/* KPI Metrics Cards - Minimal Flat */}
@@ -208,7 +392,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
             {stats.periodCompletedSets}
           </div>
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-            за {periodRange.titleUk}
+            за {periodInfo.titleUk}
           </div>
         </div>
 
@@ -264,7 +448,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
               <span>Кількість завершених підходів на м'язову групу</span>
             </h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Враховуються лише успішно виконані підходи за обраний період ({periodRange.titleUk})
+              Враховуються лише успішно виконані підходи за обраний період ({periodInfo.titleUk})
             </p>
           </div>
 
@@ -279,7 +463,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
               <Layers className="h-5 w-5" />
             </div>
             <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-              За обраний період ({periodRange.titleUk}) немає зафіксованих підходів.
+              За обраний період ({periodInfo.titleUk}) немає зафіксованих підходів.
             </p>
             <p className="text-[11px] text-zinc-400 dark:text-zinc-500 max-w-md mx-auto">
               Завершуйте підходи у тренуваннях натисканням галочки ✓, і дані про навантаження відобразяться тут.
@@ -381,7 +565,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
           <div className="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center text-xs text-zinc-500">
             {searchQuery
               ? 'Вправ за цим запитом не знайдено.'
-              : `У періоді «${periodRange.titleUk}» ще немає зафіксованих підходів із вагою.`}
+              : `У періоді «${periodInfo.titleUk}» ще немає зафіксованих підходів із вагою.`}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">

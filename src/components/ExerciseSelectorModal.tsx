@@ -107,7 +107,6 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               placeholder="Пошук вправи за назвою..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              autoFocus
               className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-10 pr-16 py-2.5 text-base sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:border-zinc-400 dark:focus:border-zinc-500 focus:outline-none"
             />
             {search && (
