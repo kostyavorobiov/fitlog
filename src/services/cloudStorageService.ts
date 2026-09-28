@@ -353,25 +353,12 @@ export class CloudStorageService {
   }
 
   /**
-   * Fetch custom and global exercises (returns only exercises actually used in workouts or created by user)
+   * Fetch custom and global exercises from Supabase
    */
   static async fetchExercises(_userId?: string): Promise<Exercise[] | null> {
     if (!isSupabaseConfigured() || !supabase) return null;
 
     try {
-      // 1. Fetch distinct exercise IDs used in workout_exercises
-      const { data: usedRows, error: weErr } = await supabase
-        .from('workout_exercises')
-        .select('exercise_id');
-
-      const usedIdSet = new Set<string>();
-      if (!weErr && usedRows) {
-        usedRows.forEach((r: any) => {
-          if (r.exercise_id) usedIdSet.add(r.exercise_id);
-        });
-      }
-
-      // 2. Fetch all exercises from Supabase
       const { data, error } = await supabase
         .from('exercises')
         .select('*')
@@ -384,43 +371,7 @@ export class CloudStorageService {
 
       if (!data) return [];
 
-      // 3. Separate used/custom exercises from unused exercises
-      const unusedIds: string[] = [];
-      const validRows: any[] = [];
-
-      data.forEach((item: any) => {
-        const isUsed = usedIdSet.has(item.id);
-        const isUserCustom = Boolean(
-          item.user_id && !item.is_default && !item.id.startsWith('global_ex') && !item.id.startsWith('def_ex')
-        );
-
-        if (isUsed || isUserCustom) {
-          validRows.push(item);
-        } else if (usedIdSet.size > 0) {
-          // If we have recorded workouts, any other exercise is unused and must be permanently removed
-          unusedIds.push(item.id);
-        } else {
-          validRows.push(item);
-        }
-      });
-
-      // 4. Permanently delete unused exercises from Supabase database
-      if (unusedIds.length > 0) {
-        for (let i = 0; i < unusedIds.length; i += 50) {
-          const chunk = unusedIds.slice(i, i + 50);
-          supabase
-            .from('exercises')
-            .delete()
-            .in('id', chunk)
-            .then(({ error: delErr }) => {
-              if (delErr) {
-                console.warn('Auto-cleanup of unused exercises error:', delErr.message);
-              }
-            });
-        }
-      }
-
-      return validRows.map((item: any) => ({
+      return data.map((item: any) => ({
         id: item.id,
         userId: item.user_id,
         name: item.name,

@@ -66,12 +66,37 @@ export class StorageService {
   }
 
   // --- EXERCISES ---
+  static getStoredExercises(): Exercise[] {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('fitlog_exercises_v2');
+        if (raw) return JSON.parse(raw);
+      } catch {}
+    }
+    return [];
+  }
+
+  static persistExercises(): void {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('fitlog_exercises_v2', JSON.stringify(memoryStore.exercises));
+      } catch {}
+    }
+  }
+
   static initializeExercises(): Exercise[] {
+    if (memoryStore.exercises.length === 0) {
+      const stored = this.getStoredExercises();
+      if (stored.length > 0) {
+        memoryStore.exercises = stored;
+      }
+    }
     return [...memoryStore.exercises];
   }
 
   static async purgeAllExercises(): Promise<void> {
     memoryStore.exercises = [];
+    this.persistExercises();
     try {
       await CloudStorageService.deleteAllExercises();
     } catch (e) {
@@ -79,31 +104,19 @@ export class StorageService {
     }
   }
 
-  static purgeUnusedExercises(): void {
-    const usedIds = new Set<string>();
-    const usedNames = new Set<string>();
-
-    memoryStore.workouts.forEach((w) => {
-      (w.exercises || []).forEach((we) => {
-        if (we.exerciseId) usedIds.add(we.exerciseId);
-        if (we.exerciseName) usedNames.add(we.exerciseName.toLowerCase().trim());
-      });
-    });
-
-    if (usedIds.size > 0 || usedNames.size > 0) {
-      memoryStore.exercises = memoryStore.exercises.filter((ex) => {
-        if (usedIds.has(ex.id) || usedNames.has(ex.name.toLowerCase().trim())) return true;
-        if (ex.userId && !ex.isDefault && !ex.id.startsWith('global_ex') && !ex.id.startsWith('def_ex')) return true;
-        return false;
-      });
-    }
-  }
-
   static async syncExercises(): Promise<Exercise[]> {
     try {
       const cloudExercises = await CloudStorageService.fetchExercises();
       if (cloudExercises) {
-        memoryStore.exercises = cloudExercises;
+        const cloudMap = new Map<string, Exercise>();
+        cloudExercises.forEach((e) => cloudMap.set(e.id, e));
+        memoryStore.exercises.forEach((local) => {
+          if (!cloudMap.has(local.id)) {
+            cloudMap.set(local.id, local);
+          }
+        });
+        memoryStore.exercises = Array.from(cloudMap.values());
+        this.persistExercises();
         return [...memoryStore.exercises];
       }
     } catch (err) {
@@ -121,7 +134,6 @@ export class StorageService {
   }
 
   static getExercises(_targetUserId?: string | null): Exercise[] {
-    this.purgeUnusedExercises();
     return this.initializeExercises();
   }
 
@@ -180,6 +192,7 @@ export class StorageService {
       createdAt: new Date().toISOString(),
     };
     memoryStore.exercises.push(newExercise);
+    this.persistExercises();
     CloudStorageService.saveExercise(newExercise).catch((e) =>
       console.warn('CloudStorageService.saveExercise error:', e)
     );
@@ -195,6 +208,7 @@ export class StorageService {
       createdAt: new Date().toISOString(),
     };
     memoryStore.exercises.push(newExercise);
+    this.persistExercises();
     CloudStorageService.saveExercise(newExercise).catch((e) =>
       console.warn('CloudStorageService.saveExercise global exercise error:', e)
     );
@@ -205,6 +219,7 @@ export class StorageService {
     const idx = memoryStore.exercises.findIndex((e) => e.id === exercise.id);
     if (idx >= 0) {
       memoryStore.exercises[idx] = exercise;
+      this.persistExercises();
 
       // Update embedded in workouts in memory
       memoryStore.workouts.forEach((w) => {
@@ -224,6 +239,7 @@ export class StorageService {
 
   static async deleteExercise(exerciseId: string): Promise<boolean> {
     memoryStore.exercises = memoryStore.exercises.filter((e) => e.id !== exerciseId);
+    this.persistExercises();
     try {
       return await CloudStorageService.deleteExercise(exerciseId);
     } catch (e) {
@@ -257,7 +273,12 @@ export class StorageService {
 
     // 3. Filter memoryStore.exercises: keep only used ones
     const initialCount = memoryStore.exercises.length;
-    this.purgeUnusedExercises();
+    memoryStore.exercises = memoryStore.exercises.filter((ex) => {
+      if (usedIds.has(ex.id) || usedNames.has(ex.name.toLowerCase().trim())) return true;
+      if (ex.userId && !ex.isDefault && !ex.id.startsWith('global_ex') && !ex.id.startsWith('def_ex')) return true;
+      return false;
+    });
+    this.persistExercises();
     const memoryDeleted = initialCount - memoryStore.exercises.length;
 
     // 4. If Supabase is connected, refresh from cloud
@@ -731,15 +752,6 @@ export class StorageService {
    */
   static async syncWithCloud(userId: string): Promise<void> {
     try {
-      if (typeof window !== 'undefined') {
-        try {
-          if (localStorage.getItem('db_exercises_purged_all_v3') !== 'true') {
-            await this.purgeAllExercises();
-            localStorage.setItem('db_exercises_purged_all_v3', 'true');
-          }
-        } catch {}
-      }
-
       const cloudWorkouts = await CloudStorageService.fetchWorkouts(userId);
       if (cloudWorkouts !== null) {
         this.setWorkoutsForUser(userId, cloudWorkouts);
@@ -862,17 +874,4 @@ export class StorageService {
   static seedDemoDataIfEmpty(_user: User): void {
     return;
   }
-}
-
-// Immediate one-time purge of existing exercises from database & local memory
-if (typeof window !== 'undefined') {
-  try {
-    if (localStorage.getItem('db_exercises_purged_all_v3') !== 'true') {
-      StorageService.purgeAllExercises().then(() => {
-        try {
-          localStorage.setItem('db_exercises_purged_all_v3', 'true');
-        } catch {}
-      });
-    }
-  } catch {}
 }

@@ -62,6 +62,9 @@ export const ProfileView: React.FC = () => {
   useEffect(() => {
     if (isAdmin) {
       refreshGlobalExercises();
+      StorageService.syncExercises().then(() => {
+        refreshGlobalExercises();
+      });
     }
   }, [isAdmin]);
 
@@ -80,11 +83,12 @@ export const ProfileView: React.FC = () => {
         muscleGroup: newGlobalExMuscle,
         description: '',
       });
-      await CloudStorageService.saveExercise(created);
       setNewGlobalExName('');
       refreshGlobalExercises();
+      await CloudStorageService.saveExercise(created);
       setAdminToast({ text: `Вправу "${cleanName}" додано до глобальної бази!`, type: 'success' });
-    } catch {
+    } catch (err) {
+      console.warn('handleAddGlobalExercise error:', err);
       setAdminToast({ text: 'Помилка при додаванні вправи', type: 'error' });
     } finally {
       setIsAddingGlobalEx(false);

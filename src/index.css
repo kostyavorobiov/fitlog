@@ -17,9 +17,23 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  #root {
+  #root,
+  #root * {
     touch-action: pan-y;
     overscroll-behavior-x: none;
+  }
+
+  .overflow-x-auto,
+  .overflow-x-auto *,
+  .overflow-x-scroll,
+  .overflow-x-scroll * {
+    touch-action: pan-x pan-y !important;
+  }
+
+  input,
+  textarea,
+  select {
+    touch-action: auto !important;
   }
 
   /* Prevent automatic zoom on mobile (iOS Safari & Android Chrome) when focusing inputs */
