@@ -3,10 +3,10 @@ import { useRef, useEffect, RefObject } from 'react';
 export interface SwipeOptions {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
-  threshold?: number; // Minimum horizontal distance in px (default: 45)
+  threshold?: number; // Minimum horizontal distance in px (default: 40)
   edgeThreshold?: number; // Distance from left edge to qualify as edge swipe (default: 50)
   maxVerticalOffset?: number; // Vertical offset threshold for vertical scroll cancellation (default: 55)
-  maxDuration?: number; // Maximum swipe duration in ms (default: 650)
+  maxDuration?: number; // Maximum swipe duration in ms (default: 750)
   disabled?: boolean;
 }
 
@@ -16,8 +16,9 @@ export interface SwipeOptions {
  * - Swipe Left  (finger moves left, deltaX < 0)  -> Next tab / Вперед
  * - Swipe Right (finger moves right, deltaX > 0) -> Prev tab / Назад
  *
- * Attaches to window so navigation gestures work across the full viewport and through conditional renders.
- * Guarantees native vertical scrolling is never blocked (passive touch listeners, early vertical cancel).
+ * Attaches to document so navigation gestures work across the full viewport and through conditional renders.
+ * Uses { passive: false } on touchmove to prevent mobile browser (iOS Safari / Android Chrome)
+ * from canceling horizontal touch gestures with touchcancel, while preserving 100% native smooth vertical scrolling.
  * Suppresses accidental click events following a completed swipe.
  */
 export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
@@ -38,7 +39,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
     let swallowClickUntil = 0;
 
     const shouldIgnoreTarget = (target: EventTarget | null, startClientX: number): boolean => {
-      if (!target || !(target instanceof HTMLElement)) return false;
+      if (!target || !(target instanceof Element)) return false;
 
       const edgeThreshold = optionsRef.current.edgeThreshold ?? 50;
       const isEdge = startClientX <= edgeThreshold;
@@ -51,20 +52,17 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
         return true;
       }
 
-      // Modals/dialogs manage their own interactions; also pause if a dialog is open
+      // Modals/dialogs manage their own interactions
       if (target.closest('[role="dialog"], [data-modal="true"], .modal-content')) {
         return true;
       }
-      if (document.querySelector('[role="dialog"]')) {
-        return true;
-      }
 
-      // Explicitly marked no-swipe containers or buttons (e.g. bottom navigation tabs)
+      // Explicitly marked no-swipe containers or buttons (e.g. bottom navigation bar)
       if (target.closest('[data-no-swipe], .no-swipe')) {
         return true;
       }
 
-      // Containers with active horizontal scroll (e.g. horizontal chips list)
+      // Containers with active horizontal scroll (e.g. horizontal muscle group chips)
       const scrollParent = target.closest('.overflow-x-auto, .overflow-x-scroll');
       if (scrollParent && scrollParent.scrollWidth > scrollParent.clientWidth) {
         return true;
@@ -73,7 +71,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       return false;
     };
 
-    // --- Touch Handlers (Mobile iOS / Android) ---
+    // --- Touch Handlers (Mobile iOS Safari & Android Chrome) ---
     const handleTouchStart = (e: TouchEvent) => {
       if (optionsRef.current.disabled) return;
       if (e.touches.length !== 1) {
@@ -113,10 +111,17 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       const absY = Math.abs(deltaY);
 
       // If user is predominantly scrolling vertically, cancel horizontal gesture
-      const maxVertical = optionsRef.current.maxVerticalOffset ?? 55;
+      const maxVertical = optionsRef.current.maxVerticalOffset ?? 50;
       if (absY > maxVertical && absY > absX * 1.3) {
         isCancelled = true;
         return;
+      }
+
+      // If horizontal movement starts to dominate, prevent native browser gestures (e.g. Safari back/forward swipe or touchcancel)
+      if (absX > absY && absX > 8) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
       }
     };
 
@@ -128,14 +133,14 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       isTracking = false;
 
       const duration = Date.now() - startTime;
-      const maxDuration = optionsRef.current.maxDuration ?? 650;
+      const maxDuration = optionsRef.current.maxDuration ?? 750;
       if (duration > maxDuration) return;
 
       const touch = e.changedTouches[0];
-      if (!touch) return;
-
-      currentX = touch.clientX;
-      currentY = touch.clientY;
+      if (touch) {
+        currentX = touch.clientX;
+        currentY = touch.clientY;
+      }
 
       const deltaX = currentX - startX;
       const deltaY = currentY - startY;
@@ -144,10 +149,11 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
 
       const edgeThreshold = optionsRef.current.edgeThreshold ?? 50;
       const isEdge = startX <= edgeThreshold;
-      const threshold = isEdge ? 35 : (optionsRef.current.threshold ?? 45);
+      const isFlick = duration < 300 && absX >= 25 && absX > absY;
+      const threshold = isEdge ? 30 : (optionsRef.current.threshold ?? 40);
 
-      // Require threshold distance and horizontal angle dominance
-      if (absX >= threshold && absX > absY * 1.15) {
+      // Require threshold distance (or flick) and horizontal angle dominance
+      if ((absX >= threshold || isFlick) && absX > absY * 1.1) {
         // Suppress any accidental click that fires on touch release
         swallowClickUntil = Date.now() + 400;
 
@@ -161,7 +167,33 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       }
     };
 
-    const handleTouchCancel = () => {
+    const handleTouchCancel = (e: TouchEvent) => {
+      if (isTracking && !isCancelled) {
+        const duration = Date.now() - startTime;
+        const maxDuration = optionsRef.current.maxDuration ?? 750;
+        const touch = e.changedTouches?.[0];
+        if (touch) {
+          currentX = touch.clientX;
+          currentY = touch.clientY;
+        }
+
+        const deltaX = currentX - startX;
+        const deltaY = currentY - startY;
+        const absX = Math.abs(deltaX);
+        const absY = Math.abs(deltaY);
+        const isEdge = startX <= (optionsRef.current.edgeThreshold ?? 50);
+        const isFlick = duration < 300 && absX >= 25 && absX > absY;
+        const threshold = isEdge ? 30 : (optionsRef.current.threshold ?? 40);
+
+        if (duration <= maxDuration && (absX >= threshold || isFlick) && absX > absY * 1.1) {
+          swallowClickUntil = Date.now() + 400;
+          if (deltaX < 0) {
+            optionsRef.current.onSwipeLeft?.();
+          } else {
+            optionsRef.current.onSwipeRight?.();
+          }
+        }
+      }
       isTracking = false;
       isCancelled = true;
     };
@@ -197,7 +229,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       const absX = Math.abs(deltaX);
       const absY = Math.abs(deltaY);
 
-      const maxVertical = optionsRef.current.maxVerticalOffset ?? 55;
+      const maxVertical = optionsRef.current.maxVerticalOffset ?? 50;
       if (absY > maxVertical && absY > absX * 1.3) {
         isCancelled = true;
         return;
@@ -212,7 +244,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       isTracking = false;
 
       const duration = Date.now() - startTime;
-      const maxDuration = optionsRef.current.maxDuration ?? 650;
+      const maxDuration = optionsRef.current.maxDuration ?? 750;
       if (duration > maxDuration) return;
 
       currentX = e.clientX;
@@ -225,9 +257,10 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
 
       const edgeThreshold = optionsRef.current.edgeThreshold ?? 50;
       const isEdge = startX <= edgeThreshold;
-      const threshold = isEdge ? 40 : (optionsRef.current.threshold ?? 55);
+      const isFlick = duration < 300 && absX >= 25 && absX > absY;
+      const threshold = isEdge ? 35 : (optionsRef.current.threshold ?? 45);
 
-      if (absX >= threshold && absX > absY * 1.15) {
+      if ((absX >= threshold || isFlick) && absX > absY * 1.1) {
         swallowClickUntil = Date.now() + 400;
 
         if (deltaX < 0) {
@@ -248,29 +281,29 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       }
     };
 
-    // Bind passive touch listeners to window
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
-    window.addEventListener('touchcancel', handleTouchCancel, { passive: true });
+    // Bind touch listeners to document (passive: false on touchmove to prevent browser cancel)
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    document.addEventListener('touchcancel', handleTouchCancel, { passive: true });
 
     // Bind pointer listeners for desktop mouse drag support
-    window.addEventListener('pointerdown', handlePointerDown);
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
 
     // Capture-phase click listener to suppress accidental clicks after swipe
     window.addEventListener('click', handleWindowClickCapture, true);
 
     return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('touchcancel', handleTouchCancel);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchcancel', handleTouchCancel);
 
-      window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
 
       window.removeEventListener('click', handleWindowClickCapture, true);
     };

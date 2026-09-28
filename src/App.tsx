@@ -168,8 +168,8 @@ const MainContent: React.FC = () => {
   const swipeRef = useSwipeGesture<HTMLElement>({
     onSwipeLeft: handleSwipeLeft,
     onSwipeRight: handleSwipeRight,
-    threshold: 45,
-    disabled: !user || isAuthModalOpen || isLoading,
+    threshold: 40,
+    disabled: isAuthModalOpen || isLoading,
   });
 
   if (isLoading) {
@@ -184,7 +184,7 @@ const MainContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-150">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-150 touch-pan-y overscroll-x-none">
       {/* Navigation */}
       <Navbar
         currentTab={currentTab}
