@@ -23,6 +23,7 @@ import {
   Sparkles,
   Save,
   Check,
+  RotateCcw,
   ChevronUp,
   ChevronDown,
   Layers,
@@ -432,6 +433,19 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     setSaveNoticeMessage('Тренування успішно виконано! Результати зафіксовані.');
     setSaveSuccessNotice(true);
     setTimeout(() => setSaveSuccessNotice(false), 3500);
+  };
+
+  // Restore workout to in_progress status
+  const handleRestoreWorkout = () => {
+    const updated: WorkoutPlan = {
+      ...workout,
+      status: 'in_progress',
+      completedAt: null,
+    };
+    updateAndSave(updated);
+    setSaveNoticeMessage('Тренування відновлено в процесі');
+    setSaveSuccessNotice(true);
+    setTimeout(() => setSaveSuccessNotice(false), 3000);
   };
 
   // Delete current workout
@@ -1103,45 +1117,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         )}
       </div>
 
-      {/* End of workout completion card */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-center space-y-3 shadow-xs">
-        {workout.status !== 'completed' ? (
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={handleFinishWorkout}
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 text-sm font-bold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
-            >
-              <Check className="h-5 w-5 stroke-[2.5]" />
-              <span>Виконано (Завершити тренування)</span> б
-            </button>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-              Натисніть «Виконано», коли всі підходи виконані, щоб зафіксувати результати тренування.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300">
-            <div className="flex items-center space-x-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span className="text-xs font-semibold">Тренування позначено як виконане!</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                const restored = { ...workout, status: 'in_progress' as const, completedAt: null };
-                updateAndSave(restored);
-                setSaveNoticeMessage('Тренування відновлено в процесі');
-                setSaveSuccessNotice(true);
-                setTimeout(() => setSaveSuccessNotice(false), 3000);
-              }}
-              className="text-xs font-semibold underline hover:text-emerald-900 dark:hover:text-emerald-100 cursor-pointer"
-            >
-              Відновити тренування (продовжити)
-            </button>
-          </div>
-        )}
-      </div>
-
       {/* Floating / Bottom Action Bar (Fully responsive for mobile) */}
       <div className="fixed sm:sticky bottom-14 sm:bottom-4 left-0 right-0 z-30 sm:rounded-xl border-t sm:border border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 p-3 sm:p-4 shadow-lg backdrop-blur-xs transition-colors">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
@@ -1190,7 +1165,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               <span>Зберегти</span>
             </button>
 
-            {workout.status !== 'completed' && (
+            {workout.status !== 'completed' ? (
               <button
                 type="button"
                 onClick={handleFinishWorkout}
@@ -1199,6 +1174,16 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               >
                 <Check className="h-4 w-4 stroke-[2.5]" />
                 <span>Виконано</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleRestoreWorkout}
+                className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
+                title="Відновити тренування (продовжити виконання)"
+              >
+                <RotateCcw className="h-4 w-4" />
+                <span>Відновити</span>
               </button>
             )}
 
