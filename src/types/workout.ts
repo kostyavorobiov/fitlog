@@ -4,8 +4,12 @@ export type MuscleGroup =
   | 'shoulders'   // Плечі
   | 'biceps'      // Біцепс
   | 'triceps'     // Трицепс
-  | 'legs'      // Ноги
-  | 'others'      // Інше
+  | 'traps'       // Трапецевидні
+  | 'glutes'      // Сідниці
+  | 'hamstrings'  // Задня частина стегна
+  | 'quads'       // Передня частина стегна
+  | 'core'        // Прес / Кор
+  | 'cardio'      // Кардіо
   | 'full_body';  // Все тіло
 
 export interface MuscleGroupInfo {
@@ -18,13 +22,53 @@ export interface MuscleGroupInfo {
 }
 
 export const MUSCLE_GROUPS: Record<MuscleGroup, MuscleGroupInfo> = {
-  legs: {
-    id: 'legs',
-    nameUk: 'Ноги',
+  shoulders: {
+    id: 'shoulders',
+    nameUk: 'Плечі',
+    color: 'text-cyan-400',
+    badgeBg: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30',
+    badgeBorder: 'border-cyan-500/30',
+    iconName: 'Crosshair',
+  },
+  triceps: {
+    id: 'triceps',
+    nameUk: 'Трицепс',
+    color: 'text-teal-400',
+    badgeBg: 'bg-teal-500/10 text-teal-300 border-teal-500/30',
+    badgeBorder: 'border-teal-500/30',
+    iconName: 'Zap',
+  },
+  glutes: {
+    id: 'glutes',
+    nameUk: 'Сідниці',
     color: 'text-fuchsia-400',
     badgeBg: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30',
     badgeBorder: 'border-fuchsia-500/30',
     iconName: 'Flame',
+  },
+  traps: {
+    id: 'traps',
+    nameUk: 'Трапецевидні',
+    color: 'text-sky-400',
+    badgeBg: 'bg-sky-500/10 text-sky-300 border-sky-500/30',
+    badgeBorder: 'border-sky-500/30',
+    iconName: 'ShieldAlert',
+  },
+  hamstrings: {
+    id: 'hamstrings',
+    nameUk: 'Задня частина стегна',
+    color: 'text-amber-500',
+    badgeBg: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+    badgeBorder: 'border-amber-500/30',
+    iconName: 'Activity',
+  },
+  quads: {
+    id: 'quads',
+    nameUk: 'Передня частина стегна',
+    color: 'text-orange-400',
+    badgeBg: 'bg-orange-500/10 text-orange-300 border-orange-500/30',
+    badgeBorder: 'border-orange-500/30',
+    iconName: 'TrendingUp',
   },
   back: {
     id: 'back',
@@ -42,14 +86,6 @@ export const MUSCLE_GROUPS: Record<MuscleGroup, MuscleGroupInfo> = {
     badgeBorder: 'border-rose-500/30',
     iconName: 'Shield',
   },
-  shoulders: {
-    id: 'shoulders',
-    nameUk: 'Плечі',
-    color: 'text-cyan-400',
-    badgeBg: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30',
-    badgeBorder: 'border-cyan-500/30',
-    iconName: 'Crosshair',
-  },
   biceps: {
     id: 'biceps',
     nameUk: 'Біцепс',
@@ -58,13 +94,21 @@ export const MUSCLE_GROUPS: Record<MuscleGroup, MuscleGroupInfo> = {
     badgeBorder: 'border-emerald-500/30',
     iconName: 'Dumbbell',
   },
-  triceps: {
-    id: 'triceps',
-    nameUk: 'Трицепс',
-    color: 'text-teal-400',
-    badgeBg: 'bg-teal-500/10 text-teal-300 border-teal-500/30',
-    badgeBorder: 'border-teal-500/30',
-    iconName: 'Zap',
+  core: {
+    id: 'core',
+    nameUk: 'Прес / Кор',
+    color: 'text-amber-400',
+    badgeBg: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+    badgeBorder: 'border-amber-500/30',
+    iconName: 'Flame',
+  },
+  cardio: {
+    id: 'cardio',
+    nameUk: 'Кардіо',
+    color: 'text-pink-400',
+    badgeBg: 'bg-pink-500/10 text-pink-300 border-pink-500/30',
+    badgeBorder: 'border-pink-500/30',
+    iconName: 'HeartPulse',
   },
   full_body: {
     id: 'full_body',
@@ -74,15 +118,6 @@ export const MUSCLE_GROUPS: Record<MuscleGroup, MuscleGroupInfo> = {
     badgeBorder: 'border-purple-500/30',
     iconName: 'Trophy',
   },
-  others: {
-    id: 'others',
-    nameUk: 'Інше',
-    color: 'text-pink-400',
-    badgeBg: 'bg-pink-500/10 text-pink-300 border-pink-500/30',
-    badgeBorder: 'border-pink-500/30',
-    iconName: 'HeartPulse',
-  },
-
 };
 
 export type UserRole = 'athlete' | 'coach' | 'admin';
