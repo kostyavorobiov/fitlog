@@ -32,6 +32,7 @@ import {
   ArrowLeft,
   Link,
   Unlink,
+  RotateCcw,
 } from 'lucide-react';
 
 interface WorkoutEditorProps {
@@ -59,6 +60,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
   const [saveSuccessNotice, setSaveSuccessNotice] = useState(false);
+  const [saveNoticeMessage, setSaveNoticeMessage] = useState('Зміни в тренуванні успішно збережено!');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
@@ -394,7 +396,16 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     }
   };
 
-  // Complete entire workout
+  // Explicitly save workout changes without completing
+  const handleSaveWorkout = () => {
+    updateAndSave(workout);
+    onSave(workout);
+    setSaveNoticeMessage('Зміни в тренуванні успішно збережено!');
+    setSaveSuccessNotice(true);
+    setTimeout(() => setSaveSuccessNotice(false), 3000);
+  };
+
+  // Complete entire workout (marks status as 'completed')
   const handleFinishWorkout = () => {
     const completedAt = new Date().toISOString();
     const updated: WorkoutPlan = {
@@ -405,8 +416,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     };
     updateAndSave(updated);
     playSuccessChime();
+    setSaveNoticeMessage('Тренування успішно виконано! Результати зафіксовані.');
     setSaveSuccessNotice(true);
-    setTimeout(() => setSaveSuccessNotice(false), 3000);
+    setTimeout(() => setSaveSuccessNotice(false), 3500);
   };
 
   // Delete current workout
@@ -455,7 +467,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       {saveSuccessNotice && (
         <div className="rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 p-3 flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>Тренування збережено як завершене! Результати зафіксовані в базі.</span>
+          <span>{saveNoticeMessage}</span>
         </div>
       )}
 
@@ -490,27 +502,35 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               )}
             </div>
 
-            {/* Action buttons (Finish / Restore & Delete) */}
+            {/* Action buttons (Save, Restore & Delete) */}
             <div className="flex items-center space-x-1.5">
-              {workout.status !== 'completed' ? (
+              {workout.status === 'completed' && (
                 <button
                   type="button"
-                  onClick={handleFinishWorkout}
-                  className="flex items-center space-x-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors cursor-pointer"
-                >
-                  <Check className="h-3.5 w-3.5 stroke-[2.5]" />
-                  <span className="hidden sm:inline">Завершити</span>
-                  <span className="sm:hidden">Готово</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => updateAndSave({ ...workout, status: 'in_progress' })}
+                  onClick={() => {
+                    const restored = { ...workout, status: 'in_progress' as const, completedAt: null };
+                    updateAndSave(restored);
+                    setSaveNoticeMessage('Тренування відновлено');
+                    setSaveSuccessNotice(true);
+                    setTimeout(() => setSaveSuccessNotice(false), 3000);
+                  }}
                   className="flex items-center space-x-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+                  title="Відновити як незавершене"
                 >
-                  <span>Відновити</span>
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Відновити</span>
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={handleSaveWorkout}
+                className="flex items-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                title="Зберегти поточний стан тренування"
+              >
+                <Save className="h-3.5 w-3.5" />
+                <span>Зберегти</span>
+              </button>
 
               {/* Delete workout button */}
               <button
@@ -617,13 +637,12 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 onDragStart={() => handleDragStart(weIndex)}
                 onDragOver={(e) => handleDragOver(e, weIndex)}
                 onDragEnd={handleDragEnd}
-                className={`rounded-xl border bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-colors ${
-                  isDragged
+                className={`rounded-xl border bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-colors ${isDragged
                     ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70'
                     : isSuperset
-                    ? 'border-l-4 border-l-indigo-500 border-zinc-200 dark:border-zinc-800'
-                    : 'border-zinc-200 dark:border-zinc-800'
-                }`}
+                      ? 'border-l-4 border-l-indigo-500 border-zinc-200 dark:border-zinc-800'
+                      : 'border-zinc-200 dark:border-zinc-800'
+                  }`}
               >
                 {/* Exercise Header */}
                 <div className="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2.5">
@@ -666,11 +685,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       <button
                         type="button"
                         onClick={() => handleToggleSuperset(weIndex)}
-                        className={`p-1.5 rounded-lg border transition-colors cursor-pointer inline-flex items-center space-x-1 text-xs font-semibold ${
-                          isSuperset
+                        className={`p-1.5 rounded-lg border transition-colors cursor-pointer inline-flex items-center space-x-1 text-xs font-semibold ${isSuperset
                             ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
                             : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-800 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20'
-                        }`}
+                          }`}
                         title={isSuperset ? 'Розʼєднати суперсет' : 'Обʼєднати наступну вправу в суперсет'}
                       >
                         {isSuperset ? <Unlink className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Link className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
@@ -1114,6 +1132,45 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         )}
       </div>
 
+      {/* End of workout completion card */}
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-center space-y-3 shadow-xs">
+        {workout.status !== 'completed' ? (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={handleFinishWorkout}
+              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 text-sm font-bold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+            >
+              <Check className="h-5 w-5 stroke-[2.5]" />
+              <span>Виконано (Завершити тренування)</span>
+            </button>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Натисніть «Виконано», коли всі підходи виконані, щоб зафіксувати результати тренування.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300">
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="text-xs font-semibold">Тренування позначено як виконане!</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const restored = { ...workout, status: 'in_progress' as const, completedAt: null };
+                updateAndSave(restored);
+                setSaveNoticeMessage('Тренування відновлено в процесі');
+                setSaveSuccessNotice(true);
+                setTimeout(() => setSaveSuccessNotice(false), 3000);
+              }}
+              className="text-xs font-semibold underline hover:text-emerald-900 dark:hover:text-emerald-100 cursor-pointer"
+            >
+              Відновити тренування (продовжити)
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Floating / Bottom Action Bar (Fully responsive for mobile) */}
       <div className="fixed sm:sticky bottom-14 sm:bottom-4 left-0 right-0 z-30 sm:rounded-xl border-t sm:border border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 p-3 sm:p-4 shadow-lg backdrop-blur-xs transition-colors">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
@@ -1145,18 +1202,34 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             <button
               type="button"
               onClick={() => setIsSelectorOpen(true)}
-              className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+              className="flex items-center justify-center space-x-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+              title="Додати вправу до тренування"
             >
-              <Plus className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
+              <Plus className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+              <span className="hidden sm:inline">Вправа</span>
             </button>
 
             <button
               type="button"
-              onClick={handleFinishWorkout}
+              onClick={handleSaveWorkout}
               className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
+              title="Зберегти поточний стан тренування"
             >
-              <Save className="h-3.5 w-3.5" />
+              <Save className="h-4 w-4" />
+              <span>Зберегти</span>
             </button>
+
+            {workout.status !== 'completed' && (
+              <button
+                type="button"
+                onClick={handleFinishWorkout}
+                className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
+                title="Позначити тренування як виконане"
+              >
+                <Check className="h-4 w-4 stroke-[2.5]" />
+                <span>Виконано</span>
+              </button>
+            )}
 
             <button
               type="button"

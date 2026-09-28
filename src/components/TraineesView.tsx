@@ -131,17 +131,25 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     }
   };
 
-  const handleConfirmRemoveTrainee = () => {
+  const handleConfirmRemoveTrainee = async () => {
     if (!traineeToRemove) return;
-    StorageService.removeTrainee(coach.id, traineeToRemove.id);
-    showToast('Підопічного відкріплено', 'success');
-    if (selectedTrainee?.id === traineeToRemove.id) {
+    const removedId = traineeToRemove.id;
+    // Immediate UI removal
+    setTrainees((prev) => prev.filter((t) => t.id !== removedId));
+    if (selectedTrainee?.id === removedId) {
       setSelectedTrainee(null);
       try {
         localStorage.removeItem('fitlog_selected_trainee_id');
       } catch {}
+      if (externalOnSelectTraineeId) {
+        externalOnSelectTraineeId(null);
+      }
     }
     setTraineeToRemove(null);
+
+    // Persist removal locally and in Supabase
+    await StorageService.removeTrainee(coach.id, removedId);
+    showToast('Підопічного відкріплено', 'success');
     setRefreshKey((k) => k + 1);
   };
 

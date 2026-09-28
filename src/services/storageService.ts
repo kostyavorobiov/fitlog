@@ -135,23 +135,46 @@ export class StorageService {
   }
 
   // --- COACH & TRAINEES RELATIONSHIPS ---
+  static getRemovedTraineeIds(coachUserId: string): string[] {
+    const raw = localStorage.getItem(`fitlog_removed_trainees_${coachUserId}`);
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  static setRemovedTraineeIds(coachUserId: string, ids: string[]): void {
+    localStorage.setItem(`fitlog_removed_trainees_${coachUserId}`, JSON.stringify(ids));
+  }
+
   static getTrainees(coachUserId: string): User[] {
     const users = this.getUsers();
     const coach = users.find((u) => u.id === coachUserId);
     if (!coach || !coach.traineeIds) return [];
-    return users.filter((u) => coach.traineeIds?.includes(u.id));
+    const removedIds = this.getRemovedTraineeIds(coachUserId);
+    return users
+      .filter((u) => coach.traineeIds?.includes(u.id))
+      .filter((u) => !removedIds.includes(u.id));
   }
 
   static async syncTraineesFromCloud(coachUserId: string): Promise<User[]> {
     try {
       const cloudTrainees = await CloudStorageService.fetchTrainees(coachUserId);
       if (cloudTrainees && cloudTrainees.length > 0) {
-        cloudTrainees.forEach((t) => this.saveUser(t));
+        const removedIds = this.getRemovedTraineeIds(coachUserId);
+        const activeCloudTrainees = cloudTrainees.filter((t) => !removedIds.includes(t.id));
+
+        activeCloudTrainees.forEach((t) => this.saveUser(t));
         const users = this.getUsers();
         const coach = users.find((u) => u.id === coachUserId);
         if (coach) {
           coach.traineeIds = Array.from(
-            new Set([...(coach.traineeIds || []), ...cloudTrainees.map((t) => t.id)])
+            new Set([
+              ...(coach.traineeIds || []).filter((id) => !removedIds.includes(id)),
+              ...activeCloudTrainees.map((t) => t.id),
+            ])
           );
           this.saveUser(coach);
         }
@@ -209,6 +232,15 @@ export class StorageService {
 
     if (trainee.id === coachUserId) {
       return { success: false, message: 'Неможливо додати себе у ролі підопічного' };
+    }
+
+    // Unmark as removed if previously unlinked
+    const removedIds = this.getRemovedTraineeIds(coachUserId);
+    if (removedIds.includes(trainee.id)) {
+      this.setRemovedTraineeIds(
+        coachUserId,
+        removedIds.filter((id) => id !== trainee.id)
+      );
     }
 
     const currentTrainees = coach.traineeIds || [];
@@ -279,6 +311,15 @@ export class StorageService {
       return { success: false, message: 'Неможливо призначити себе тренером' };
     }
 
+    // Remove athlete from coach's removed list if present
+    const removedIds = this.getRemovedTraineeIds(coach.id);
+    if (removedIds.includes(athlete.id)) {
+      this.setRemovedTraineeIds(
+        coach.id,
+        removedIds.filter((id) => id !== athlete.id)
+      );
+    }
+
     athlete.coachId = coach.id;
     this.saveUser(athlete);
 
@@ -297,21 +338,36 @@ export class StorageService {
     };
   }
 
-  static removeTrainee(coachUserId: string, traineeId: string): void {
+  static async removeTrainee(coachUserId: string, traineeId: string): Promise<boolean> {
+    // 1. Add to coach's removed list to immediately block sync resurrection
+    const removedIds = this.getRemovedTraineeIds(coachUserId);
+    if (!removedIds.includes(traineeId)) {
+      this.setRemovedTraineeIds(coachUserId, [...removedIds, traineeId]);
+    }
+
+    // 2. Remove from coach locally
     const users = this.getUsers();
     const coach = users.find((u) => u.id === coachUserId);
     if (coach && coach.traineeIds) {
       coach.traineeIds = coach.traineeIds.filter((id) => id !== traineeId);
       this.saveUser(coach);
     }
+
+    // 3. Clear coachId on trainee locally
     const trainee = users.find((u) => u.id === traineeId);
     if (trainee && trainee.coachId === coachUserId) {
       trainee.coachId = null;
       this.saveUser(trainee);
     }
-    CloudStorageService.removeTrainee(coachUserId, traineeId).catch((err) =>
-      console.warn('Background removeTrainee error:', err)
-    );
+
+    // 4. Update in Supabase
+    let cloudSuccess = false;
+    try {
+      cloudSuccess = await CloudStorageService.removeTrainee(coachUserId, traineeId);
+    } catch (err) {
+      console.warn('removeTrainee cloud error:', err);
+    }
+    return cloudSuccess;
   }
 
   // --- AUTHORIZATION CHECKS (Section 8) ---
