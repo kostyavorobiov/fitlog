@@ -67,30 +67,16 @@ export class StorageService {
 
   // --- EXERCISES ---
   static initializeExercises(): Exercise[] {
-    if (memoryStore.exercises.length === 0 && memoryStore.workouts.length > 0) {
-      const seen = new Set<string>();
-      const fromWorkouts: Exercise[] = [];
-      memoryStore.workouts.forEach((w) => {
-        (w.exercises || []).forEach((we) => {
-          if (we.exerciseId && !seen.has(we.exerciseId)) {
-            seen.add(we.exerciseId);
-            fromWorkouts.push({
-              id: we.exerciseId,
-              name: we.exerciseName || 'Вправа',
-              muscleGroup: we.muscleGroup || 'full_body',
-              description: '',
-              isDefault: true,
-              userId: null,
-              createdAt: '2026-01-01T00:00:00.000Z',
-            });
-          }
-        });
-      });
-      if (fromWorkouts.length > 0) {
-        memoryStore.exercises = fromWorkouts;
-      }
-    }
     return [...memoryStore.exercises];
+  }
+
+  static async purgeAllExercises(): Promise<void> {
+    memoryStore.exercises = [];
+    try {
+      await CloudStorageService.deleteAllExercises();
+    } catch (e) {
+      console.warn('purgeAllExercises error:', e);
+    }
   }
 
   static purgeUnusedExercises(): void {
@@ -116,14 +102,13 @@ export class StorageService {
   static async syncExercises(): Promise<Exercise[]> {
     try {
       const cloudExercises = await CloudStorageService.fetchExercises();
-      if (cloudExercises && cloudExercises.length > 0) {
+      if (cloudExercises) {
         memoryStore.exercises = cloudExercises;
         return [...memoryStore.exercises];
       }
     } catch (err) {
       console.warn('syncExercises error:', err);
     }
-    this.purgeUnusedExercises();
     return this.initializeExercises();
   }
 
@@ -746,13 +731,20 @@ export class StorageService {
    */
   static async syncWithCloud(userId: string): Promise<void> {
     try {
+      if (typeof window !== 'undefined') {
+        try {
+          if (localStorage.getItem('db_exercises_purged_all_v3') !== 'true') {
+            await this.purgeAllExercises();
+            localStorage.setItem('db_exercises_purged_all_v3', 'true');
+          }
+        } catch {}
+      }
+
       const cloudWorkouts = await CloudStorageService.fetchWorkouts(userId);
       if (cloudWorkouts !== null) {
         this.setWorkoutsForUser(userId, cloudWorkouts);
       }
 
-      // Automatically clean up any unused exercises in Supabase & memory
-      await this.cleanupUnusedExercises();
       await this.syncExercises();
     } catch (err) {
       console.warn('syncWithCloud error:', err);
@@ -870,4 +862,17 @@ export class StorageService {
   static seedDemoDataIfEmpty(_user: User): void {
     return;
   }
+}
+
+// Immediate one-time purge of existing exercises from database & local memory
+if (typeof window !== 'undefined') {
+  try {
+    if (localStorage.getItem('db_exercises_purged_all_v3') !== 'true') {
+      StorageService.purgeAllExercises().then(() => {
+        try {
+          localStorage.setItem('db_exercises_purged_all_v3', 'true');
+        } catch {}
+      });
+    }
+  } catch {}
 }

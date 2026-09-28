@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { StorageService } from '../services/storageService';
 import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
 import { ExerciseHistoryModal } from './ExerciseHistoryModal';
-import { useSwipeGesture } from '../utils/useSwipeGesture';
 import {
   Trophy,
   Flame,
@@ -48,12 +47,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       setCurrentDate(new Date());
     }
   };
-
-  const analyticsSwipeRef = useSwipeGesture<HTMLDivElement>({
-    onSwipeLeft: handleNextPeriod,
-    onSwipeRight: handlePrevPeriod,
-    threshold: 60,
-  });
 
   const workouts = useMemo(() => StorageService.getWorkouts(userId), [userId]);
 
@@ -294,7 +287,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
 
   return (
     <div
-      ref={analyticsSwipeRef}
       className="space-y-5 max-w-5xl mx-auto animate-fade-in pb-12 touch-pan-y"
     >
       {/* Top Header Bar */}

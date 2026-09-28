@@ -408,9 +408,15 @@ export class CloudStorageService {
       if (unusedIds.length > 0) {
         for (let i = 0; i < unusedIds.length; i += 50) {
           const chunk = unusedIds.slice(i, i + 50);
-          supabase.from('exercises').delete().in('id', chunk).catch((delErr) => {
-            console.warn('Auto-cleanup of unused exercises error:', delErr);
-          });
+          supabase
+            .from('exercises')
+            .delete()
+            .in('id', chunk)
+            .then(({ error: delErr }) => {
+              if (delErr) {
+                console.warn('Auto-cleanup of unused exercises error:', delErr.message);
+              }
+            });
         }
       }
 
@@ -489,6 +495,26 @@ export class CloudStorageService {
       return true;
     } catch (err) {
       console.warn('Failed to delete exercise in cloud:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Delete all exercises from Supabase exercises table
+   */
+  static async deleteAllExercises(): Promise<boolean> {
+    if (!isSupabaseConfigured() || !supabase) return false;
+    try {
+      // First delete workout_exercises if any exist to clear foreign keys
+      await supabase.from('workout_exercises').delete().neq('id', '');
+      const { error } = await supabase.from('exercises').delete().neq('id', '');
+      if (error) {
+        console.warn('deleteAllExercises error:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Failed to delete all exercises:', err);
       return false;
     }
   }

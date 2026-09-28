@@ -10,7 +10,7 @@ interface ExerciseSelectorModalProps {
   userId: string;
   onClose: () => void;
   onSelect: (exercise: Exercise) => void;
-  onOpenCreateModal: () => void;
+  onOpenCreateModal: (initialName?: string) => void;
 }
 
 export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
@@ -186,8 +186,9 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               <p className="text-sm text-zinc-500 dark:text-zinc-400">Вправу не знайдено за вашим запитом.</p>
               <button
                 onClick={() => {
+                  const query = search.trim();
                   onClose();
-                  onOpenCreateModal();
+                  onOpenCreateModal(query);
                 }}
                 className="mt-3 inline-flex items-center space-x-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition"
               >
@@ -249,8 +250,9 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           <span className="text-xs text-zinc-500 dark:text-zinc-400">Немає потрібної вправи?</span>
           <button
             onClick={() => {
+              const query = search.trim();
               onClose();
-              onOpenCreateModal();
+              onOpenCreateModal(query);
             }}
             className="flex items-center space-x-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
           >

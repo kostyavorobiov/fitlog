@@ -123,6 +123,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   // Strictly respect requirement 6: Do NOT auto open exercise selector modal; show workout form directly!
   const [isSelectorOpen, setIsSelectorOpen] = useState(Boolean(autoOpenExerciseSelector));
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createExerciseInitialName, setCreateExerciseInitialName] = useState('');
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
   const [saveSuccessNotice, setSaveSuccessNotice] = useState(false);
   const [saveNoticeMessage, setSaveNoticeMessage] = useState('Зміни в тренуванні успішно збережено!');
@@ -1632,15 +1633,23 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         userId={userId}
         onClose={() => setIsSelectorOpen(false)}
         onSelect={handleSelectExercise}
-        onOpenCreateModal={() => setIsCreateOpen(true)}
+        onOpenCreateModal={(initialName) => {
+          setCreateExerciseInitialName(initialName || '');
+          setIsCreateOpen(true);
+        }}
       />
 
       <CreateExerciseModal
         isOpen={isCreateOpen}
         userId={userId}
-        onClose={() => setIsCreateOpen(false)}
+        initialName={createExerciseInitialName}
+        onClose={() => {
+          setIsCreateOpen(false);
+          setCreateExerciseInitialName('');
+        }}
         onCreated={(newEx) => {
           handleSelectExercise(newEx);
+          setCreateExerciseInitialName('');
         }}
       />
 

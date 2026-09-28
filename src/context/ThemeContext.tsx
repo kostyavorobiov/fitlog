@@ -14,6 +14,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') return 'dark';
   try {
+    const saved = localStorage.getItem('theme_preference') as Theme | null;
+    if (saved === 'light' || saved === 'dark') {
+      return saved;
+    }
     // Fallback to prefers-color-scheme
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
       return 'light';
@@ -32,16 +36,26 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.classList.remove('light', 'dark');
     root.classList.add(newTheme);
     root.style.colorScheme = newTheme;
+    try {
+      localStorage.setItem('theme_preference', newTheme);
+    } catch (e) {
+      console.error('Error saving theme preference', e);
+    }
   };
 
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
 
-  // Listen to OS theme changes
+  // Listen to OS theme changes if user hasn't explicitly set a preference
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
+      try {
+        if (localStorage.getItem('theme_preference')) {
+          return; // User set explicit preference
+        }
+      } catch {}
       setThemeState(e.matches ? 'dark' : 'light');
     };
     mediaQuery.addEventListener('change', handleChange);

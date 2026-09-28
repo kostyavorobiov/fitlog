@@ -3,7 +3,6 @@ import { WorkoutPlan } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
-import { useSwipeGesture } from '../utils/useSwipeGesture';
 import {
   Plus,
   Calendar,
@@ -26,7 +25,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
   onDeleteWorkout,
 }) => {
   const [workoutToDelete, setWorkoutToDelete] = useState<WorkoutPlan | null>(null);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'in_progress' | 'completed'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'in_progress' | 'completed'>('in_progress');
   const [workouts, setWorkouts] = useState<WorkoutPlan[]>(() => StorageService.getWorkouts(userId));
 
   React.useEffect(() => {
@@ -42,30 +41,6 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
       isSubscribed = false;
     };
   }, [userId]);
-
-  const filterTabs: ('all' | 'in_progress' | 'completed')[] = ['all', 'in_progress', 'completed'];
-
-  // Swipe Left -> next filter status (Всі -> У процесі -> Завершено)
-  // Swipe Right -> previous filter status (Завершено -> У процесі -> Всі)
-  const handleNextFilter = () => {
-    const currentIndex = filterTabs.indexOf(filterStatus);
-    if (currentIndex < filterTabs.length - 1) {
-      setFilterStatus(filterTabs[currentIndex + 1]);
-    }
-  };
-
-  const handlePrevFilter = () => {
-    const currentIndex = filterTabs.indexOf(filterStatus);
-    if (currentIndex > 0) {
-      setFilterStatus(filterTabs[currentIndex - 1]);
-    }
-  };
-
-  const swipeRef = useSwipeGesture<HTMLDivElement>({
-    onSwipeLeft: handleNextFilter,
-    onSwipeRight: handlePrevFilter,
-    threshold: 60,
-  });
 
   const handleConfirmDelete = () => {
     if (!workoutToDelete) return;
@@ -87,7 +62,6 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
 
   return (
     <div
-      ref={swipeRef}
       className="space-y-6 max-w-5xl mx-auto animate-fade-in pb-12 touch-pan-y"
     >
       {/* Top Header Bar - Minimal Functional Flat */}
@@ -96,9 +70,6 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
           <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
             Тренування
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            Список тренувань та створення нової програми занять
-          </p>
         </div>
 
         {/* Primary Action Button - Opens workout creation form directly */}
@@ -119,33 +90,30 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
             <button
               type="button"
               onClick={() => setFilterStatus('all')}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                filterStatus === 'all'
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'all'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
             >
               Всі ({workouts.length})
             </button>
             <button
               type="button"
               onClick={() => setFilterStatus('in_progress')}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                filterStatus === 'in_progress'
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'in_progress'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
             >
               У процесі ({workouts.filter((w) => w.status === 'in_progress').length})
             </button>
             <button
               type="button"
               onClick={() => setFilterStatus('completed')}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                filterStatus === 'completed'
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'completed'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
             >
               Завершено ({workouts.filter((w) => w.status === 'completed').length})
             </button>
@@ -208,19 +176,18 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                     {/* Status & Date labels */}
                     <div className="flex items-center space-x-2 text-xs">
                       <span
-                        className={`font-semibold ${
-                          isCompleted
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : w.status === 'in_progress'
+                        className={`font-semibold ${isCompleted
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : w.status === 'in_progress'
                             ? 'text-amber-600 dark:text-amber-400'
                             : 'text-zinc-500 dark:text-zinc-400'
-                        }`}
+                          }`}
                       >
                         {isCompleted
                           ? 'Завершено'
                           : w.status === 'in_progress'
-                          ? 'У процесі'
-                          : 'Заплановано'}
+                            ? 'У процесі'
+                            : 'Заплановано'}
                       </span>
 
                       <span className="text-zinc-300 dark:text-zinc-700">·</span>
@@ -314,8 +281,8 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                         {isCompleted
                           ? 'Переглянути'
                           : w.status === 'in_progress'
-                          ? 'Продовжити'
-                          : 'Розпочати'}
+                            ? 'Продовжити'
+                            : 'Розпочати'}
                       </span>
                       <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
                     </button>

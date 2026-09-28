@@ -9,6 +9,7 @@ interface CreateExerciseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreated: (newExercise: Exercise) => void;
+  initialName?: string;
 }
 
 export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
@@ -16,8 +17,9 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   isOpen,
   onClose,
   onCreated,
+  initialName = '',
 }) => {
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialName);
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>('chest');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
@@ -25,12 +27,14 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    setName(initialName);
+    setError('');
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = originalOverflow;
     };
-  }, [isOpen]);
+  }, [isOpen, initialName]);
 
   if (!isOpen) return null;
 
@@ -128,7 +132,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
               Цільова м'язова група
             </label>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => {
                 const info = MUSCLE_GROUPS[groupKey];
                 const isSelected = muscleGroup === groupKey;

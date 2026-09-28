@@ -414,9 +414,14 @@ begin
   return v_deleted;
 end;
 $$ language plpgsql security definer;
-
 -- One-time execution query for Supabase SQL Editor:
 -- select public.cleanup_unused_exercises();
 
-
-
+-- ==============================================================================
+-- 9. PURGE ALL EXERCISES
+-- Run this in Supabase SQL Editor to wipe all existing exercises from the database:
+-- ==============================================================================
+-- truncate table public.exercises cascade;
+-- or:
+-- delete from public.workout_exercises;
+-- delete from public.exercises;

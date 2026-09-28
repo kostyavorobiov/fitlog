@@ -192,7 +192,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
               className="inline-flex items-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
             >
               <Plus className="h-4 w-4" />
-              <span>Додати власну вправу</span>
+              <span>{search.trim() ? `Створити «${search.trim()}»` : 'Додати власну вправу'}</span>
             </button>
           </div>
         ) : (
@@ -295,6 +295,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
       <CreateExerciseModal
         userId={userId}
         isOpen={isCreateOpen}
+        initialName={search.trim()}
         onClose={() => setIsCreateOpen(false)}
         onCreated={(newEx) => {
           setRefreshKey((prev) => prev + 1);

@@ -35,13 +35,22 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
     let isTracking = false;
     let isCancelled = false;
 
-    const shouldIgnoreTarget = (target: EventTarget | null): boolean => {
+    const shouldIgnoreTarget = (target: EventTarget | null, isEdge: boolean): boolean => {
       if (!target || !(target instanceof HTMLElement)) return false;
-      // Ignore interactive form controls and elements with horizontal scroll
-      const interactive = target.closest(
-        'input, textarea, select, button, a, [role="button"], [data-no-swipe], .no-swipe, .overflow-x-auto, [role="dialog"]'
-      );
-      return Boolean(interactive);
+      // Never hijack active text inputs
+      if (target.closest('input, textarea, select')) return true;
+      // Modals/dialogs manage their own interactions
+      if (target.closest('[role="dialog"]')) return true;
+      // Explicitly marked no-swipe or horizontal scroll
+      if (target.closest('[data-no-swipe], .no-swipe, .overflow-x-auto')) return true;
+
+      // If it's an edge swipe (touch started within 45px of screen edge), allow it
+      if (isEdge) return false;
+
+      // Ignore touches starting directly on buttons or links
+      if (target.closest('button, a, [role="button"]')) return true;
+
+      return false;
     };
 
     const handleTouchStart = (e: TouchEvent) => {
@@ -51,12 +60,14 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
         return;
       }
 
-      if (shouldIgnoreTarget(e.target)) {
+      const touch = e.touches[0];
+      const isEdge = touch.clientX <= 45;
+
+      if (shouldIgnoreTarget(e.target, isEdge)) {
         isTracking = false;
         return;
       }
 
-      const touch = e.touches[0];
       startX = touch.clientX;
       startY = touch.clientY;
       startTime = Date.now();
