@@ -12,6 +12,7 @@ import {
   Mail,
   Sun,
   Moon,
+  Loader2,
 } from 'lucide-react';
 import { UserRole } from '../types/workout';
 import { StorageService } from '../services/storageService';
@@ -25,6 +26,9 @@ export const ProfileView: React.FC = () => {
   const [lastName, setLastName] = useState(user?.lastName || '');
   const [selectedRole, setSelectedRole] = useState<UserRole>(user?.role || 'athlete');
   const [saveToast, setSaveToast] = useState(false);
+  const [coachInputCode, setCoachInputCode] = useState('');
+  const [isLinkingCoach, setIsLinkingCoach] = useState(false);
+  const [coachToast, setCoachToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   if (!user) return null;
 
@@ -45,6 +49,26 @@ export const ProfileView: React.FC = () => {
     setIsEditing(false);
     setSaveToast(true);
     setTimeout(() => setSaveToast(false), 3000);
+  };
+
+  const handleLinkCoach = async () => {
+    if (!coachInputCode.trim()) return;
+    setIsLinkingCoach(true);
+    try {
+      const res = await StorageService.assignCoachToAthlete(user.id, coachInputCode.trim());
+      if (res.success && res.coach) {
+        updateUserProfile({ coachId: res.coach.id });
+        setCoachToast({ text: res.message, type: 'success' });
+        setCoachInputCode('');
+      } else {
+        setCoachToast({ text: res.message, type: 'error' });
+      }
+    } catch {
+      setCoachToast({ text: 'Помилка при прикріпленні тренера', type: 'error' });
+    } finally {
+      setIsLinkingCoach(false);
+      setTimeout(() => setCoachToast(null), 4000);
+    }
   };
 
   const traineesCount = user.traineeIds?.length || 0;
@@ -342,11 +366,54 @@ export const ProfileView: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
-              <p>У вас немає призначеного тренера.</p>
-              <p>
-                Повідомте ваш ID <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{user.profileCode || user.id}</span> тренеру для прикріплення.
-              </p>
+            <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-3">
+              <div className="space-y-1">
+                <p>У вас немає призначеного тренера.</p>
+                <p>
+                  Повідомте ваш ID <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{user.profileCode || user.id}</span> тренеру для прикріплення.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+                <p className="text-zinc-700 dark:text-zinc-300 font-medium">
+                  Або прикріпіться за кодом тренера:
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Введіть код або email тренера"
+                    value={coachInputCode}
+                    onChange={(e) => setCoachInputCode(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !isLinkingCoach) {
+                        handleLinkCoach();
+                      }
+                    }}
+                    disabled={isLinkingCoach}
+                    className="flex-1 h-8 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleLinkCoach}
+                    disabled={isLinkingCoach || !coachInputCode.trim()}
+                    className="h-8 px-3 rounded bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center space-x-1"
+                  >
+                    {isLinkingCoach ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                    <span>Прикріпитися</span>
+                  </button>
+                </div>
+                {coachToast && (
+                  <p
+                    className={`text-[11px] font-medium ${
+                      coachToast.type === 'success'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-rose-600 dark:text-rose-400'
+                    }`}
+                  >
+                    {coachToast.text}
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>

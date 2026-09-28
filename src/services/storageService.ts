@@ -142,23 +142,63 @@ export class StorageService {
     return users.filter((u) => coach.traineeIds?.includes(u.id));
   }
 
-  static addTraineeByCode(
+  static async syncTraineesFromCloud(coachUserId: string): Promise<User[]> {
+    try {
+      const cloudTrainees = await CloudStorageService.fetchTrainees(coachUserId);
+      if (cloudTrainees && cloudTrainees.length > 0) {
+        cloudTrainees.forEach((t) => this.saveUser(t));
+        const users = this.getUsers();
+        const coach = users.find((u) => u.id === coachUserId);
+        if (coach) {
+          coach.traineeIds = Array.from(
+            new Set([...(coach.traineeIds || []), ...cloudTrainees.map((t) => t.id)])
+          );
+          this.saveUser(coach);
+        }
+      }
+    } catch (err) {
+      console.warn('syncTraineesFromCloud error:', err);
+    }
+    return this.getTrainees(coachUserId);
+  }
+
+  static async addTraineeByCode(
     coachUserId: string,
     profileCodeOrId: string
-  ): { success: boolean; message: string; trainee?: User } {
+  ): Promise<{ success: boolean; message: string; trainee?: User }> {
     const users = this.getUsers();
     const coach = users.find((u) => u.id === coachUserId);
     if (!coach) {
       return { success: false, message: 'Тренера не знайдено' };
     }
 
-    const cleanInput = profileCodeOrId.trim().toUpperCase();
-    const trainee = users.find(
+    const cleanInput = profileCodeOrId.trim();
+    const upperInput = cleanInput.toUpperCase();
+    const strippedUpper = upperInput.replace(/^U_/i, '');
+
+    // 1. Search locally in localStorage
+    let trainee = users.find(
       (u) =>
-        u.profileCode?.toUpperCase() === cleanInput ||
-        u.id.toUpperCase() === cleanInput ||
-        u.email.toLowerCase() === cleanInput.toLowerCase()
+        u.profileCode?.toUpperCase() === upperInput ||
+        u.profileCode?.toUpperCase() === strippedUpper ||
+        u.id.toUpperCase() === upperInput ||
+        u.id.toUpperCase() === strippedUpper ||
+        u.email.toLowerCase() === cleanInput.toLowerCase() ||
+        (u.id && u.id.replace(/[-_]/g, '').toUpperCase().startsWith(strippedUpper))
     );
+
+    // 2. If not found locally, query Supabase profiles
+    if (!trainee) {
+      try {
+        const cloudTrainee = await CloudStorageService.findProfile(cleanInput);
+        if (cloudTrainee) {
+          trainee = cloudTrainee;
+          this.saveUser(trainee);
+        }
+      } catch (e) {
+        console.warn('Cloud search failed:', e);
+      }
+    }
 
     if (!trainee) {
       return {
@@ -176,18 +216,84 @@ export class StorageService {
       return { success: false, message: `${trainee.name} вже є у вашому списку підопічних` };
     }
 
-    // Update coach
+    // Update coach locally
     coach.traineeIds = [...currentTrainees, trainee.id];
     this.saveUser(coach);
 
-    // Update trainee with coachId
+    // Update trainee with coachId locally
     trainee.coachId = coach.id;
     this.saveUser(trainee);
+
+    // Update in Supabase
+    CloudStorageService.assignTrainee(coach.id, trainee.id).catch((err) =>
+      console.warn('Background assignTrainee error:', err)
+    );
 
     return {
       success: true,
       message: `Підопічного ${trainee.name} успішно прив'язано!`,
       trainee,
+    };
+  }
+
+  static async assignCoachToAthlete(
+    athleteUserId: string,
+    coachCodeOrId: string
+  ): Promise<{ success: boolean; message: string; coach?: User }> {
+    const users = this.getUsers();
+    const athlete = users.find((u) => u.id === athleteUserId);
+    if (!athlete) {
+      return { success: false, message: 'Користувача не знайдено' };
+    }
+
+    const cleanInput = coachCodeOrId.trim();
+    const upperInput = cleanInput.toUpperCase();
+    const strippedUpper = upperInput.replace(/^U_/i, '');
+
+    let coach = users.find(
+      (u) =>
+        u.profileCode?.toUpperCase() === upperInput ||
+        u.profileCode?.toUpperCase() === strippedUpper ||
+        u.id.toUpperCase() === upperInput ||
+        u.id.toUpperCase() === strippedUpper ||
+        u.email.toLowerCase() === cleanInput.toLowerCase()
+    );
+
+    if (!coach) {
+      try {
+        const cloudCoach = await CloudStorageService.findProfile(cleanInput);
+        if (cloudCoach) {
+          coach = cloudCoach;
+          this.saveUser(coach);
+        }
+      } catch (e) {
+        console.warn('Cloud coach search failed:', e);
+      }
+    }
+
+    if (!coach) {
+      return { success: false, message: `Тренера з кодом "${cleanInput}" не знайдено` };
+    }
+
+    if (coach.id === athleteUserId) {
+      return { success: false, message: 'Неможливо призначити себе тренером' };
+    }
+
+    athlete.coachId = coach.id;
+    this.saveUser(athlete);
+
+    coach.traineeIds = Array.from(new Set([...(coach.traineeIds || []), athlete.id]));
+    this.saveUser(coach);
+
+    // Update in Supabase
+    CloudStorageService.updateProfile(athlete.id, { coachId: coach.id }).catch((err) =>
+      console.warn('Background update athlete coach error:', err)
+    );
+
+    return {
+      success: true,
+      message: `Вас успішно прикріплено до тренера ${coach.name}!`,
+      coach,
     };
   }
 
@@ -203,6 +309,9 @@ export class StorageService {
       trainee.coachId = null;
       this.saveUser(trainee);
     }
+    CloudStorageService.removeTrainee(coachUserId, traineeId).catch((err) =>
+      console.warn('Background removeTrainee error:', err)
+    );
   }
 
   // --- AUTHORIZATION CHECKS (Section 8) ---

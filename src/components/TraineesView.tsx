@@ -17,6 +17,7 @@ import {
   Copy,
   Check,
   Edit3,
+  Loader2,
 } from 'lucide-react';
 
 interface TraineesViewProps {
@@ -37,12 +38,14 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
   const [newTraineeCode, setNewTraineeCode] = useState('');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [workoutToDelete, setWorkoutToDelete] = useState<WorkoutPlan | null>(null);
   const [traineeToRemove, setTraineeToRemove] = useState<User | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Load trainees
+  // Load trainees (locally + cloud sync)
   useEffect(() => {
+    let isMounted = true;
     const list = StorageService.getTrainees(coach.id);
     setTrainees(list);
 
@@ -58,6 +61,25 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
       const refreshed = list.find((t) => t.id === selectedTrainee.id) || list[0] || null;
       setSelectedTrainee(refreshed);
     }
+
+    // Sync from Supabase cloud
+    StorageService.syncTraineesFromCloud(coach.id).then((cloudList) => {
+      if (!isMounted) return;
+      if (cloudList && cloudList.length > 0) {
+        setTrainees(cloudList);
+        const curSavedId = externalSelectedTraineeId || localStorage.getItem('fitlog_selected_trainee_id');
+        const curMatched = cloudList.find((t) => t.id === curSavedId);
+        if (curMatched) {
+          setSelectedTrainee(curMatched);
+        } else if (!selectedTrainee) {
+          setSelectedTrainee(cloudList[0]);
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, [coach.id, coach.traineeIds, refreshKey, externalSelectedTraineeId]);
 
   const selectTrainee = (trainee: User) => {
@@ -82,23 +104,30 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const handleAddTrainee = (codeToUse?: string) => {
+  const handleAddTrainee = async (codeToUse?: string) => {
     const code = (codeToUse || newTraineeCode).trim();
     if (!code) {
-      showToast('Введіть ID або код підопічного', 'error');
+      showToast('Введіть ID, код або email підопічного', 'error');
       return;
     }
 
-    const result = StorageService.addTraineeByCode(coach.id, code);
-    if (result.success) {
-      showToast(result.message, 'success');
-      setNewTraineeCode('');
-      setRefreshKey((k) => k + 1);
-      if (result.trainee) {
-        selectTrainee(result.trainee);
+    setIsAdding(true);
+    try {
+      const result = await StorageService.addTraineeByCode(coach.id, code);
+      if (result.success) {
+        showToast(result.message, 'success');
+        setNewTraineeCode('');
+        setRefreshKey((k) => k + 1);
+        if (result.trainee) {
+          selectTrainee(result.trainee);
+        }
+      } else {
+        showToast(result.message, 'error');
       }
-    } else {
-      showToast(result.message, 'error');
+    } catch {
+      showToast('Помилка при додаванні підопічного', 'error');
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -202,18 +231,34 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
-            placeholder="Введіть код підопічного (напр. cmug5e9xj...)"
+            placeholder="Введіть ID, код або email підопічного (напр. U_278AF2CCCC або email)"
             value={newTraineeCode}
             onChange={(e) => setNewTraineeCode(e.target.value)}
-            className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !isAdding) {
+                handleAddTrainee();
+              }
+            }}
+            disabled={isAdding}
+            className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 disabled:opacity-50"
           />
           <button
             type="button"
             onClick={() => handleAddTrainee()}
-            className="h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0"
+            disabled={isAdding}
+            className="h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50"
           >
-            <UserPlus className="h-4 w-4" />
-            <span>Прикріпити</span>
+            {isAdding ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Пошук...</span>
+              </>
+            ) : (
+              <>
+                <UserPlus className="h-4 w-4" />
+                <span>Прикріпити</span>
+              </>
+            )}
           </button>
         </div>
       </div>

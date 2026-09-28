@@ -374,6 +374,149 @@ export class CloudStorageService {
   }
 
   /**
+   * Search for a user profile in Supabase by profile_code, email, id, or partial match
+   */
+  static async findProfile(query: string): Promise<User | null> {
+    if (!isSupabaseConfigured() || !supabase) return null;
+
+    const raw = query.trim();
+    if (!raw) return null;
+
+    // Normalizations
+    const clean = raw;
+    const stripped = raw.replace(/^u_/i, '');
+    const cleanNoDashes = raw.replace(/[-_]/g, '').toLowerCase();
+    const strippedNoDashes = stripped.replace(/[-_]/g, '').toLowerCase();
+
+    try {
+      // 1. Direct UUID match (if input is a valid 36-char UUID)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean);
+      if (isUuid) {
+        const { data } = await supabase.from('profiles').select('*').eq('id', clean).maybeSingle();
+        if (data) return this.mapProfileRow(data);
+      }
+
+      // 2. Exact match on profile_code (case-insensitive)
+      const { data: codeMatch } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`profile_code.ilike.${clean},profile_code.ilike.${stripped}`)
+        .limit(1);
+      if (codeMatch && codeMatch.length > 0) {
+        return this.mapProfileRow(codeMatch[0]);
+      }
+
+      // 3. Exact match on email (case-insensitive)
+      const { data: emailMatch } = await supabase
+        .from('profiles')
+        .select('*')
+        .ilike('email', clean)
+        .limit(1);
+      if (emailMatch && emailMatch.length > 0) {
+        return this.mapProfileRow(emailMatch[0]);
+      }
+
+      // 4. Broad search across profiles (handles partial matches and shortened IDs)
+      const { data: allProfiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .limit(200);
+
+      if (allProfiles && allProfiles.length > 0) {
+        const found = allProfiles.find((p: any) => {
+          const pId = (p.id || '').toLowerCase().replace(/[-_]/g, '');
+          const pCode = (p.profile_code || '').toLowerCase();
+          const pEmail = (p.email || '').toLowerCase();
+
+          return (
+            pCode === clean.toLowerCase() ||
+            pCode === stripped.toLowerCase() ||
+            pEmail === clean.toLowerCase() ||
+            pId === cleanNoDashes ||
+            pId === strippedNoDashes ||
+            pId.startsWith(strippedNoDashes) ||
+            pId.startsWith(cleanNoDashes) ||
+            pCode.includes(clean.toLowerCase()) ||
+            pCode.includes(stripped.toLowerCase()) ||
+            pEmail.includes(clean.toLowerCase())
+          );
+        });
+
+        if (found) {
+          return this.mapProfileRow(found);
+        }
+      }
+
+      return null;
+    } catch (err) {
+      console.warn('CloudStorageService.findProfile error:', err);
+      return null;
+    }
+  }
+
+  private static mapProfileRow(item: any): User {
+    return {
+      id: item.id,
+      profileCode: item.profile_code,
+      firstName: item.first_name || '',
+      lastName: item.last_name || '',
+      name: item.name || `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Підопічний',
+      email: item.email,
+      role: item.role || 'athlete',
+      coachId: item.coach_id,
+      image: item.avatar_url || '',
+      createdAt: item.created_at,
+    };
+  }
+
+  /**
+   * Assign trainee to coach in Supabase
+   */
+  static async assignTrainee(coachId: string, traineeId: string): Promise<boolean> {
+    if (!isSupabaseConfigured() || !supabase) return false;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ coach_id: coachId, updated_at: new Date().toISOString() })
+        .eq('id', traineeId);
+
+      if (error) {
+        console.warn('CloudStorageService.assignTrainee error:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('CloudStorageService.assignTrainee failed:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Remove trainee from coach in Supabase
+   */
+  static async removeTrainee(coachId: string, traineeId: string): Promise<boolean> {
+    if (!isSupabaseConfigured() || !supabase) return false;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ coach_id: null, updated_at: new Date().toISOString() })
+        .eq('id', traineeId)
+        .eq('coach_id', coachId);
+
+      if (error) {
+        console.warn('CloudStorageService.removeTrainee error:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('CloudStorageService.removeTrainee failed:', err);
+      return false;
+    }
+  }
+
+  /**
    * Fetch trainees for coach
    */
   static async fetchTrainees(coachId: string): Promise<User[]> {
@@ -387,18 +530,7 @@ export class CloudStorageService {
 
       if (error || !data) return [];
 
-      return data.map((item: any) => ({
-        id: item.id,
-        profileCode: item.profile_code,
-        firstName: item.first_name || '',
-        lastName: item.last_name || '',
-        name: item.name || `${item.first_name || ''} ${item.last_name || ''}`.trim(),
-        email: item.email,
-        role: item.role || 'athlete',
-        coachId: item.coach_id,
-        image: item.avatar_url || '',
-        createdAt: item.created_at,
-      }));
+      return data.map((item: any) => this.mapProfileRow(item));
     } catch (err) {
       console.warn('Failed to fetch trainees:', err);
       return [];

@@ -94,10 +94,19 @@ create policy "Allow all authenticated users to read profiles"
   to authenticated
   using (true);
 
-create policy "Users can update their own profile"
+create policy "Users can update their own profile or assign coach"
   on public.profiles for update
   to authenticated
-  using (auth.uid() = id);
+  using (
+    auth.uid() = id or
+    coach_id is null or
+    coach_id = auth.uid()
+  )
+  with check (
+    auth.uid() = id or
+    coach_id is null or
+    coach_id = auth.uid()
+  );
 
 create policy "Users can insert their own profile"
   on public.profiles for insert
