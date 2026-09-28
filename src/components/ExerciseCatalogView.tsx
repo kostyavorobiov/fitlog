@@ -39,8 +39,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
   const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isCleaning, setIsCleaning] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     StorageService.syncExercises().then(() => {
@@ -85,21 +83,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleCleanupUnused = async () => {
-    setIsCleaning(true);
-    try {
-      const res = await StorageService.cleanupUnusedExercises();
-      setToastMessage(`Видалено ${res.deletedCount} невикористаних вправ. Залишено: ${res.keptCount}`);
-      setRefreshKey((prev) => prev + 1);
-      setTimeout(() => setToastMessage(null), 4000);
-    } catch {
-      setToastMessage('Помилка при очищенні вправ');
-      setTimeout(() => setToastMessage(null), 3000);
-    } finally {
-      setIsCleaning(false);
-    }
-  };
-
   return (
     <div className="space-y-5 max-w-5xl mx-auto animate-fade-in pb-12">
       {/* Header */}
@@ -114,19 +97,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         </div>
 
         <div className="flex items-center gap-2">
-          {isCoachOrAdmin && (
-            <button
-              type="button"
-              onClick={handleCleanupUnused}
-              disabled={isCleaning}
-              className="inline-flex items-center justify-center space-x-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-              title="Видалити всі вправи в базі даних, які не використовуються в жодному тренуванні"
-            >
-              <Trash2 className="h-3.5 w-3.5 text-zinc-400" />
-              <span>{isCleaning ? 'Очищення...' : 'Очистити невикористані'}</span>
-            </button>
-          )}
-
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
@@ -137,18 +107,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
           </button>
         </div>
       </div>
-
-      {toastMessage && (
-        <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs font-medium text-emerald-800 dark:text-emerald-200 animate-fade-in flex items-center justify-between">
-          <span>{toastMessage}</span>
-          <button
-            onClick={() => setToastMessage(null)}
-            className="text-emerald-600 dark:text-emerald-400 hover:opacity-75 cursor-pointer ml-2"
-          >
-            ×
-          </button>
-        </div>
-      )}
 
       {/* Search and Filters Bar */}
       <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-4 space-y-3">

@@ -321,12 +321,25 @@ export class CloudStorageService {
   }
 
   /**
-   * Fetch custom and global exercises
+   * Fetch custom and global exercises (returns only exercises actually used in workouts or created by user)
    */
   static async fetchExercises(_userId?: string): Promise<Exercise[] | null> {
     if (!isSupabaseConfigured() || !supabase) return null;
 
     try {
+      // 1. Fetch distinct exercise IDs used in workout_exercises
+      const { data: usedRows, error: weErr } = await supabase
+        .from('workout_exercises')
+        .select('exercise_id');
+
+      const usedIdSet = new Set<string>();
+      if (!weErr && usedRows) {
+        usedRows.forEach((r: any) => {
+          if (r.exercise_id) usedIdSet.add(r.exercise_id);
+        });
+      }
+
+      // 2. Fetch all exercises from Supabase
       const { data, error } = await supabase
         .from('exercises')
         .select('*')
@@ -339,7 +352,37 @@ export class CloudStorageService {
 
       if (!data) return [];
 
-      return data.map((item: any) => ({
+      // 3. Separate used/custom exercises from unused exercises
+      const unusedIds: string[] = [];
+      const validRows: any[] = [];
+
+      data.forEach((item: any) => {
+        const isUsed = usedIdSet.has(item.id);
+        const isUserCustom = Boolean(
+          item.user_id && !item.is_default && !item.id.startsWith('global_ex') && !item.id.startsWith('def_ex')
+        );
+
+        if (isUsed || isUserCustom) {
+          validRows.push(item);
+        } else if (usedIdSet.size > 0) {
+          // If we have recorded workouts, any other exercise is unused and must be permanently removed
+          unusedIds.push(item.id);
+        } else {
+          validRows.push(item);
+        }
+      });
+
+      // 4. Permanently delete unused exercises from Supabase database
+      if (unusedIds.length > 0) {
+        for (let i = 0; i < unusedIds.length; i += 50) {
+          const chunk = unusedIds.slice(i, i + 50);
+          supabase.from('exercises').delete().in('id', chunk).catch((delErr) => {
+            console.warn('Auto-cleanup of unused exercises error:', delErr);
+          });
+        }
+      }
+
+      return validRows.map((item: any) => ({
         id: item.id,
         userId: item.user_id,
         name: item.name,
@@ -668,42 +711,11 @@ export class CloudStorageService {
   }
 
   /**
-   * Seed default exercises into Supabase exercises table
+   * Seed default exercises into Supabase exercises table (disabled - unused exercises are purged permanently)
    */
   static async ensureDefaultExercises(): Promise<void> {
-    if (!isSupabaseConfigured() || !supabase) return;
-    try {
-      if (DEFAULT_EXERCISES.length === 0) return;
-
-      const { data: existingRows } = await supabase.from('exercises').select('id').limit(1);
-      if (existingRows && existingRows.length > 0) {
-        // Table already has exercises in Supabase! Do NOT resurrect deleted exercises.
-        return;
-      }
-
-      const defaultRows = DEFAULT_EXERCISES.map((ex, idx) => ({
-        id: `global_ex_${idx + 1}`,
-        name: ex.name,
-        muscle_group: ex.muscleGroup,
-        description: ex.description || '',
-        is_default: true,
-        user_id: null,
-      }));
-
-      const { data: authData } = await supabase.auth.getUser();
-      const currentAuthId = authData?.user?.id || null;
-
-      for (let i = 0; i < defaultRows.length; i += 50) {
-        const chunk = defaultRows.slice(i, i + 50);
-        const { error: inErr } = await supabase.from('exercises').insert(chunk);
-        if (inErr && currentAuthId) {
-          const fallbackChunk = chunk.map((r) => ({ ...r, user_id: currentAuthId }));
-          await supabase.from('exercises').insert(fallbackChunk);
-        }
-      }
-    } catch (err) {
-      console.warn('ensureDefaultExercises error:', err);
-    }
+    // Unused exercises are permanently deleted. Never resurrect or seed old exercises.
+    return;
   }
 
   /**
@@ -712,7 +724,15 @@ export class CloudStorageService {
   static async cleanupUnusedExercises(): Promise<{ deletedCount: number; keptCount: number }> {
     if (!isSupabaseConfigured() || !supabase) return { deletedCount: 0, keptCount: 0 };
     try {
-      // 1. Fetch all distinct exercise_ids used in workout_exercises
+      // 1. First attempt to call the security-definer Postgres RPC function
+      try {
+        const { data: rpcDeleted, error: rpcErr } = await supabase.rpc('cleanup_unused_exercises');
+        if (!rpcErr && typeof rpcDeleted === 'number') {
+          return { deletedCount: rpcDeleted, keptCount: 0 };
+        }
+      } catch {}
+
+      // 2. Fetch all distinct exercise_ids used in workout_exercises
       const { data: usedRows, error: weErr } = await supabase
         .from('workout_exercises')
         .select('exercise_id');
@@ -726,17 +746,22 @@ export class CloudStorageService {
         (usedRows || []).map((r: any) => r.exercise_id).filter(Boolean)
       );
 
-      // 2. Fetch all exercises from exercises table
+      // 3. Fetch all exercises from exercises table
       const { data: allExercises, error: exErr } = await supabase
         .from('exercises')
-        .select('id, name');
+        .select('id, name, user_id, is_default');
 
       if (exErr || !allExercises) {
         console.warn('cleanupUnusedExercises error fetching exercises:', exErr);
         return { deletedCount: 0, keptCount: 0 };
       }
 
-      const unusedExercises = allExercises.filter((ex: any) => !usedIdSet.has(ex.id));
+      const unusedExercises = allExercises.filter((ex: any) => {
+        if (usedIdSet.has(ex.id)) return false;
+        // Keep active custom user exercise if created
+        if (ex.user_id && !ex.is_default && !ex.id.startsWith('global_ex') && !ex.id.startsWith('def_ex')) return false;
+        return true;
+      });
 
       if (unusedExercises.length === 0) {
         return { deletedCount: 0, keptCount: allExercises.length };
@@ -744,7 +769,7 @@ export class CloudStorageService {
 
       const unusedIds = unusedExercises.map((ex: any) => ex.id);
 
-      // 3. Delete unused exercises from database in chunks of 50
+      // 4. Delete unused exercises from database in chunks of 50
       for (let i = 0; i < unusedIds.length; i += 50) {
         const chunk = unusedIds.slice(i, i + 50);
         await supabase.from('exercises').delete().in('id', chunk);

@@ -398,13 +398,25 @@ $$ language plpgsql security definer;
 
 -- ==============================================================================
 -- 8. CLEANUP UNUSED EXERCISES (Keep only exercises used in workouts)
--- Run this block in Supabase SQL Editor whenever you want to purge unused exercises:
 -- ==============================================================================
--- delete from public.exercises
--- where id not in (
---   select distinct exercise_id
---   from public.workout_exercises
---   where exercise_id is not null
--- );
+create or replace function public.cleanup_unused_exercises()
+returns integer as $$
+declare
+  v_deleted integer;
+begin
+  delete from public.exercises
+  where id not in (
+    select distinct exercise_id
+    from public.workout_exercises
+    where exercise_id is not null
+  );
+  get diagnostics v_deleted = row_count;
+  return v_deleted;
+end;
+$$ language plpgsql security definer;
+
+-- One-time execution query for Supabase SQL Editor:
+-- select public.cleanup_unused_exercises();
+
 
 

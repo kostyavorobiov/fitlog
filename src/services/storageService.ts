@@ -67,40 +67,63 @@ export class StorageService {
 
   // --- EXERCISES ---
   static initializeExercises(): Exercise[] {
-    if (memoryStore.exercises.length === 0) {
-      memoryStore.exercises = DEFAULT_EXERCISES.map((def, idx) => ({
-        id: `global_ex_${idx + 1}`,
-        name: def.name,
-        muscleGroup: def.muscleGroup,
-        description: def.description || '',
-        isDefault: true,
-        userId: null,
-        createdAt: '2026-01-01T00:00:00.000Z',
-      }));
+    if (memoryStore.exercises.length === 0 && memoryStore.workouts.length > 0) {
+      const seen = new Set<string>();
+      const fromWorkouts: Exercise[] = [];
+      memoryStore.workouts.forEach((w) => {
+        (w.exercises || []).forEach((we) => {
+          if (we.exerciseId && !seen.has(we.exerciseId)) {
+            seen.add(we.exerciseId);
+            fromWorkouts.push({
+              id: we.exerciseId,
+              name: we.exerciseName || 'Вправа',
+              muscleGroup: we.muscleGroup || 'full_body',
+              description: '',
+              isDefault: true,
+              userId: null,
+              createdAt: '2026-01-01T00:00:00.000Z',
+            });
+          }
+        });
+      });
+      if (fromWorkouts.length > 0) {
+        memoryStore.exercises = fromWorkouts;
+      }
     }
     return [...memoryStore.exercises];
+  }
+
+  static purgeUnusedExercises(): void {
+    const usedIds = new Set<string>();
+    const usedNames = new Set<string>();
+
+    memoryStore.workouts.forEach((w) => {
+      (w.exercises || []).forEach((we) => {
+        if (we.exerciseId) usedIds.add(we.exerciseId);
+        if (we.exerciseName) usedNames.add(we.exerciseName.toLowerCase().trim());
+      });
+    });
+
+    if (usedIds.size > 0 || usedNames.size > 0) {
+      memoryStore.exercises = memoryStore.exercises.filter((ex) => {
+        if (usedIds.has(ex.id) || usedNames.has(ex.name.toLowerCase().trim())) return true;
+        if (ex.userId && !ex.isDefault && !ex.id.startsWith('global_ex') && !ex.id.startsWith('def_ex')) return true;
+        return false;
+      });
+    }
   }
 
   static async syncExercises(): Promise<Exercise[]> {
     try {
       const cloudExercises = await CloudStorageService.fetchExercises();
-      if (cloudExercises) {
-        if (cloudExercises.length > 0) {
-          memoryStore.exercises = cloudExercises;
-          return [...memoryStore.exercises];
-        } else {
-          // If cloud has 0 exercises, seed once
-          await CloudStorageService.ensureDefaultExercises();
-          const refreshed = await CloudStorageService.fetchExercises();
-          if (refreshed && refreshed.length > 0) {
-            memoryStore.exercises = refreshed;
-            return [...memoryStore.exercises];
-          }
-        }
+      if (cloudExercises && cloudExercises.length > 0) {
+        memoryStore.exercises = cloudExercises;
+        return [...memoryStore.exercises];
       }
     } catch (err) {
       console.warn('syncExercises error:', err);
     }
+    this.purgeUnusedExercises();
     return this.initializeExercises();
   }
 
@@ -112,61 +135,9 @@ export class StorageService {
     });
   }
 
-  static getExercises(targetUserId: string | null): Exercise[] {
-    const all = this.initializeExercises();
-
-    const activeUserId = this.getActiveUserId();
-    const users = this.getUsers();
-
-    const activeUser = users.find((u) => u.id === activeUserId);
-    const targetUser = users.find((u) => u.id === targetUserId);
-
-    // Admins see all exercises
-    if (activeUser?.role === 'admin' || targetUser?.role === 'admin') {
-      return all;
-    }
-
-    // Collect all exercise IDs used in workouts accessible to activeUser or targetUser
-    const relevantWorkouts = this.getWorkoutsForUserAndCoach(targetUserId, activeUserId);
-    const usedExerciseIds = new Set<string>();
-    relevantWorkouts.forEach((w) => {
-      (w.exercises || []).forEach((we) => {
-        if (we.exerciseId) usedExerciseIds.add(we.exerciseId);
-      });
-    });
-
-    return all.filter((ex) => {
-      // 1. Global / default exercises are visible to all
-      if (ex.isDefault || ex.userId === null || ex.id.startsWith('global_ex') || ex.id.startsWith('def_ex')) return true;
-
-      // 2. Creator sees their own exercises (by ID or profileCode)
-      if (
-        (activeUserId && ex.userId === activeUserId) ||
-        (targetUserId && ex.userId === targetUserId) ||
-        (activeUser?.profileCode && ex.userId === activeUser.profileCode) ||
-        (targetUser?.profileCode && ex.userId === targetUser.profileCode)
-      ) {
-        return true;
-      }
-
-      // 3. Trainee sees coach's custom exercises & Coach sees trainee's custom exercises
-      if (
-        (activeUser?.coachId && ex.userId === activeUser.coachId) ||
-        (targetUser?.coachId && ex.userId === targetUser.coachId) ||
-        (activeUser?.traineeIds && ex.userId && activeUser.traineeIds.includes(ex.userId)) ||
-        (targetUser?.traineeIds && ex.userId && targetUser.traineeIds.includes(ex.userId))
-      ) {
-        return true;
-      }
-
-      // 4. Custom exercises created locally without userId are visible to current user
-      if (ex.id.startsWith('custom_ex') && !ex.userId) return true;
-
-      // 5. User sees custom exercise created by coach or trainee IF formed into a workout!
-      if (usedExerciseIds.has(ex.id)) return true;
-
-      return false;
-    });
+  static getExercises(_targetUserId?: string | null): Exercise[] {
+    this.purgeUnusedExercises();
+    return this.initializeExercises();
   }
 
   static getExerciseById(id: string): Exercise | undefined {
@@ -301,15 +272,13 @@ export class StorageService {
 
     // 3. Filter memoryStore.exercises: keep only used ones
     const initialCount = memoryStore.exercises.length;
-    memoryStore.exercises = memoryStore.exercises.filter((ex) => {
-      return usedIds.has(ex.id) || usedNames.has(ex.name.toLowerCase().trim());
-    });
+    this.purgeUnusedExercises();
     const memoryDeleted = initialCount - memoryStore.exercises.length;
 
     // 4. If Supabase is connected, refresh from cloud
     try {
       const refreshed = await CloudStorageService.fetchExercises();
-      if (refreshed) {
+      if (refreshed && refreshed.length > 0) {
         memoryStore.exercises = refreshed;
       }
     } catch (e) {
