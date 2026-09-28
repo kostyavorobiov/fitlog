@@ -117,8 +117,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       const titleUk = isToday
         ? `Сьогодні, ${formatted}`
         : isYesterday
-        ? `Вчора, ${formatted}`
-        : formatted;
+          ? `Вчора, ${formatted}`
+          : formatted;
 
       return {
         type: 'day' as const,
@@ -295,9 +295,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
           <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
             Аналітика
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            Кількість завершених підходів за м'язовими групами та динаміка навантаження
-          </p>
         </div>
 
         {/* Period Filter (Flat Segmented Control) */}
@@ -318,11 +315,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                   setSelectedPeriod(p.key);
                   setCurrentDate(new Date());
                 }}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                  isActive
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${isActive
                     ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 {p.label}
               </button>
@@ -521,8 +517,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                 type="button"
                 onClick={() => setViewMode('prs')}
                 className={`rounded px-2.5 py-1 font-semibold transition-colors cursor-pointer ${viewMode === 'prs' && !searchQuery
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                   }`}
               >
                 Топ ({stats.topPRs.length})
@@ -531,8 +527,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                 type="button"
                 onClick={() => setViewMode('all')}
                 className={`rounded px-2.5 py-1 font-semibold transition-colors cursor-pointer ${viewMode === 'all' && !searchQuery
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                   }`}
               >
                 Всі ({stats.allTrackedExercises.length})

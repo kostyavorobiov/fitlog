@@ -91,20 +91,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
           <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
             База вправ
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            Каталог вправ із персональною статистикою та історією підходів
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs sm:text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Створити власну вправу</span>
-          </button>
         </div>
       </div>
 
@@ -147,11 +133,10 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
           <button
             type="button"
             onClick={() => setSelectedMuscle('all')}
-            className={`rounded-md px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors border cursor-pointer ${
-              selectedMuscle === 'all'
-                ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950'
-                : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-            }`}
+            className={`rounded-md px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors border cursor-pointer ${selectedMuscle === 'all'
+              ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950'
+              : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+              }`}
           >
             Всі м'язи ({displayedBase.length})
           </button>
@@ -164,11 +149,10 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                 key={groupKey}
                 type="button"
                 onClick={() => setSelectedMuscle(groupKey)}
-                className={`rounded-md px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors border cursor-pointer ${
-                  isSelected
-                    ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950'
-                    : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                }`}
+                className={`rounded-md px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors border cursor-pointer ${isSelected
+                  ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950'
+                  : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
               >
                 {info.nameUk} ({count})
               </button>

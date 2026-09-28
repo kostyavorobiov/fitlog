@@ -177,20 +177,6 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
         </div>
 
         {/* Add Workout Button */}
-        <button
-          type="button"
-          onClick={() => {
-            if (onCreateWorkout) {
-              onCreateWorkout('', selectedCalendarDateStr);
-            } else {
-              setIsCreateModalOpen(true);
-            }
-          }}
-          className="inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs sm:text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Додати тренування</span>
-        </button>
       </div>
 
       {/* CALENDAR CARD - Minimal Flat */}
@@ -267,23 +253,23 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 key={`day-${dayNum}`}
                 onClick={() => setSelectedCalendarDateStr(dateStr)}
                 className={`h-14 sm:h-20 rounded-lg border p-1 sm:p-1.5 cursor-pointer transition-colors flex flex-col justify-between ${isSelected
-                    ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900 dark:ring-zinc-100'
-                    : isToday
-                      ? 'border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900'
-                      : dayWorkouts.length > 0
-                        ? 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
-                        : 'border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                  ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900 dark:ring-zinc-100'
+                  : isToday
+                    ? 'border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900'
+                    : dayWorkouts.length > 0
+                      ? 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
+                      : 'border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
                   }`}
               >
                 <div className="flex items-center justify-between">
                   <span
                     className={`text-[11px] sm:text-xs font-bold ${isSelected
-                        ? 'text-zinc-950 dark:text-zinc-50'
-                        : isToday
-                          ? 'text-zinc-900 dark:text-zinc-100 font-extrabold'
-                          : dayWorkouts.length > 0
-                            ? 'text-zinc-800 dark:text-zinc-200'
-                            : 'text-zinc-400 dark:text-zinc-500'
+                      ? 'text-zinc-950 dark:text-zinc-50'
+                      : isToday
+                        ? 'text-zinc-900 dark:text-zinc-100 font-extrabold'
+                        : dayWorkouts.length > 0
+                          ? 'text-zinc-800 dark:text-zinc-200'
+                          : 'text-zinc-400 dark:text-zinc-500'
                       }`}
                   >
                     {dayNum}
@@ -304,8 +290,8 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                       <div
                         key={dw.id}
                         className={`truncate rounded px-1 py-0.5 text-[8px] sm:text-[9px] font-semibold border ${isDone
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
-                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
                           }`}
                         title={dw.title}
                       >
@@ -390,10 +376,10 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                     <div className="flex items-center space-x-2 text-xs">
                       <span
                         className={`font-semibold ${isDone
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : w.status === 'in_progress'
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-zinc-500 dark:text-zinc-400'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : w.status === 'in_progress'
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-zinc-500 dark:text-zinc-400'
                           }`}
                       >
                         {isDone
