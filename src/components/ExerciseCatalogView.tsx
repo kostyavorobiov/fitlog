@@ -72,9 +72,13 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
     });
   }, [exercises, search, selectedMuscle, onlyCustom]);
 
-  const handleConfirmDelete = () => {
+  const currentUser = StorageService.getUserById(userId);
+  const isCoachOrAdmin = !currentUser || currentUser.role === 'coach' || currentUser.role === 'admin';
+
+  const handleConfirmDelete = async () => {
     if (!exerciseToDelete) return;
-    StorageService.deleteExercise(exerciseToDelete.id);
+    const idToDelete = exerciseToDelete.id;
+    await StorageService.deleteExercise(idToDelete);
     setExerciseToDelete(null);
     setRefreshKey((prev) => prev + 1);
   };
@@ -194,7 +198,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
             const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
             const lastPerf = StorageService.getLastExercisePerformance(userId, ex.id);
             const isCustom = isCustomExercise(ex);
-            const canEdit = !ex.isDefault && (ex.userId === userId || !ex.userId);
+            const canEdit = isCoachOrAdmin || isCustom || ex.userId === userId;
 
             return (
               <div
@@ -224,7 +228,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                             setExerciseToEdit(ex);
                           }}
                           className="p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ml-0.5"
-                          title="Редагувати власну вправу"
+                          title={isCustom ? "Редагувати власну вправу" : "Редагувати вправу"}
                           aria-label={`Редагувати вправу ${ex.name}`}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -238,7 +242,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                             setExerciseToDelete(ex);
                           }}
                           className="p-1 rounded text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer ml-0.5"
-                          title="Видалити власну вправу"
+                          title={isCustom ? "Видалити власну вправу" : "Видалити вправу"}
                           aria-label={`Видалити вправу ${ex.name}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -314,8 +318,8 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
 
       <ConfirmDeleteModal
         isOpen={Boolean(exerciseToDelete)}
-        title="Видалити власну вправу?"
-        message={`Ви впевнені, що хочете видалити вправу "${exerciseToDelete?.name}"? Її буде вилучено з вашої бази вправ.`}
+        title={exerciseToDelete && isCustomExercise(exerciseToDelete) ? "Видалити власну вправу?" : "Видалити вправу з бази?"}
+        message={`Ви впевнені, що хочете видалити вправу "${exerciseToDelete?.name || ''}"? Її буде вилучено з бази вправ.`}
         confirmLabel="Видалити"
         cancelLabel="Скасувати"
         onConfirm={handleConfirmDelete}

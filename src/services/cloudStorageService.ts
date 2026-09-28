@@ -404,6 +404,8 @@ export class CloudStorageService {
   static async deleteExercise(exerciseId: string): Promise<boolean> {
     if (!isSupabaseConfigured() || !supabase) return false;
     try {
+      // Delete any workout_exercises that reference this exercise
+      await supabase.from('workout_exercises').delete().eq('exercise_id', exerciseId);
       const { error } = await supabase.from('exercises').delete().eq('id', exerciseId);
       if (error) {
         console.warn('deleteExercise error:', error.message);
@@ -673,33 +675,30 @@ export class CloudStorageService {
     try {
       if (DEFAULT_EXERCISES.length === 0) return;
 
-      const { data: existingRows } = await supabase.from('exercises').select('id, name');
-      const existingNames = new Map<string, string>();
-      (existingRows || []).forEach((r: any) => {
-        if (r.name) existingNames.set(r.name.toLowerCase().trim(), r.id);
-      });
+      const { data: existingRows } = await supabase.from('exercises').select('id').limit(1);
+      if (existingRows && existingRows.length > 0) {
+        // Table already has exercises in Supabase! Do NOT resurrect deleted exercises.
+        return;
+      }
 
-      const defaultRows = DEFAULT_EXERCISES.map((ex, idx) => {
-        const existingId = existingNames.get(ex.name.toLowerCase().trim());
-        return {
-          id: existingId || `global_ex_${idx + 1}`,
-          name: ex.name,
-          muscle_group: ex.muscleGroup,
-          description: ex.description || '',
-          is_default: true,
-          user_id: null,
-        };
-      });
+      const defaultRows = DEFAULT_EXERCISES.map((ex, idx) => ({
+        id: `global_ex_${idx + 1}`,
+        name: ex.name,
+        muscle_group: ex.muscleGroup,
+        description: ex.description || '',
+        is_default: true,
+        user_id: null,
+      }));
 
       const { data: authData } = await supabase.auth.getUser();
       const currentAuthId = authData?.user?.id || null;
 
       for (let i = 0; i < defaultRows.length; i += 50) {
         const chunk = defaultRows.slice(i, i + 50);
-        const { error: upErr } = await supabase.from('exercises').upsert(chunk, { onConflict: 'id' });
-        if (upErr && currentAuthId) {
+        const { error: inErr } = await supabase.from('exercises').insert(chunk);
+        if (inErr && currentAuthId) {
           const fallbackChunk = chunk.map((r) => ({ ...r, user_id: currentAuthId }));
-          await supabase.from('exercises').upsert(fallbackChunk, { onConflict: 'id' });
+          await supabase.from('exercises').insert(fallbackChunk);
         }
       }
     } catch (err) {

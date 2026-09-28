@@ -53,7 +53,7 @@ export const ProfileView: React.FC = () => {
   const [adminToast, setAdminToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const refreshGlobalExercises = () => {
-    const list = StorageService.initializeExercises().filter(
+    const list = StorageService.getExercises(null).filter(
       (e) => e.isDefault || e.userId === null
     );
     setGlobalExercises(list);
@@ -136,8 +136,7 @@ export const ProfileView: React.FC = () => {
   };
 
   const handleDeleteGlobalExercise = async (exerciseId: string, name: string) => {
-    StorageService.deleteExercise(exerciseId);
-    await CloudStorageService.deleteExercise(exerciseId);
+    await StorageService.deleteExercise(exerciseId);
     refreshGlobalExercises();
     setAdminToast({ text: `Вправу "${name}" видалено`, type: 'success' });
     setTimeout(() => setAdminToast(null), 3000);

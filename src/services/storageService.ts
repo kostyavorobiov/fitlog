@@ -77,58 +77,26 @@ export class StorageService {
         userId: null,
         createdAt: '2026-01-01T00:00:00.000Z',
       }));
-    } else {
-      // Ensure all DEFAULT_EXERCISES exist in memory
-      const nameMap = new Map<string, Exercise>();
-      memoryStore.exercises.forEach((ex) => {
-        nameMap.set(ex.name.toLowerCase().trim(), ex);
-      });
-
-      DEFAULT_EXERCISES.forEach((def, idx) => {
-        const cleanName = def.name.toLowerCase().trim();
-        const existing = nameMap.get(cleanName);
-        if (existing) {
-          if (!existing.isDefault || existing.muscleGroup !== def.muscleGroup) {
-            existing.isDefault = true;
-            existing.muscleGroup = def.muscleGroup;
-          }
-        } else {
-          const newGlobal: Exercise = {
-            id: `global_ex_${idx + 1}`,
-            name: def.name,
-            muscleGroup: def.muscleGroup,
-            description: def.description || '',
-            isDefault: true,
-            userId: null,
-            createdAt: '2026-01-01T00:00:00.000Z',
-          };
-          memoryStore.exercises.push(newGlobal);
-          nameMap.set(cleanName, newGlobal);
-        }
-      });
     }
-
     return [...memoryStore.exercises];
   }
 
   static async syncExercises(): Promise<Exercise[]> {
     try {
       const cloudExercises = await CloudStorageService.fetchExercises();
-      if (cloudExercises && cloudExercises.length > 0) {
-        this.initializeExercises();
-        const mapEx = new Map<string, Exercise>();
-        memoryStore.exercises.forEach((e) => mapEx.set(e.id, e));
-        cloudExercises.forEach((ce) => {
-          if (!ce.id.startsWith('def_ex_')) {
-            const existing = mapEx.get(ce.id);
-            mapEx.set(ce.id, {
-              ...existing,
-              ...ce,
-            });
+      if (cloudExercises) {
+        if (cloudExercises.length > 0) {
+          memoryStore.exercises = cloudExercises;
+          return [...memoryStore.exercises];
+        } else {
+          // If cloud has 0 exercises, seed once
+          await CloudStorageService.ensureDefaultExercises();
+          const refreshed = await CloudStorageService.fetchExercises();
+          if (refreshed && refreshed.length > 0) {
+            memoryStore.exercises = refreshed;
+            return [...memoryStore.exercises];
           }
-        });
-        memoryStore.exercises = Array.from(mapEx.values());
-        return [...memoryStore.exercises];
+        }
       }
     } catch (err) {
       console.warn('syncExercises error:', err);
@@ -263,7 +231,6 @@ export class StorageService {
   }
 
   static createGlobalExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt' | 'userId' | 'isDefault'>): Exercise {
-    this.initializeExercises();
     const newExercise: Exercise = {
       ...exerciseData,
       id: generateId('global_ex'),
@@ -279,7 +246,6 @@ export class StorageService {
   }
 
   static updateExercise(exercise: Exercise): void {
-    this.initializeExercises();
     const idx = memoryStore.exercises.findIndex((e) => e.id === exercise.id);
     if (idx >= 0) {
       memoryStore.exercises[idx] = exercise;
@@ -300,12 +266,14 @@ export class StorageService {
     }
   }
 
-  static deleteExercise(exerciseId: string): void {
-    this.initializeExercises();
+  static async deleteExercise(exerciseId: string): Promise<boolean> {
     memoryStore.exercises = memoryStore.exercises.filter((e) => e.id !== exerciseId);
-    CloudStorageService.deleteExercise(exerciseId).catch((e) =>
-      console.warn('CloudStorageService.deleteExercise error:', e)
-    );
+    try {
+      return await CloudStorageService.deleteExercise(exerciseId);
+    } catch (e) {
+      console.warn('CloudStorageService.deleteExercise error:', e);
+      return false;
+    }
   }
 
   // --- COACH & TRAINEES RELATIONSHIPS ---

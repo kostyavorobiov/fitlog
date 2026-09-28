@@ -123,7 +123,8 @@ create policy "Read default and custom exercises"
 
 drop policy if exists "Create own custom exercises" on public.exercises;
 drop policy if exists "Create custom exercises" on public.exercises;
-create policy "Create custom exercises"
+drop policy if exists "Create exercises" on public.exercises;
+create policy "Create exercises"
   on public.exercises for insert
   to authenticated
   with check (
@@ -133,46 +134,41 @@ create policy "Create custom exercises"
       select 1 from public.profiles
       where (profiles.id = exercises.user_id and profiles.coach_id = auth.uid())
          or (profiles.id = auth.uid() and profiles.coach_id = exercises.user_id)
-    ) or
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid() and profiles.role = 'admin'
+         or (profiles.id = auth.uid() and profiles.role in ('coach', 'admin'))
     )
   );
 
 drop policy if exists "Update own custom exercises" on public.exercises;
 drop policy if exists "Update custom exercises" on public.exercises;
-create policy "Update custom exercises"
+drop policy if exists "Update exercises" on public.exercises;
+create policy "Update exercises"
   on public.exercises for update
   to authenticated
   using (
     user_id = auth.uid() or
+    user_id is null or
     exists (
       select 1 from public.profiles
       where (profiles.id = exercises.user_id and profiles.coach_id = auth.uid())
          or (profiles.id = auth.uid() and profiles.coach_id = exercises.user_id)
-    ) or
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid() and profiles.role = 'admin'
+         or (profiles.id = auth.uid() and profiles.role in ('coach', 'admin'))
     )
   );
 
 drop policy if exists "Delete own custom exercises" on public.exercises;
 drop policy if exists "Delete custom exercises" on public.exercises;
-create policy "Delete custom exercises"
+drop policy if exists "Delete exercises" on public.exercises;
+create policy "Delete exercises"
   on public.exercises for delete
   to authenticated
   using (
     user_id = auth.uid() or
+    user_id is null or
     exists (
       select 1 from public.profiles
       where (profiles.id = exercises.user_id and profiles.coach_id = auth.uid())
          or (profiles.id = auth.uid() and profiles.coach_id = exercises.user_id)
-    ) or
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid() and profiles.role = 'admin'
+         or (profiles.id = auth.uid() and profiles.role in ('coach', 'admin'))
     )
   );
 
