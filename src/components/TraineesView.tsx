@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, WorkoutPlan } from '../types/workout';
 import { StorageService, generateId } from '../services/storageService';
+import { CloudStorageService } from '../services/cloudStorageService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { UserAvatar } from './UserAvatar';
 import {
@@ -166,14 +167,14 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
 
     // 2. Fetch from cloud and merge
     let isSubscribed = true;
-    CloudStorageService.fetchWorkouts(selectedTrainee.id).then((cloudWorkouts) => {
+    CloudStorageService.fetchWorkouts(selectedTrainee.id).then((cloudWorkouts: WorkoutPlan[] | null) => {
       if (!isSubscribed) return;
       if (cloudWorkouts && cloudWorkouts.length > 0) {
         const raw = localStorage.getItem('workout_diary_workouts');
         let localWorkouts: WorkoutPlan[] = raw ? JSON.parse(raw) : [];
         const map = new Map<string, WorkoutPlan>();
         localWorkouts.forEach((w) => map.set(w.id, w));
-        cloudWorkouts.forEach((cw) => map.set(cw.id, cw));
+        cloudWorkouts.forEach((cw: WorkoutPlan) => map.set(cw.id, cw));
         localStorage.setItem('workout_diary_workouts', JSON.stringify(Array.from(map.values())));
         setTraineeWorkouts(StorageService.getWorkouts(selectedTrainee.id));
       }
