@@ -371,6 +371,28 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       .map((e, idx) => ({ ...e, order: idx + 1 }));
 
     updateAndSave({ ...currentWorkout, exercises: updatedExercises });
+
+    // When an exercise is deleted, position the beginning of the last exercise card slightly below the top navigation
+    if (updatedExercises.length > 0 && typeof window !== 'undefined') {
+      const lastEx = updatedExercises[updatedExercises.length - 1];
+      window.dispatchEvent(new CustomEvent('show-navbar'));
+
+      setTimeout(() => {
+        const cardEl = document.getElementById(`exercise-card-${lastEx.id}`);
+        if (cardEl) {
+          const navHeader = document.querySelector('header');
+          const navHeight = navHeader ? navHeader.getBoundingClientRect().height : 56;
+          const offset = window.innerWidth < 640 ? 12 : 16;
+          const cardRect = cardEl.getBoundingClientRect();
+          const targetScrollY = Math.max(0, window.scrollY + cardRect.top - navHeight - offset);
+
+          window.scrollTo({
+            top: targetScrollY,
+            behavior: 'smooth',
+          });
+        }
+      }, 100);
+    }
   };
 
   // Target Rep Range change (e.g. '8-12' -> '6-8')
@@ -799,6 +821,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             return (
               <div
                 key={weItem.id}
+                id={`exercise-card-${weItem.id}`}
                 draggable
                 onDragStart={() => handleDragStart(weIndex)}
                 onDragOver={(e) => handleDragOver(e, weIndex)}
