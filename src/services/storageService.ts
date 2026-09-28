@@ -86,8 +86,56 @@ export class StorageService {
   }
 
   static getExerciseById(id: string): Exercise | undefined {
+    if (!id) return undefined;
     const all = this.initializeExercises();
-    return all.find((ex) => ex.id === id);
+    const found = all.find((ex) => ex.id === id);
+    if (found) return found;
+
+    // Check by def_ex numeric suffix or raw index (e.g. def_ex_1 or 1)
+    const numMatch = id.match(/^(?:def_ex_)?(\d+)$/);
+    if (numMatch) {
+      const idx = parseInt(numMatch[1], 10) - 1;
+      if (all[idx]) return all[idx];
+    }
+
+    // Check by case-insensitive name match
+    const byName = all.find((ex) => ex.name.toLowerCase() === id.toLowerCase());
+    if (byName) return byName;
+
+    // Fallback: search stored workouts for an embedded exerciseName and muscleGroup
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
+      if (raw) {
+        const workouts = JSON.parse(raw) as WorkoutPlan[];
+        for (const w of workouts) {
+          const matchWe = w.exercises?.find((we) => we.exerciseId === id || we.id === id);
+          if (matchWe && matchWe.exerciseName) {
+            const reconstructed: Exercise = {
+              id,
+              userId: null,
+              name: matchWe.exerciseName,
+              muscleGroup: matchWe.muscleGroup || 'full_body',
+              createdAt: '2026-01-01T00:00:00.000Z',
+            };
+            this.saveExercise(reconstructed);
+            return reconstructed;
+          }
+        }
+      }
+    } catch {}
+
+    return undefined;
+  }
+
+  static saveExercise(exercise: Exercise): void {
+    const all = this.initializeExercises();
+    const idx = all.findIndex((e) => e.id === exercise.id);
+    if (idx >= 0) {
+      all[idx] = exercise;
+    } else {
+      all.push(exercise);
+    }
+    localStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(all));
   }
 
   static createExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt'>): Exercise {
@@ -370,6 +418,38 @@ export class StorageService {
     return cloudSuccess;
   }
 
+  static async removeCoachFromAthlete(athleteId: string, coachId: string): Promise<boolean> {
+    // 1. Clear coachId locally on athlete
+    const users = this.getUsers();
+    const athlete = users.find((u) => u.id === athleteId);
+    if (athlete) {
+      athlete.coachId = null;
+      this.saveUser(athlete);
+    }
+
+    // 2. Remove athlete from coach's traineeIds locally
+    const coach = users.find((u) => u.id === coachId);
+    if (coach && coach.traineeIds) {
+      coach.traineeIds = coach.traineeIds.filter((id) => id !== athleteId);
+      this.saveUser(coach);
+    }
+
+    // 3. Mark in coach's removed list
+    const removedIds = this.getRemovedTraineeIds(coachId);
+    if (!removedIds.includes(athleteId)) {
+      this.setRemovedTraineeIds(coachId, [...removedIds, athleteId]);
+    }
+
+    // 4. Update in Supabase
+    let cloudSuccess = false;
+    try {
+      cloudSuccess = await CloudStorageService.removeTrainee(coachId, athleteId);
+    } catch (err) {
+      console.warn('removeCoachFromAthlete cloud error:', err);
+    }
+    return cloudSuccess;
+  }
+
   // --- AUTHORIZATION CHECKS (Section 8) ---
   static canAccessUserData(requesterId?: string | null, targetUserId?: string | null): boolean {
     if (!requesterId || !targetUserId) return true; // Internal or unrestricted
@@ -564,6 +644,11 @@ export class StorageService {
    */
   static async syncWithCloud(userId: string): Promise<void> {
     try {
+      // Ensure default exercises exist in Supabase
+      CloudStorageService.ensureDefaultExercises().catch((e) =>
+        console.warn('ensureDefaultExercises error:', e)
+      );
+
       const cloudWorkouts = await CloudStorageService.fetchWorkouts(userId);
       if (cloudWorkouts && cloudWorkouts.length > 0) {
         const raw = localStorage.getItem(STORAGE_KEYS.WORKOUTS);

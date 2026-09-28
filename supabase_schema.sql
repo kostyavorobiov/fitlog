@@ -113,11 +113,18 @@ create policy "Users can insert their own profile"
   to authenticated
   with check (auth.uid() = id);
 
--- Exercises: Read global default exercises OR user's custom exercises
+-- Exercises: Read global default exercises, own custom exercises, or assigned trainees' exercises
 create policy "Read default and own custom exercises"
   on public.exercises for select
   to authenticated
-  using (user_id is null or user_id = auth.uid());
+  using (
+    user_id is null or
+    user_id = auth.uid() or
+    exists (
+      select 1 from public.profiles
+      where profiles.id = exercises.user_id and profiles.coach_id = auth.uid()
+    )
+  );
 
 create policy "Create own custom exercises"
   on public.exercises for insert
@@ -278,3 +285,23 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- ==============================================================================
+-- 7. RPC TO UNLINK TRAINEE SAFELY (Bypasses table RLS for coach / trainee / admin)
+-- ==============================================================================
+create or replace function public.unlink_trainee(p_trainee_id uuid)
+returns boolean as $$
+declare
+  v_caller_id uuid := auth.uid();
+begin
+  update public.profiles
+  set coach_id = null, updated_at = now()
+  where id = p_trainee_id and (
+    coach_id = v_caller_id or
+    id = v_caller_id or
+    exists (select 1 from public.profiles where id = v_caller_id and role = 'admin')
+  );
+  return true;
+end;
+$$ language plpgsql security definer;
+

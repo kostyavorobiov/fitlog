@@ -32,7 +32,6 @@ import {
   ArrowLeft,
   Link,
   Unlink,
-  RotateCcw,
 } from 'lucide-react';
 
 interface WorkoutEditorProps {
@@ -71,9 +70,21 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
   // Auto-save helper
   const updateAndSave = (updated: WorkoutPlan) => {
-    setWorkout(updated);
-    StorageService.saveWorkout(updated);
-    onSave(updated);
+    const enrichedExercises = updated.exercises.map((we) => {
+      if (!we.exerciseName || !we.muscleGroup) {
+        const ex = StorageService.getExerciseById(we.exerciseId);
+        return {
+          ...we,
+          exerciseName: we.exerciseName || ex?.name,
+          muscleGroup: we.muscleGroup || ex?.muscleGroup || 'full_body',
+        };
+      }
+      return we;
+    });
+    const enriched = { ...updated, exercises: enrichedExercises };
+    setWorkout(enriched);
+    StorageService.saveWorkout(enriched);
+    onSave(enriched);
   };
 
   // Workout Title & Metadata
@@ -155,6 +166,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       id: weId,
       workoutPlanId: workout.id,
       exerciseId: exercise.id,
+      exerciseName: exercise.name,
+      muscleGroup: exercise.muscleGroup,
       order: workout.exercises.length + 1,
       targetRepsRange: targetRange,
       setCount: initialSets.length,
@@ -501,48 +514,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 </span>
               )}
             </div>
-
-            {/* Action buttons (Save, Restore & Delete) */}
-            <div className="flex items-center space-x-1.5">
-              {workout.status === 'completed' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const restored = { ...workout, status: 'in_progress' as const, completedAt: null };
-                    updateAndSave(restored);
-                    setSaveNoticeMessage('Тренування відновлено');
-                    setSaveSuccessNotice(true);
-                    setTimeout(() => setSaveSuccessNotice(false), 3000);
-                  }}
-                  className="flex items-center space-x-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-                  title="Відновити як незавершене"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Відновити</span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={handleSaveWorkout}
-                className="flex items-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
-                title="Зберегти поточний стан тренування"
-              >
-                <Save className="h-3.5 w-3.5" />
-                <span>Зберегти</span>
-              </button>
-
-              {/* Delete workout button */}
-              <button
-                type="button"
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="rounded-lg border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 p-1.5 sm:p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors cursor-pointer"
-                title="Видалити це тренування"
-                aria-label="Видалити тренування"
-              >
-                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              </button>
-            </div>
           </div>
 
           {/* Title input - Functional and non-blocking */}
@@ -623,9 +594,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         ) : (
           workout.exercises.map((weItem, weIndex) => {
             const exercise = StorageService.getExerciseById(weItem.exerciseId);
-            const muscleInfo = exercise
-              ? MUSCLE_GROUPS[exercise.muscleGroup] || MUSCLE_GROUPS.full_body
-              : MUSCLE_GROUPS.full_body;
+            const exerciseName = exercise?.name || weItem.exerciseName || 'Вправа';
+            const muscleGroupKey = exercise?.muscleGroup || weItem.muscleGroup || 'full_body';
+            const muscleInfo = MUSCLE_GROUPS[muscleGroupKey] || MUSCLE_GROUPS.full_body;
 
             const isDragged = draggedIndex === weIndex;
             const isSuperset = Boolean(weItem.supersetGroupId);
@@ -638,10 +609,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 onDragOver={(e) => handleDragOver(e, weIndex)}
                 onDragEnd={handleDragEnd}
                 className={`rounded-xl border bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-colors ${isDragged
-                    ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70'
-                    : isSuperset
-                      ? 'border-l-4 border-l-indigo-500 border-zinc-200 dark:border-zinc-800'
-                      : 'border-zinc-200 dark:border-zinc-800'
+                  ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70'
+                  : isSuperset
+                    ? 'border-l-4 border-l-indigo-500 border-zinc-200 dark:border-zinc-800'
+                    : 'border-zinc-200 dark:border-zinc-800'
                   }`}
               >
                 {/* Exercise Header */}
@@ -661,7 +632,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                         <h4 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 break-words leading-snug">
-                          {exercise?.name || 'Вправа'}
+                          {exerciseName}
                         </h4>
                         <span
                           className={`inline-flex rounded-md px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold ${muscleInfo.badgeBg} border ${muscleInfo.badgeBorder}`}
@@ -686,8 +657,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         type="button"
                         onClick={() => handleToggleSuperset(weIndex)}
                         className={`p-1.5 rounded-lg border transition-colors cursor-pointer inline-flex items-center space-x-1 text-xs font-semibold ${isSuperset
-                            ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
-                            : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-800 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20'
+                          ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
+                          : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-800 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20'
                           }`}
                         title={isSuperset ? 'Розʼєднати суперсет' : 'Обʼєднати наступну вправу в суперсет'}
                       >

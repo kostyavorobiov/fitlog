@@ -135,6 +135,8 @@ export interface WorkoutExercise {
   id: string;
   workoutPlanId: string;
   exerciseId: string;
+  exerciseName?: string; // Embedded exercise name for offline and cross-user display
+  muscleGroup?: MuscleGroup; // Embedded muscle group
   order: number;
   setCount?: number; // 2, 3, 4, 5
   targetRepsRange?: string; // "6-8" | "8-12" | "10-15"

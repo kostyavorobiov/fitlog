@@ -1,5 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { WorkoutPlan, Exercise, User, WorkoutExercise, WorkoutSet } from '../types/workout';
+import { StorageService } from './storageService';
+import { DEFAULT_EXERCISES } from '../data/defaultExercises';
 
 export class CloudStorageService {
   /**
@@ -31,6 +33,12 @@ export class CloudStorageService {
             target_reps_range,
             notes,
             superset_group_id,
+            exercises (
+              id,
+              name,
+              muscle_group,
+              description
+            ),
             workout_sets (
               id,
               workout_exercise_id,
@@ -57,6 +65,24 @@ export class CloudStorageService {
         const exercises: WorkoutExercise[] = (w.workout_exercises || [])
           .sort((a: any, b: any) => a.order_index - b.order_index)
           .map((we: any) => {
+            const exObj = Array.isArray(we.exercises) ? we.exercises[0] : we.exercises;
+            if (exObj && exObj.name) {
+              try {
+                StorageService.saveExercise({
+                  id: exObj.id || we.exercise_id,
+                  userId: null,
+                  name: exObj.name,
+                  muscleGroup: exObj.muscle_group || 'full_body',
+                  description: exObj.description || '',
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                });
+              } catch {}
+            }
+
+            const localEx = StorageService.getExerciseById(we.exercise_id);
+            const exerciseName = exObj?.name || localEx?.name || undefined;
+            const muscleGroup = exObj?.muscle_group || localEx?.muscleGroup || undefined;
+
             const sets: WorkoutSet[] = (we.workout_sets || [])
               .sort((a: any, b: any) => a.set_number - b.set_number)
               .map((s: any) => ({
@@ -75,6 +101,8 @@ export class CloudStorageService {
               id: we.id,
               workoutPlanId: we.workout_id,
               exerciseId: we.exercise_id,
+              exerciseName,
+              muscleGroup,
               order: we.order_index,
               setCount: we.set_count,
               targetRepsRange: we.target_reps_range,
@@ -135,6 +163,27 @@ export class CloudStorageService {
 
       // 2. Upsert exercises & sets
       if (workout.exercises && workout.exercises.length > 0) {
+        // Ensure all referenced exercises exist in Supabase exercises table to prevent FK errors
+        for (const we of workout.exercises) {
+          const ex = StorageService.getExerciseById(we.exerciseId);
+          const nameToUse = we.exerciseName || ex?.name;
+          if (nameToUse) {
+            try {
+              await supabase.from('exercises').upsert(
+                {
+                  id: we.exerciseId,
+                  name: nameToUse,
+                  muscle_group: we.muscleGroup || ex?.muscleGroup || 'full_body',
+                  description: ex?.description || '',
+                  is_default: ex?.isDefault ?? false,
+                  user_id: ex?.userId || null,
+                },
+                { onConflict: 'id' }
+              );
+            } catch {}
+          }
+        }
+
         // Collect exercises for upsert
         const weRows = workout.exercises.map((we, idx) => ({
           id: we.id,
@@ -499,20 +548,52 @@ export class CloudStorageService {
     if (!isSupabaseConfigured() || !supabase) return false;
 
     try {
+      // 1. Try RPC unlink_trainee (bypasses RLS with security definer)
+      const { data: rpcRes, error: rpcError } = await supabase.rpc('unlink_trainee', {
+        p_trainee_id: traineeId,
+      });
+
+      if (!rpcError && rpcRes !== false) {
+        return true;
+      }
+
+      // 2. Direct table update fallback
       const { error } = await supabase
         .from('profiles')
         .update({ coach_id: null, updated_at: new Date().toISOString() })
-        .eq('id', traineeId)
-        .eq('coach_id', coachId);
+        .eq('id', traineeId);
 
       if (error) {
-        console.warn('CloudStorageService.removeTrainee error:', error.message);
+        console.warn('CloudStorageService.removeTrainee update error:', error.message);
         return false;
       }
       return true;
     } catch (err) {
       console.warn('CloudStorageService.removeTrainee failed:', err);
       return false;
+    }
+  }
+
+  /**
+   * Seed default exercises into Supabase exercises table
+   */
+  static async ensureDefaultExercises(): Promise<void> {
+    if (!isSupabaseConfigured() || !supabase) return;
+    try {
+      const defaultRows = DEFAULT_EXERCISES.map((ex, idx) => ({
+        id: `def_ex_${idx + 1}`,
+        name: ex.name,
+        muscle_group: ex.muscleGroup,
+        description: ex.description || '',
+        is_default: true,
+        user_id: null,
+      }));
+
+      await supabase
+        .from('exercises')
+        .upsert(defaultRows, { onConflict: 'id', ignoreDuplicates: true });
+    } catch (err) {
+      console.warn('ensureDefaultExercises error:', err);
     }
   }
 

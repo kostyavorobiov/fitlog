@@ -436,6 +436,24 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                               <span className="text-zinc-300 dark:text-zinc-700">·</span>
                               <span>{setsCount} підходів</span>
                             </div>
+
+                            {/* Exercises Names Preview */}
+                            {(w.exercises || []).length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 pt-1">
+                                {(w.exercises || []).map((we, idx) => {
+                                  const ex = StorageService.getExerciseById(we.exerciseId);
+                                  const exName = ex?.name || we.exerciseName || 'Вправа';
+                                  return (
+                                    <span
+                                      key={idx}
+                                      className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 text-[11px] text-zinc-700 dark:text-zinc-300 font-medium"
+                                    >
+                                      {exName} ({we.sets?.length || 0})
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex items-center space-x-2 shrink-0">

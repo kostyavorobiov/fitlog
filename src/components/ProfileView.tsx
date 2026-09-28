@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { UserAvatar } from './UserAvatar';
@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { UserRole } from '../types/workout';
 import { StorageService } from '../services/storageService';
+import { CloudStorageService } from '../services/cloudStorageService';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export const ProfileView: React.FC = () => {
   const { user, updateUserProfile, isAdmin, isCoach } = useAuth();
@@ -71,8 +73,64 @@ export const ProfileView: React.FC = () => {
     }
   };
 
+  // Handle Athlete unlinking from Coach
+  const handleUnlinkCoach = async () => {
+    if (!user.coachId) return;
+    setIsLinkingCoach(true);
+    try {
+      await StorageService.removeCoachFromAthlete(user.id, user.coachId);
+      updateUserProfile({ coachId: null });
+      setCoachToast({ text: 'Тренера успішно відкріплено', type: 'success' });
+    } catch {
+      setCoachToast({ text: 'Помилка при відкріпленні тренера', type: 'error' });
+    } finally {
+      setIsLinkingCoach(false);
+      setTimeout(() => setCoachToast(null), 3000);
+    }
+  };
+
   const traineesCount = user.traineeIds?.length || 0;
-  const coach = user.coachId ? StorageService.getUsers().find((u) => u.id === user.coachId) : null;
+  const rawCoach = user.coachId ? StorageService.getUsers().find((u) => u.id === user.coachId) : null;
+
+  // Immediate check if coach has unlinked this trainee locally
+  const isCoachUnlinked = Boolean(
+    user.coachId &&
+    (StorageService.getRemovedTraineeIds(user.coachId).includes(user.id) ||
+      (rawCoach && rawCoach.traineeIds && !rawCoach.traineeIds.includes(user.id)))
+  );
+
+  const coach = !isCoachUnlinked ? rawCoach : null;
+
+  // Automatic background synchronization: if coach unlinked trainee, clear coachId
+  useEffect(() => {
+    if (!user.coachId) return;
+
+    // Check local removed list
+    const coachRemoved = StorageService.getRemovedTraineeIds(user.coachId);
+    if (coachRemoved.includes(user.id)) {
+      updateUserProfile({ coachId: null });
+      StorageService.removeCoachFromAthlete(user.id, user.coachId);
+      return;
+    }
+
+    // Check cloud profile
+    if (isSupabaseConfigured() && supabase) {
+      CloudStorageService.fetchProfile(user.id).then((freshProfile) => {
+        if (!freshProfile || !freshProfile.coachId) {
+          updateUserProfile({ coachId: null });
+          StorageService.removeCoachFromAthlete(user.id, user.coachId!);
+        } else if (freshProfile.coachId) {
+          CloudStorageService.fetchTrainees(freshProfile.coachId).then((trainees) => {
+            if (trainees.length > 0 && !trainees.some((t) => t.id === user.id)) {
+              // Coach active trainees do not include this athlete -> unlinked
+              updateUserProfile({ coachId: null });
+              StorageService.removeCoachFromAthlete(user.id, freshProfile.coachId!);
+            }
+          }).catch(() => {});
+        }
+      }).catch(() => {});
+    }
+  }, [user.id, user.coachId]);
 
   const roleLabels: Record<UserRole, { title: string; color: string; bg: string; border: string }> = {
     admin: {
@@ -356,7 +414,18 @@ export const ProfileView: React.FC = () => {
             </div>
           ) : coach ? (
             <div className="space-y-2 text-xs">
-              <p className="text-zinc-600 dark:text-zinc-400">Ваш призначений тренер:</p>
+              <div className="flex items-center justify-between">
+                <p className="text-zinc-600 dark:text-zinc-400">Ваш призначений тренер:</p>
+                <button
+                  type="button"
+                  onClick={handleUnlinkCoach}
+                  disabled={isLinkingCoach}
+                  className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer disabled:opacity-50"
+                  title="Відкріпитися від призначеного тренера"
+                >
+                  {isLinkingCoach ? 'Відкріплення...' : 'Відкріпитися'}
+                </button>
+              </div>
               <div className="flex items-center space-x-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5">
                 <UserAvatar src={coach.image} alt={coach.name} size="sm" />
                 <div>
