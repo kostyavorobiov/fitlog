@@ -1,6 +1,6 @@
 import React from 'react';
-import { WorkoutDetailScreen } from '../../screens/WorkoutDetailScreen';
+import { WorkoutEditorScreen } from '../../screens/WorkoutEditorScreen';
 
 export default function WorkoutDetailRoute() {
-  return <WorkoutDetailScreen />;
+  return <WorkoutEditorScreen />;
 }

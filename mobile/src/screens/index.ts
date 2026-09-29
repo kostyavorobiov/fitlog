@@ -1,5 +1,6 @@
 export * from './WorkoutsScreen';
 export * from './WorkoutDetailScreen';
+export * from './WorkoutEditorScreen';
 export * from './ExercisesScreen';
 export * from './CalendarScreen';
 export * from './AnalyticsScreen';

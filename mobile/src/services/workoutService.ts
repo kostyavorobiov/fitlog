@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { WorkoutPlan, WorkoutExercise, WorkoutSet } from '../types/workout';
+import { WorkoutPlan, WorkoutExercise, WorkoutSet, PastExercisePerformance, PastExerciseSetSummary } from '../types/workout';
 import { MobileStorage } from '../lib/storage';
 
 const WORKOUTS_CACHE_KEY = 'mobile_workouts_cache';
@@ -174,6 +174,94 @@ export class WorkoutService {
   static async getWorkoutById(userId: string, workoutId: string): Promise<WorkoutPlan | null> {
     const list = await this.getWorkouts(userId);
     return list.find((w) => w.id === workoutId) || null;
+  }
+
+  /**
+   * Retrieves the last performance for an exercise from previous workouts
+   */
+  static async getLastExercisePerformance(
+    userId: string,
+    exerciseId: string,
+    excludeWorkoutId?: string
+  ): Promise<PastExercisePerformance | null> {
+    try {
+      const workouts = await this.getWorkouts(userId);
+      if (!Array.isArray(workouts)) return null;
+
+      for (const w of workouts) {
+        if (!w || (excludeWorkoutId && w.id === excludeWorkoutId)) continue;
+        if (!Array.isArray(w.exercises)) continue;
+
+        const we = w.exercises.find((item) => item && item.exerciseId === exerciseId);
+        if (!we || !Array.isArray(we.sets) || we.sets.length === 0) continue;
+
+        const validSets = we.sets
+          .filter((s) => s && s.actualReps !== null && s.actualReps > 0 && s.weight > 0)
+          .sort((a, b) => a.setNumber - b.setNumber);
+
+        if (validSets.length > 0) {
+          let maxWeight = 0;
+          let totalVolume = 0;
+          const setSummaries: PastExerciseSetSummary[] = validSets.map((s) => {
+            if (s.weight > maxWeight) maxWeight = s.weight;
+            totalVolume += s.weight * (s.actualReps || 0);
+            return {
+              setNumber: s.setNumber,
+              weight: s.weight,
+              actualReps: s.actualReps as number,
+              targetRepsRange: s.targetRepsRange,
+            };
+          });
+
+          return {
+            workoutId: w.id,
+            workoutTitle: w.title,
+            date: w.scheduledDate,
+            sets: setSummaries,
+            maxWeight,
+            totalVolume,
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('[WorkoutService.getLastExercisePerformance] Error:', e);
+    }
+    return null;
+  }
+
+  /**
+   * Retrieves previous workout to repeat (by matching title, or latest completed workout)
+   */
+  static async getPreviousWorkoutToRepeat(
+    userId: string,
+    excludeWorkoutId?: string,
+    titleMatch?: string
+  ): Promise<WorkoutPlan | null> {
+    try {
+      const workouts = await this.getWorkouts(userId);
+      if (!Array.isArray(workouts)) return null;
+
+      // 1. Try matching by title first
+      if (titleMatch && titleMatch.trim() && titleMatch !== 'Нове тренування' && titleMatch !== 'Тренування') {
+        const titleMatchWorkout = workouts.find(
+          (w) =>
+            w.id !== excludeWorkoutId &&
+            w.title.toLowerCase().trim() === titleMatch.toLowerCase().trim() &&
+            w.exercises &&
+            w.exercises.length > 0
+        );
+        if (titleMatchWorkout) return titleMatchWorkout;
+      }
+
+      // 2. Otherwise return the most recent completed or non-empty workout
+      const prev = workouts.find(
+        (w) => w.id !== excludeWorkoutId && w.exercises && w.exercises.length > 0
+      );
+      return prev || null;
+    } catch (e) {
+      console.warn('[WorkoutService.getPreviousWorkoutToRepeat] Error:', e);
+      return null;
+    }
   }
 
   /**
