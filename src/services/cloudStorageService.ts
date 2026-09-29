@@ -558,31 +558,31 @@ export class CloudStorageService {
     if (!isSupabaseConfigured() || !supabase) return null;
 
     try {
+      // 1. Direct table select
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
+
+      if (!error && data) {
+        return this.mapProfileRow(data);
+      }
+
+      // 2. RPC fallback get_profile_by_id
+      try {
+        const { data: rpcData, error: rpcErr } = await supabase.rpc('get_profile_by_id', {
+          p_user_id: userId,
+        });
+        if (!rpcErr && rpcData && rpcData.length > 0) {
+          return this.mapProfileRow(rpcData[0]);
+        }
+      } catch {}
 
       if (error) {
         console.warn('fetchProfile error:', error.message);
-        return null;
       }
-
-      if (!data) return null;
-
-      return {
-        id: data.id,
-        profileCode: data.profile_code,
-        firstName: data.first_name || '',
-        lastName: data.last_name || '',
-        name: data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
-        email: data.email,
-        role: data.role || 'athlete',
-        coachId: data.coach_id,
-        image: data.avatar_url || '',
-        createdAt: data.created_at,
-      };
+      return null;
     } catch (err) {
       console.warn('Failed to fetch profile in cloud:', err);
       return null;
@@ -751,6 +751,19 @@ export class CloudStorageService {
     if (!isSupabaseConfigured() || !supabase) return false;
 
     try {
+      // 1. Try RPC assign_trainee_to_coach (bypasses RLS with security definer)
+      try {
+        const { data: rpcRes, error: rpcError } = await supabase.rpc('assign_trainee_to_coach', {
+          p_coach_id: coachId,
+          p_trainee_id: traineeId,
+        });
+
+        if (!rpcError && rpcRes !== false) {
+          return true;
+        }
+      } catch {}
+
+      // 2. Direct table update fallback
       const { error } = await supabase
         .from('profiles')
         .update({ coach_id: coachId, updated_at: new Date().toISOString() })
@@ -879,14 +892,27 @@ export class CloudStorageService {
     if (!isSupabaseConfigured() || !supabase) return [];
 
     try {
+      // 1. Direct table select
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('coach_id', coachId);
 
-      if (error || !data) return [];
+      if (!error && data && data.length > 0) {
+        return data.map((item: any) => this.mapProfileRow(item));
+      }
 
-      return data.map((item: any) => this.mapProfileRow(item));
+      // 2. RPC fallback get_coach_trainees
+      try {
+        const { data: rpcData, error: rpcErr } = await supabase.rpc('get_coach_trainees', {
+          p_coach_id: coachId,
+        });
+        if (!rpcErr && rpcData && rpcData.length > 0) {
+          return rpcData.map((item: any) => this.mapProfileRow(item));
+        }
+      } catch {}
+
+      return data ? data.map((item: any) => this.mapProfileRow(item)) : [];
     } catch (err) {
       console.warn('Failed to fetch trainees:', err);
       return [];

@@ -398,9 +398,11 @@ export class StorageService {
     this.saveUser(trainee);
 
     // Update in Supabase
-    CloudStorageService.assignTrainee(coach.id, trainee.id).catch((err) =>
-      console.warn('Background assignTrainee error:', err)
-    );
+    try {
+      await CloudStorageService.assignTrainee(coach.id, trainee.id);
+    } catch (err) {
+      console.warn('addTraineeByCode assignTrainee error:', err);
+    }
 
     return {
       success: true,
@@ -468,9 +470,12 @@ export class StorageService {
     this.saveUser(coach);
 
     // Update in Supabase
-    CloudStorageService.updateProfile(athlete.id, { coachId: coach.id }).catch((err) =>
-      console.warn('Background update athlete coach error:', err)
-    );
+    try {
+      await CloudStorageService.assignTrainee(coach.id, athlete.id);
+      await CloudStorageService.updateProfile(athlete.id, { coachId: coach.id });
+    } catch (err) {
+      console.warn('assignCoachToAthlete cloud update error:', err);
+    }
 
     return {
       success: true,

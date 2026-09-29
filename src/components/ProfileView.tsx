@@ -22,7 +22,7 @@ import {
   Search,
   LogOut,
 } from 'lucide-react';
-import { UserRole, Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
+import { User, UserRole, Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -174,6 +174,7 @@ export const ProfileView: React.FC = () => {
     try {
       const res = await StorageService.assignCoachToAthlete(user.id, coachInputCode.trim());
       if (res.success && res.coach) {
+        setLoadedCoach(res.coach);
         updateUserProfile({ coachId: res.coach.id });
         setCoachToast({ text: res.message, type: 'success' });
         setCoachInputCode('');
@@ -194,6 +195,7 @@ export const ProfileView: React.FC = () => {
     setIsLinkingCoach(true);
     try {
       await StorageService.removeCoachFromAthlete(user.id, user.coachId);
+      setLoadedCoach(null);
       updateUserProfile({ coachId: null });
       setCoachToast({ text: 'Тренера успішно відкріплено', type: 'success' });
     } catch {
@@ -205,46 +207,70 @@ export const ProfileView: React.FC = () => {
   };
 
   const traineesCount = user.traineeIds?.length || 0;
-  const rawCoach = user.coachId ? StorageService.getUsers().find((u) => u.id === user.coachId) : null;
+  const [loadedCoach, setLoadedCoach] = useState<User | null>(() => {
+    if (!user.coachId) return null;
+    return StorageService.getUserById(user.coachId) || null;
+  });
 
-  // Immediate check if coach has unlinked this trainee locally
   const isCoachUnlinked = Boolean(
-    user.coachId &&
-    (StorageService.getRemovedTraineeIds(user.coachId).includes(user.id) ||
-      (rawCoach && rawCoach.traineeIds && !rawCoach.traineeIds.includes(user.id)))
+    user.coachId && StorageService.getRemovedTraineeIds(user.coachId).includes(user.id)
   );
 
-  const coach = !isCoachUnlinked ? rawCoach : null;
+  const coach = !isCoachUnlinked ? (loadedCoach || (user.coachId ? StorageService.getUserById(user.coachId) || null : null)) : null;
 
-  // Automatic background synchronization: if coach unlinked trainee, clear coachId
+  // Automatic background synchronization: sync coach profile with cloud DB
   useEffect(() => {
-    if (!user.coachId) return;
+    let isMounted = true;
 
-    // Check local removed list
-    const coachRemoved = StorageService.getRemovedTraineeIds(user.coachId);
-    if (coachRemoved.includes(user.id)) {
-      updateUserProfile({ coachId: null });
-      StorageService.removeCoachFromAthlete(user.id, user.coachId);
-      return;
-    }
+    const syncCoach = async () => {
+      if (!isSupabaseConfigured() || !supabase) return;
 
-    // Check cloud profile
-    if (isSupabaseConfigured() && supabase) {
-      CloudStorageService.fetchProfile(user.id).then((freshProfile) => {
-        if (!freshProfile || !freshProfile.coachId) {
-          updateUserProfile({ coachId: null });
-          StorageService.removeCoachFromAthlete(user.id, user.coachId!);
-        } else if (freshProfile.coachId) {
-          CloudStorageService.fetchTrainees(freshProfile.coachId).then((trainees) => {
-            if (trainees.length > 0 && !trainees.some((t) => t.id === user.id)) {
-              // Coach active trainees do not include this athlete -> unlinked
-              updateUserProfile({ coachId: null });
-              StorageService.removeCoachFromAthlete(user.id, freshProfile.coachId!);
-            }
-          }).catch(() => {});
+      try {
+        // 1. Fetch fresh profile of current user to see if coach was assigned or unlinked in DB
+        const freshProfile = await CloudStorageService.fetchProfile(user.id);
+        if (!isMounted || !freshProfile) return;
+
+        // If cloud profile coachId differs from current user state, update it
+        if (freshProfile.coachId !== user.coachId) {
+          updateUserProfile({ coachId: freshProfile.coachId || null });
         }
-      }).catch(() => {});
-    }
+
+        const effectiveCoachId = freshProfile.coachId;
+        if (effectiveCoachId) {
+          // Check local removed list
+          if (StorageService.getRemovedTraineeIds(effectiveCoachId).includes(user.id)) {
+            updateUserProfile({ coachId: null });
+            StorageService.removeCoachFromAthlete(user.id, effectiveCoachId);
+            if (isMounted) setLoadedCoach(null);
+            return;
+          }
+
+          // 2. Fetch coach's profile details if not already loaded or different
+          let coachObj: User | null = StorageService.getUserById(effectiveCoachId) || null;
+          if (!coachObj) {
+            coachObj = await CloudStorageService.fetchProfile(effectiveCoachId);
+            if (coachObj) {
+              StorageService.saveUser(coachObj);
+            }
+          }
+          if (isMounted && coachObj) {
+            setLoadedCoach(coachObj);
+          }
+        } else {
+          if (isMounted) {
+            setLoadedCoach(null);
+          }
+        }
+      } catch (err) {
+        console.warn('ProfileView sync coach error:', err);
+      }
+    };
+
+    syncCoach();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user.id, user.coachId]);
 
   const roleLabels: Record<UserRole, { title: string; color: string; bg: string; border: string }> = {
@@ -744,28 +770,51 @@ export const ProfileView: React.FC = () => {
                 <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{traineesCount}</span>
               </div>
             </div>
-          ) : coach ? (
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <p className="text-zinc-600 dark:text-zinc-400">Ваш призначений тренер:</p>
-                <button
-                  type="button"
-                  onClick={handleUnlinkCoach}
-                  disabled={isLinkingCoach}
-                  className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer disabled:opacity-50"
-                  title="Відкріпитися від призначеного тренера"
-                >
-                  {isLinkingCoach ? 'Відкріплення...' : 'Відкріпитися'}
-                </button>
-              </div>
-              <div className="flex items-center space-x-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5">
-                <UserAvatar src={coach.image} alt={coach.name} size="sm" />
-                <div>
-                  <div className="font-bold text-zinc-900 dark:text-zinc-100">{coach.name}</div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{coach.email}</div>
+          ) : user.coachId ? (
+            coach ? (
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <p className="text-zinc-600 dark:text-zinc-400">Ваш призначений тренер:</p>
+                  <button
+                    type="button"
+                    onClick={handleUnlinkCoach}
+                    disabled={isLinkingCoach}
+                    className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer disabled:opacity-50"
+                    title="Відкріпитися від призначеного тренера"
+                  >
+                    {isLinkingCoach ? 'Відкріплення...' : 'Відкріпитися'}
+                  </button>
+                </div>
+                <div className="flex items-center space-x-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5">
+                  <UserAvatar src={coach.image} alt={coach.name} size="sm" />
+                  <div>
+                    <div className="font-bold text-zinc-900 dark:text-zinc-100">{coach.name}</div>
+                    <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{coach.email}</div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <p className="text-zinc-600 dark:text-zinc-400">Ваш призначений тренер:</p>
+                  <button
+                    type="button"
+                    onClick={handleUnlinkCoach}
+                    disabled={isLinkingCoach}
+                    className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer disabled:opacity-50"
+                  >
+                    Відкріпитися
+                  </button>
+                </div>
+                <div className="flex items-center space-x-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 animate-pulse">
+                  <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+                  <div className="space-y-1">
+                    <div className="h-3 w-28 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                    <div className="h-2.5 w-36 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                  </div>
+                </div>
+              </div>
+            )
           ) : (
             <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-3">
               <div className="space-y-1">

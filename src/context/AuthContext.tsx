@@ -67,8 +67,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               ...activeCloudIds,
             ])
           );
+        for (const t of cloudTrainees || []) {
+            StorageService.saveUser(t);
+          }
         } catch (e) {
           console.warn('Failed to load cloud trainees in handleSupabaseUser:', e);
+        }
+      }
+
+      // If user has a coach, load coach profile immediately
+      if (profile.coachId) {
+        try {
+          const coachProfile = await CloudStorageService.fetchProfile(profile.coachId);
+          if (coachProfile) {
+            StorageService.saveUser(coachProfile);
+          }
+        } catch (e) {
+          console.warn('Failed to load coach profile in handleSupabaseUser:', e);
         }
       }
 
@@ -81,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Initial cloud sync error:', err)
       );
 
-      setAllUsers([profile]);
+      setAllUsers(StorageService.getUsers());
     } catch (e) {
       console.warn('handleSupabaseUser error:', e);
     }
@@ -238,7 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     StorageService.saveUser(updated);
     setUser(updated);
-    setAllUsers([updated]);
+    setAllUsers(StorageService.getUsers());
 
     // Update in cloud if connected
     if (isSupabaseConfigured() && supabase) {

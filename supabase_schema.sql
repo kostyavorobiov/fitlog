@@ -94,19 +94,13 @@ create policy "Allow all authenticated users to read profiles"
   to authenticated
   using (true);
 
+drop policy if exists "Users can update their own profile" on public.profiles;
+drop policy if exists "Users can update their own profile or assign coach" on public.profiles;
 create policy "Users can update their own profile or assign coach"
   on public.profiles for update
   to authenticated
-  using (
-    auth.uid() = id or
-    coach_id is null or
-    coach_id = auth.uid()
-  )
-  with check (
-    auth.uid() = id or
-    coach_id is null or
-    coach_id = auth.uid()
-  );
+  using (true)
+  with check (true);
 
 create policy "Users can insert their own profile"
   on public.profiles for insert
@@ -349,8 +343,23 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- ==============================================================================
--- 7. RPC TO UNLINK TRAINEE SAFELY (Bypasses table RLS for coach / trainee / admin)
+-- 7. RPC FUNCTIONS FOR COACH/TRAINEE MANAGEMENT (Security Definer)
 -- ==============================================================================
+create or replace function public.assign_trainee_to_coach(p_coach_id uuid, p_trainee_id uuid)
+returns boolean as $$
+declare
+  v_caller_id uuid := auth.uid();
+begin
+  if v_caller_id = p_coach_id or v_caller_id = p_trainee_id or exists (select 1 from public.profiles where id = v_caller_id and role = 'admin') then
+    update public.profiles
+    set coach_id = p_coach_id, updated_at = now()
+    where id = p_trainee_id;
+    return true;
+  end if;
+  return false;
+end;
+$$ language plpgsql security definer;
+
 create or replace function public.unlink_trainee(p_trainee_id uuid)
 returns boolean as $$
 declare
@@ -364,6 +373,20 @@ begin
     exists (select 1 from public.profiles where id = v_caller_id and role = 'admin')
   );
   return true;
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.get_profile_by_id(p_user_id uuid)
+returns setof public.profiles as $$
+begin
+  return query select * from public.profiles where id = p_user_id;
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.get_coach_trainees(p_coach_id uuid)
+returns setof public.profiles as $$
+begin
+  return query select * from public.profiles where coach_id = p_coach_id;
 end;
 $$ language plpgsql security definer;
 
