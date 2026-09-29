@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MobileStorage } from './storage';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -13,15 +13,40 @@ export const isSupabaseConfigured = (): boolean => {
   );
 };
 
-const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+const isWeb = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
+
+
+// Storage adapter compatible with Supabase auth for React Native, Web & Node
+const storageAdapter = {
+  getItem: async (key: string): Promise<string | null> => {
+    try {
+      return await MobileStorage.getItem<string | null>(key, null);
+    } catch {
+      return null;
+    }
+  },
+  setItem: async (key: string, value: string): Promise<void> => {
+    try {
+      await MobileStorage.setItem(key, value);
+    } catch {}
+  },
+  removeItem: async (key: string): Promise<void> => {
+    try {
+      await MobileStorage.removeItem(key);
+    } catch {}
+  },
+};
 
 export const supabase = isSupabaseConfigured()
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
-        storage: !isBrowser && AsyncStorage ? AsyncStorage : undefined,
+        storage: storageAdapter,
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: false,
+        detectSessionInUrl: isWeb,
       },
     })
   : null;
+
+

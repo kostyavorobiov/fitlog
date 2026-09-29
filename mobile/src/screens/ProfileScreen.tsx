@@ -12,27 +12,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { AuthService } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { User } from '../types/workout';
 
 export const ProfileScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const isCloudConnected = isSupabaseConfigured();
-
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    AuthService.getCurrentUser().then(setUser);
-    const unsubscribe = AuthService.onAuthStateChange(setUser);
-    return () => unsubscribe();
-  }, []);
+  const { user, logout } = useAuth();
 
   const handleSignOut = async () => {
-    await AuthService.signOut();
-    setUser(null);
-    Alert.alert('Сесію завершено', 'Ви успішно вийшли з облікового запису.');
+    await logout();
   };
+
 
   return (
     <SafeAreaView

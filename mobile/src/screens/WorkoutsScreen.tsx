@@ -14,16 +14,17 @@ import { Card } from '../components/Card';
 import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { WorkoutService } from '../services/workoutService';
-import { AuthService } from '../services/authService';
 import { ExerciseService } from '../services/exerciseService';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { WorkoutPlan, User, Exercise } from '../types/workout';
+import { useAuth } from '../context/AuthContext';
+import { WorkoutPlan, Exercise } from '../types/workout';
+
 
 export const WorkoutsScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const isCloudConnected = isSupabaseConfigured();
+  const { user } = useAuth();
 
-  const [user, setUser] = useState<User | null>(null);
   const [workouts, setWorkouts] = useState<WorkoutPlan[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -32,10 +33,7 @@ export const WorkoutsScreen: React.FC = () => {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const currentUser = await AuthService.getCurrentUser();
-      setUser(currentUser);
-
-      const userId = currentUser?.id || 'demo_user';
+      const userId = user?.id || 'demo_user';
       const [fetchedWorkouts, fetchedExercises] = await Promise.all([
         WorkoutService.getWorkouts(userId),
         ExerciseService.getExercises(userId),
@@ -48,11 +46,12 @@ export const WorkoutsScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
 
   // Test action: creates a real workout plan and syncs to Supabase / local storage
   const handleCreateTestWorkout = async () => {

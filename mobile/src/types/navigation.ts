@@ -7,8 +7,11 @@ export type RootTabParamList = {
 
 export type RootStackParamList = {
   '(tabs)': undefined;
+  '(auth)': undefined;
+  'auth/callback': undefined;
   'workout/[id]': { id: string };
   'exercise/[id]': { id: string };
   'modal': undefined;
   '+not-found': undefined;
 };
+
