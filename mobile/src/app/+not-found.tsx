@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, Stack } from 'expo-router';
-import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function NotFoundScreen() {
   const isDark = useColorScheme() === 'dark';

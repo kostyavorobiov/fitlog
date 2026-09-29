@@ -4,11 +4,11 @@ import {
   View,
   Text,
   StyleSheet,
-  useColorScheme,
   ActivityIndicator,
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';

@@ -1,14 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
+import { useAppColorScheme } from '../context/ThemeContext';
+import { UserAvatar } from './UserAvatar';
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
   rightAction?: React.ReactNode;
+  showAvatar?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, subtitle, rightAction }) => {
-  const isDark = useColorScheme() === 'dark';
+export const Header: React.FC<HeaderProps> = ({
+  title,
+  subtitle,
+  rightAction,
+  showAvatar = true,
+}) => {
+  const isDark = useAppColorScheme() === 'dark';
+  const router = useRouter();
+  const { user } = useAuth();
 
   return (
     <View style={[styles.container, isDark ? styles.borderDark : styles.borderLight]}>
@@ -22,7 +34,18 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, rightAction }) 
           </Text>
         ) : null}
       </View>
-      {rightAction ? <View style={styles.actionContainer}>{rightAction}</View> : null}
+      {rightAction ? (
+        <View style={styles.actionContainer}>{rightAction}</View>
+      ) : showAvatar && user ? (
+        <View style={styles.actionContainer}>
+          <UserAvatar
+            image={user.image}
+            name={user.name}
+            size="sm"
+            onPress={() => router.push('/(tabs)/profile')}
+          />
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -69,5 +92,7 @@ const styles = StyleSheet.create({
   },
   actionContainer: {
     marginLeft: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

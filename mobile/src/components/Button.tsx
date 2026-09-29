@@ -5,8 +5,8 @@ import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacityProps,
-  useColorScheme,
 } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger';
 

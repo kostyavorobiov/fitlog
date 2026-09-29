@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  useColorScheme,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';

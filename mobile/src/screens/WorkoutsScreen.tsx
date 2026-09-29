@@ -5,7 +5,6 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  useColorScheme,
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
@@ -14,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';

@@ -5,7 +5,8 @@ import { AuthService } from '../services/authService';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  isAuthenticated: boolean;
+  isAdmin: boolean;
+  isCoach: boolean;
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   loginWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   registerWithEmail: (
@@ -18,6 +19,7 @@ interface AuthContextType {
   loginAsDemo: (type?: 'admin' | 'athlete' | 'coach', custom?: Partial<User>) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateUserProfile: (updates: Partial<User>) => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -145,18 +147,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserProfile = async (updates: Partial<User>): Promise<User | null> => {
+    setIsLoading(true);
+    try {
+      const updated = await AuthService.updateUserProfile(updates);
+      if (updated) {
+        setUser(updated);
+      }
+      return updated;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isAdmin = user?.role === 'admin';
+  const isCoach = user?.role === 'coach' || user?.role === 'admin';
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
-        isAuthenticated: Boolean(user),
+        isAdmin,
+        isCoach,
         loginWithGoogle,
         loginWithEmail,
         registerWithEmail,
         loginAsDemo,
         logout,
         refreshUser,
+        updateUserProfile,
       }}
     >
       {children}

@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { Exercise } from '../types/workout';
+import { Exercise, MuscleGroup } from '../types/workout';
 import { MobileStorage } from '../lib/storage';
 
 const EXERCISES_CACHE_KEY = 'mobile_exercises_cache';
@@ -107,12 +107,88 @@ export class ExerciseService {
   }
 
   /**
-   * Delete an exercise by ID
+   * Fetch only global / system default exercises (userId is null or isDefault is true)
    */
-  static async deleteExercise(exerciseId: string): Promise<boolean> {
+  static async getGlobalExercises(): Promise<Exercise[]> {
+    const list = await this.getExercises(undefined);
+    return list.filter((e) => e.isDefault || e.userId === null);
+  }
+
+  /**
+   * Create a global exercise (Admin only)
+   */
+  static async createGlobalExercise(data: {
+    name: string;
+    muscleGroup: MuscleGroup;
+    description?: string;
+  }): Promise<{ success: boolean; exercise?: Exercise; error?: string }> {
+    const cleanName = data.name.trim();
+    if (!cleanName) return { success: false, error: 'Введіть назву вправи' };
+
+    const newEx: Exercise = {
+      id: `global_ex_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId: null,
+      name: cleanName,
+      muscleGroup: data.muscleGroup,
+      description: data.description || '',
+      isDefault: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    const ok = await this.createExercise(newEx);
+    if (ok) {
+      return { success: true, exercise: newEx };
+    }
+    return { success: false, error: 'Не вдалося зберегти глобальну вправу' };
+  }
+
+  /**
+   * Update an existing exercise with ownership / admin verification
+   */
+  static async updateExercise(
+    exercise: Exercise,
+    actingUserId?: string,
+    isAdmin?: boolean
+  ): Promise<{ success: boolean; error?: string }> {
+    // 1. Authorization check
+    if (exercise.userId === null || exercise.isDefault) {
+      if (!isAdmin) {
+        return { success: false, error: 'Лише адміністратор може редагувати глобальні вправи' };
+      }
+    } else if (exercise.userId && actingUserId) {
+      if (exercise.userId !== actingUserId && !isAdmin) {
+        return { success: false, error: 'Ви можете редагувати лише власні приватні вправи' };
+      }
+    }
+
+    const ok = await this.createExercise(exercise);
+    return { success: ok, error: ok ? undefined : 'Помилка при оновленні вправи' };
+  }
+
+  /**
+   * Delete an exercise by ID with ownership / admin verification
+   */
+  static async deleteExercise(
+    exerciseId: string,
+    actingUserId?: string,
+    isAdmin?: boolean
+  ): Promise<boolean> {
+    const all = await MobileStorage.getItem<Exercise[]>(EXERCISES_CACHE_KEY, []);
+    const target = all.find((e) => e.id === exerciseId);
+
+    if (target) {
+      if ((target.userId === null || target.isDefault) && !isAdmin) {
+        console.warn('[ExerciseService.deleteExercise] Non-admin cannot delete global exercise');
+        return false;
+      }
+      if (target.userId && actingUserId && target.userId !== actingUserId && !isAdmin) {
+        console.warn('[ExerciseService.deleteExercise] Cannot delete another user private exercise');
+        return false;
+      }
+    }
+
     // 1. Update local cache
-    const list = await this.getExercises();
-    const filtered = list.filter((e) => e.id !== exerciseId);
+    const filtered = all.filter((e) => e.id !== exerciseId);
     await MobileStorage.setItem(EXERCISES_CACHE_KEY, filtered);
 
     // 2. Persist deletion in Supabase

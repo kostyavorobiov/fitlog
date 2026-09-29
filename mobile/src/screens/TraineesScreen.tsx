@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  useColorScheme,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
@@ -12,11 +11,13 @@ import {
   Alert,
   Share,
 } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Header } from '../components/Header';
 import { Card } from '../components/Card';
+import { UserAvatar } from '../components/UserAvatar';
 import { useAuth } from '../context/AuthContext';
 import { TraineeService } from '../services/traineeService';
 import { WorkoutService } from '../services/workoutService';
@@ -416,11 +417,7 @@ export const TraineesScreen: React.FC = () => {
                         isDark ? styles.pillDark : styles.pillLight,
                       ]}
                     >
-                      <View style={[styles.avatarCircle, isSelected && styles.avatarCircleActive]}>
-                        <Text style={[styles.avatarText, isSelected && styles.avatarTextActive]}>
-                          {initials}
-                        </Text>
-                      </View>
+                      <UserAvatar image={t.image} name={t.name} size="xs" />
                       <View style={styles.pillTextWrap}>
                         <Text
                           numberOfLines={1}
@@ -451,11 +448,7 @@ export const TraineesScreen: React.FC = () => {
               <Card style={styles.selectedTraineeCard}>
                 <View style={styles.traineeHeaderRow}>
                   <View style={styles.traineeHeaderLeft}>
-                    <View style={styles.traineeBigAvatar}>
-                      <Text style={styles.bigAvatarText}>
-                        {(selectedTrainee.name || 'П').slice(0, 2).toUpperCase()}
-                      </Text>
-                    </View>
+                    <UserAvatar image={selectedTrainee.image} name={selectedTrainee.name} size="lg" />
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.traineeNameTitle, isDark ? styles.textDark : styles.textLight]}>
                         {selectedTrainee.name}

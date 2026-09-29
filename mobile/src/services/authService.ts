@@ -138,6 +138,31 @@ export class AuthService {
   }
 
   /**
+   * Update active user profile fields and persist to cache and Supabase
+   */
+  static async updateUserProfile(updates: Partial<User>): Promise<User | null> {
+    const current = await this.getCurrentUser();
+    if (!current) return null;
+
+    const firstName = updates.firstName !== undefined ? updates.firstName : current.firstName;
+    const lastName = updates.lastName !== undefined ? updates.lastName : current.lastName;
+    const name = `${firstName || ''} ${lastName || ''}`.trim() || updates.name || current.name;
+
+    const updated: User = {
+      ...current,
+      ...updates,
+      firstName,
+      lastName,
+      name,
+    };
+
+    await MobileStorage.setItem(ACTIVE_USER_KEY, updated);
+    await this.upsertProfile(updated);
+    this.notifyListeners(updated);
+    return updated;
+  }
+
+  /**
    * Synchronize Supabase auth user with profiles table (matching web logic)
    */
   static async handleSupabaseUser(sbUser: any): Promise<User> {
