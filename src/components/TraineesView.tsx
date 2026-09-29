@@ -491,7 +491,9 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                               <div className="flex flex-wrap gap-1.5 pt-1">
                                 {(w.exercises || []).map((we, idx) => {
                                   const ex = StorageService.getExerciseById(we.exerciseId);
-                                  const exName = ex?.name || we.exerciseName || 'Вправа';
+                                  const exName = (we.exerciseName && we.exerciseName !== 'Вправа')
+                                    ? we.exerciseName
+                                    : ((ex?.name && ex.name !== 'Вправа') ? ex.name : (we.exerciseName || 'Вправа'));
                                   return (
                                     <span
                                       key={idx}

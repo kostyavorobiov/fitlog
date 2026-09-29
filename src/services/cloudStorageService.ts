@@ -5,6 +5,66 @@ import { DEFAULT_EXERCISES } from '../data/defaultExercises';
 
 export class CloudStorageService {
   /**
+   * Helper to encode exercise metadata into notes
+   */
+  static encodeExerciseMeta(exerciseName?: string, muscleGroup?: string, userNotes?: string): string {
+    const cleanNotes = (userNotes || '').replace(/^\[meta:[^\]]+\]/, '');
+    if (!exerciseName || exerciseName === 'Вправа') return cleanNotes;
+    const meta = `[meta:ex=${encodeURIComponent(exerciseName)}${muscleGroup ? `&mg=${encodeURIComponent(muscleGroup)}` : ''}]`;
+    return `${meta}${cleanNotes}`;
+  }
+
+  /**
+   * Helper to decode exercise metadata from notes
+   */
+  static decodeExerciseMeta(rawNotes?: string): { exerciseName?: string; muscleGroup?: string; cleanNotes: string } {
+    if (!rawNotes) return { cleanNotes: '' };
+    const match = rawNotes.match(/^\[meta:ex=([^&\]]+)(?:&mg=([^\]]*))?\]/);
+    if (match) {
+      try {
+        return {
+          exerciseName: decodeURIComponent(match[1]),
+          muscleGroup: match[2] ? decodeURIComponent(match[2]) : undefined,
+          cleanNotes: rawNotes.slice(match[0].length),
+        };
+      } catch {
+        return { cleanNotes: rawNotes };
+      }
+    }
+    return { cleanNotes: rawNotes };
+  }
+
+  /**
+   * Batch seed default exercises into Supabase exercises table
+   */
+  static async seedDefaultExercises(): Promise<boolean> {
+    if (!isSupabaseConfigured() || !supabase) return false;
+    try {
+      const rows = DEFAULT_EXERCISES.map((ex) => ({
+        id: ex.id,
+        user_id: null,
+        name: ex.name,
+        muscle_group: ex.muscleGroup,
+        description: ex.description || '',
+        is_default: true,
+        created_at: '2026-01-01T00:00:00.000Z',
+      }));
+
+      for (let i = 0; i < rows.length; i += 50) {
+        const batch = rows.slice(i, i + 50);
+        const { error } = await supabase.from('exercises').upsert(batch, { onConflict: 'id' });
+        if (error) {
+          console.warn('seedDefaultExercises batch upsert error:', error.message);
+        }
+      }
+      return true;
+    } catch (err) {
+      console.warn('seedDefaultExercises error:', err);
+      return false;
+    }
+  }
+
+  /**
    * Fetch all workouts for user (including assigned trainee workouts)
    */
   static async fetchWorkouts(userId: string): Promise<WorkoutPlan[] | null> {
@@ -74,23 +134,36 @@ export class CloudStorageService {
           .sort((a: any, b: any) => a.order_index - b.order_index)
           .map((we: any) => {
             const exObj = Array.isArray(we.exercises) ? we.exercises[0] : we.exercises;
-            if (exObj && exObj.name) {
+            const { exerciseName: metaExName, muscleGroup: metaMg, cleanNotes } = CloudStorageService.decodeExerciseMeta(we.notes);
+
+            const localEx = StorageService.getExerciseById(we.exercise_id);
+            
+            let exerciseName: string | undefined;
+            if (metaExName && metaExName !== 'Вправа') {
+              exerciseName = metaExName;
+            } else if (exObj?.name && exObj.name !== 'Вправа') {
+              exerciseName = exObj.name;
+            } else if (localEx?.name && localEx.name !== 'Вправа') {
+              exerciseName = localEx.name;
+            } else {
+              exerciseName = metaExName || exObj?.name || localEx?.name || undefined;
+            }
+
+            const muscleGroup = metaMg || exObj?.muscle_group || localEx?.muscleGroup || undefined;
+
+            if (exerciseName && exerciseName !== 'Вправа') {
               try {
                 StorageService.saveExercise({
-                  id: exObj.id || we.exercise_id,
-                  userId: exObj.user_id || null,
-                  name: exObj.name,
-                  muscleGroup: exObj.muscle_group || 'full_body',
-                  description: exObj.description || '',
-                  isDefault: Boolean(exObj.is_default),
-                  createdAt: exObj.created_at || '2026-01-01T00:00:00.000Z',
+                  id: exObj?.id || we.exercise_id,
+                  userId: exObj?.user_id || null,
+                  name: exerciseName,
+                  muscleGroup: (muscleGroup as any) || 'full_body',
+                  description: exObj?.description || '',
+                  isDefault: Boolean(exObj?.is_default ?? (we.exercise_id.startsWith('def_ex') || we.exercise_id.startsWith('global_ex'))),
+                  createdAt: exObj?.created_at || '2026-01-01T00:00:00.000Z',
                 });
               } catch {}
             }
-
-            const localEx = StorageService.getExerciseById(we.exercise_id);
-            const exerciseName = exObj?.name || localEx?.name || undefined;
-            const muscleGroup = exObj?.muscle_group || localEx?.muscleGroup || undefined;
 
             const sets: WorkoutSet[] = (we.workout_sets || [])
               .sort((a: any, b: any) => a.set_number - b.set_number)
@@ -115,7 +188,7 @@ export class CloudStorageService {
               order: we.order_index,
               setCount: we.set_count,
               targetRepsRange: we.target_reps_range,
-              notes: we.notes || '',
+              notes: cleanNotes,
               supersetGroupId: we.superset_group_id,
               sets,
             };
@@ -243,18 +316,22 @@ export class CloudStorageService {
           const missingRows = missing.map((id) => {
             const we = workout.exercises.find((e) => e.exerciseId === id);
             const local = StorageService.getExerciseById(id);
+            const resolvedName = (we?.exerciseName && we.exerciseName !== 'Вправа')
+              ? we.exerciseName
+              : (local?.name && local.name !== 'Вправа' ? local.name : 'Вправа');
+            const isDef = local?.isDefault ?? (id.startsWith('def_ex') || id.startsWith('global_ex'));
             return {
               id,
-              name: we?.exerciseName || local?.name || 'Вправа',
+              name: resolvedName,
               muscle_group: we?.muscleGroup || local?.muscleGroup || 'full_body',
               description: local?.description || '',
-              is_default: local?.isDefault ?? false,
-              user_id: local?.userId || null,
+              is_default: isDef,
+              user_id: isDef ? null : (local?.userId || currentAuthId),
             };
           });
-          const { error: insErr } = await supabase.from('exercises').insert(missingRows);
+          const { error: insErr } = await supabase.from('exercises').upsert(missingRows, { onConflict: 'id' });
           if (insErr) {
-            console.warn('Could not insert missing exercises with user_id null, retrying with auth user:', insErr.message);
+            console.warn('Could not upsert missing exercises with user_id null, retrying with auth user:', insErr.message);
             if (currentAuthId) {
               const fallbackRows = missingRows.map((r) => ({ ...r, user_id: currentAuthId }));
               await supabase.from('exercises').upsert(fallbackRows, { onConflict: 'id' });
@@ -262,17 +339,31 @@ export class CloudStorageService {
           }
         }
 
-        // Collect exercises for upsert
-        const weRows = workout.exercises.map((we, idx) => ({
-          id: we.id,
-          workout_id: workout.id,
-          exercise_id: we.exerciseId,
-          order_index: we.order || idx + 1,
-          set_count: we.setCount || we.sets.length,
-          target_reps_range: we.targetRepsRange || '8-12',
-          notes: we.notes || '',
-          superset_group_id: we.supersetGroupId || null,
-        }));
+        // Collect exercises for upsert with embedded metadata in notes
+        const weRows = workout.exercises.map((we, idx) => {
+          const localEx = StorageService.getExerciseById(we.exerciseId);
+          const effectiveExName = (we.exerciseName && we.exerciseName !== 'Вправа')
+            ? we.exerciseName
+            : (localEx?.name && localEx.name !== 'Вправа' ? localEx.name : undefined);
+          const effectiveMg = we.muscleGroup || localEx?.muscleGroup || undefined;
+
+          const notesWithMeta = CloudStorageService.encodeExerciseMeta(
+            effectiveExName,
+            effectiveMg,
+            we.notes
+          );
+
+          return {
+            id: we.id,
+            workout_id: workout.id,
+            exercise_id: we.exerciseId,
+            order_index: we.order || idx + 1,
+            set_count: we.setCount || we.sets.length,
+            target_reps_range: we.targetRepsRange || '8-12',
+            notes: notesWithMeta,
+            superset_group_id: we.supersetGroupId || null,
+          };
+        });
 
         const { error: weError } = await supabase
           .from('workout_exercises')
@@ -369,7 +460,12 @@ export class CloudStorageService {
         return null;
       }
 
-      if (!data) return [];
+      if (!data || data.length === 0) {
+        CloudStorageService.seedDefaultExercises().catch((e) =>
+          console.warn('seedDefaultExercises error:', e)
+        );
+        return [];
+      }
 
       return data.map((item: any) => ({
         id: item.id,

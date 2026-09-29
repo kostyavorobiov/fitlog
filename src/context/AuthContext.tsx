@@ -91,6 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let authSubscription: { unsubscribe: () => void } | null = null;
 
     const initAuth = async () => {
+      // 0. Initialize baseline exercises immediately so catalog and workouts always have exercises
+      StorageService.initializeExercises();
+      StorageService.syncExercises().catch((e) => console.warn('Background exercise sync error:', e));
+
       // 1. Clean out any legacy mock/demo users
       const mockIds = new Set(['usr_trainee_1', 'usr_trainee_2', 'cmua8f1ka0000k9d82leirx01']);
       let storedUsers = StorageService.getUsers().filter((u) => !mockIds.has(u.id));

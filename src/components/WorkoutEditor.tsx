@@ -171,11 +171,14 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     try {
       const rawExercises = Array.isArray(updated.exercises) ? updated.exercises : [];
       const enrichedExercises = rawExercises.map((we) => {
-        if (!we.exerciseName || !we.muscleGroup) {
+        if (!we.exerciseName || !we.muscleGroup || we.exerciseName === 'Вправа') {
           const ex = StorageService.getExerciseById(we.exerciseId);
+          const resolvedName = (we.exerciseName && we.exerciseName !== 'Вправа')
+            ? we.exerciseName
+            : ((ex?.name && ex.name !== 'Вправа') ? ex.name : (we.exerciseName || 'Вправа'));
           return {
             ...we,
-            exerciseName: we.exerciseName || ex?.name || 'Вправа',
+            exerciseName: resolvedName,
             muscleGroup: we.muscleGroup || ex?.muscleGroup || 'full_body',
           };
         }
@@ -852,7 +855,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         ) : (
           currentExList.map((weItem, weIndex) => {
             const exercise = StorageService.getExerciseById(weItem.exerciseId);
-            const exerciseName = exercise?.name || weItem.exerciseName || 'Вправа';
+            const exerciseName = (weItem.exerciseName && weItem.exerciseName !== 'Вправа')
+              ? weItem.exerciseName
+              : ((exercise?.name && exercise.name !== 'Вправа') ? exercise.name : (weItem.exerciseName || 'Вправа'));
             const muscleGroupKey = exercise?.muscleGroup || weItem.muscleGroup || 'full_body';
             const muscleInfo = MUSCLE_GROUPS[muscleGroupKey] || MUSCLE_GROUPS.full_body;
 
