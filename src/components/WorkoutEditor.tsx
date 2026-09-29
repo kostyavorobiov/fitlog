@@ -132,6 +132,20 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const mobileDeleteWorkoutButtonRef = useRef<HTMLButtonElement>(null);
+  const [activeInputText, setActiveInputText] = useState<Record<string, string>>({});
+
+  const handleInputCursorToEnd = (e: React.SyntheticEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const moveToEnd = () => {
+      try {
+        const len = input.value.length;
+        input.setSelectionRange(len, len);
+      } catch {}
+    };
+    moveToEnd();
+    requestAnimationFrame(moveToEnd);
+    setTimeout(moveToEnd, 15);
+  };
 
   // Sync state if initialWorkout changes (e.g. user selected another workout)
   useEffect(() => {
@@ -1009,45 +1023,66 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_weight`];
+                                  return copy;
+                                });
                                 handleUpdateSet(
                                   weItem.id,
                                   setItem.id,
                                   'weight',
                                   Math.max(0, (setItem.weight || 0) - 2.5)
-                                )
-                              }
+                                );
+                              }}
                               className="h-7 w-6 rounded bg-white dark:bg-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
                               title="Зменшити вагу на 2.5 кг"
                             >
                               <Minus className="h-3 w-3 stroke-[2.5]" />
                             </button>
                             <input
-                              type="number"
+                              type="text"
                               inputMode="decimal"
-                              step="0.5"
-                              min="0"
-                              value={setItem.weight === 0 ? '' : setItem.weight}
-                              onChange={(e) =>
-                                handleUpdateSet(
-                                  weItem.id,
-                                  setItem.id,
-                                  'weight',
-                                  parseFloat(e.target.value) || 0
-                                )
+                              value={
+                                activeInputText[`${setItem.id}_weight`] !== undefined
+                                  ? activeInputText[`${setItem.id}_weight`]
+                                  : (setItem.weight === 0 ? '' : setItem.weight)
                               }
+                              onChange={(e) => {
+                                const rawVal = e.target.value.replace(',', '.');
+                                if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+                                  const num = rawVal === '' ? 0 : parseFloat(rawVal) || 0;
+                                  handleUpdateSet(weItem.id, setItem.id, 'weight', num);
+                                  setActiveInputText((prev) => ({ ...prev, [`${setItem.id}_weight`]: rawVal }));
+                                }
+                              }}
+                              onFocus={handleInputCursorToEnd}
+                              onClick={handleInputCursorToEnd}
+                              onBlur={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_weight`];
+                                  return copy;
+                                });
+                              }}
                               className="w-11 text-center bg-transparent font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none"
                             />
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_weight`];
+                                  return copy;
+                                });
                                 handleUpdateSet(
                                   weItem.id,
                                   setItem.id,
                                   'weight',
                                   (setItem.weight || 0) + 2.5
-                                )
-                              }
+                                );
+                              }}
                               className="h-7 w-6 rounded bg-white dark:bg-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
                               title="Збільшити вагу на 2.5 кг"
                             >
@@ -1059,45 +1094,66 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_actualReps`];
+                                  return copy;
+                                });
                                 handleUpdateSet(
                                   weItem.id,
                                   setItem.id,
                                   'actualReps',
                                   Math.max(0, (setItem.actualReps || 0) - 1)
-                                )
-                              }
+                                );
+                              }}
                               className="h-7 w-6 rounded bg-white dark:bg-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
                               title="Зменшити повторення"
                             >
                               <Minus className="h-3 w-3 stroke-[2.5]" />
                             </button>
                             <input
-                              type="number"
+                              type="text"
                               inputMode="numeric"
-                              min="0"
-                              max="200"
-                              value={setItem.actualReps === null ? '' : setItem.actualReps}
-                              onChange={(e) =>
-                                handleUpdateSet(
-                                  weItem.id,
-                                  setItem.id,
-                                  'actualReps',
-                                  e.target.value === '' ? null : parseInt(e.target.value, 10)
-                                )
+                              value={
+                                activeInputText[`${setItem.id}_actualReps`] !== undefined
+                                  ? activeInputText[`${setItem.id}_actualReps`]
+                                  : (setItem.actualReps === null ? '' : setItem.actualReps)
                               }
+                              onChange={(e) => {
+                                const rawVal = e.target.value;
+                                if (rawVal === '' || /^\d+$/.test(rawVal)) {
+                                  const num = rawVal === '' ? null : parseInt(rawVal, 10);
+                                  handleUpdateSet(weItem.id, setItem.id, 'actualReps', num);
+                                  setActiveInputText((prev) => ({ ...prev, [`${setItem.id}_actualReps`]: rawVal }));
+                                }
+                              }}
+                              onFocus={handleInputCursorToEnd}
+                              onClick={handleInputCursorToEnd}
+                              onBlur={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_actualReps`];
+                                  return copy;
+                                });
+                              }}
                               className="w-9 text-center bg-transparent font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none"
                             />
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_actualReps`];
+                                  return copy;
+                                });
                                 handleUpdateSet(
                                   weItem.id,
                                   setItem.id,
                                   'actualReps',
                                   (setItem.actualReps || 0) + 1
-                                )
-                              }
+                                );
+                              }}
                               className="h-7 w-6 rounded bg-white dark:bg-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shrink-0"
                               title="Збільшити повторення"
                             >
@@ -1321,45 +1377,66 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                               <div className="flex items-center space-x-1.5 max-w-[170px]">
                                 <button
                                   type="button"
-                                  onClick={() =>
+                                  onClick={() => {
+                                    setActiveInputText((prev) => {
+                                      const copy = { ...prev };
+                                      delete copy[`${setItem.id}_weight`];
+                                      return copy;
+                                    });
                                     handleUpdateSet(
                                       weItem.id,
                                       setItem.id,
                                       'weight',
                                       Math.max(0, (setItem.weight || 0) - 2.5)
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                   title="Зменшити вагу на 2.5 кг"
                                 >
                                   <Minus className="h-4 w-4 stroke-[2.5]" />
                                 </button>
                                 <input
-                                  type="number"
+                                  type="text"
                                   inputMode="decimal"
-                                  step="0.5"
-                                  min="0"
-                                  value={setItem.weight === 0 ? '' : setItem.weight}
-                                  onChange={(e) =>
-                                    handleUpdateSet(
-                                      weItem.id,
-                                      setItem.id,
-                                      'weight',
-                                      parseFloat(e.target.value) || 0
-                                    )
+                                  value={
+                                    activeInputText[`${setItem.id}_weight`] !== undefined
+                                      ? activeInputText[`${setItem.id}_weight`]
+                                      : (setItem.weight === 0 ? '' : setItem.weight)
                                   }
+                                  onChange={(e) => {
+                                    const rawVal = e.target.value.replace(',', '.');
+                                    if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+                                      const num = rawVal === '' ? 0 : parseFloat(rawVal) || 0;
+                                      handleUpdateSet(weItem.id, setItem.id, 'weight', num);
+                                      setActiveInputText((prev) => ({ ...prev, [`${setItem.id}_weight`]: rawVal }));
+                                    }
+                                  }}
+                                  onFocus={handleInputCursorToEnd}
+                                  onClick={handleInputCursorToEnd}
+                                  onBlur={() => {
+                                    setActiveInputText((prev) => {
+                                      const copy = { ...prev };
+                                      delete copy[`${setItem.id}_weight`];
+                                      return copy;
+                                    });
+                                  }}
                                   className="w-20 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1.5 font-mono text-center text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100 focus:outline-none"
                                 />
                                 <button
                                   type="button"
-                                  onClick={() =>
+                                  onClick={() => {
+                                    setActiveInputText((prev) => {
+                                      const copy = { ...prev };
+                                      delete copy[`${setItem.id}_weight`];
+                                      return copy;
+                                    });
                                     handleUpdateSet(
                                       weItem.id,
                                       setItem.id,
                                       'weight',
                                       (setItem.weight || 0) + 2.5
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                   title="Збільшити вагу на 2.5 кг"
                                 >
@@ -1374,33 +1451,49 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                               <div className="flex items-center space-x-1.5 max-w-[170px]">
                                 <button
                                   type="button"
-                                  onClick={() =>
+                                  onClick={() => {
+                                    setActiveInputText((prev) => {
+                                      const copy = { ...prev };
+                                      delete copy[`${setItem.id}_actualReps`];
+                                      return copy;
+                                    });
                                     handleUpdateSet(
                                       weItem.id,
                                       setItem.id,
                                       'actualReps',
                                       Math.max(0, (setItem.actualReps || 0) - 1)
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                   title="Зменшити повторення"
                                 >
                                   <Minus className="h-4 w-4 stroke-[2.5]" />
                                 </button>
                                 <input
-                                  type="number"
+                                  type="text"
                                   inputMode="numeric"
-                                  min="0"
-                                  max="200"
-                                  value={setItem.actualReps === null ? '' : setItem.actualReps}
-                                  onChange={(e) =>
-                                    handleUpdateSet(
-                                      weItem.id,
-                                      setItem.id,
-                                      'actualReps',
-                                      e.target.value === '' ? null : parseInt(e.target.value, 10)
-                                    )
+                                  value={
+                                    activeInputText[`${setItem.id}_actualReps`] !== undefined
+                                      ? activeInputText[`${setItem.id}_actualReps`]
+                                      : (setItem.actualReps === null ? '' : setItem.actualReps)
                                   }
+                                  onChange={(e) => {
+                                    const rawVal = e.target.value;
+                                    if (rawVal === '' || /^\d+$/.test(rawVal)) {
+                                      const num = rawVal === '' ? null : parseInt(rawVal, 10);
+                                      handleUpdateSet(weItem.id, setItem.id, 'actualReps', num);
+                                      setActiveInputText((prev) => ({ ...prev, [`${setItem.id}_actualReps`]: rawVal }));
+                                    }
+                                  }}
+                                  onFocus={handleInputCursorToEnd}
+                                  onClick={handleInputCursorToEnd}
+                                  onBlur={() => {
+                                    setActiveInputText((prev) => {
+                                      const copy = { ...prev };
+                                      delete copy[`${setItem.id}_actualReps`];
+                                      return copy;
+                                    });
+                                  }}
                                   className={`w-16 rounded-lg border px-2 py-1.5 font-mono text-center text-xs font-bold focus:outline-none ${isDone
                                     ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
                                     : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100'
@@ -1408,14 +1501,19 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                 />
                                 <button
                                   type="button"
-                                  onClick={() =>
+                                  onClick={() => {
+                                    setActiveInputText((prev) => {
+                                      const copy = { ...prev };
+                                      delete copy[`${setItem.id}_actualReps`];
+                                      return copy;
+                                    });
                                     handleUpdateSet(
                                       weItem.id,
                                       setItem.id,
                                       'actualReps',
                                       (setItem.actualReps || 0) + 1
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                   title="Збільшити повторення"
                                 >

@@ -7,8 +7,6 @@ import {
   Calendar,
   BookOpen,
   Activity,
-  User,
-  LogOut,
   Users,
   Sun,
   Moon,
@@ -27,27 +25,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuthModal,
   hasActiveWorkout,
 }) => {
-  const { user, logout, isCoach, isAdmin } = useAuth();
+  const { user, isCoach, isAdmin } = useAuth();
   const { theme, toggleTheme, isDark } = useTheme();
-  const [userDropdown, setUserDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setUserDropdown(false);
-      }
-    };
-    if (userDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [userDropdown]);
 
   // Handle mobile navbar auto-hide on scroll
   useEffect(() => {
@@ -67,7 +48,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             // Scrolling down the page (swiping up) -> hide navbar
             if (Date.now() >= suppressHideUntil) {
               setIsNavVisible(false);
-              setUserDropdown(false);
             }
           } else if (diff < -8) {
             // Scrolling up the page (swiping down) -> immediately show navbar
@@ -203,101 +183,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {/* User Auth Section */}
-              <div className="relative flex items-center" ref={dropdownRef}>
+              <div className="flex items-center">
                 {user ? (
-                  <div>
-                    {/* Clickable round avatar with min 44px tap target on mobile */}
-                    <button
-                      type="button"
-                      onClick={() => setUserDropdown((prev) => !prev)}
-                      className={`relative flex items-center justify-center rounded-full p-0.5 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-400 active:scale-95 ${
-                        currentTab === 'profile' || userDropdown
-                          ? 'border-zinc-900 dark:border-zinc-100 ring-2 ring-zinc-300 dark:ring-zinc-700'
-                          : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
-                      }`}
-                      style={{ minWidth: '40px', minHeight: '40px' }}
-                      title="Профіль користувача"
-                      aria-label="Профіль користувача"
-                      aria-expanded={userDropdown}
-                    >
-                      <UserAvatar
-                        src={user.image}
-                        alt={user.name}
-                        size="sm"
-                      />
-                    </button>
-
-                    {/* Clean Minimal Flat Dropdown Menu */}
-                    {userDropdown && (
-                      <div className="absolute right-0 top-12 sm:top-14 z-50 w-64 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 shadow-xl animate-fade-in">
-                        {/* User Info Header */}
-                        <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800 mb-1">
-                          <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                            {user.firstName || user.name} {user.lastName || ''}
-                          </p>
-                          <p className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
-                            ID: {user.profileCode || user.id}
-                          </p>
-                          <p className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate">{user.email}</p>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUserDropdown(false);
-                            onSelectTab('profile');
-                          }}
-                          className="w-full flex items-center space-x-2 rounded-lg px-3 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-                        >
-                          <User className="h-4 w-4 text-zinc-400" />
-                          <span>Мій профіль</span>
-                        </button>
-
-                        {(user?.role === 'coach' || isAdmin) && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setUserDropdown(false);
-                              onSelectTab('trainees');
-                            }}
-                            className="w-full flex items-center space-x-2 rounded-lg px-3 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-                          >
-                            <Users className="h-4 w-4 text-zinc-400" />
-                            <span>Підопічні (Тренер)</span>
-                          </button>
-                        )}
-
-                        {/* Theme Toggle within Menu */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            toggleTheme();
-                          }}
-                          className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-                        >
-                          <div className="flex items-center space-x-2">
-                            {isDark ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4 text-zinc-600" />}
-                            <span>Тема</span>
-                          </div>
-                          <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
-                            {isDark ? 'Темна' : 'Світла'}
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUserDropdown(false);
-                            logout();
-                          }}
-                          className="w-full flex items-center space-x-2 rounded-lg px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-700 dark:hover:text-red-300 transition-colors border-t border-zinc-100 dark:border-zinc-800 mt-1 pt-2 cursor-pointer"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          <span>Вийти</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onSelectTab('profile')}
+                    className={`relative flex items-center justify-center rounded-full p-0.5 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-400 active:scale-95 ${
+                      currentTab === 'profile'
+                        ? 'border-zinc-900 dark:border-zinc-100 ring-2 ring-zinc-300 dark:ring-zinc-700'
+                        : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                    }`}
+                    style={{ minWidth: '40px', minHeight: '40px' }}
+                    title="Мій профіль"
+                    aria-label="Мій профіль"
+                  >
+                    <UserAvatar
+                      src={user.image}
+                      alt={user.name}
+                      size="sm"
+                    />
+                  </button>
                 ) : (
                   <button
                     type="button"

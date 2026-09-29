@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Plus, Dumbbell } from 'lucide-react';
 import { MuscleGroup, MUSCLE_GROUPS, Exercise } from '../types/workout';
 import { StorageService } from '../services/storageService';
+import { useAuth } from '../context/AuthContext';
 
 interface CreateExerciseModalProps {
   userId: string;
@@ -19,15 +20,18 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   onCreated,
   initialName = '',
 }) => {
+  const { isAdmin } = useAuth();
   const [name, setName] = useState(initialName);
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>('chest');
   const [description, setDescription] = useState('');
+  const [isGlobal, setIsGlobal] = useState(false);
   const [error, setError] = useState('');
   const backdropMouseDownRef = React.useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setName(initialName);
+    setIsGlobal(false);
     setError('');
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -47,17 +51,24 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
 
     const creatorId = StorageService.getActiveUserId() || userId;
 
-    const created = StorageService.createExercise({
-      userId: creatorId,
-      name: name.trim(),
-      muscleGroup,
-      description: description.trim() || undefined,
-      isDefault: false,
-    });
+    const created = (isAdmin && isGlobal)
+      ? StorageService.createGlobalExercise({
+          name: name.trim(),
+          muscleGroup,
+          description: description.trim() || undefined,
+        })
+      : StorageService.createExercise({
+          userId: creatorId,
+          name: name.trim(),
+          muscleGroup,
+          description: description.trim() || undefined,
+          isDefault: false,
+        });
 
     onCreated(created);
     setName('');
     setDescription('');
+    setIsGlobal(false);
     setError('');
     onClose();
   };
@@ -166,6 +177,24 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
               className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 resize-none"
             />
           </div>
+
+          {isAdmin && (
+            <div className="flex items-center space-x-2.5 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 p-2.5">
+              <input
+                type="checkbox"
+                id="is-global-checkbox"
+                checked={isGlobal}
+                onChange={(e) => setIsGlobal(e.target.checked)}
+                className="h-4 w-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+              />
+              <label
+                htmlFor="is-global-checkbox"
+                className="text-xs text-amber-950 dark:text-amber-200 cursor-pointer select-none"
+              >
+                <span className="font-bold">Global</span> (додає вправу в глобальну базу)
+              </label>
+            </div>
+          )}
 
           <div className="flex items-center space-x-2 pt-2">
             <button

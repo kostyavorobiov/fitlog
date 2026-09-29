@@ -52,12 +52,6 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
     const shouldIgnoreTarget = (target: EventTarget | null, startClientX: number): boolean => {
       if (!target || !(target instanceof Element)) return false;
 
-      const edgeThreshold = optionsRef.current.edgeThreshold ?? 55;
-      const isEdge = startClientX <= edgeThreshold;
-
-      // Edge swipes (swiping from the left edge to go back) always take priority
-      if (isEdge) return false;
-
       // Do not initiate gestures on editable form inputs
       if (target.closest('input, textarea, select, [contenteditable="true"]')) {
         return true;
@@ -86,6 +80,11 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
     const handleTouchStart = (e: TouchEvent) => {
       if (optionsRef.current.disabled) return;
       if (e.touches.length !== 1) {
+        isTracking = false;
+        return;
+      }
+
+      if (ref.current && e.target instanceof Node && !ref.current.contains(e.target)) {
         isTracking = false;
         return;
       }
@@ -198,6 +197,11 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
     const handlePointerDown = (e: PointerEvent) => {
       if (optionsRef.current.disabled) return;
       if (e.pointerType !== 'mouse' || e.button !== 0) return;
+
+      if (ref.current && e.target instanceof Node && !ref.current.contains(e.target)) {
+        isTracking = false;
+        return;
+      }
 
       if (shouldIgnoreTarget(e.target, e.clientX)) {
         isTracking = false;

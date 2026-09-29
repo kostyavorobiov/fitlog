@@ -12,7 +12,6 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { ProfileView } from './components/ProfileView';
 import { TraineesView } from './components/TraineesView';
 import { GoogleAuthModal } from './components/GoogleAuthModal';
-import { useSwipeGesture } from './utils/useSwipeGesture';
 
 const MainContent: React.FC = () => {
   const { user, isLoading, isCoach, isAdmin } = useAuth();
@@ -61,6 +60,7 @@ const MainContent: React.FC = () => {
     StorageService.saveWorkout(newWorkout);
     setActiveWorkout(newWorkout);
     setWorkoutViewMode('editor');
+    setCurrentTab('editor');
   };
 
   const handleSelectWorkout = (workout: WorkoutPlan) => {
@@ -120,58 +120,6 @@ const MainContent: React.FC = () => {
     }
   };
 
-  const navTabs: ('editor' | 'history' | 'analytics' | 'catalog' | 'trainees')[] = [
-    'editor',
-    'history',
-    'analytics',
-    'catalog',
-  ];
-  if (user?.role === 'coach' || isAdmin) {
-    navTabs.push('trainees');
-  }
-
-  const handleSwipeLeft = () => {
-    if (workoutViewMode === 'editor') return;
-    if (currentTab === 'profile') return;
-    const currentIndex = navTabs.indexOf(currentTab as any);
-    if (currentIndex >= 0 && currentIndex < navTabs.length - 1) {
-      const nextTab = navTabs[currentIndex + 1];
-      setCurrentTab(nextTab);
-      if (nextTab === 'editor') {
-        setEditingTrainee(null);
-        setWorkoutViewMode('list');
-      }
-    }
-  };
-
-  const handleSwipeRight = () => {
-    if (workoutViewMode === 'editor') {
-      handleBackFromWorkout();
-      return;
-    }
-    if (currentTab === 'profile') {
-      setCurrentTab('editor');
-      setWorkoutViewMode('list');
-      return;
-    }
-    const currentIndex = navTabs.indexOf(currentTab as any);
-    if (currentIndex > 0) {
-      const prevTab = navTabs[currentIndex - 1];
-      setCurrentTab(prevTab);
-      if (prevTab === 'editor') {
-        setEditingTrainee(null);
-        setWorkoutViewMode('list');
-      }
-    }
-  };
-
-  const swipeRef = useSwipeGesture<HTMLElement>({
-    onSwipeLeft: handleSwipeLeft,
-    onSwipeRight: handleSwipeRight,
-    threshold: 30,
-    disabled: isAuthModalOpen || isLoading,
-  });
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
@@ -184,7 +132,7 @@ const MainContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-150 touch-pan-y overscroll-x-none">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-150">
       {/* Navigation */}
       <Navbar
         currentTab={currentTab}
@@ -200,10 +148,7 @@ const MainContent: React.FC = () => {
       />
 
       {/* Main View Container */}
-      <main
-        ref={swipeRef}
-        className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-8 touch-pan-y"
-      >
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-8">
         {currentTab === 'editor' && user && (
           <div>
             {workoutViewMode === 'editor' && activeWorkout ? (

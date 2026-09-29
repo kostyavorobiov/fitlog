@@ -20,6 +20,7 @@ import {
   Pencil,
   X,
   Search,
+  LogOut,
 } from 'lucide-react';
 import { UserRole, Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
@@ -27,7 +28,7 @@ import { CloudStorageService } from '../services/cloudStorageService';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export const ProfileView: React.FC = () => {
-  const { user, updateUserProfile, isAdmin, isCoach } = useAuth();
+  const { user, updateUserProfile, isAdmin, isCoach, logout } = useAuth();
   const { theme, toggleTheme, setTheme, isDark } = useTheme();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -816,6 +817,18 @@ export const ProfileView: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Logout Button */}
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={logout}
+            className="w-full flex items-center justify-center space-x-2 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/20 px-4 py-2.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100/80 dark:hover:bg-red-900/40 hover:text-red-700 dark:hover:text-red-300 transition-colors cursor-pointer shadow-2xs"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Вийти з акаунта</span>
+          </button>
         </div>
       </div>
     </div>

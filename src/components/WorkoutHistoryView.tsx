@@ -13,6 +13,7 @@ import {
   ChevronRight as ArrowRight,
   Layers,
 } from 'lucide-react';
+import { useSwipeGesture } from '../utils/useSwipeGesture';
 
 interface WorkoutHistoryViewProps {
   userId: string;
@@ -36,6 +37,24 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [workoutToDelete, setWorkoutToDelete] = useState<WorkoutPlan | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  const year = currentCalendarDate.getFullYear();
+  const month = currentCalendarDate.getMonth();
+
+  const handlePrevMonth = () => {
+    setCurrentCalendarDate(new Date(year, month - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentCalendarDate(new Date(year, month + 1, 1));
+  };
+
+  const swipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: handleNextMonth,
+    onSwipeRight: handlePrevMonth,
+    threshold: 30,
+    disabled: isCreateModalOpen || Boolean(workoutToDelete),
+  });
 
   const [workouts, setWorkouts] = useState<WorkoutPlan[]>(() => StorageService.getWorkouts(userId));
 
@@ -69,16 +88,7 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
     'Грудень',
   ];
 
-  const year = currentCalendarDate.getFullYear();
-  const month = currentCalendarDate.getMonth();
 
-  const handlePrevMonth = () => {
-    setCurrentCalendarDate(new Date(year, month - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentCalendarDate(new Date(year, month + 1, 1));
-  };
 
 
   const handleToday = () => {
@@ -181,6 +191,7 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
 
       {/* CALENDAR CARD - Minimal Flat */}
       <div
+        ref={swipeRef}
         className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
       >
         {/* Month & Year Navigation */}

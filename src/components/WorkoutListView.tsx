@@ -11,6 +11,8 @@ import {
   Layers,
 } from 'lucide-react';
 
+import { useSwipeGesture } from '../utils/useSwipeGesture';
+
 interface WorkoutListViewProps {
   userId: string;
   onSelectWorkout: (workout: WorkoutPlan) => void;
@@ -27,6 +29,29 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
   const [workoutToDelete, setWorkoutToDelete] = useState<WorkoutPlan | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'in_progress' | 'completed'>('in_progress');
   const [workouts, setWorkouts] = useState<WorkoutPlan[]>(() => StorageService.getWorkouts(userId));
+
+  const filterTabs: ('all' | 'in_progress' | 'completed')[] = ['all', 'in_progress', 'completed'];
+
+  const handleSwipeLeft = () => {
+    const idx = filterTabs.indexOf(filterStatus);
+    if (idx < filterTabs.length - 1) {
+      setFilterStatus(filterTabs[idx + 1]);
+    }
+  };
+
+  const handleSwipeRight = () => {
+    const idx = filterTabs.indexOf(filterStatus);
+    if (idx > 0) {
+      setFilterStatus(filterTabs[idx - 1]);
+    }
+  };
+
+  const swipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+    threshold: 30,
+    disabled: Boolean(workoutToDelete),
+  });
 
   React.useEffect(() => {
     setWorkouts(StorageService.getWorkouts(userId));
@@ -62,6 +87,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
 
   return (
     <div
+      ref={swipeRef}
       className="space-y-6 max-w-5xl mx-auto animate-fade-in pb-12 touch-pan-y"
     >
       {/* Top Header Bar - Minimal Functional Flat */}

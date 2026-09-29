@@ -26,6 +26,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    setSearch('');
     const scrollY = window.scrollY;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
