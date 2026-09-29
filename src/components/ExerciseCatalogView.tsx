@@ -114,12 +114,21 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
   return (
     <div className="space-y-5 max-w-5xl mx-auto animate-fade-in pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+      <div className="flex items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
             База вправ
           </h1>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setIsCreateOpen(true)}
+          className="inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-2 text-xs sm:text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-white active:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-xs"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Додати вправу</span>
+        </button>
       </div>
 
       {/* Search and Filters Bar */}
@@ -316,9 +325,13 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
           blockHistoryModalUntilRef.current = Date.now() + 800;
           setIsCreateOpen(false);
         }}
-        onCreated={() => {
+        onCreated={(newEx) => {
           blockHistoryModalUntilRef.current = Date.now() + 800;
           setHistoryModalExercise(null);
+          if (newEx?.muscleGroup) {
+            setSelectedMuscle(newEx.muscleGroup);
+          }
+          setSearch('');
           setRefreshKey((prev) => prev + 1);
         }}
       />
