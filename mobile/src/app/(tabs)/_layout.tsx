@@ -36,20 +36,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="exercises"
-        options={{
-          title: 'Вправи',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="fitness-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="calendar"
         options={{
           title: 'Календар',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          title: 'Аналітика',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="stats-chart-outline" size={size} color={color} />
           ),
         }}
       />
@@ -62,6 +62,13 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="exercises"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
+
   );
 }

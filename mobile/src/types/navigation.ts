@@ -1,9 +1,11 @@
 export type RootTabParamList = {
   index: undefined;        // Workouts
-  exercises: undefined;    // Exercise Catalog
   calendar: undefined;     // Calendar View
+  analytics: undefined;    // Analytics View
   profile: undefined;      // User Profile
+  exercises?: undefined;   // Hidden/Auxiliary Exercise Catalog
 };
+
 
 export type RootStackParamList = {
   '(tabs)': undefined;

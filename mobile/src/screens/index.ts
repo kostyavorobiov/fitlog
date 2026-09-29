@@ -1,4 +1,7 @@
 export * from './WorkoutsScreen';
+export * from './WorkoutDetailScreen';
 export * from './ExercisesScreen';
 export * from './CalendarScreen';
+export * from './AnalyticsScreen';
 export * from './ProfileScreen';
+export * from './LoginScreen';

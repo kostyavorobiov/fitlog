@@ -1,126 +1,110 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   ScrollView,
   View,
   Text,
+  TextInput,
   StyleSheet,
   useColorScheme,
   ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity,
+  Modal,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Card } from '../components/Card';
-import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { WorkoutService } from '../services/workoutService';
-import { ExerciseService } from '../services/exerciseService';
-import { isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { WorkoutPlan, Exercise } from '../types/workout';
+import { WorkoutPlan } from '../types/workout';
 
+export type WorkoutFilterStatus = 'all' | 'in_progress' | 'completed';
 
 export const WorkoutsScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
-  const isCloudConnected = isSupabaseConfigured();
+  const router = useRouter();
   const { user } = useAuth();
 
   const [workouts, setWorkouts] = useState<WorkoutPlan[]>([]);
-  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [filterStatus, setFilterStatus] = useState<WorkoutFilterStatus>('all');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  // Creation modal state
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [newTitle, setNewTitle] = useState<string>('');
+  const [newDate, setNewDate] = useState<string>('');
+  const [newNotes, setNewNotes] = useState<string>('');
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
   const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const userId = user?.id || 'demo_user';
-      const [fetchedWorkouts, fetchedExercises] = await Promise.all([
-        WorkoutService.getWorkouts(userId),
-        ExerciseService.getExercises(userId),
-      ]);
+    if (!user) {
+      setWorkouts([]);
+      setIsLoading(false);
+      return;
+    }
 
-      setWorkouts(fetchedWorkouts);
-      setExercises(fetchedExercises);
+    try {
+      const data = await WorkoutService.getWorkouts(user.id);
+      setWorkouts(data);
     } catch (e) {
-      console.warn('Error loading data in WorkoutsScreen:', e);
+      console.warn('[WorkoutsScreen.loadData] Error:', e);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
+    setIsLoading(true);
     loadData();
   }, [loadData]);
 
+  const onRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    loadData();
+  }, [loadData]);
 
-  // Test action: creates a real workout plan and syncs to Supabase / local storage
-  const handleCreateTestWorkout = async () => {
+  // Open modal with defaults
+  const handleOpenCreateModal = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setNewTitle('');
+    setNewDate(today);
+    setNewNotes('');
+    setIsModalOpen(true);
+  };
+
+  // Submit new workout
+  const handleCreateWorkoutSubmit = async () => {
+    if (!user) return;
+
+    const titleToUse = newTitle.trim() || 'Силове тренування';
+    const dateToUse = newDate.trim() || new Date().toISOString().split('T')[0];
+
     setIsCreating(true);
     try {
-      const userId = user?.id || 'demo_user';
-      const now = new Date();
-      const dateStr = now.toISOString().split('T')[0];
-      const workoutId = `m_wo_${Date.now()}`;
-      const exerciseId = exercises[0]?.id || 'def_ex_1';
-      const exerciseName = exercises[0]?.name || 'Жим штанги лежачи';
-      const muscleGroup = exercises[0]?.muscleGroup || 'chest';
-
-      const testWorkout: WorkoutPlan = {
+      const workoutId = `wo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const newWorkout: WorkoutPlan = {
         id: workoutId,
-        userId,
-        title: `Мобільне тренування (${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
-        scheduledDate: dateStr,
+        userId: user.id,
+        title: titleToUse,
+        scheduledDate: dateToUse,
         status: 'planned',
-        notes: 'Створено з мобільного застосунку React Native + Expo',
-        createdAt: now.toISOString(),
-        exercises: [
-          {
-            id: `m_we_${Date.now()}_1`,
-            workoutPlanId: workoutId,
-            exerciseId,
-            exerciseName,
-            muscleGroup,
-            order: 1,
-            setCount: 3,
-            targetRepsRange: '8-12',
-            notes: 'Тестова вправа',
-            sets: [
-              {
-                id: `m_ws_${Date.now()}_1`,
-                workoutExerciseId: `m_we_${Date.now()}_1`,
-                setNumber: 1,
-                targetRepsRange: '8-12',
-                weight: 60,
-                actualReps: 10,
-                completedAt: now.toISOString(),
-                notes: 'Розминка',
-                isWarmup: false,
-              },
-              {
-                id: `m_ws_${Date.now()}_2`,
-                workoutExerciseId: `m_we_${Date.now()}_1`,
-                setNumber: 2,
-                targetRepsRange: '8-12',
-                weight: 70,
-                actualReps: 8,
-                completedAt: now.toISOString(),
-                notes: '',
-                isWarmup: false,
-              },
-            ],
-          },
-        ],
+        notes: newNotes.trim(),
+        createdAt: new Date().toISOString(),
+        exercises: [],
       };
 
-      const success = await WorkoutService.saveWorkout(testWorkout);
+      const success = await WorkoutService.saveWorkout(newWorkout);
       if (success) {
-        await loadData();
-        Alert.alert(
-          'Успішно',
-          isCloudConnected
-            ? 'Тестове тренування збережено в Supabase і доступне у вебверсії!'
-            : 'Тестове тренування збережено локально в кеш!'
-        );
+        setWorkouts((prev) => [newWorkout, ...prev]);
+        setIsModalOpen(false);
+        router.push({ pathname: '/workout/[id]', params: { id: newWorkout.id } });
       } else {
         Alert.alert('Помилка', 'Не вдалося зберегти тренування');
       }
@@ -131,175 +115,453 @@ export const WorkoutsScreen: React.FC = () => {
     }
   };
 
-  const handleDeleteWorkout = async (id: string) => {
-    const userId = user?.id || 'demo_user';
-    await WorkoutService.deleteWorkout(userId, id);
-    await loadData();
+  // Delete workout with alert confirmation
+  const handleDeleteWorkout = (workout: WorkoutPlan) => {
+    if (!user) return;
+
+    Alert.alert(
+      'Видалити тренування?',
+      `Ви впевнені, що хочете видалити «${workout.title || 'це тренування'}»?`,
+      [
+        { text: 'Скасувати', style: 'cancel' },
+        {
+          text: 'Видалити',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const ok = await WorkoutService.deleteWorkout(user.id, workout.id);
+              if (ok) {
+                setWorkouts((prev) => prev.filter((w) => w.id !== workout.id));
+              } else {
+                Alert.alert('Помилка', 'Не вдалося видалити тренування');
+              }
+            } catch (e) {
+              Alert.alert('Помилка', 'Помилка видалення');
+            }
+          },
+        },
+      ]
+    );
   };
 
+  // Filtered workouts
+  const filteredWorkouts = useMemo(() => {
+    return workouts.filter((w) => {
+      if (filterStatus === 'all') return true;
+      if (filterStatus === 'in_progress') return w.status === 'in_progress' || w.status === 'planned';
+      if (filterStatus === 'completed') return w.status === 'completed';
+      return true;
+    });
+  }, [workouts, filterStatus]);
+
+  const inProgressCount = useMemo(() => {
+    return workouts.filter((w) => w.status === 'in_progress' || w.status === 'planned').length;
+  }, [workouts]);
+
+  const completedCount = useMemo(() => {
+    return workouts.filter((w) => w.status === 'completed').length;
+  }, [workouts]);
+
   return (
-    <SafeAreaView
-      edges={['top']}
-      style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}
-    >
-      <Header
-        title="Тренування"
-        subtitle="Workout Diary Mobile"
-        rightAction={
-          <Button
-            title="+ Тестове"
-            variant="primary"
-            loading={isCreating}
-            onPress={handleCreateTestWorkout}
-            style={styles.addButton}
-          />
-        }
-      />
+    <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      {/* Top Header */}
+      <View style={[styles.headerBar, isDark ? styles.borderDark : styles.borderLight]}>
+        <View style={styles.headerLeft}>
+          <Text style={[styles.screenTitle, isDark ? styles.textDark : styles.textLight]}>
+            Тренування
+          </Text>
+          <Text style={[styles.screenSubtitle, isDark ? styles.subDark : styles.subLight]}>
+            {user ? `Атлет: ${user.name || user.email}` : 'Щоденник тренувань'}
+          </Text>
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={handleOpenCreateModal}
+          style={styles.newWorkoutBtn}
+        >
+          <Ionicons name="add" size={20} color="#ffffff" />
+          <Text style={styles.newWorkoutBtnText}>Нове</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Filter Tabs */}
+      <View style={styles.filterRow}>
+        <View style={[styles.filterContainer, isDark ? styles.filterDark : styles.filterLight]}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setFilterStatus('all')}
+            style={[styles.filterBtn, filterStatus === 'all' && styles.filterBtnActive]}
+          >
+            <Text
+              style={[
+                styles.filterBtnText,
+                filterStatus === 'all' ? styles.filterBtnTextActive : (isDark ? styles.subDark : styles.subLight),
+              ]}
+            >
+              Всі ({workouts.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setFilterStatus('in_progress')}
+            style={[styles.filterBtn, filterStatus === 'in_progress' && styles.filterBtnActive]}
+          >
+            <Text
+              style={[
+                styles.filterBtnText,
+                filterStatus === 'in_progress' ? styles.filterBtnTextActive : (isDark ? styles.subDark : styles.subLight),
+              ]}
+            >
+              У процесі ({inProgressCount})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setFilterStatus('completed')}
+            style={[styles.filterBtn, filterStatus === 'completed' && styles.filterBtnActive]}
+          >
+            <Text
+              style={[
+                styles.filterBtnText,
+                filterStatus === 'completed' ? styles.filterBtnTextActive : (isDark ? styles.subDark : styles.subLight),
+              ]}
+            >
+              Завершено ({completedCount})
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={isDark ? '#38bdf8' : '#0284c7'}
+          />
+        }
       >
-        {/* Backend / Cloud Status Banner */}
-        <Card style={styles.bannerCard}>
-          <View style={styles.bannerRow}>
-            <View
-              style={[
-                styles.bannerIcon,
-                isCloudConnected ? styles.iconCloudConnected : styles.iconCloudOffline,
-              ]}
-            >
-              <Ionicons
-                name={isCloudConnected ? 'cloud-done-outline' : 'cloud-offline-outline'}
-                size={24}
-                color={isCloudConnected ? '#10b981' : '#f59e0b'}
-              />
-            </View>
-            <View style={styles.bannerText}>
-              <View style={styles.statusBadgeRow}>
-                <Text style={[styles.bannerTitle, isDark ? styles.textDark : styles.textLight]}>
-                  {isCloudConnected ? 'Supabase Backend підключено' : 'Автономний режим (Offline)'}
-                </Text>
-                <View
-                  style={[
-                    styles.statusIndicator,
-                    { backgroundColor: isCloudConnected ? '#10b981' : '#f59e0b' },
-                  ]}
-                />
-              </View>
-              <Text style={[styles.bannerSub, isDark ? styles.subDark : styles.subLight]}>
-                {isCloudConnected
-                  ? `Спільна база даних PostgreSQL • Користувач: ${user?.name || user?.email || 'Авторизований'}`
-                  : 'Дані зберігаються в AsyncStorage локально'}
-              </Text>
-            </View>
-          </View>
-        </Card>
-
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <Card style={styles.statBox}>
-            <Text style={[styles.statValue, isDark ? styles.textDark : styles.textLight]}>
-              {workouts.length}
-            </Text>
-            <Text style={[styles.statLabel, isDark ? styles.subDark : styles.subLight]}>
-              Тренувань
-            </Text>
-          </Card>
-          <Card style={styles.statBox}>
-            <Text style={[styles.statValue, isDark ? styles.textDark : styles.textLight]}>
-              {exercises.length}
-            </Text>
-            <Text style={[styles.statLabel, isDark ? styles.subDark : styles.subLight]}>
-              Вправ у базі
-            </Text>
-          </Card>
-        </View>
-
-        {/* Loading Indicator */}
-        {isLoading ? (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color={isDark ? '#fafafa' : '#18181b'} />
-            <Text style={[styles.loaderText, isDark ? styles.subDark : styles.subLight]}>
-              Завантаження даних з backend...
+        {isLoading && !isRefreshing ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#0284c7" />
+            <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+              Завантаження списку тренувань...
             </Text>
           </View>
-        ) : workouts.length === 0 ? (
-          /* Empty State */
-          <Card style={styles.emptyCard}>
-            <Ionicons
-              name="calendar-outline"
-              size={40}
-              color={isDark ? '#71717a' : '#a1a1aa'}
-              style={styles.emptyIcon}
-            />
+        ) : filteredWorkouts.length === 0 ? (
+          <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
+            <View style={[styles.emptyIconCircle, isDark ? styles.logoDark : styles.logoLight]}>
+              <Ionicons name="barbell-outline" size={36} color={isDark ? '#38bdf8' : '#0284c7'} />
+            </View>
             <Text style={[styles.emptyTitle, isDark ? styles.textDark : styles.textLight]}>
-              Тренувань поки немає
+              {workouts.length === 0
+                ? 'Тренувань ще немає'
+                : 'Немає тренувань за обраним фільтром'}
             </Text>
-            <Text style={[styles.emptyDesc, isDark ? styles.subDark : styles.subLight]}>
-              Натисніть «+ Тестове», щоб створити перше тренування з мобільного застосунку та перевірити синхронізацію з вебверсією.
+            <Text style={[styles.emptySubtitle, isDark ? styles.subDark : styles.subLight]}>
+              {workouts.length === 0
+                ? 'Створіть своє перше тренування для відстеження підходів, ваги та прогресу.'
+                : 'Спробуйте вибрати інший фільтр або створіть нове тренування.'}
             </Text>
             <Button
-              title="Створити тестове тренування"
-              variant="primary"
-              loading={isCreating}
-              onPress={handleCreateTestWorkout}
-              style={{ marginTop: 16 }}
+              title="Створити перше тренування"
+              onPress={handleOpenCreateModal}
+              style={{ marginTop: 8 }}
             />
-          </Card>
+          </View>
         ) : (
-          /* Workouts List */
-          <View style={styles.listContainer}>
-            <View style={styles.listHeader}>
-              <Text style={[styles.listTitle, isDark ? styles.textDark : styles.textLight]}>
-                Список тренувань ({workouts.length})
-              </Text>
-              <Button
-                title="Оновити"
-                variant="outline"
-                onPress={loadData}
-                style={styles.refreshButton}
-              />
-            </View>
+          <View style={styles.workoutsList}>
+            {filteredWorkouts.map((w) => {
+              const isCompleted = w.status === 'completed';
+              const isInProgress = w.status === 'in_progress';
+              const exercises = w.exercises || [];
+              const totalSets = exercises.reduce((acc, ex) => acc + (ex.sets ? ex.sets.length : 0), 0);
 
-            {workouts.map((w) => (
-              <Card key={w.id} style={styles.workoutItemCard}>
-                <View style={styles.workoutTopRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}>
-                      {w.title}
-                    </Text>
-                    <Text style={[styles.workoutDate, isDark ? styles.subDark : styles.subLight]}>
-                      📅 {w.scheduledDate} • {w.exercises?.length || 0} вправ
-                    </Text>
-                  </View>
-                  <Button
-                    title="Видалити"
-                    variant="danger"
-                    onPress={() => handleDeleteWorkout(w.id)}
-                    style={styles.deleteButton}
-                  />
-                </View>
+              let totalVolume = 0;
+              exercises.forEach((ex) => {
+                (ex.sets || []).forEach((s) => {
+                  if ((s.completedAt || isCompleted) && s.weight && s.actualReps) {
+                    totalVolume += s.weight * s.actualReps;
+                  }
+                });
+              });
 
-                {w.exercises && w.exercises.length > 0 && (
-                  <View style={styles.exercisesPreview}>
-                    {w.exercises.slice(0, 3).map((ex, exIdx) => (
-                      <View key={ex.id || exIdx} style={styles.exRow}>
-                        <Text style={[styles.exName, isDark ? styles.textDark : styles.textLight]}>
-                          • {ex.exerciseName || 'Вправа'}
-                        </Text>
-                        <Text style={[styles.exSets, isDark ? styles.subDark : styles.subLight]}>
-                          {ex.sets?.length || 0} сетів
+              return (
+                <TouchableOpacity
+                  key={w.id}
+                  activeOpacity={0.7}
+                  onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
+                >
+                  <Card style={styles.workoutCard}>
+                    {/* Top Row: Status, Date, Coach, Delete Action */}
+                    <View style={styles.cardTopRow}>
+                      <View style={styles.cardBadgesRow}>
+                        <View
+                          style={[
+                            styles.statusPill,
+                            isCompleted
+                              ? styles.statusCompleted
+                              : isInProgress
+                              ? styles.statusInProgress
+                              : styles.statusPlanned,
+                          ]}
+                        >
+                          <View
+                            style={[
+                              styles.statusDot,
+                              {
+                                backgroundColor: isCompleted
+                                  ? '#10b981'
+                                  : isInProgress
+                                  ? '#f59e0b'
+                                  : '#94a3b8',
+                              },
+                            ]}
+                          />
+                          <Text
+                            style={[
+                              styles.statusText,
+                              {
+                                color: isCompleted
+                                  ? '#10b981'
+                                  : isInProgress
+                                  ? '#f59e0b'
+                                  : '#64748b',
+                              },
+                            ]}
+                          >
+                            {isCompleted ? 'Завершено' : isInProgress ? 'У процесі' : 'Заплановано'}
+                          </Text>
+                        </View>
+
+                        <View style={styles.dateWrap}>
+                          <Ionicons
+                            name="calendar-outline"
+                            size={12}
+                            color={isDark ? '#71717a' : '#94a3b8'}
+                          />
+                          <Text style={[styles.dateText, isDark ? styles.subDark : styles.subLight]}>
+                            {w.scheduledDate}
+                          </Text>
+                        </View>
+
+                        {w.assignedByCoachId && (
+                          <View style={styles.coachBadge}>
+                            <Text style={styles.coachText}>Від тренера</Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Delete Quick Button */}
+                      <TouchableOpacity
+                        activeOpacity={0.6}
+                        onPress={(e) => {
+                          e.stopPropagation?.();
+                          handleDeleteWorkout(w);
+                        }}
+                        style={styles.cardDeleteBtn}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={16}
+                          color={isDark ? '#71717a' : '#a1a1aa'}
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Workout Title */}
+                    <Text
+                      numberOfLines={1}
+                      style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
+                    >
+                      {w.title || 'Тренування без назви'}
+                    </Text>
+
+                    {/* Metrics Row */}
+                    <View style={styles.cardMetricsRow}>
+                      <View style={styles.metricItem}>
+                        <Ionicons
+                          name="layers-outline"
+                          size={14}
+                          color={isDark ? '#71717a' : '#94a3b8'}
+                        />
+                        <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                          <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                            {exercises.length}
+                          </Text>{' '}
+                          вправ
                         </Text>
                       </View>
-                    ))}
-                  </View>
-                )}
-              </Card>
-            ))}
+
+                      <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+
+                      <View style={styles.metricItem}>
+                        <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                          <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                            {totalSets}
+                          </Text>{' '}
+                          підходів
+                        </Text>
+                      </View>
+
+                      {totalVolume > 0 && (
+                        <>
+                          <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+                          <View style={styles.metricItem}>
+                            <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                              <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                                {totalVolume}
+                              </Text>{' '}
+                              кг
+                            </Text>
+                          </View>
+                        </>
+                      )}
+
+                      {w.durationMinutes ? (
+                        <>
+                          <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+                          <View style={styles.metricItem}>
+                            <Ionicons
+                              name="time-outline"
+                              size={13}
+                              color={isDark ? '#71717a' : '#94a3b8'}
+                            />
+                            <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                              {w.durationMinutes} хв
+                            </Text>
+                          </View>
+                        </>
+                      ) : null}
+                    </View>
+
+                    {/* Notes snippet */}
+                    {w.notes ? (
+                      <Text
+                        numberOfLines={1}
+                        style={[styles.notesSnippet, isDark ? styles.subDark : styles.subLight]}
+                      >
+                        {w.notes}
+                      </Text>
+                    ) : null}
+                  </Card>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
       </ScrollView>
+
+      {/* Create Workout Modal */}
+      <Modal
+        visible={isModalOpen}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsModalOpen(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalContent, isDark ? styles.modalDark : styles.modalLight]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
+                Нове тренування
+              </Text>
+              <TouchableOpacity onPress={() => setIsModalOpen(false)} style={styles.closeBtn}>
+                <Ionicons name="close" size={22} color={isDark ? '#a1a1aa' : '#71717a'} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Title Input */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
+                Назва тренування
+              </Text>
+              <TextInput
+                style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
+                placeholder="Наприклад: Силове тренування"
+                placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                value={newTitle}
+                onChangeText={setNewTitle}
+                autoFocus
+              />
+            </View>
+
+            {/* Date Input with Quick Chips */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
+                Дата (РРРР-ММ-ДД)
+              </Text>
+              <TextInput
+                style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
+                placeholder="2026-09-29"
+                placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                value={newDate}
+                onChangeText={setNewDate}
+              />
+              <View style={styles.quickDateRow}>
+                <TouchableOpacity
+                  onPress={() => setNewDate(new Date().toISOString().split('T')[0])}
+                  style={[styles.quickChip, isDark ? styles.chipDark : styles.chipLight]}
+                >
+                  <Text style={[styles.quickChipText, isDark ? styles.textDark : styles.textLight]}>
+                    Сьогодні
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    const tmr = new Date();
+                    tmr.setDate(tmr.getDate() + 1);
+                    setNewDate(tmr.toISOString().split('T')[0]);
+                  }}
+                  style={[styles.quickChip, isDark ? styles.chipDark : styles.chipLight]}
+                >
+                  <Text style={[styles.quickChipText, isDark ? styles.textDark : styles.textLight]}>
+                    Завтра
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Notes Input */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
+                Примітки (необов’язково)
+              </Text>
+              <TextInput
+                style={[styles.input, styles.textArea, isDark ? styles.inputDark : styles.inputLight]}
+                placeholder="Цілі, самопочуття або план на день..."
+                placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                multiline
+                numberOfLines={3}
+                value={newNotes}
+                onChangeText={setNewNotes}
+              />
+            </View>
+
+            {/* Modal Actions */}
+            <View style={styles.modalActionsRow}>
+              <Button
+                title="Скасувати"
+                variant="outline"
+                onPress={() => setIsModalOpen(false)}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title="Створити"
+                loading={isCreating}
+                onPress={handleCreateWorkoutSubmit}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -314,155 +576,307 @@ const styles = StyleSheet.create({
   bgDark: {
     backgroundColor: '#09090b',
   },
-  content: {
-    padding: 16,
-    gap: 16,
-  },
-  addButton: {
-    height: 36,
-    paddingHorizontal: 12,
-  },
-  refreshButton: {
-    height: 32,
-    paddingHorizontal: 10,
-  },
-  deleteButton: {
-    height: 30,
-    paddingHorizontal: 8,
-  },
-  bannerCard: {
-    padding: 16,
-  },
-  bannerRow: {
+  headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
-  bannerIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconCloudConnected: {
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-  },
-  iconCloudOffline: {
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
-  },
-  bannerText: {
+  headerLeft: {
     flex: 1,
   },
-  statusBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  bannerTitle: {
-    fontSize: 14,
+  screenTitle: {
+    fontSize: 22,
     fontWeight: '700',
+    letterSpacing: -0.5,
   },
-  bannerSub: {
+  screenSubtitle: {
     fontSize: 12,
     marginTop: 2,
-    lineHeight: 16,
   },
-  statsRow: {
+  newWorkoutBtn: {
     flexDirection: 'row',
-    gap: 12,
-  },
-  statBox: {
-    flex: 1,
-    padding: 16,
     alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
   },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '800',
+  newWorkoutBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
   },
-  statLabel: {
+  filterRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    padding: 3,
+    borderRadius: 8,
+  },
+  filterLight: {
+    backgroundColor: '#f1f5f9',
+  },
+  filterDark: {
+    backgroundColor: '#18181b',
+  },
+  filterBtn: {
+    flex: 1,
+    paddingVertical: 6,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  filterBtnActive: {
+    backgroundColor: '#0284c7',
+  },
+  filterBtnText: {
     fontSize: 12,
-    marginTop: 4,
+    fontWeight: '600',
   },
-  loaderContainer: {
+  filterBtnTextActive: {
+    color: '#ffffff',
+  },
+  content: {
+    padding: 16,
+    gap: 12,
+    paddingBottom: 32,
+  },
+  loadingContainer: {
     padding: 40,
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
-  loaderText: {
+  loadingText: {
     fontSize: 13,
   },
-  emptyCard: {
+  emptyContainer: {
     padding: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    marginTop: 12,
+  },
+  emptyLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  emptyDark: {
+    backgroundColor: '#18181b50',
+    borderColor: '#27272a',
+  },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 4,
   },
-  emptyIcon: {
-    marginBottom: 12,
+  logoLight: {
+    backgroundColor: '#e0f2fe',
+  },
+  logoDark: {
+    backgroundColor: '#0c4a6e',
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    marginBottom: 6,
   },
-  emptyDesc: {
+  emptySubtitle: {
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,
     maxWidth: 280,
   },
-  listContainer: {
+  workoutsList: {
     gap: 12,
   },
-  listHeader: {
+  workoutCard: {
+    padding: 14,
+    gap: 8,
+  },
+  cardTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 4,
   },
-  listTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  workoutItemCard: {
-    padding: 14,
-    gap: 10,
-  },
-  workoutTopRow: {
+  cardBadgesRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: 8,
+    flexWrap: 'wrap',
   },
-  workoutTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
-  workoutDate: {
-    fontSize: 12,
-    marginTop: 2,
+  statusCompleted: {
+    backgroundColor: '#ecfdf5',
   },
-  exercisesPreview: {
-    borderTopWidth: 1,
-    borderTopColor: '#27272a20',
-    paddingTop: 8,
+  statusInProgress: {
+    backgroundColor: '#fffbeb',
+  },
+  statusPlanned: {
+    backgroundColor: '#f1f5f9',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  dateWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
   },
-  exRow: {
+  dateText: {
+    fontSize: 11,
+    fontFamily: 'monospace',
+  },
+  coachBadge: {
+    backgroundColor: '#e0e7ff20',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  coachText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#6366f1',
+  },
+  cardDeleteBtn: {
+    padding: 4,
+  },
+  workoutTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  cardMetricsRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  metricItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metricText: {
+    fontSize: 12,
+  },
+  metricVal: {
+    fontWeight: '600',
+  },
+  dotSep: {
+    fontSize: 12,
+  },
+  notesSnippet: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+    gap: 16,
+  },
+  modalLight: {
+    backgroundColor: '#ffffff',
+  },
+  modalDark: {
+    backgroundColor: '#18181b',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  exName: {
-    fontSize: 13,
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
   },
-  exSets: {
-    fontSize: 12,
+  closeBtn: {
+    padding: 4,
+  },
+  inputGroup: {
+    gap: 6,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+  },
+  textArea: {
+    minHeight: 70,
+    textAlignVertical: 'top',
+  },
+  inputLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    color: '#0f172a',
+  },
+  inputDark: {
+    backgroundColor: '#09090b',
+    borderColor: '#27272a',
+    color: '#f8fafc',
+  },
+  quickDateRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  quickChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  chipLight: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  chipDark: {
+    backgroundColor: '#27272a',
+    borderColor: '#3f3f46',
+  },
+  quickChipText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  modalActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
   },
   textLight: {
     color: '#09090b',
@@ -475,5 +889,11 @@ const styles = StyleSheet.create({
   },
   subDark: {
     color: '#a1a1aa',
+  },
+  borderLight: {
+    borderColor: '#e4e4e7',
+  },
+  borderDark: {
+    borderColor: '#27272a',
   },
 });
