@@ -308,9 +308,8 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         isOpen={isCreateOpen}
         initialName={search.trim()}
         onClose={() => setIsCreateOpen(false)}
-        onCreated={(newEx) => {
+        onCreated={() => {
           setRefreshKey((prev) => prev + 1);
-          setHistoryModalExercise(newEx);
         }}
       />
 

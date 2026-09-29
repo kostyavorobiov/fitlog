@@ -457,6 +457,23 @@ export class CloudStorageService {
         }
       }
 
+      // 1. Try RPC save_exercise (bypasses RLS with security definer)
+      try {
+        const { data: rpcRes, error: rpcError } = await supabase.rpc('save_exercise', {
+          p_id: exercise.id,
+          p_user_id: effectiveUserId,
+          p_name: exercise.name,
+          p_muscle_group: exercise.muscleGroup,
+          p_description: exercise.description || '',
+          p_is_default: Boolean(exercise.isDefault),
+        });
+
+        if (!rpcError && rpcRes !== false) {
+          return true;
+        }
+      } catch {}
+
+      // 2. Direct table upsert fallback
       const { error } = await supabase.from('exercises').upsert(
         {
           id: exercise.id,

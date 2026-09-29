@@ -433,7 +433,49 @@ end;
 $$ language plpgsql security definer;
 
 -- ==============================================================================
--- 9. PURGE ALL EXERCISES
+-- 9. RPC TO SAVE / UPSERT EXERCISES SAFELY (Bypasses table RLS for global/custom)
+-- ==============================================================================
+create or replace function public.save_exercise(
+  p_id text,
+  p_user_id uuid,
+  p_name text,
+  p_muscle_group text,
+  p_description text,
+  p_is_default boolean
+)
+returns boolean as $$
+begin
+  insert into public.exercises (
+    id,
+    user_id,
+    name,
+    muscle_group,
+    description,
+    is_default,
+    created_at
+  )
+  values (
+    p_id,
+    p_user_id,
+    p_name,
+    p_muscle_group,
+    coalesce(p_description, ''),
+    coalesce(p_is_default, false),
+    now()
+  )
+  on conflict (id) do update set
+    user_id = excluded.user_id,
+    name = excluded.name,
+    muscle_group = excluded.muscle_group,
+    description = excluded.description,
+    is_default = excluded.is_default;
+
+  return true;
+end;
+$$ language plpgsql security definer;
+
+-- ==============================================================================
+-- 10. PURGE ALL EXERCISES
 -- Run this in Supabase SQL Editor to wipe all existing exercises from the database:
 -- ==============================================================================
 -- truncate table public.exercises cascade;

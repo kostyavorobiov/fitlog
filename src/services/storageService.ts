@@ -160,7 +160,7 @@ export class StorageService {
     }
   }
 
-  static createExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt'>): Exercise {
+  static async createExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt'>): Promise<Exercise> {
     const newExercise: Exercise = {
       ...exerciseData,
       id: generateId('custom_ex'),
@@ -168,13 +168,15 @@ export class StorageService {
       createdAt: new Date().toISOString(),
     };
     memoryStore.exercises.push(newExercise);
-    CloudStorageService.saveExercise(newExercise).catch((e) =>
-      console.warn('CloudStorageService.saveExercise error:', e)
-    );
+    try {
+      await CloudStorageService.saveExercise(newExercise);
+    } catch (e) {
+      console.warn('CloudStorageService.saveExercise error:', e);
+    }
     return newExercise;
   }
 
-  static createGlobalExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt' | 'userId' | 'isDefault'>): Exercise {
+  static async createGlobalExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt' | 'userId' | 'isDefault'>): Promise<Exercise> {
     const newExercise: Exercise = {
       ...exerciseData,
       id: generateId('global_ex'),
@@ -183,9 +185,11 @@ export class StorageService {
       createdAt: new Date().toISOString(),
     };
     memoryStore.exercises.push(newExercise);
-    CloudStorageService.saveExercise(newExercise).catch((e) =>
-      console.warn('CloudStorageService.saveExercise global exercise error:', e)
-    );
+    try {
+      await CloudStorageService.saveExercise(newExercise);
+    } catch (e) {
+      console.warn('CloudStorageService.saveExercise global exercise error:', e);
+    }
     return newExercise;
   }
 

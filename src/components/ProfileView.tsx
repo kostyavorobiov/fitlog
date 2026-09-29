@@ -79,14 +79,13 @@ export const ProfileView: React.FC = () => {
 
     setIsAddingGlobalEx(true);
     try {
-      const created = StorageService.createGlobalExercise({
+      const created = await StorageService.createGlobalExercise({
         name: cleanName,
         muscleGroup: newGlobalExMuscle,
         description: '',
       });
       setNewGlobalExName('');
       refreshGlobalExercises();
-      await CloudStorageService.saveExercise(created);
       setAdminToast({ text: `Вправу "${cleanName}" додано до глобальної бази!`, type: 'success' });
     } catch (err) {
       console.warn('handleAddGlobalExercise error:', err);

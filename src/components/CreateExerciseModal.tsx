@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Plus, Dumbbell } from 'lucide-react';
+import { X, Plus, Dumbbell, Loader2 } from 'lucide-react';
 import { MuscleGroup, MUSCLE_GROUPS, Exercise } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
@@ -20,11 +20,13 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   onCreated,
   initialName = '',
 }) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isCoach } = useAuth();
+  const canCreateGlobal = Boolean(isAdmin || isCoach);
   const [name, setName] = useState(initialName);
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>('chest');
   const [description, setDescription] = useState('');
   const [isGlobal, setIsGlobal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const backdropMouseDownRef = React.useRef(false);
 
@@ -32,6 +34,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
     if (!isOpen) return;
     setName(initialName);
     setIsGlobal(false);
+    setIsSubmitting(false);
     setError('');
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -42,35 +45,45 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       setError('Введіть назву вправи');
       return;
     }
 
-    const creatorId = StorageService.getActiveUserId() || userId;
-
-    const created = (isAdmin && isGlobal)
-      ? StorageService.createGlobalExercise({
-          name: name.trim(),
-          muscleGroup,
-          description: description.trim() || undefined,
-        })
-      : StorageService.createExercise({
-          userId: creatorId,
-          name: name.trim(),
-          muscleGroup,
-          description: description.trim() || undefined,
-          isDefault: false,
-        });
-
-    onCreated(created);
-    setName('');
-    setDescription('');
-    setIsGlobal(false);
+    setIsSubmitting(true);
     setError('');
-    onClose();
+
+    try {
+      const creatorId = StorageService.getActiveUserId() || userId;
+      const isGlobalSelected = canCreateGlobal && isGlobal;
+
+      const created = isGlobalSelected
+        ? await StorageService.createGlobalExercise({
+            name: name.trim(),
+            muscleGroup,
+            description: description.trim() || undefined,
+          })
+        : await StorageService.createExercise({
+            userId: creatorId,
+            name: name.trim(),
+            muscleGroup,
+            description: description.trim() || undefined,
+            isDefault: false,
+          });
+
+      onCreated(created);
+      setName('');
+      setDescription('');
+      setIsGlobal(false);
+      setError('');
+      onClose();
+    } catch (err: any) {
+      setError(err?.message || 'Помилка при створенні вправи');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -178,7 +191,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             />
           </div>
 
-          {isAdmin && (
+          {canCreateGlobal && (
             <div className="flex items-center space-x-2.5 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 p-2.5">
               <input
                 type="checkbox"
@@ -200,16 +213,18 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+              disabled={isSubmitting}
+              className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer disabled:opacity-50"
             >
               Скасувати
             </button>
             <button
               type="submit"
-              className="flex-1 h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+              disabled={isSubmitting}
+              className="flex-1 h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer disabled:opacity-50"
             >
-              <Plus className="h-4 w-4" />
-              <span>Зберегти вправу</span>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              <span>{isSubmitting ? 'Збереження...' : 'Зберегти вправу'}</span>
             </button>
           </div>
         </form>
