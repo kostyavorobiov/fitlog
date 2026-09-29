@@ -1,34 +1,39 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { UserAvatar } from './UserAvatar';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Dumbbell,
   Calendar,
-  BookOpen,
   Activity,
+  Dumbbell,
+  BookOpen,
   Users,
   Sun,
   Moon,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { UserAvatar } from './UserAvatar';
 
 interface NavbarProps {
   currentTab: 'editor' | 'history' | 'trainees' | 'catalog' | 'analytics' | 'profile';
-  onSelectTab: (tab: 'editor' | 'history' | 'trainees' | 'catalog' | 'analytics' | 'profile') => void;
+  onSelectTab: (
+    tab: 'editor' | 'history' | 'trainees' | 'catalog' | 'analytics' | 'profile'
+  ) => void;
   onOpenAuthModal: () => void;
-  hasActiveWorkout: boolean;
+  hasActiveWorkout?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentTab,
   onSelectTab,
   onOpenAuthModal,
-  hasActiveWorkout,
+  hasActiveWorkout = false,
 }) => {
-  const { user, isCoach, isAdmin } = useAuth();
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { user, isAdmin } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const lastNavSelectTime = useRef(0);
 
   // Handle mobile navbar auto-hide on scroll
   useEffect(() => {
@@ -66,18 +71,46 @@ export const Navbar: React.FC<NavbarProps> = ({
       suppressHideUntil = Date.now() + 800;
     };
 
+    const handleFocusChange = () => {
+      setIsNavVisible(true);
+      suppressHideUntil = Date.now() + 1000;
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('show-navbar', handleShowNavbar);
+    window.addEventListener('focusin', handleFocusChange);
+    window.addEventListener('focusout', handleFocusChange);
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('show-navbar', handleShowNavbar);
+      window.removeEventListener('focusin', handleFocusChange);
+      window.removeEventListener('focusout', handleFocusChange);
     };
   }, []);
+
+  const handleNavSelect = (
+    tab: 'editor' | 'history' | 'trainees' | 'catalog' | 'analytics' | 'profile'
+  ) => {
+    const now = Date.now();
+    // If any input or element is focused, blur it immediately so keyboard collapses smoothly
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setIsNavVisible(true);
+
+    if (now - lastNavSelectTime.current < 250 && currentTab === tab) {
+      return;
+    }
+    lastNavSelectTime.current = now;
+
+    onSelectTab(tab);
+  };
 
   return (
     <>
       {/* Top Header - Liquid Glass with Mobile Auto-Hide */}
       <header
+        data-no-swipe="true"
         className={`sticky top-0 z-40 w-full border-b border-zinc-200/70 dark:border-zinc-800/70 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl transition-all duration-300 ease-in-out ${
           isNavVisible
             ? 'translate-y-0 opacity-100'
@@ -89,7 +122,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Pure Flat Text Logo */}
             <div
               className="flex items-center cursor-pointer select-none py-1 shrink-0"
-              onClick={() => onSelectTab('editor')}
+              onTouchStart={() => handleNavSelect('editor')}
+              onPointerDown={(e) => {
+                if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor');
+              }}
+              onClick={() => handleNavSelect('editor')}
             >
               <span className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 hover:text-zinc-700 dark:hover:text-white transition-colors">
                 Workout diary
@@ -100,7 +137,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <nav className="hidden md:flex items-center space-x-1">
               <button
                 type="button"
-                onClick={() => onSelectTab('editor')}
+                onTouchStart={() => handleNavSelect('editor')}
+                onPointerDown={(e) => {
+                  if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor');
+                }}
+                onClick={() => handleNavSelect('editor')}
                 className={`relative flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                   currentTab === 'editor'
                     ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
@@ -116,7 +157,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <button
                 type="button"
-                onClick={() => onSelectTab('history')}
+                onTouchStart={() => handleNavSelect('history')}
+                onPointerDown={(e) => {
+                  if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history');
+                }}
+                onClick={() => handleNavSelect('history')}
                 className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                   currentTab === 'history'
                     ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
@@ -129,7 +174,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <button
                 type="button"
-                onClick={() => onSelectTab('analytics')}
+                onTouchStart={() => handleNavSelect('analytics')}
+                onPointerDown={(e) => {
+                  if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics');
+                }}
+                onClick={() => handleNavSelect('analytics')}
                 className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                   currentTab === 'analytics'
                     ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
@@ -142,7 +191,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <button
                 type="button"
-                onClick={() => onSelectTab('catalog')}
+                onTouchStart={() => handleNavSelect('catalog')}
+                onPointerDown={(e) => {
+                  if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog');
+                }}
+                onClick={() => handleNavSelect('catalog')}
                 className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                   currentTab === 'catalog'
                     ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
@@ -156,7 +209,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               {(user?.role === 'coach' || isAdmin) && (
                 <button
                   type="button"
-                  onClick={() => onSelectTab('trainees')}
+                  onTouchStart={() => handleNavSelect('trainees')}
+                  onPointerDown={(e) => {
+                    if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees');
+                  }}
+                  onClick={() => handleNavSelect('trainees')}
                   className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                     currentTab === 'trainees'
                       ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
@@ -174,6 +231,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Theme Toggle Button */}
               <button
                 type="button"
+                onTouchStart={() => {
+                  if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                  }
+                }}
+                onPointerDown={() => {
+                  if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                  }
+                }}
                 onClick={toggleTheme}
                 className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 title={isDark ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
@@ -187,7 +254,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {user ? (
                   <button
                     type="button"
-                    onClick={() => onSelectTab('profile')}
+                    onTouchStart={() => handleNavSelect('profile')}
+                    onPointerDown={(e) => {
+                      if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('profile');
+                    }}
+                    onClick={() => handleNavSelect('profile')}
                     className={`relative flex items-center justify-center rounded-full p-0.5 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-400 active:scale-95 ${
                       currentTab === 'profile'
                         ? 'border-zinc-900 dark:border-zinc-100 ring-2 ring-zinc-300 dark:ring-zinc-700'
@@ -206,7 +277,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ) : (
                   <button
                     type="button"
-                    onClick={onOpenAuthModal}
+                    onTouchStart={() => {
+                      if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                      }
+                      onOpenAuthModal();
+                    }}
+                    onPointerDown={(e) => {
+                      if (e.button === 0 || e.pointerType === 'touch') {
+                        if (document.activeElement instanceof HTMLElement) {
+                          document.activeElement.blur();
+                        }
+                        onOpenAuthModal();
+                      }
+                    }}
+                    onClick={() => {
+                      if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                      }
+                      onOpenAuthModal();
+                    }}
                     className="rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
                   >
                     Увійти
@@ -221,6 +311,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Modern Mobile Bottom Navigation Bar - Liquid Glass style with Safe-Area Inset */}
       <nav
         data-no-swipe="true"
+        aria-label="Mobile Navigation"
         className={`md:hidden fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 rounded-2xl bg-white/75 dark:bg-zinc-900/80 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] px-2 py-1.5 flex items-center justify-around transition-all duration-300 ease-in-out ${
           isNavVisible
             ? 'translate-y-0 opacity-100 pointer-events-auto'
@@ -232,10 +323,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       >
         <button
           type="button"
-          onClick={() => {
-            setIsNavVisible(true);
-            onSelectTab('editor');
+          onTouchStart={() => handleNavSelect('editor')}
+          onPointerDown={(e) => {
+            if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor');
           }}
+          onClick={() => handleNavSelect('editor')}
           className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
             currentTab === 'editor'
               ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'
@@ -251,10 +343,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           type="button"
-          onClick={() => {
-            setIsNavVisible(true);
-            onSelectTab('history');
+          onTouchStart={() => handleNavSelect('history')}
+          onPointerDown={(e) => {
+            if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history');
           }}
+          onClick={() => handleNavSelect('history')}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
             currentTab === 'history'
               ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'
@@ -267,10 +360,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           type="button"
-          onClick={() => {
-            setIsNavVisible(true);
-            onSelectTab('analytics');
+          onTouchStart={() => handleNavSelect('analytics')}
+          onPointerDown={(e) => {
+            if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics');
           }}
+          onClick={() => handleNavSelect('analytics')}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
             currentTab === 'analytics'
               ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'
@@ -283,10 +377,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           type="button"
-          onClick={() => {
-            setIsNavVisible(true);
-            onSelectTab('catalog');
+          onTouchStart={() => handleNavSelect('catalog')}
+          onPointerDown={(e) => {
+            if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog');
           }}
+          onClick={() => handleNavSelect('catalog')}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
             currentTab === 'catalog'
               ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'
@@ -300,10 +395,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         {(user?.role === 'coach' || isAdmin) && (
           <button
             type="button"
-            onClick={() => {
-              setIsNavVisible(true);
-              onSelectTab('trainees');
+            onTouchStart={() => handleNavSelect('trainees')}
+            onPointerDown={(e) => {
+              if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees');
             }}
+            onClick={() => handleNavSelect('trainees')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
               currentTab === 'trainees'
                 ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'

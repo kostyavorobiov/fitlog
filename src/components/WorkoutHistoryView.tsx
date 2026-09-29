@@ -49,9 +49,52 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
     setCurrentCalendarDate(new Date(year, month + 1, 1));
   };
 
+  const handlePrevDay = () => {
+    try {
+      const [y, m, d] = selectedCalendarDateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      dt.setDate(dt.getDate() - 1);
+      const newY = dt.getFullYear();
+      const newM = String(dt.getMonth() + 1).padStart(2, '0');
+      const newD = String(dt.getDate()).padStart(2, '0');
+      const newStr = `${newY}-${newM}-${newD}`;
+      setSelectedCalendarDateStr(newStr);
+      if (dt.getMonth() !== currentCalendarDate.getMonth() || dt.getFullYear() !== currentCalendarDate.getFullYear()) {
+        setCurrentCalendarDate(new Date(dt.getFullYear(), dt.getMonth(), 1));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleNextDay = () => {
+    try {
+      const [y, m, d] = selectedCalendarDateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      dt.setDate(dt.getDate() + 1);
+      const newY = dt.getFullYear();
+      const newM = String(dt.getMonth() + 1).padStart(2, '0');
+      const newD = String(dt.getDate()).padStart(2, '0');
+      const newStr = `${newY}-${newM}-${newD}`;
+      setSelectedCalendarDateStr(newStr);
+      if (dt.getMonth() !== currentCalendarDate.getMonth() || dt.getFullYear() !== currentCalendarDate.getFullYear()) {
+        setCurrentCalendarDate(new Date(dt.getFullYear(), dt.getMonth(), 1));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const swipeRef = useSwipeGesture<HTMLDivElement>({
     onSwipeLeft: handleNextMonth,
     onSwipeRight: handlePrevMonth,
+    threshold: 30,
+    disabled: isCreateModalOpen || Boolean(workoutToDelete),
+  });
+
+  const daySwipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: handleNextDay,
+    onSwipeRight: handlePrevDay,
     threshold: 30,
     disabled: isCreateModalOpen || Boolean(workoutToDelete),
   });
@@ -326,14 +369,35 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
       </div>
 
       {/* SELECTED DATE DETAILS & WORKOUTS */}
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-3">
+      <div
+        ref={daySwipeRef}
+        className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-3 touch-pan-y"
+      >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <div>
-            <div className="flex items-center space-x-2">
-              <CalendarIcon className="h-4 w-4 text-zinc-500" />
-              <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+            <div className="flex items-center space-x-1.5">
+              <CalendarIcon className="h-4 w-4 text-zinc-500 shrink-0" />
+              <button
+                type="button"
+                onClick={handlePrevDay}
+                className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+                title="Попередній день"
+                aria-label="Попередній день"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+              <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 select-none">
                 {formatUkDate(selectedCalendarDateStr)}
               </h3>
+              <button
+                type="button"
+                onClick={handleNextDay}
+                className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+                title="Наступний день"
+                aria-label="Наступний день"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
             </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
               {selectedDateWorkouts.length === 0

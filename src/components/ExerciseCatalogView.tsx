@@ -14,6 +14,7 @@ import {
   Trash2,
   Pencil,
 } from 'lucide-react';
+import { useSwipeGesture } from '../utils/useSwipeGesture';
 
 export const isCustomExercise = (ex: Exercise): boolean => {
   if (!ex) return false;
@@ -39,6 +40,32 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
   const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const muscleTabs = useMemo<(MuscleGroup | 'all')[]>(
+    () => ['all', ...(Object.keys(MUSCLE_GROUPS) as MuscleGroup[])],
+    []
+  );
+
+  const handleNextMuscle = () => {
+    const idx = muscleTabs.indexOf(selectedMuscle);
+    if (idx < muscleTabs.length - 1) {
+      setSelectedMuscle(muscleTabs[idx + 1]);
+    }
+  };
+
+  const handlePrevMuscle = () => {
+    const idx = muscleTabs.indexOf(selectedMuscle);
+    if (idx > 0) {
+      setSelectedMuscle(muscleTabs[idx - 1]);
+    }
+  };
+
+  const catalogSwipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: handleNextMuscle,
+    onSwipeRight: handlePrevMuscle,
+    threshold: 30,
+    disabled: isCreateOpen || Boolean(exerciseToEdit) || Boolean(exerciseToDelete) || Boolean(historyModalExercise),
+  });
 
   useEffect(() => {
     StorageService.syncExercises().then(() => {
@@ -161,8 +188,8 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         </div>
       </div>
 
-      {/* Grid of exercises */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* Grid of exercises (Supports Swipe Left/Right to change muscle group) */}
+      <div ref={catalogSwipeRef} className="grid grid-cols-1 md:grid-cols-2 gap-3 touch-pan-y">
         {filtered.length === 0 ? (
           <div className="col-span-full rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 p-10 text-center space-y-2">
             <p className="text-xs text-zinc-500 dark:text-zinc-400">

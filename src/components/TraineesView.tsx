@@ -20,6 +20,7 @@ import {
   Edit3,
   Loader2,
 } from 'lucide-react';
+import { useSwipeGesture } from '../utils/useSwipeGesture';
 
 interface TraineesViewProps {
   coach: User;
@@ -43,6 +44,29 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
   const [workoutToDelete, setWorkoutToDelete] = useState<WorkoutPlan | null>(null);
   const [traineeToRemove, setTraineeToRemove] = useState<User | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const handlePrevTrainee = () => {
+    if (!selectedTrainee || trainees.length <= 1) return;
+    const idx = trainees.findIndex((t) => t.id === selectedTrainee.id);
+    if (idx > 0) {
+      selectTrainee(trainees[idx - 1]);
+    }
+  };
+
+  const handleNextTrainee = () => {
+    if (!selectedTrainee || trainees.length <= 1) return;
+    const idx = trainees.findIndex((t) => t.id === selectedTrainee.id);
+    if (idx < trainees.length - 1) {
+      selectTrainee(trainees[idx + 1]);
+    }
+  };
+
+  const traineeSwipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: handleNextTrainee,
+    onSwipeRight: handlePrevTrainee,
+    threshold: 30,
+    disabled: trainees.length <= 1 || Boolean(workoutToDelete) || Boolean(traineeToRemove),
+  });
 
   // Load trainees (locally + cloud sync)
   useEffect(() => {
@@ -344,9 +368,12 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
             </div>
           </div>
 
-          {/* Selected Trainee Workouts & Management Panel */}
+          {/* Selected Trainee Workouts & Management Panel (Supports Swipe Left/Right between trainees) */}
           {selectedTrainee && (
-            <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4">
+            <div
+              ref={traineeSwipeRef}
+              className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
+            >
               {/* Trainee Subheader */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
                 <div className="flex items-center space-x-3">

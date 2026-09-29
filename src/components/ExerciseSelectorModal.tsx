@@ -4,6 +4,7 @@ import { Search, X, Plus, Dumbbell, Sparkles } from 'lucide-react';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { isCustomExercise } from './ExerciseCatalogView';
+import { useSwipeGesture } from '../utils/useSwipeGesture';
 
 interface ExerciseSelectorModalProps {
   isOpen: boolean;
@@ -23,6 +24,32 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   const [search, setSearch] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const muscleTabs = useMemo<(MuscleGroup | 'all')[]>(
+    () => ['all', ...(Object.keys(MUSCLE_GROUPS) as MuscleGroup[])],
+    []
+  );
+
+  const handleNextMuscle = () => {
+    const idx = muscleTabs.indexOf(selectedMuscle);
+    if (idx < muscleTabs.length - 1) {
+      setSelectedMuscle(muscleTabs[idx + 1]);
+    }
+  };
+
+  const handlePrevMuscle = () => {
+    const idx = muscleTabs.indexOf(selectedMuscle);
+    if (idx > 0) {
+      setSelectedMuscle(muscleTabs[idx - 1]);
+    }
+  };
+
+  const modalSwipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: handleNextMuscle,
+    onSwipeRight: handlePrevMuscle,
+    threshold: 30,
+    disabled: !isOpen,
+  });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -103,7 +130,6 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        data-no-swipe="true"
         className="relative z-10 w-full max-w-xl max-h-[85vh] my-auto flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
         onClick={(e) => e.stopPropagation()}
       >
@@ -180,8 +206,8 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           </div>
         </div>
 
-        {/* List of exercises */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        {/* List of exercises (Supports Swipe Left/Right to change muscle group) */}
+        <div ref={modalSwipeRef} className="flex-1 overflow-y-auto p-4 space-y-2 touch-pan-y">
           {filtered.length === 0 ? (
             <div className="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-8 text-center">
               <p className="text-sm text-zinc-500 dark:text-zinc-400">Вправу не знайдено за вашим запитом.</p>

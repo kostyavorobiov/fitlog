@@ -15,6 +15,8 @@ import {
   Search,
 } from 'lucide-react';
 
+import { useSwipeGesture } from '../utils/useSwipeGesture';
+
 interface AnalyticsViewProps {
   userId: string;
 }
@@ -78,6 +80,31 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       return d;
     });
   };
+
+  const dateNavSwipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: handleNextDate,
+    onSwipeRight: handlePrevDate,
+    threshold: 30,
+    disabled: Boolean(selectedExercise),
+  });
+
+  const periodSwipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: handleNextPeriod,
+    onSwipeRight: handlePrevPeriod,
+    threshold: 25,
+    disabled: Boolean(selectedExercise),
+  });
+
+  const recordsSwipeRef = useSwipeGesture<HTMLDivElement>({
+    onSwipeLeft: () => {
+      if (viewMode === 'prs') setViewMode('all');
+    },
+    onSwipeRight: () => {
+      if (viewMode === 'all') setViewMode('prs');
+    },
+    threshold: 30,
+    disabled: Boolean(selectedExercise) || Boolean(searchQuery.trim()),
+  });
 
   const handleToday = () => {
     setCurrentDate(new Date());
@@ -298,7 +325,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
         </div>
 
         {/* Period Filter (Flat Segmented Control) */}
-        <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-0.5 shrink-0 self-start sm:self-auto">
+        <div
+          ref={periodSwipeRef}
+          className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-0.5 shrink-0 self-start sm:self-auto touch-pan-y"
+        >
           {(
             [
               { key: 'day', label: 'День' },
@@ -327,102 +357,105 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
         </div>
       </div>
 
-      {/* Date Navigation Bar (Allows switching days, weeks, months) */}
-      <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2.5 shadow-2xs">
-        <div className="flex items-center space-x-1">
-          <button
-            type="button"
-            onClick={handlePrevDate}
-            className="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-            title="Попередній період"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleNextDate}
-            className="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-            title="Наступний період"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
+      {/* Date Navigation & KPI Metrics Section (Supports Swipe Left/Right to change date) */}
+      <div ref={dateNavSwipeRef} className="space-y-3 touch-pan-y">
+        {/* Date Navigation Bar (Allows switching days, weeks, months) */}
+        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2.5 shadow-2xs">
+          <div className="flex items-center space-x-1">
+            <button
+              type="button"
+              onClick={handlePrevDate}
+              className="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+              title="Попередній період"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleNextDate}
+              className="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+              title="Наступний період"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-4 w-4 text-zinc-400" />
+            <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 select-none">
+              {periodInfo.titleUk}
+            </span>
+          </div>
+
+          {!periodInfo.isCurrent ? (
+            <button
+              type="button"
+              onClick={handleToday}
+              className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded cursor-pointer"
+            >
+              Сьогодні
+            </button>
+          ) : (
+            <div className="w-14" />
+          )}
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Calendar className="h-4 w-4 text-zinc-400" />
-          <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100">
-            {periodInfo.titleUk}
-          </span>
-        </div>
+        {/* KPI Metrics Cards - Minimal Flat */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Completed Sets */}
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+            <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1.5">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>Завершено підходів</span>
+            </div>
+            <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              {stats.periodCompletedSets}
+            </div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+              за {periodInfo.titleUk}
+            </div>
+          </div>
 
-        {!periodInfo.isCurrent ? (
-          <button
-            type="button"
-            onClick={handleToday}
-            className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded cursor-pointer"
-          >
-            Сьогодні
-          </button>
-        ) : (
-          <div className="w-14" />
-        )}
-      </div>
+          {/* Workouts in Period */}
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+            <div className="flex items-center space-x-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1.5">
+              <Calendar className="h-4 w-4" />
+              <span>Активних тренувань</span>
+            </div>
+            <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              {stats.periodWorkoutsCount}
+            </div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+              у поточному періоді
+            </div>
+          </div>
 
-      {/* KPI Metrics Cards - Minimal Flat */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {/* Completed Sets */}
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
-          <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1.5">
-            <CheckCircle2 className="h-4 w-4" />
-            <span>Завершено підходів</span>
+          {/* Volume in Period */}
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+            <div className="flex items-center space-x-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1.5">
+              <Flame className="h-4 w-4" />
+              <span>Тоннаж періоду</span>
+            </div>
+            <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              {stats.periodTons > 0 ? `${stats.periodTons} т` : `${stats.periodVolumeKg} кг`}
+            </div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono">
+              {stats.periodVolumeKg.toLocaleString()} кг піднято
+            </div>
           </div>
-          <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-            {stats.periodCompletedSets}
-          </div>
-          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-            за {periodInfo.titleUk}
-          </div>
-        </div>
 
-        {/* Workouts in Period */}
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
-          <div className="flex items-center space-x-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1.5">
-            <Calendar className="h-4 w-4" />
-            <span>Активних тренувань</span>
-          </div>
-          <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-            {stats.periodWorkoutsCount}
-          </div>
-          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-            у поточному періоді
-          </div>
-        </div>
-
-        {/* Volume in Period */}
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
-          <div className="flex items-center space-x-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1.5">
-            <Flame className="h-4 w-4" />
-            <span>Тоннаж періоду</span>
-          </div>
-          <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-            {stats.periodTons > 0 ? `${stats.periodTons} т` : `${stats.periodVolumeKg} кг`}
-          </div>
-          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono">
-            {stats.periodVolumeKg.toLocaleString()} кг піднято
-          </div>
-        </div>
-
-        {/* Exercises Tracked */}
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
-          <div className="flex items-center space-x-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1.5">
-            <Trophy className="h-4 w-4" />
-            <span>Задіяних вправ</span>
-          </div>
-          <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-            {stats.allTrackedExercises.length}
-          </div>
-          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-            з результатами у вибірці
+          {/* Exercises Tracked */}
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+            <div className="flex items-center space-x-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1.5">
+              <Trophy className="h-4 w-4" />
+              <span>Задіяних вправ</span>
+            </div>
+            <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              {stats.allTrackedExercises.length}
+            </div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+              з результатами у вибірці
+            </div>
           </div>
         </div>
       </div>
@@ -500,8 +533,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
         )}
       </div>
 
-      {/* Personal Records & Tracked Exercises */}
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4">
+      {/* Personal Records & Tracked Exercises (Supports Swipe Left/Right between Top and All) */}
+      <div
+        ref={recordsSwipeRef}
+        className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
+      >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <div className="flex items-center space-x-2">
             <Trophy className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
