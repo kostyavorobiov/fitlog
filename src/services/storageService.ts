@@ -31,6 +31,14 @@ const memoryStore: MemoryStore = {
   removedTraineesByCoach: new Map(),
 };
 
+// Ensure localStorage is purged of any legacy exercise data
+if (typeof window !== 'undefined') {
+  try {
+    localStorage.removeItem('fitlog_exercises_v2');
+    localStorage.removeItem('fitlog_exercises');
+  } catch {}
+}
+
 export class StorageService {
   // --- USERS ---
   static getUsers(): User[] {
@@ -64,62 +72,13 @@ export class StorageService {
     memoryStore.activeUserId = userId;
   }
 
-  // --- EXERCISES ---
-  static getStoredExercises(): Exercise[] {
-    if (typeof window !== 'undefined') {
-      try {
-        const raw = localStorage.getItem('fitlog_exercises_v2');
-        if (raw) return JSON.parse(raw);
-      } catch {}
-    }
-    return [];
-  }
-
-  static persistExercises(): void {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('fitlog_exercises_v2', JSON.stringify(memoryStore.exercises));
-      } catch {}
-    }
-  }
-
+  // --- EXERCISES (STORED ONLY IN SUPABASE DATABASE) ---
   static initializeExercises(): Exercise[] {
-    if (memoryStore.exercises.length === 0) {
-      const stored = this.getStoredExercises();
-      if (Array.isArray(stored) && stored.length > 0) {
-        memoryStore.exercises = stored;
-      }
-
-      // Also merge any exercises that might already be in memory workouts
-      memoryStore.workouts.forEach((w) => {
-        (w.exercises || []).forEach((we) => {
-          if (we.exerciseId && we.exerciseName && we.exerciseName !== 'Вправа') {
-            const exists = memoryStore.exercises.some((e) => e.id === we.exerciseId);
-            if (!exists) {
-              memoryStore.exercises.push({
-                id: we.exerciseId,
-                userId: null,
-                name: we.exerciseName,
-                muscleGroup: we.muscleGroup || 'full_body',
-                description: '',
-                createdAt: '2026-01-01T00:00:00.000Z',
-                isDefault: we.exerciseId.startsWith('def_ex') || we.exerciseId.startsWith('global_ex'),
-              });
-            }
-          }
-        });
-      });
-
-      if (memoryStore.exercises.length > 0) {
-        this.persistExercises();
-      }
-    }
     return [...memoryStore.exercises];
   }
 
   static async purgeAllExercises(): Promise<void> {
     memoryStore.exercises = [];
-    this.persistExercises();
     try {
       await CloudStorageService.deleteAllExercises();
     } catch (e) {
@@ -128,25 +87,16 @@ export class StorageService {
   }
 
   static async syncExercises(): Promise<Exercise[]> {
-    this.initializeExercises();
     try {
       const cloudExercises = await CloudStorageService.fetchExercises();
-      if (cloudExercises && cloudExercises.length > 0) {
-        const cloudMap = new Map<string, Exercise>();
-        cloudExercises.forEach((e) => cloudMap.set(e.id, e));
-        memoryStore.exercises.forEach((local) => {
-          if (!cloudMap.has(local.id)) {
-            cloudMap.set(local.id, local);
-          }
-        });
-        memoryStore.exercises = Array.from(cloudMap.values());
-        this.persistExercises();
+      if (cloudExercises !== null) {
+        memoryStore.exercises = cloudExercises;
         return [...memoryStore.exercises];
       }
     } catch (err) {
       console.warn('syncExercises error:', err);
     }
-    return this.initializeExercises();
+    return [...memoryStore.exercises];
   }
 
   static getWorkoutsForUserAndCoach(userId?: string | null, otherUserId?: string | null): WorkoutPlan[] {
@@ -204,18 +154,15 @@ export class StorageService {
   }
 
   static saveExercise(exercise: Exercise): void {
-    this.initializeExercises();
     const idx = memoryStore.exercises.findIndex((e) => e.id === exercise.id);
     if (idx >= 0) {
       memoryStore.exercises[idx] = exercise;
     } else {
       memoryStore.exercises.push(exercise);
     }
-    this.persistExercises();
   }
 
   static createExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt'>): Exercise {
-    this.initializeExercises();
     const newExercise: Exercise = {
       ...exerciseData,
       id: generateId('custom_ex'),
@@ -223,7 +170,6 @@ export class StorageService {
       createdAt: new Date().toISOString(),
     };
     memoryStore.exercises.push(newExercise);
-    this.persistExercises();
     CloudStorageService.saveExercise(newExercise).catch((e) =>
       console.warn('CloudStorageService.saveExercise error:', e)
     );
@@ -239,7 +185,6 @@ export class StorageService {
       createdAt: new Date().toISOString(),
     };
     memoryStore.exercises.push(newExercise);
-    this.persistExercises();
     CloudStorageService.saveExercise(newExercise).catch((e) =>
       console.warn('CloudStorageService.saveExercise global exercise error:', e)
     );
@@ -250,7 +195,6 @@ export class StorageService {
     const idx = memoryStore.exercises.findIndex((e) => e.id === exercise.id);
     if (idx >= 0) {
       memoryStore.exercises[idx] = exercise;
-      this.persistExercises();
 
       // Update embedded in workouts in memory
       memoryStore.workouts.forEach((w) => {
@@ -270,7 +214,6 @@ export class StorageService {
 
   static async deleteExercise(exerciseId: string): Promise<boolean> {
     memoryStore.exercises = memoryStore.exercises.filter((e) => e.id !== exerciseId);
-    this.persistExercises();
     try {
       return await CloudStorageService.deleteExercise(exerciseId);
     } catch (e) {
@@ -309,7 +252,6 @@ export class StorageService {
       if (ex.userId && !ex.isDefault && !ex.id.startsWith('global_ex') && !ex.id.startsWith('def_ex')) return true;
       return false;
     });
-    this.persistExercises();
     const memoryDeleted = initialCount - memoryStore.exercises.length;
 
     // 4. If Supabase is connected, refresh from cloud
