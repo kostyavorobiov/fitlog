@@ -2,10 +2,13 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../context/AuthContext';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { user } = useAuth();
+  const isTrainer = user?.role === 'coach' || user?.role === 'admin';
 
   return (
     <Tabs
@@ -33,6 +36,16 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="barbell-outline" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="trainees"
+        options={{
+          title: 'Підопічні',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" size={size} color={color} />
+          ),
+          href: isTrainer ? '/(tabs)/trainees' : null,
         }}
       />
       <Tabs.Screen

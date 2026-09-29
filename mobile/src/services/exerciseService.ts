@@ -44,7 +44,11 @@ export class ExerciseService {
       }
     }
 
-    return MobileStorage.getItem<Exercise[]>(EXERCISES_CACHE_KEY, []);
+    const cached = await MobileStorage.getItem<Exercise[]>(EXERCISES_CACHE_KEY, []);
+    if (userId) {
+      return cached.filter((e) => e.isDefault || !e.userId || e.userId === userId);
+    }
+    return cached.filter((e) => e.isDefault || !e.userId);
   }
 
   /**

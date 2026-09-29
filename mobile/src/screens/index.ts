@@ -6,3 +6,4 @@ export * from './CalendarScreen';
 export * from './AnalyticsScreen';
 export * from './ProfileScreen';
 export * from './LoginScreen';
+export * from './TraineesScreen';

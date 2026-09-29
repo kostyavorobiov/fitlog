@@ -169,11 +169,158 @@ export class WorkoutService {
   }
 
   /**
-   * Get a single workout by ID
+   * Get a single workout by ID (supports trainer/trainee context and direct Supabase lookup)
    */
-  static async getWorkoutById(userId: string, workoutId: string): Promise<WorkoutPlan | null> {
-    const list = await this.getWorkouts(userId);
-    return list.find((w) => w.id === workoutId) || null;
+  static async getWorkoutById(param1: string, param2?: string): Promise<WorkoutPlan | null> {
+    if (!param1) return null;
+
+    let targetUserId = '';
+    let workoutId = '';
+
+    if (param2) {
+      // Check cache with param1 as userId, param2 as workoutId
+      const list1 = await this.getWorkouts(param1);
+      const match1 = list1.find((w) => w.id === param2);
+      if (match1) return match1;
+
+      // Check cache with param2 as userId, param1 as workoutId
+      const list2 = await this.getWorkouts(param2);
+      const match2 = list2.find((w) => w.id === param1);
+      if (match2) return match2;
+
+      workoutId = param2.startsWith('w') || param2.includes('-') ? param2 : param1;
+      targetUserId = workoutId === param2 ? param1 : param2;
+    } else {
+      workoutId = param1;
+    }
+
+    // Direct Supabase query (Server-side RLS allows reading if user is owner or coach of trainee!)
+    if (isSupabaseConfigured() && supabase && workoutId) {
+      try {
+        const { data, error } = await supabase
+          .from('workouts')
+          .select(`
+            id,
+            user_id,
+            assigned_by_coach_id,
+            title,
+            scheduled_date,
+            status,
+            completed_at,
+            notes,
+            duration_minutes,
+            created_at,
+            workout_exercises (
+              id,
+              workout_id,
+              exercise_id,
+              order_index,
+              set_count,
+              target_reps_range,
+              notes,
+              superset_group_id,
+              exercises (
+                id,
+                user_id,
+                name,
+                muscle_group,
+                description,
+                is_default,
+                created_at
+              ),
+              workout_sets (
+                id,
+                workout_exercise_id,
+                set_number,
+                target_reps_range,
+                weight,
+                actual_reps,
+                completed_at,
+                notes,
+                is_warmup
+              )
+            )
+          `)
+          .eq('id', workoutId)
+          .maybeSingle();
+
+        if (!error && data) {
+          const exercises: WorkoutExercise[] = (data.workout_exercises || [])
+            .sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0))
+            .map((we: any) => {
+              const exObj = Array.isArray(we.exercises) ? we.exercises[0] : we.exercises;
+              const { exerciseName: metaExName, muscleGroup: metaMg, cleanNotes } =
+                this.decodeExerciseMeta(we.notes);
+
+              const exerciseName =
+                (metaExName && metaExName !== 'Вправа' ? metaExName : undefined) ||
+                (exObj?.name && exObj.name !== 'Вправа' ? exObj.name : undefined) ||
+                'Вправа';
+
+              const muscleGroup = metaMg || exObj?.muscle_group || 'full_body';
+
+              const sets: WorkoutSet[] = (we.workout_sets || [])
+                .sort((a: any, b: any) => (a.set_number ?? 0) - (b.set_number ?? 0))
+                .map((s: any) => ({
+                  id: s.id,
+                  workoutExerciseId: s.workout_exercise_id,
+                  setNumber: s.set_number,
+                  targetRepsRange: s.target_reps_range || '8-12',
+                  weight: Number(s.weight) || 0,
+                  actualReps: s.actual_reps !== null && s.actual_reps !== undefined ? Number(s.actual_reps) : null,
+                  completedAt: s.completed_at,
+                  notes: s.notes || '',
+                  isWarmup: Boolean(s.is_warmup),
+                }));
+
+              return {
+                id: we.id,
+                workoutPlanId: we.workout_id,
+                exerciseId: we.exercise_id,
+                exerciseName,
+                muscleGroup,
+                order: we.order_index || 1,
+                setCount: we.set_count || sets.length,
+                targetRepsRange: we.target_reps_range || '8-12',
+                notes: cleanNotes,
+                supersetGroupId: we.superset_group_id || null,
+                sets,
+              };
+            });
+
+          const mapped: WorkoutPlan = {
+            id: data.id,
+            userId: data.user_id,
+            assignedByCoachId: data.assigned_by_coach_id || null,
+            title: data.title,
+            scheduledDate: data.scheduled_date,
+            status: data.status,
+            completedAt: data.completed_at,
+            notes: data.notes || '',
+            durationMinutes: data.duration_minutes || undefined,
+            createdAt: data.created_at,
+            exercises,
+          };
+
+          // Cache in user's list
+          const cacheKey = `${WORKOUTS_CACHE_KEY}_${data.user_id}`;
+          const currentCached = await MobileStorage.getItem<WorkoutPlan[]>(cacheKey, []);
+          const cIdx = currentCached.findIndex((w) => w.id === mapped.id);
+          if (cIdx >= 0) {
+            currentCached[cIdx] = mapped;
+          } else {
+            currentCached.unshift(mapped);
+          }
+          await MobileStorage.setItem(cacheKey, currentCached);
+
+          return mapped;
+        }
+      } catch (err) {
+        console.warn('[WorkoutService.getWorkoutById] Supabase query error:', err);
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -388,13 +535,24 @@ export class WorkoutService {
   /**
    * Delete a workout by ID
    */
-  static async deleteWorkout(userId: string, workoutId: string): Promise<boolean> {
+  static async deleteWorkout(
+    userId: string,
+    workoutId: string,
+    additionalUserId?: string
+  ): Promise<boolean> {
+    // 1. Remove from local cache for primary user
     const cacheKey = `${WORKOUTS_CACHE_KEY}_${userId}`;
-
-    // 1. Remove from local cache
     const cached = await MobileStorage.getItem<WorkoutPlan[]>(cacheKey, []);
     const filtered = cached.filter((w) => w.id !== workoutId);
     await MobileStorage.setItem(cacheKey, filtered);
+
+    // Also clear from additionalUserId cache if provided (e.g. coach deleting trainee's workout or vice-versa)
+    if (additionalUserId && additionalUserId !== userId) {
+      const extraKey = `${WORKOUTS_CACHE_KEY}_${additionalUserId}`;
+      const extraCached = await MobileStorage.getItem<WorkoutPlan[]>(extraKey, []);
+      const extraFiltered = extraCached.filter((w) => w.id !== workoutId);
+      await MobileStorage.setItem(extraKey, extraFiltered);
+    }
 
     // 2. Delete from Supabase with safe FK order
     if (isSupabaseConfigured() && supabase) {

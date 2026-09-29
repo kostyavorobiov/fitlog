@@ -21,8 +21,9 @@ import { WorkoutPlan, MuscleGroup } from '../types/workout';
 export const WorkoutDetailScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, traineeId } = useLocalSearchParams<{ id: string; traineeId?: string }>();
   const { user } = useAuth();
+  const targetUserId = traineeId || user?.id || '';
 
   const [workout, setWorkout] = useState<WorkoutPlan | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -30,20 +31,20 @@ export const WorkoutDetailScreen: React.FC = () => {
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
 
   const loadWorkout = useCallback(async () => {
-    if (!user || !id) {
+    if (!id) {
       setIsLoading(false);
       return;
     }
 
     try {
-      const data = await WorkoutService.getWorkoutById(user.id, id);
+      const data = await WorkoutService.getWorkoutById(id, targetUserId);
       setWorkout(data);
     } catch (e) {
       console.warn('[WorkoutDetailScreen.loadWorkout] Error:', e);
     } finally {
       setIsLoading(false);
     }
-  }, [user, id]);
+  }, [id, targetUserId]);
 
   useEffect(() => {
     loadWorkout();
@@ -86,7 +87,8 @@ export const WorkoutDetailScreen: React.FC = () => {
           onPress: async () => {
             setIsDeleting(true);
             try {
-              const ok = await WorkoutService.deleteWorkout(user.id, workout.id);
+              const effectiveUserId = workout.userId || targetUserId || user.id;
+              const ok = await WorkoutService.deleteWorkout(effectiveUserId, workout.id, user.id);
               if (ok) {
                 router.back();
               } else {

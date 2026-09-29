@@ -45,8 +45,9 @@ const TITLE_PRESETS = [
 export const WorkoutEditorScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, traineeId } = useLocalSearchParams<{ id: string; traineeId?: string }>();
   const { user } = useAuth();
+  const targetUserId = traineeId || user?.id || '';
 
   const [workout, setWorkout] = useState<WorkoutPlan | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -65,31 +66,32 @@ export const WorkoutEditorScreen: React.FC = () => {
 
   // Load workout details
   const loadWorkout = useCallback(async () => {
-    if (!user || !id) {
+    if (!id) {
       setIsLoading(false);
       return;
     }
 
     try {
-      const data = await WorkoutService.getWorkoutById(user.id, id);
+      const data = await WorkoutService.getWorkoutById(id, targetUserId);
       if (data) {
         setWorkout(data);
         workoutRef.current = data;
-        loadPerformancesForWorkout(data);
+        loadPerformancesForWorkout(data, data.userId);
       }
     } catch (e) {
       console.warn('[WorkoutEditorScreen.loadWorkout] Error:', e);
     } finally {
       setIsLoading(false);
     }
-  }, [user, id]);
+  }, [id, targetUserId]);
 
-  const loadPerformancesForWorkout = async (w: WorkoutPlan) => {
-    if (!user || !w.exercises) return;
+  const loadPerformancesForWorkout = async (w: WorkoutPlan, ownerUserId?: string) => {
+    const effectiveUserId = ownerUserId || w.userId || targetUserId;
+    if (!effectiveUserId || !w.exercises) return;
     const perfs: Record<string, PastExercisePerformance | null> = {};
     for (const ex of w.exercises) {
       try {
-        const perf = await WorkoutService.getLastExercisePerformance(user.id, ex.exerciseId, w.id);
+        const perf = await WorkoutService.getLastExercisePerformance(effectiveUserId, ex.exerciseId, w.id);
         perfs[ex.exerciseId] = perf;
       } catch {
         perfs[ex.exerciseId] = null;
@@ -113,6 +115,11 @@ export const WorkoutEditorScreen: React.FC = () => {
 
   // Central update & persist helper
   const updateAndSave = (updated: WorkoutPlan, immediateSave: boolean = false) => {
+    // Preserve trainee context: if coach is editing trainee's workout, ensure coach ID is assigned
+    if (user?.id && updated.userId !== user.id && !updated.assignedByCoachId) {
+      updated.assignedByCoachId = user.id;
+    }
+
     setWorkout(updated);
     workoutRef.current = updated;
 
@@ -530,10 +537,12 @@ export const WorkoutEditorScreen: React.FC = () => {
 
   // Repeat entire previous workout
   const handleRepeatPreviousWorkout = async () => {
-    if (!workout || !user) return;
+    if (!workout) return;
+    const effectiveUserId = workout.userId || targetUserId;
+    if (!effectiveUserId) return;
 
     try {
-      const prev = await WorkoutService.getPreviousWorkoutToRepeat(user.id, workout.id, workout.title);
+      const prev = await WorkoutService.getPreviousWorkoutToRepeat(effectiveUserId, workout.id, workout.title);
       if (!prev || !prev.exercises || prev.exercises.length === 0) {
         Alert.alert(
           'Немає тренувань',
@@ -642,7 +651,12 @@ export const WorkoutEditorScreen: React.FC = () => {
           onPress: async () => {
             setIsDeleting(true);
             try {
-              const ok = await WorkoutService.deleteWorkout(user.id, workout.id);
+              const effectiveUserId = workout.userId || targetUserId;
+              const ok = await WorkoutService.deleteWorkout(
+                effectiveUserId,
+                workout.id,
+                user?.id
+              );
               if (ok) {
                 router.back();
               } else {
