@@ -6,8 +6,8 @@ import { LiquidGlassTabBar } from '../../components/LiquidGlassTabBar';
 import { ScrollTabBarProvider } from '../../context/ScrollTabBarContext';
 
 export default function TabLayout() {
-  const { user } = useAuth();
-  const isTrainer = user?.role === 'coach' || user?.role === 'admin';
+  const { user, isAdmin } = useAuth();
+  const isTrainer = user?.role === 'coach' || isAdmin;
 
   return (
     <ScrollTabBarProvider>
@@ -25,16 +25,6 @@ export default function TabLayout() {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="barbell-outline" size={size} color={color} />
             ),
-          }}
-        />
-        <Tabs.Screen
-          name="trainees"
-          options={{
-            title: 'Підопічні',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="people-outline" size={size} color={color} />
-            ),
-            href: isTrainer ? '/(tabs)/trainees' : null,
           }}
         />
         <Tabs.Screen
@@ -56,13 +46,26 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="profile"
+          name="exercises"
           options={{
-            href: null,
+            title: 'Вправи',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="book-outline" size={size} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
-          name="exercises"
+          name="trainees"
+          options={{
+            title: 'Підопічні',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="people-outline" size={size} color={color} />
+            ),
+            href: isTrainer ? '/(tabs)/trainees' : null,
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
           options={{
             href: null,
           }}

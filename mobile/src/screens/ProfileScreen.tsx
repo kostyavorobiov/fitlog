@@ -328,7 +328,7 @@ export const ProfileScreen: React.FC = () => {
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
         <Header title="Профіль" showAvatar={false} />
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#0284c7" />
+          <ActivityIndicator size="large" color={isDark ? '#fafafa' : '#18181b'} />
           <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
             Завантаження профілю...
           </Text>
@@ -504,16 +504,22 @@ export const ProfileScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.saveBtn, isSavingProfile && styles.btnDisabled]}
+                  style={[
+                    styles.saveBtn,
+                    isDark ? styles.saveBtnDark : styles.saveBtnLight,
+                    isSavingProfile && styles.btnDisabled,
+                  ]}
                   onPress={handleSaveProfile}
                   disabled={isSavingProfile}
                 >
                   {isSavingProfile ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={16} color="#ffffff" />
-                      <Text style={styles.saveBtnText}>Зберегти зміни</Text>
+                      <Ionicons name="checkmark" size={16} color={isDark ? '#09090b' : '#ffffff'} />
+                      <Text style={[styles.saveBtnText, isDark ? styles.saveBtnTextDark : styles.saveBtnTextLight]}>
+                        Зберегти зміни
+                      </Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -565,7 +571,7 @@ export const ProfileScreen: React.FC = () => {
                 <Ionicons
                   name={isDark ? 'moon-outline' : 'sunny-outline'}
                   size={18}
-                  color={isDark ? '#38bdf8' : '#0284c7'}
+                  color={isDark ? '#f59e0b' : '#d97706'}
                 />
                 <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
                   Тема інтерфейсу
@@ -700,14 +706,20 @@ export const ProfileScreen: React.FC = () => {
                   autoCorrect={false}
                 />
                 <TouchableOpacity
-                  style={[styles.linkCoachBtn, isLinkingCoach && styles.btnDisabled]}
+                  style={[
+                    styles.linkCoachBtn,
+                    isDark ? styles.linkCoachBtnDark : styles.linkCoachBtnLight,
+                    isLinkingCoach && styles.btnDisabled,
+                  ]}
                   onPress={handleLinkCoach}
                   disabled={isLinkingCoach}
                 >
                   {isLinkingCoach ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
                   ) : (
-                    <Text style={styles.linkCoachBtnText}>Прикріпитися</Text>
+                    <Text style={[styles.linkCoachBtnText, isDark ? styles.linkCoachBtnTextDark : styles.linkCoachBtnTextLight]}>
+                      Прикріпитися
+                    </Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -875,13 +887,19 @@ export const ProfileScreen: React.FC = () => {
 
                             <TouchableOpacity
                               onPress={() => handleSaveEditGlobal(ex)}
-                              style={[styles.saveEditBtn, isSavingEdit && styles.btnDisabled]}
+                              style={[
+                                styles.saveEditBtn,
+                                isDark ? styles.saveEditBtnDark : styles.saveEditBtnLight,
+                                isSavingEdit && styles.btnDisabled,
+                              ]}
                               disabled={isSavingEdit}
                             >
                               {isSavingEdit ? (
-                                <ActivityIndicator size="small" color="#ffffff" />
+                                <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
                               ) : (
-                                <Text style={styles.saveBtnText}>Зберегти</Text>
+                                <Text style={[styles.saveBtnText, isDark ? styles.saveBtnTextDark : styles.saveBtnTextLight]}>
+                                  Зберегти
+                                </Text>
                               )}
                             </TouchableOpacity>
                           </View>
@@ -1082,17 +1100,27 @@ const styles = StyleSheet.create({
   saveBtn: {
     flex: 1.5,
     height: 40,
-    backgroundColor: '#0284c7',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
     flexDirection: 'row',
     gap: 6,
   },
+  saveBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  saveBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
   saveBtnText: {
-    color: '#ffffff',
     fontSize: 13,
     fontWeight: '600',
+  },
+  saveBtnTextLight: {
+    color: '#ffffff',
+  },
+  saveBtnTextDark: {
+    color: '#09090b',
   },
   btnDisabled: {
     opacity: 0.6,
@@ -1290,16 +1318,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   linkCoachBtn: {
-    backgroundColor: '#0284c7',
     paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  linkCoachBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  linkCoachBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
   linkCoachBtnText: {
-    color: '#ffffff',
     fontSize: 13,
     fontWeight: '600',
+  },
+  linkCoachBtnTextLight: {
+    color: '#ffffff',
+  },
+  linkCoachBtnTextDark: {
+    color: '#09090b',
   },
   adminCard: {
     padding: 16,
@@ -1492,10 +1530,15 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   saveEditBtn: {
-    backgroundColor: '#0284c7',
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 6,
+  },
+  saveEditBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  saveEditBtnDark: {
+    backgroundColor: '#f4f4f5',
   },
   logoutBtn: {
     backgroundColor: 'rgba(244, 63, 94, 0.1)',

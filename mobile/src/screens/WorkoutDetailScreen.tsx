@@ -125,7 +125,7 @@ export const WorkoutDetailScreen: React.FC = () => {
     return (
       <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="small" color="#0284c7" />
+          <ActivityIndicator size="small" color={isDark ? '#fafafa' : '#18181b'} />
           <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
             Завантаження тренування...
           </Text>
@@ -332,15 +332,19 @@ export const WorkoutDetailScreen: React.FC = () => {
           exercises.map((ex, exIndex) => (
             <Card key={ex.id || `ex_${exIndex}`} style={styles.exerciseCard}>
               <View style={styles.exHeader}>
-                <View style={styles.exIndexCircle}>
-                  <Text style={styles.exIndexText}>{exIndex + 1}</Text>
+                <View style={[styles.exIndexCircle, isDark ? styles.exIndexCircleDark : styles.exIndexCircleLight]}>
+                  <Text style={[styles.exIndexText, isDark ? styles.textPrimaryDark : styles.textPrimaryLight]}>
+                    {exIndex + 1}
+                  </Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}>
                     {ex.exerciseName || 'Вправа'}
                   </Text>
-                  <View style={styles.mgBadge}>
-                    <Text style={styles.mgText}>{getMuscleGroupName(ex.muscleGroup)}</Text>
+                  <View style={[styles.mgBadge, isDark ? styles.mgBadgeDark : styles.mgBadgeLight]}>
+                    <Text style={[styles.mgText, isDark ? styles.subDark : styles.subLight]}>
+                      {getMuscleGroupName(ex.muscleGroup)}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -600,14 +604,24 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#0284c7',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  exIndexCircleLight: {
+    backgroundColor: '#18181b',
+  },
+  exIndexCircleDark: {
+    backgroundColor: '#f4f4f5',
+  },
   exIndexText: {
-    color: '#ffffff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
+  },
+  textPrimaryLight: {
+    color: '#ffffff',
+  },
+  textPrimaryDark: {
+    color: '#09090b',
   },
   exTitle: {
     fontSize: 15,
@@ -615,16 +629,23 @@ const styles = StyleSheet.create({
   },
   mgBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#0284c715',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     marginTop: 3,
+    borderWidth: 1,
+  },
+  mgBadgeLight: {
+    backgroundColor: '#f4f4f5',
+    borderColor: '#e4e4e7',
+  },
+  mgBadgeDark: {
+    backgroundColor: '#18181b',
+    borderColor: '#27272a',
   },
   mgText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#0284c7',
   },
   exNotes: {
     fontSize: 12,

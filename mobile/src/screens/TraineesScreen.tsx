@@ -261,12 +261,14 @@ export const TraineesScreen: React.FC = () => {
             Цей розділ призначений для перегляду та складання тренувальних планів ваших спортсменів.
           </Text>
           <TouchableOpacity
-            style={styles.goToProfileBtn}
+            style={[styles.goToProfileBtn, isDark ? styles.goToProfileBtnDark : styles.goToProfileBtnLight]}
             onPress={() => router.push('/(tabs)/profile')}
             activeOpacity={0.8}
           >
-            <Ionicons name="person-outline" size={18} color="#ffffff" />
-            <Text style={styles.goToProfileBtnText}>Перейти у профіль</Text>
+            <Ionicons name="person-outline" size={18} color={isDark ? '#09090b' : '#ffffff'} />
+            <Text style={[styles.goToProfileBtnText, isDark ? styles.goToProfileBtnTextDark : styles.goToProfileBtnTextLight]}>
+              Перейти у профіль
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -358,17 +360,23 @@ export const TraineesScreen: React.FC = () => {
             </View>
 
             <TouchableOpacity
-              style={[styles.addBtn, isAddingTrainee && styles.addBtnDisabled]}
+              style={[
+                styles.addBtn,
+                isDark ? styles.addBtnDark : styles.addBtnLight,
+                isAddingTrainee && styles.addBtnDisabled,
+              ]}
               onPress={handleAddTrainee}
               disabled={isAddingTrainee}
               activeOpacity={0.8}
             >
               {isAddingTrainee ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
               ) : (
                 <>
-                  <Ionicons name="add" size={18} color="#ffffff" />
-                  <Text style={styles.addBtnText}>Додати</Text>
+                  <Ionicons name="add" size={18} color={isDark ? '#09090b' : '#ffffff'} />
+                  <Text style={[styles.addBtnText, isDark ? styles.addBtnTextDark : styles.addBtnTextLight]}>
+                    Додати
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
@@ -417,8 +425,8 @@ export const TraineesScreen: React.FC = () => {
                       onPress={() => setSelectedTrainee(t)}
                       style={[
                         styles.traineePill,
-                        isSelected && styles.traineePillActive,
                         isDark ? styles.pillDark : styles.pillLight,
+                        isSelected && (isDark ? styles.traineePillActiveDark : styles.traineePillActiveLight),
                       ]}
                     >
                       <UserAvatar image={t.image} name={t.name} size="xs" />
@@ -427,7 +435,9 @@ export const TraineesScreen: React.FC = () => {
                           numberOfLines={1}
                           style={[
                             styles.pillName,
-                            isSelected ? styles.pillNameActive : (isDark ? styles.textDark : styles.textLight),
+                            isSelected
+                              ? (isDark ? styles.pillNameActiveDark : styles.pillNameActiveLight)
+                              : (isDark ? styles.textDark : styles.textLight),
                           ]}
                         >
                           {t.name}
@@ -435,7 +445,9 @@ export const TraineesScreen: React.FC = () => {
                         <Text
                           style={[
                             styles.pillCode,
-                            isSelected ? styles.pillCodeActive : (isDark ? styles.subDark : styles.subLight),
+                            isSelected
+                              ? (isDark ? styles.pillCodeActiveDark : styles.pillCodeActiveLight)
+                              : (isDark ? styles.subDark : styles.subLight),
                           ]}
                         >
                           {t.profileCode}
@@ -476,12 +488,14 @@ export const TraineesScreen: React.FC = () => {
                 {/* Trainee Action Buttons */}
                 <View style={styles.actionButtonsRow}>
                   <TouchableOpacity
-                    style={styles.createWorkoutBtn}
+                    style={[styles.createWorkoutBtn, isDark ? styles.createWorkoutBtnDark : styles.createWorkoutBtnLight]}
                     activeOpacity={0.8}
                     onPress={handleCreateWorkoutForTrainee}
                   >
-                    <Ionicons name="add-circle" size={18} color="#ffffff" />
-                    <Text style={styles.createWorkoutBtnText}>Додати тренування</Text>
+                    <Ionicons name="add-circle" size={18} color={isDark ? '#09090b' : '#ffffff'} />
+                    <Text style={[styles.createWorkoutBtnText, isDark ? styles.createWorkoutBtnTextDark : styles.createWorkoutBtnTextLight]}>
+                      Додати тренування
+                    </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -497,8 +511,10 @@ export const TraineesScreen: React.FC = () => {
                       })
                     }
                   >
-                    <Ionicons name="stats-chart-outline" size={16} color="#0284c7" />
-                    <Text style={styles.analyticsBtnText}>Аналітика</Text>
+                    <Ionicons name="stats-chart-outline" size={16} color={isDark ? '#fafafa' : '#09090b'} />
+                    <Text style={[styles.analyticsBtnText, isDark ? styles.textDark : styles.textLight]}>
+                      Аналітика
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
@@ -738,18 +754,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#0284c7',
     paddingHorizontal: 14,
     borderRadius: 8,
     justifyContent: 'center',
+  },
+  addBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  addBtnDark: {
+    backgroundColor: '#f4f4f5',
   },
   addBtnDisabled: {
     opacity: 0.6,
   },
   addBtnText: {
-    color: '#ffffff',
     fontSize: 13,
     fontWeight: '600',
+  },
+  addBtnTextLight: {
+    color: '#ffffff',
+  },
+  addBtnTextDark: {
+    color: '#09090b',
   },
   traineeSelectorSection: {
     gap: 8,
@@ -775,15 +801,19 @@ const styles = StyleSheet.create({
   },
   pillLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#e4e4e7',
   },
   pillDark: {
     backgroundColor: '#18181b',
     borderColor: '#27272a',
   },
-  traineePillActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+  traineePillActiveLight: {
+    backgroundColor: '#f4f4f5',
+    borderColor: '#18181b',
+  },
+  traineePillActiveDark: {
+    backgroundColor: '#27272a',
+    borderColor: '#f4f4f5',
   },
   avatarCircle: {
     width: 28,
@@ -811,14 +841,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  pillNameActive: {
+  pillNameActiveLight: {
+    color: '#09090b',
+    fontWeight: '700',
+  },
+  pillNameActiveDark: {
     color: '#ffffff',
+    fontWeight: '700',
   },
   pillCode: {
     fontSize: 10,
   },
-  pillCodeActive: {
-    color: '#e0f2fe',
+  pillCodeActiveLight: {
+    color: '#71717a',
+  },
+  pillCodeActiveDark: {
+    color: '#a1a1aa',
   },
   selectedTraineeCard: {
     padding: 16,
@@ -872,14 +910,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#0284c7',
     paddingVertical: 10,
     borderRadius: 8,
   },
+  createWorkoutBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  createWorkoutBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
   createWorkoutBtnText: {
-    color: '#ffffff',
     fontSize: 13,
     fontWeight: '600',
+  },
+  createWorkoutBtnTextLight: {
+    color: '#ffffff',
+  },
+  createWorkoutBtnTextDark: {
+    color: '#09090b',
   },
   analyticsBtn: {
     flexDirection: 'row',
@@ -891,15 +939,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   analyticsBtnLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    borderColor: '#e4e4e7',
   },
   analyticsBtnDark: {
     backgroundColor: '#18181b',
     borderColor: '#27272a',
   },
   analyticsBtnText: {
-    color: '#0284c7',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -1080,15 +1127,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#0284c7',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 10,
     marginTop: 12,
   },
+  goToProfileBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  goToProfileBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
   goToProfileBtnText: {
-    color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  goToProfileBtnTextLight: {
+    color: '#ffffff',
+  },
+  goToProfileBtnTextDark: {
+    color: '#09090b',
   },
 });

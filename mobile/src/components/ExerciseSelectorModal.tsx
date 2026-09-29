@@ -152,13 +152,17 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                     onPress={() => setCustomMuscle(opt.id as MuscleGroup)}
                     style={[
                       styles.muscleChip,
-                      isSel ? styles.muscleChipActive : (isDark ? styles.muscleChipDark : styles.muscleChipLight),
+                      isSel
+                        ? (isDark ? styles.muscleChipActiveDark : styles.muscleChipActiveLight)
+                        : (isDark ? styles.muscleChipDark : styles.muscleChipLight),
                     ]}
                   >
                     <Text
                       style={[
                         styles.muscleChipText,
-                        isSel ? styles.muscleChipTextActive : (isDark ? styles.textDark : styles.textLight),
+                        isSel
+                          ? (isDark ? styles.muscleChipTextActiveDark : styles.muscleChipTextActiveLight)
+                          : (isDark ? styles.textDark : styles.textLight),
                       ]}
                     >
                       {opt.label}
@@ -168,8 +172,14 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               })}
             </View>
 
-            <TouchableOpacity style={styles.saveCustomBtn} activeOpacity={0.8} onPress={handleCreateExercise}>
-              <Text style={styles.saveCustomBtnText}>Додати та обрати</Text>
+            <TouchableOpacity
+              style={[styles.saveCustomBtn, isDark ? styles.saveCustomBtnDark : styles.saveCustomBtnLight]}
+              activeOpacity={0.8}
+              onPress={handleCreateExercise}
+            >
+              <Text style={[styles.saveCustomBtnText, isDark ? styles.saveCustomBtnTextDark : styles.saveCustomBtnTextLight]}>
+                Додати та обрати
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -212,13 +222,17 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                       onPress={() => setSelectedMuscle(item.id)}
                       style={[
                         styles.filterTab,
-                        isSelected ? styles.filterTabActive : (isDark ? styles.filterTabDark : styles.filterTabLight),
+                        isSelected
+                          ? (isDark ? styles.filterTabActiveDark : styles.filterTabActiveLight)
+                          : (isDark ? styles.filterTabDark : styles.filterTabLight),
                       ]}
                     >
                       <Text
                         style={[
                           styles.filterTabText,
-                          isSelected ? styles.filterTabTextActive : (isDark ? styles.subDark : styles.subLight),
+                          isSelected
+                            ? (isDark ? styles.filterTabTextActiveDark : styles.filterTabTextActiveLight)
+                            : (isDark ? styles.subDark : styles.subLight),
                         ]}
                       >
                         {item.label}
@@ -232,7 +246,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             {/* Exercises List */}
             {isLoading ? (
               <View style={styles.centerContainer}>
-                <ActivityIndicator size="small" color="#0284c7" />
+                <ActivityIndicator size="small" color={isDark ? '#fafafa' : '#18181b'} />
                 <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
                   Завантаження вправ...
                 </Text>
@@ -274,7 +288,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                         </View>
                       </View>
 
-                      <Ionicons name="add-circle-outline" size={24} color="#0284c7" />
+                      <Ionicons name="add" size={20} color={isDark ? '#fafafa' : '#09090b'} />
                     </TouchableOpacity>
                   );
                 }}
@@ -288,15 +302,17 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                       Спробуйте інший пошуковий запит або створіть власну вправу.
                     </Text>
                     <TouchableOpacity
-                      style={styles.addCustomBtn}
+                      style={[styles.addCustomBtn, isDark ? styles.addCustomBtnDark : styles.addCustomBtnLight]}
                       activeOpacity={0.8}
                       onPress={() => {
                         setCustomName(searchQuery);
                         setIsCreatingCustom(true);
                       }}
                     >
-                      <Ionicons name="add" size={18} color="#ffffff" />
-                      <Text style={styles.addCustomBtnText}>Створити власну вправу</Text>
+                      <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
+                      <Text style={[styles.addCustomBtnText, isDark ? styles.addCustomBtnTextDark : styles.addCustomBtnTextLight]}>
+                        Створити власну вправу
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 }
@@ -310,8 +326,10 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                         setIsCreatingCustom(true);
                       }}
                     >
-                      <Ionicons name="add-circle" size={18} color="#0284c7" />
-                      <Text style={styles.footerCustomBtnText}>Не знайшли вправу? Створити власну</Text>
+                      <Ionicons name="add-circle-outline" size={16} color={isDark ? '#a1a1aa' : '#71717a'} />
+                      <Text style={[styles.footerCustomBtnText, isDark ? styles.textDark : styles.textLight]}>
+                        Не знайшли вправу? Створити власну
+                      </Text>
                     </TouchableOpacity>
                   ) : null
                 }
@@ -396,16 +414,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#18181b',
     borderColor: '#27272a',
   },
-  filterTabActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+  filterTabActiveLight: {
+    backgroundColor: '#18181b',
+    borderColor: '#18181b',
+  },
+  filterTabActiveDark: {
+    backgroundColor: '#f4f4f5',
+    borderColor: '#f4f4f5',
   },
   filterTabText: {
     fontSize: 13,
     fontWeight: '600',
   },
-  filterTabTextActive: {
+  filterTabTextActiveLight: {
     color: '#ffffff',
+  },
+  filterTabTextActiveDark: {
+    color: '#09090b',
   },
   listContent: {
     paddingHorizontal: 16,
@@ -489,16 +514,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#0284c7',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 8,
     marginTop: 4,
   },
+  addCustomBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  addCustomBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
   addCustomBtnText: {
-    color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  addCustomBtnTextLight: {
+    color: '#ffffff',
+  },
+  addCustomBtnTextDark: {
+    color: '#09090b',
   },
   footerCustomBtn: {
     flexDirection: 'row',
@@ -510,7 +545,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   footerCustomBtnText: {
-    color: '#0284c7',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -559,29 +593,46 @@ const styles = StyleSheet.create({
     backgroundColor: '#18181b',
     borderColor: '#27272a',
   },
-  muscleChipActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+  muscleChipActiveLight: {
+    backgroundColor: '#18181b',
+    borderColor: '#18181b',
+  },
+  muscleChipActiveDark: {
+    backgroundColor: '#f4f4f5',
+    borderColor: '#f4f4f5',
   },
   muscleChipText: {
     fontSize: 13,
     fontWeight: '600',
   },
-  muscleChipTextActive: {
+  muscleChipTextActiveLight: {
     color: '#ffffff',
   },
+  muscleChipTextActiveDark: {
+    color: '#09090b',
+  },
   saveCustomBtn: {
-    backgroundColor: '#0284c7',
-    height: 48,
-    borderRadius: 10,
+    height: 44,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
   },
+  saveCustomBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  saveCustomBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
   saveCustomBtnText: {
-    color: '#ffffff',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
+  },
+  saveCustomBtnTextLight: {
+    color: '#ffffff',
+  },
+  saveCustomBtnTextDark: {
+    color: '#09090b',
   },
   textLight: {
     color: '#09090b',

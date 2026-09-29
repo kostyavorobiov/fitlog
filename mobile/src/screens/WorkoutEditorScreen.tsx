@@ -704,7 +704,7 @@ export const WorkoutEditorScreen: React.FC = () => {
     return (
       <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="small" color="#0284c7" />
+          <ActivityIndicator size="small" color={isDark ? '#fafafa' : '#18181b'} />
           <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
             Завантаження тренування...
           </Text>
@@ -773,7 +773,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             onPress={handleRepeatPreviousWorkout}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="refresh-circle-outline" size={22} color="#0284c7" />
+            <Ionicons name="refresh-circle-outline" size={22} color={isDark ? '#a1a1aa' : '#71717a'} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -857,13 +857,17 @@ export const WorkoutEditorScreen: React.FC = () => {
                     onPress={() => handleUpdateTitle(preset)}
                     style={[
                       styles.presetChip,
-                      isSelected ? styles.presetChipActive : (isDark ? styles.presetChipDark : styles.presetChipLight),
+                      isSelected
+                        ? (isDark ? styles.presetChipActiveDark : styles.presetChipActiveLight)
+                        : (isDark ? styles.presetChipDark : styles.presetChipLight),
                     ]}
                   >
                     <Text
                       style={[
                         styles.presetChipText,
-                        isSelected ? styles.presetChipTextActive : (isDark ? styles.subDark : styles.subLight),
+                        isSelected
+                          ? (isDark ? styles.presetChipTextActiveDark : styles.presetChipTextActiveLight)
+                          : (isDark ? styles.subDark : styles.subLight),
                       ]}
                     >
                       {preset}
@@ -912,7 +916,7 @@ export const WorkoutEditorScreen: React.FC = () => {
           {/* Repeat Previous Workout Prompt if empty */}
           {exercises.length === 0 && (
             <Card style={styles.emptyPromptCard}>
-              <Ionicons name="barbell-outline" size={36} color="#0284c7" />
+              <Ionicons name="barbell-outline" size={36} color={isDark ? '#71717a' : '#a1a1aa'} />
               <Text style={[styles.emptyPromptTitle, isDark ? styles.textDark : styles.textLight]}>
                 У цьому тренуванні ще немає вправ
               </Text>
@@ -1074,7 +1078,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                       onPress={() => handleApplyPreviousPerformance(ex.id, ex.exerciseId)}
                       style={[styles.pastPerfBanner, isDark ? styles.pastPerfDark : styles.pastPerfLight]}
                     >
-                      <Ionicons name="time-outline" size={13} color="#0284c7" />
+                      <Ionicons name="time-outline" size={13} color={isDark ? '#a1a1aa' : '#71717a'} />
                       <Text style={styles.pastPerfText}>
                         Останнє: {pastPerf.maxWeight} кг ({pastPerf.sets.map((s) => s.actualReps).join('-')} повт.)
                       </Text>
@@ -1098,13 +1102,17 @@ export const WorkoutEditorScreen: React.FC = () => {
                               onPress={() => handleTargetRepsRangeChange(ex.id, rng)}
                               style={[
                                 styles.rangeChip,
-                                isSel ? styles.rangeChipActive : (isDark ? styles.chipDark : styles.chipLight),
+                                isSel
+                                  ? (isDark ? styles.rangeChipActiveDark : styles.rangeChipActiveLight)
+                                  : (isDark ? styles.chipDark : styles.chipLight),
                               ]}
                             >
                               <Text
                                 style={[
                                   styles.rangeChipText,
-                                  isSel ? styles.rangeChipTextActive : (isDark ? styles.subDark : styles.subLight),
+                                  isSel
+                                    ? (isDark ? styles.rangeChipTextActiveDark : styles.rangeChipTextActiveLight)
+                                    : (isDark ? styles.subDark : styles.subLight),
                                 ]}
                               >
                                 {rng}
@@ -1129,13 +1137,17 @@ export const WorkoutEditorScreen: React.FC = () => {
                               onPress={() => handleSetCountChange(ex.id, cnt)}
                               style={[
                                 styles.setCountChip,
-                                isSel ? styles.rangeChipActive : (isDark ? styles.chipDark : styles.chipLight),
+                                isSel
+                                  ? (isDark ? styles.rangeChipActiveDark : styles.rangeChipActiveLight)
+                                  : (isDark ? styles.chipDark : styles.chipLight),
                               ]}
                             >
                               <Text
                                 style={[
                                   styles.rangeChipText,
-                                  isSel ? styles.rangeChipTextActive : (isDark ? styles.subDark : styles.subLight),
+                                  isSel
+                                    ? (isDark ? styles.rangeChipTextActiveDark : styles.rangeChipTextActiveLight)
+                                    : (isDark ? styles.subDark : styles.subLight),
                                 ]}
                               >
                                 {cnt}
@@ -1310,8 +1322,10 @@ export const WorkoutEditorScreen: React.FC = () => {
                     onPress={() => handleAddSet(ex.id)}
                     style={[styles.addSetBtn, isDark ? styles.borderDark : styles.borderLight]}
                   >
-                    <Ionicons name="add" size={16} color="#0284c7" />
-                    <Text style={styles.addSetBtnText}>Додати підхід</Text>
+                    <Ionicons name="add" size={16} color={isDark ? '#fafafa' : '#09090b'} />
+                    <Text style={[styles.addSetBtnText, isDark ? styles.textDark : styles.textLight]}>
+                      Додати підхід
+                    </Text>
                   </TouchableOpacity>
                 </Card>
               </View>
@@ -1324,8 +1338,10 @@ export const WorkoutEditorScreen: React.FC = () => {
             onPress={() => setIsSelectorOpen(true)}
             style={[styles.bigAddExerciseBtn, isDark ? styles.borderDark : styles.borderLight]}
           >
-            <Ionicons name="add-circle" size={22} color="#0284c7" />
-            <Text style={styles.bigAddExerciseText}>Додати вправу з каталогу</Text>
+            <Ionicons name="add" size={20} color={isDark ? '#fafafa' : '#09090b'} />
+            <Text style={[styles.bigAddExerciseText, isDark ? styles.textDark : styles.textLight]}>
+              Додати вправу з каталогу
+            </Text>
           </TouchableOpacity>
 
           {/* Delete Workout Secondary Option at Bottom */}
@@ -1495,16 +1511,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#18181b',
     borderColor: '#27272a',
   },
-  presetChipActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+  presetChipActiveLight: {
+    backgroundColor: '#18181b',
+    borderColor: '#18181b',
+  },
+  presetChipActiveDark: {
+    backgroundColor: '#f4f4f5',
+    borderColor: '#f4f4f5',
   },
   presetChipText: {
     fontSize: 11,
     fontWeight: '600',
   },
-  presetChipTextActive: {
+  presetChipTextActiveLight: {
     color: '#ffffff',
+  },
+  presetChipTextActiveDark: {
+    color: '#09090b',
   },
   metaDivider: {
     height: 1,
@@ -1726,16 +1749,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#18181b',
     borderColor: '#27272a',
   },
-  rangeChipActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+  rangeChipActiveLight: {
+    backgroundColor: '#18181b',
+    borderColor: '#18181b',
+  },
+  rangeChipActiveDark: {
+    backgroundColor: '#f4f4f5',
+    borderColor: '#f4f4f5',
   },
   rangeChipText: {
     fontSize: 10,
     fontWeight: '600',
   },
-  rangeChipTextActive: {
+  rangeChipTextActiveLight: {
     color: '#ffffff',
+  },
+  rangeChipTextActiveDark: {
+    color: '#09090b',
   },
   setsTable: {
     marginTop: 4,
@@ -1871,7 +1901,6 @@ const styles = StyleSheet.create({
   addSetBtnText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#0284c7',
   },
   bigAddExerciseBtn: {
     flexDirection: 'row',
@@ -1885,9 +1914,8 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   bigAddExerciseText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0284c7',
+    fontSize: 13,
+    fontWeight: '600',
   },
   deleteWorkoutBottomBtn: {
     flexDirection: 'row',

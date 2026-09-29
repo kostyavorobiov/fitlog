@@ -34,6 +34,17 @@ const MUSCLE_ORDER: MuscleGroup[] = [
   'other',
 ];
 
+export const isCustomExercise = (ex: Exercise): boolean => {
+  if (!ex) return false;
+  if (ex.id.startsWith('global_ex') || ex.id.startsWith('def_ex')) return false;
+  if (ex.id.startsWith('custom_ex')) return true;
+  if (ex.userId && ex.userId !== 'null') return true;
+  if (ex.isDefault === false) return true;
+  if (ex.isDefault === true && !ex.userId) return false;
+  if (ex.userId === null) return false;
+  return false;
+};
+
 export const ExercisesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const { user, isAdmin } = useAuth();
@@ -42,6 +53,7 @@ export const ExercisesScreen: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [onlyCustom, setOnlyCustom] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Create Modal State
@@ -72,14 +84,20 @@ export const ExercisesScreen: React.FC = () => {
     loadExercises();
   }, [loadExercises]);
 
+  const customCount = useMemo(() => {
+    return exercises.filter(isCustomExercise).length;
+  }, [exercises]);
+
   const filteredExercises = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return exercises.filter((ex) => {
       const matchesSearch = !q || ex.name.toLowerCase().includes(q);
       const matchesMuscle = selectedMuscle === 'all' || ex.muscleGroup === selectedMuscle;
-      return matchesSearch && matchesMuscle;
+      const isCustom = isCustomExercise(ex);
+      const matchesCustom = !onlyCustom || isCustom;
+      return matchesSearch && matchesMuscle && matchesCustom;
     });
-  }, [exercises, searchQuery, selectedMuscle]);
+  }, [exercises, searchQuery, selectedMuscle, onlyCustom]);
 
   // Handle open create modal
   const handleOpenCreateModal = () => {
@@ -214,12 +232,16 @@ export const ExercisesScreen: React.FC = () => {
         title="База вправ"
         subtitle={`Каталог (${exercises.length} вправ)`}
         rightAction={
-          <Button
-            title="+ Створити"
-            variant="primary"
+          <TouchableOpacity
+            activeOpacity={0.8}
             onPress={handleOpenCreateModal}
-            style={styles.addButton}
-          />
+            style={[styles.webAddBtn, isDark ? styles.webAddBtnDark : styles.webAddBtnLight]}
+          >
+            <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
+            <Text style={[styles.webAddBtnText, isDark ? styles.webAddBtnTextDark : styles.webAddBtnTextLight]}>
+              Додати вправу
+            </Text>
+          </TouchableOpacity>
         }
       />
 
@@ -230,28 +252,57 @@ export const ExercisesScreen: React.FC = () => {
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        {/* Search Bar */}
-        <View style={[styles.searchBar, isDark ? styles.searchBarDark : styles.searchBarLight]}>
-          <Ionicons
-            name="search"
-            size={18}
-            color={isDark ? '#71717a' : '#a1a1aa'}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={[styles.searchInput, isDark ? styles.textDark : styles.textLight]}
-            placeholder="Пошук вправи за назвою..."
-            placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCorrect={false}
-            clearButtonMode="while-editing"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={16} color={isDark ? '#71717a' : '#a1a1aa'} />
-            </TouchableOpacity>
-          )}
+        {/* Search Bar & Custom Filter */}
+        <View style={styles.filterBarContainer}>
+          <View style={[styles.searchBar, isDark ? styles.searchBarDark : styles.searchBarLight]}>
+            <Ionicons
+              name="search"
+              size={18}
+              color={isDark ? '#71717a' : '#a1a1aa'}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={[styles.searchInput, isDark ? styles.textDark : styles.textLight]}
+              placeholder="Пошук вправи за назвою..."
+              placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCorrect={false}
+              clearButtonMode="while-editing"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={16} color={isDark ? '#71717a' : '#a1a1aa'} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setOnlyCustom((prev) => !prev)}
+            style={[
+              styles.customToggleChip,
+              onlyCustom
+                ? (isDark ? styles.customToggleActiveDark : styles.customToggleActiveLight)
+                : (isDark ? styles.customToggleInactiveDark : styles.customToggleInactiveLight),
+            ]}
+          >
+            <Ionicons
+              name={onlyCustom ? 'checkmark-circle' : 'ellipse-outline'}
+              size={15}
+              color={onlyCustom ? (isDark ? '#09090b' : '#ffffff') : (isDark ? '#a1a1aa' : '#71717a')}
+            />
+            <Text
+              style={[
+                styles.customToggleText,
+                onlyCustom
+                  ? (isDark ? styles.textPrimaryDark : styles.textPrimaryLight)
+                  : (isDark ? styles.subDark : styles.subLight),
+              ]}
+            >
+              Тільки власні ({customCount})
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Muscle group tabs */}
@@ -525,16 +576,22 @@ export const ExercisesScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.modalSaveBtn, isSubmittingCreate && styles.btnDisabled]}
+                  style={[
+                    styles.modalSaveBtn,
+                    isDark ? styles.modalSaveBtnDark : styles.modalSaveBtnLight,
+                    isSubmittingCreate && styles.btnDisabled,
+                  ]}
                   onPress={handleSaveCreate}
                   disabled={isSubmittingCreate}
                 >
                   {isSubmittingCreate ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={18} color="#ffffff" />
-                      <Text style={styles.modalSaveText}>Зберегти вправу</Text>
+                      <Ionicons name="checkmark" size={18} color={isDark ? '#09090b' : '#ffffff'} />
+                      <Text style={isDark ? styles.modalSaveTextDark : styles.modalSaveTextLight}>
+                        Зберегти вправу
+                      </Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -631,16 +688,22 @@ export const ExercisesScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.modalSaveBtn, isSubmittingEdit && styles.btnDisabled]}
+                  style={[
+                    styles.modalSaveBtn,
+                    isDark ? styles.modalSaveBtnDark : styles.modalSaveBtnLight,
+                    isSubmittingEdit && styles.btnDisabled,
+                  ]}
                   onPress={handleSaveEdit}
                   disabled={isSubmittingEdit}
                 >
                   {isSubmittingEdit ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={18} color="#ffffff" />
-                      <Text style={styles.modalSaveText}>Зберегти зміни</Text>
+                      <Ionicons name="checkmark" size={18} color={isDark ? '#09090b' : '#ffffff'} />
+                      <Text style={isDark ? styles.modalSaveTextDark : styles.modalSaveTextLight}>
+                        Зберегти зміни
+                      </Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -936,18 +999,85 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  webAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 36,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  webAddBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  webAddBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
+  webAddBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  webAddBtnTextLight: {
+    color: '#ffffff',
+  },
+  webAddBtnTextDark: {
+    color: '#09090b',
+  },
+  filterBarContainer: {
+    gap: 8,
+  },
+  customToggleChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  customToggleActiveLight: {
+    backgroundColor: '#18181b',
+    borderColor: '#18181b',
+  },
+  customToggleActiveDark: {
+    backgroundColor: '#f4f4f5',
+    borderColor: '#f4f4f5',
+  },
+  customToggleInactiveLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e4e4e7',
+  },
+  customToggleInactiveDark: {
+    backgroundColor: '#18181b',
+    borderColor: '#27272a',
+  },
+  customToggleText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   modalSaveBtn: {
     flex: 1.5,
     height: 44,
-    backgroundColor: '#0284c7',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 6,
   },
-  modalSaveText: {
+  modalSaveBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  modalSaveBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
+  modalSaveTextLight: {
     color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modalSaveTextDark: {
+    color: '#09090b',
     fontSize: 14,
     fontWeight: '600',
   },

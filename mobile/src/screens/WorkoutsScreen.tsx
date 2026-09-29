@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
+import { Header } from '../components/Header';
 import { WorkoutService } from '../services/workoutService';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
@@ -166,38 +167,48 @@ export const WorkoutsScreen: React.FC = () => {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      {/* Top Header */}
-      <View style={[styles.headerBar, isDark ? styles.borderDark : styles.borderLight]}>
-        <View style={styles.headerLeft}>
-          <Text style={[styles.screenTitle, isDark ? styles.textDark : styles.textLight]}>
-            Тренування
-          </Text>
-          <Text style={[styles.screenSubtitle, isDark ? styles.subDark : styles.subLight]}>
-            {user ? `Атлет: ${user.name || user.email}` : 'Щоденник тренувань'}
-          </Text>
-        </View>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleOpenCreateModal}
-          style={styles.newWorkoutBtn}
-        >
-          <Ionicons name="add" size={20} color="#ffffff" />
-          <Text style={styles.newWorkoutBtnText}>Нове</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Top Navbar & Section Header */}
+      <Header
+        title="Тренування"
+        rightAction={
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleOpenCreateModal}
+            style={[
+              styles.newWorkoutBtn,
+              isDark ? styles.newWorkoutBtnDark : styles.newWorkoutBtnLight,
+            ]}
+          >
+            <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
+            <Text
+              style={[
+                styles.newWorkoutBtnText,
+                isDark ? styles.newWorkoutTextDark : styles.newWorkoutTextLight,
+              ]}
+            >
+              Нове тренування
+            </Text>
+          </TouchableOpacity>
+        }
+      />
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs (Web Segmented Control Style) */}
       <View style={styles.filterRow}>
         <View style={[styles.filterContainer, isDark ? styles.filterDark : styles.filterLight]}>
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => setFilterStatus('all')}
-            style={[styles.filterBtn, filterStatus === 'all' && styles.filterBtnActive]}
+            style={[
+              styles.filterBtn,
+              filterStatus === 'all' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
+            ]}
           >
             <Text
               style={[
                 styles.filterBtnText,
-                filterStatus === 'all' ? styles.filterBtnTextActive : (isDark ? styles.subDark : styles.subLight),
+                filterStatus === 'all'
+                  ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
+                  : (isDark ? styles.subDark : styles.subLight),
               ]}
             >
               Всі ({workouts.length})
@@ -207,12 +218,17 @@ export const WorkoutsScreen: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => setFilterStatus('in_progress')}
-            style={[styles.filterBtn, filterStatus === 'in_progress' && styles.filterBtnActive]}
+            style={[
+              styles.filterBtn,
+              filterStatus === 'in_progress' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
+            ]}
           >
             <Text
               style={[
                 styles.filterBtnText,
-                filterStatus === 'in_progress' ? styles.filterBtnTextActive : (isDark ? styles.subDark : styles.subLight),
+                filterStatus === 'in_progress'
+                  ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
+                  : (isDark ? styles.subDark : styles.subLight),
               ]}
             >
               У процесі ({inProgressCount})
@@ -222,12 +238,17 @@ export const WorkoutsScreen: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => setFilterStatus('completed')}
-            style={[styles.filterBtn, filterStatus === 'completed' && styles.filterBtnActive]}
+            style={[
+              styles.filterBtn,
+              filterStatus === 'completed' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
+            ]}
           >
             <Text
               style={[
                 styles.filterBtnText,
-                filterStatus === 'completed' ? styles.filterBtnTextActive : (isDark ? styles.subDark : styles.subLight),
+                filterStatus === 'completed'
+                  ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
+                  : (isDark ? styles.subDark : styles.subLight),
               ]}
             >
               Завершено ({completedCount})
@@ -304,49 +325,28 @@ export const WorkoutsScreen: React.FC = () => {
                     {/* Top Row: Status, Date, Coach, Delete Action */}
                     <View style={styles.cardTopRow}>
                       <View style={styles.cardBadgesRow}>
-                        <View
+                        <Text
                           style={[
-                            styles.statusPill,
-                            isCompleted
-                              ? styles.statusCompleted
-                              : isInProgress
-                              ? styles.statusInProgress
-                              : styles.statusPlanned,
+                            styles.statusText,
+                            {
+                              color: isCompleted
+                                ? (isDark ? '#34d399' : '#059669')
+                                : isInProgress
+                                ? (isDark ? '#fbbf24' : '#d97706')
+                                : (isDark ? '#a1a1aa' : '#71717a'),
+                            },
                           ]}
                         >
-                          <View
-                            style={[
-                              styles.statusDot,
-                              {
-                                backgroundColor: isCompleted
-                                  ? '#10b981'
-                                  : isInProgress
-                                  ? '#f59e0b'
-                                  : '#94a3b8',
-                              },
-                            ]}
-                          />
-                          <Text
-                            style={[
-                              styles.statusText,
-                              {
-                                color: isCompleted
-                                  ? '#10b981'
-                                  : isInProgress
-                                  ? '#f59e0b'
-                                  : '#64748b',
-                              },
-                            ]}
-                          >
-                            {isCompleted ? 'Завершено' : isInProgress ? 'У процесі' : 'Заплановано'}
-                          </Text>
-                        </View>
+                          {isCompleted ? 'Завершено' : isInProgress ? 'У процесі' : 'Заплановано'}
+                        </Text>
+
+                        <Text style={[styles.dotSep, isDark ? styles.dotDark : styles.dotLight]}>·</Text>
 
                         <View style={styles.dateWrap}>
                           <Ionicons
                             name="calendar-outline"
                             size={12}
-                            color={isDark ? '#71717a' : '#94a3b8'}
+                            color={isDark ? '#71717a' : '#a1a1aa'}
                           />
                           <Text style={[styles.dateText, isDark ? styles.subDark : styles.subLight]}>
                             {w.scheduledDate}
@@ -354,9 +354,12 @@ export const WorkoutsScreen: React.FC = () => {
                         </View>
 
                         {w.assignedByCoachId && (
-                          <View style={styles.coachBadge}>
-                            <Text style={styles.coachText}>Від тренера</Text>
-                          </View>
+                          <>
+                            <Text style={[styles.dotSep, isDark ? styles.dotDark : styles.dotLight]}>·</Text>
+                            <Text style={[styles.coachText, isDark ? styles.coachDark : styles.coachLight]}>
+                              Від тренера
+                            </Text>
+                          </>
                         )}
                       </View>
 
@@ -604,46 +607,67 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#0284c7',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 8,
   },
+  newWorkoutBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  newWorkoutBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
   newWorkoutBtnText: {
-    color: '#ffffff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
+  },
+  newWorkoutTextLight: {
+    color: '#ffffff',
+  },
+  newWorkoutTextDark: {
+    color: '#09090b',
   },
   filterRow: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   filterContainer: {
     flexDirection: 'row',
-    padding: 3,
+    padding: 2,
     borderRadius: 8,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
   },
   filterLight: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f9fafb',
+    borderColor: '#e4e4e7',
   },
   filterDark: {
     backgroundColor: '#18181b',
+    borderColor: '#27272a',
   },
   filterBtn: {
-    flex: 1,
     paddingVertical: 6,
+    paddingHorizontal: 12,
     alignItems: 'center',
     borderRadius: 6,
   },
-  filterBtnActive: {
-    backgroundColor: '#0284c7',
+  filterBtnActiveLight: {
+    backgroundColor: '#18181b',
+  },
+  filterBtnActiveDark: {
+    backgroundColor: '#f4f4f5',
   },
   filterBtnText: {
     fontSize: 12,
     fontWeight: '600',
   },
-  filterBtnTextActive: {
+  filterTextActiveLight: {
     color: '#ffffff',
+  },
+  filterTextActiveDark: {
+    color: '#09090b',
   },
   content: {
     padding: 16,
@@ -753,16 +777,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'monospace',
   },
-  coachBadge: {
-    backgroundColor: '#e0e7ff20',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+  dotSep: {
+    fontSize: 12,
+  },
+  dotLight: {
+    color: '#d4d4d8',
+  },
+  dotDark: {
+    color: '#3f3f46',
   },
   coachText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#6366f1',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  coachLight: {
+    color: '#4f46e5',
+  },
+  coachDark: {
+    color: '#818cf8',
   },
   cardDeleteBtn: {
     padding: 4,
@@ -788,9 +820,6 @@ const styles = StyleSheet.create({
   },
   metricVal: {
     fontWeight: '600',
-  },
-  dotSep: {
-    fontSize: 12,
   },
   notesSnippet: {
     fontSize: 12,

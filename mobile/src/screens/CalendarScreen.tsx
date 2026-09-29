@@ -196,15 +196,16 @@ export const CalendarScreen: React.FC = () => {
       {/* Header */}
       <Header
         title="Календар"
-        subtitle="Графік тренувань"
         rightAction={
           <TouchableOpacity
-            style={styles.headerAddBtn}
+            style={[styles.headerAddBtn, isDark ? styles.headerAddBtnDark : styles.headerAddBtnLight]}
             activeOpacity={0.8}
             onPress={() => setIsCreateModalOpen(true)}
           >
-            <Ionicons name="add" size={16} color="#ffffff" />
-            <Text style={styles.headerAddBtnText}>Додати</Text>
+            <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
+            <Text style={[styles.headerAddBtnText, isDark ? styles.headerAddTextDark : styles.headerAddTextLight]}>
+              Додати
+            </Text>
           </TouchableOpacity>
         }
       />
@@ -308,7 +309,7 @@ export const CalendarScreen: React.FC = () => {
                       style={[
                         styles.dayCellNum,
                         isSelected
-                          ? styles.dayCellNumSelected
+                          ? (isDark ? styles.dayCellNumSelectedDark : styles.dayCellNumSelectedLight)
                           : isToday
                           ? styles.dayCellNumToday
                           : hasWorkouts
@@ -539,15 +540,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#0284c7',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
+  headerAddBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  headerAddBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
   headerAddBtnText: {
-    color: '#ffffff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
+  },
+  headerAddTextLight: {
+    color: '#ffffff',
+  },
+  headerAddTextDark: {
+    color: '#09090b',
   },
   scrollContent: {
     padding: 16,
@@ -569,7 +580,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   monthTitleText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
   navArrowBtn: {
@@ -581,8 +592,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   btnLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#f9fafb',
+    borderColor: '#e4e4e7',
   },
   btnDark: {
     backgroundColor: '#18181b',
@@ -595,8 +606,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   todayBtnLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#f9fafb',
+    borderColor: '#e4e4e7',
   },
   todayBtnDark: {
     backgroundColor: '#18181b',
@@ -640,14 +651,14 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   dayCellSelectedLight: {
-    backgroundColor: '#0284c7',
+    backgroundColor: '#18181b',
   },
   dayCellSelectedDark: {
-    backgroundColor: '#0284c7',
+    backgroundColor: '#f4f4f5',
   },
   dayCellToday: {
     borderWidth: 1.5,
-    borderColor: '#0284c7',
+    borderColor: '#71717a',
   },
   dayNumWrap: {
     alignItems: 'center',
@@ -657,8 +668,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  dayCellNumSelected: {
+  dayCellNumSelectedLight: {
     color: '#ffffff',
+    fontWeight: '700',
+  },
+  dayCellNumSelectedDark: {
+    color: '#09090b',
     fontWeight: '700',
   },
   dayCellNumToday: {

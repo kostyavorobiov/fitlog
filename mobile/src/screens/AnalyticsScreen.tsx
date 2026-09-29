@@ -143,50 +143,53 @@ export const AnalyticsScreen: React.FC = () => {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      {/* Header */}
+      {/* Header with Segmented Period Switcher (День | Тиждень | Місяць) */}
       <Header
         title="Аналітика"
         subtitle={
           traineeName
             ? `Підопічний: ${traineeName}`
-            : 'Огляд навантаження за періодами'
+            : undefined
         }
-      />
-
-      {/* Period Segmented Switcher (День | Тиждень | Місяць) */}
-      <View style={styles.periodRow}>
-        <View style={[styles.periodContainer, isDark ? styles.periodDark : styles.periodLight]}>
-          {(
-            [
-              { key: 'day', label: 'День' },
-              { key: 'week', label: 'Тиждень' },
-              { key: 'month', label: 'Місяць' },
-            ] as const
-          ).map((p) => {
-            const isActive = period === p.key;
-            return (
-              <TouchableOpacity
-                key={p.key}
-                activeOpacity={0.8}
-                onPress={() => {
-                  setPeriod(p.key);
-                  setCurrentDate(new Date());
-                }}
-                style={[styles.periodBtn, isActive && styles.periodBtnActive]}
-              >
-                <Text
+        rightAction={
+          <View style={[styles.periodContainer, isDark ? styles.periodDark : styles.periodLight]}>
+            {(
+              [
+                { key: 'day', label: 'День' },
+                { key: 'week', label: 'Тиждень' },
+                { key: 'month', label: 'Місяць' },
+              ] as const
+            ).map((p) => {
+              const isActive = period === p.key;
+              return (
+                <TouchableOpacity
+                  key={p.key}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setPeriod(p.key);
+                    setCurrentDate(new Date());
+                  }}
                   style={[
-                    styles.periodBtnText,
-                    isActive ? styles.periodBtnTextActive : (isDark ? styles.subDark : styles.subLight),
+                    styles.periodBtn,
+                    isActive && (isDark ? styles.periodBtnActiveDark : styles.periodBtnActiveLight),
                   ]}
                 >
-                  {p.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
+                  <Text
+                    style={[
+                      styles.periodBtnText,
+                      isActive
+                        ? (isDark ? styles.periodTextActiveDark : styles.periodTextActiveLight)
+                        : (isDark ? styles.subDark : styles.subLight),
+                    ]}
+                  >
+                    {p.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        }
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -613,30 +616,40 @@ const styles = StyleSheet.create({
   },
   periodContainer: {
     flexDirection: 'row',
-    padding: 3,
-    borderRadius: 10,
+    padding: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
   },
   periodLight: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f9fafb',
+    borderColor: '#e4e4e7',
   },
   periodDark: {
     backgroundColor: '#18181b',
+    borderColor: '#27272a',
   },
   periodBtn: {
-    flex: 1,
-    paddingVertical: 7,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 6,
   },
-  periodBtnActive: {
-    backgroundColor: '#0284c7',
+  periodBtnActiveLight: {
+    backgroundColor: '#18181b',
+  },
+  periodBtnActiveDark: {
+    backgroundColor: '#f4f4f5',
   },
   periodBtnText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
   },
-  periodBtnTextActive: {
+  periodTextActiveLight: {
     color: '#ffffff',
+  },
+  periodTextActiveDark: {
+    color: '#09090b',
   },
   scrollContent: {
     padding: 16,
@@ -661,8 +674,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   btnLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#f9fafb',
+    borderColor: '#e4e4e7',
   },
   btnDark: {
     backgroundColor: '#18181b',

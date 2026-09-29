@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { useTheme } from '../context/ThemeContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
+import { useAuth } from '../context/AuthContext';
+import { WorkoutService } from '../services/workoutService';
 
 export interface TabBarRoute {
   key: string;
@@ -50,8 +52,28 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
   navigation,
 }) => {
   const { isDark } = useTheme();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const { translateY } = useScrollTabBar();
+  const [hasActiveWorkout, setHasActiveWorkout] = useState(false);
+
+  // Check if any in-progress workout exists (matches Web hasActiveWorkout indicator)
+  useEffect(() => {
+    if (!user?.id) {
+      setHasActiveWorkout(false);
+      return;
+    }
+    let isSubscribed = true;
+    WorkoutService.getWorkouts(user.id).then((list) => {
+      if (!isSubscribed) return;
+      const inProg = list.some((w) => w.status === 'in_progress');
+      setHasActiveWorkout(inProg);
+    }).catch(() => {});
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [user?.id, state.index]);
 
   // Filter out hidden routes (e.g. href: null)
   const visibleRoutes = state.routes.filter((route) => {
@@ -128,8 +150,9 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
               });
             };
 
-            const activeColor = isDark ? '#ffffff' : '#09090b';
-            const inactiveColor = isDark ? '#71717a' : '#a1a1aa';
+            // Colors exactly mirroring Web: text-zinc-950 dark:text-zinc-100 / text-zinc-500 dark:text-zinc-400
+            const activeColor = isDark ? '#fafafa' : '#09090b';
+            const inactiveColor = isDark ? '#a1a1aa' : '#71717a';
             const color = isFocused ? activeColor : inactiveColor;
 
             return (
@@ -148,11 +171,16 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
                 ]}
                 hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
               >
-                {options.tabBarIcon?.({
-                  focused: isFocused,
-                  color,
-                  size: 20,
-                })}
+                <View style={styles.iconWrap}>
+                  {options.tabBarIcon?.({
+                    focused: isFocused,
+                    color,
+                    size: 20,
+                  })}
+                  {route.name === 'index' && hasActiveWorkout && !isFocused && (
+                    <View style={styles.amberBadgeDot} />
+                  )}
+                </View>
                 <Text
                   numberOfLines={1}
                   style={[
@@ -175,62 +203,80 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
 const styles = StyleSheet.create({
   floatingContainer: {
     position: 'absolute',
-    left: 16,
-    right: 16,
+    left: 12,
+    right: 12,
     zIndex: 100,
-    elevation: 12,
+    elevation: 8,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
   },
   glassCard: {
-    height: 64,
-    borderRadius: 32,
+    height: 56,
+    // Web mobile version rounded-2xl (16px); legacy borderRadius: 32
+    borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
     justifyContent: 'center',
   },
   glassCardLight: {
-    borderColor: 'rgba(0, 0, 0, 0.08)',
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderColor: 'rgba(255, 255, 255, 0.65)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
   },
   glassCardDark: {
-    borderColor: 'rgba(255, 255, 255, 0.14)',
-    backgroundColor: 'rgba(24, 24, 27, 0.82)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(24, 24, 27, 0.85)',
   },
   fallbackBgLight: {
     backgroundColor: 'rgba(255, 255, 255, 0.88)',
   },
   fallbackBgDark: {
-    backgroundColor: 'rgba(24, 24, 27, 0.85)',
+    backgroundColor: 'rgba(24, 24, 27, 0.88)',
   },
   tabsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     height: '100%',
   },
   tabButton: {
     flex: 1,
-    height: 50,
-    borderRadius: 25,
+    height: 46,
+    // Web rounded-xl (12px)
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
-    gap: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 2,
+    marginHorizontal: 1,
   },
   tabButtonActiveLight: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
   tabButtonActiveDark: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+  },
+  iconWrap: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  amberBadgeDot: {
+    position: 'absolute',
+    top: -2,
+    right: -4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#f59e0b',
   },
   tabLabel: {
     fontSize: 10,
     fontWeight: '500',
     letterSpacing: -0.2,
+    marginTop: 2,
   },
   tabLabelFocused: {
     fontWeight: '700',
