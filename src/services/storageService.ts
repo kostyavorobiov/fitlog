@@ -19,6 +19,8 @@ interface MemoryStore {
   users: User[];
   exercises: Exercise[];
   workouts: WorkoutPlan[];
+  deletedWorkoutIds: Set<string>;
+  deletedWorkoutExerciseIds: Set<string>;
   activeUserId: string | null;
   removedTraineesByCoach: Map<string, string[]>;
 }
@@ -27,6 +29,8 @@ const memoryStore: MemoryStore = {
   users: [],
   exercises: [],
   workouts: [],
+  deletedWorkoutIds: new Set(),
+  deletedWorkoutExerciseIds: new Set(),
   activeUserId: null,
   removedTraineesByCoach: new Map(),
 };
@@ -569,7 +573,7 @@ export class StorageService {
       return [];
     }
     return memoryStore.workouts
-      .filter((w) => w.userId === userId)
+      .filter((w) => w.userId === userId && !memoryStore.deletedWorkoutIds.has(w.id))
       .sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
   }
 
@@ -578,6 +582,20 @@ export class StorageService {
   }
 
   static saveWorkout(workout: WorkoutPlan): void {
+    // If this workout was previously deleted, unmark it
+    memoryStore.deletedWorkoutIds.delete(workout.id);
+
+    // Track which exercises were removed from this workout
+    const existing = memoryStore.workouts.find((w) => w.id === workout.id);
+    if (existing && Array.isArray(existing.exercises)) {
+      const currentExIds = new Set((workout.exercises || []).map((e) => e.id));
+      existing.exercises.forEach((ex) => {
+        if (!currentExIds.has(ex.id)) {
+          memoryStore.deletedWorkoutExerciseIds.add(ex.id);
+        }
+      });
+    }
+
     // Ensure all exercises in this workout have exerciseName and muscleGroup resolved
     if (workout.exercises && Array.isArray(workout.exercises)) {
       workout.exercises.forEach((we) => {
@@ -694,6 +712,7 @@ export class StorageService {
   }
 
   static deleteWorkout(workoutId: string): void {
+    memoryStore.deletedWorkoutIds.add(workoutId);
     memoryStore.workouts = memoryStore.workouts.filter((w) => w.id !== workoutId);
     CloudStorageService.deleteWorkout(workoutId).catch((e) =>
       console.warn('CloudStorageService.deleteWorkout background sync error:', e)
@@ -706,43 +725,50 @@ export class StorageService {
    */
   static setWorkoutsForUser(userId: string, userWorkouts: WorkoutPlan[]): void {
     const otherUsersWorkouts = memoryStore.workouts.filter((w) => w.userId !== userId);
-    const localUserWorkouts = memoryStore.workouts.filter((w) => w.userId === userId);
+    const localUserWorkouts = memoryStore.workouts.filter(
+      (w) => w.userId === userId && !memoryStore.deletedWorkoutIds.has(w.id)
+    );
     const localMap = new Map<string, WorkoutPlan>();
     localUserWorkouts.forEach((w) => localMap.set(w.id, w));
 
-    // Merge cloud workouts with local workouts to ensure exercises added locally are never wiped out
-    const mergedUserWorkouts = (userWorkouts || []).map((cw) => {
+    // Filter out any workouts that were deleted locally
+    const filteredCloudWorkouts = (userWorkouts || []).filter(
+      (cw) => !memoryStore.deletedWorkoutIds.has(cw.id)
+    );
+
+    // Merge cloud workouts with local workouts
+    const mergedUserWorkouts = filteredCloudWorkouts.map((cw) => {
       const local = localMap.get(cw.id);
-      if (!local) return cw;
-
-      const localExercises = Array.isArray(local.exercises) ? local.exercises : [];
-      const cloudExercises = Array.isArray(cw.exercises) ? cw.exercises : [];
-
-      if (localExercises.length > 0) {
-        if (cloudExercises.length === 0) {
-          return {
-            ...cw,
-            exercises: localExercises,
-          };
-        }
-
-        // If local has exercises not present in cloud (e.g. newly added exercises), preserve them!
-        const cloudExIds = new Set(cloudExercises.map((e) => e.id));
-        const missingLocal = localExercises.filter((le) => !cloudExIds.has(le.id));
-        if (missingLocal.length > 0) {
-          return {
-            ...cw,
-            exercises: [...cloudExercises, ...missingLocal],
-          };
-        }
+      if (!local) {
+        // Strip any exercises that were deleted locally
+        const cleanExercises = (cw.exercises || []).filter(
+          (we) => !memoryStore.deletedWorkoutExerciseIds.has(we.id)
+        );
+        return { ...cw, exercises: cleanExercises };
       }
-      return cw;
+
+      // If local exists, local has the authoritative in-memory state of exercises for this workout
+      const localExercises = (Array.isArray(local.exercises) ? local.exercises : []).filter(
+        (le) => !memoryStore.deletedWorkoutExerciseIds.has(le.id)
+      );
+      const cloudExercises = (Array.isArray(cw.exercises) ? cw.exercises : []).filter(
+        (we) => !memoryStore.deletedWorkoutExerciseIds.has(we.id)
+      );
+
+      // Preserve local exercises; if cloud has new exercises not seen locally, include them
+      const localExIds = new Set(localExercises.map((e) => e.id));
+      const newFromCloud = cloudExercises.filter((ce) => !localExIds.has(ce.id));
+
+      return {
+        ...cw,
+        exercises: localExercises.length > 0 ? localExercises : (newFromCloud.length > 0 ? newFromCloud : []),
+      };
     });
 
     // Also preserve any newly created local workouts that haven't hit the cloud yet
-    const cloudIds = new Set((userWorkouts || []).map((w) => w.id));
+    const cloudIds = new Set(filteredCloudWorkouts.map((w) => w.id));
     localUserWorkouts.forEach((lw) => {
-      if (!cloudIds.has(lw.id)) {
+      if (!cloudIds.has(lw.id) && !memoryStore.deletedWorkoutIds.has(lw.id)) {
         mergedUserWorkouts.push(lw);
       }
     });

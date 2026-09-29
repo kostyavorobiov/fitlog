@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CreateExerciseModal } from './CreateExerciseModal';
@@ -40,6 +40,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
   const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const blockHistoryModalUntilRef = useRef<number>(0);
 
   const muscleTabs = useMemo<(MuscleGroup | 'all')[]>(
     () => ['all', ...(Object.keys(MUSCLE_GROUPS) as MuscleGroup[])],
@@ -216,7 +217,10 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
             return (
               <div
                 key={ex.id}
-                onClick={() => setHistoryModalExercise(ex)}
+                onClick={() => {
+                  if (Date.now() < blockHistoryModalUntilRef.current) return;
+                  setHistoryModalExercise(ex);
+                }}
                 className="group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer flex flex-col justify-between"
               >
                 <div>
@@ -288,6 +292,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (Date.now() < blockHistoryModalUntilRef.current) return;
                       setHistoryModalExercise(ex);
                     }}
                     className="flex items-center space-x-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-colors"
@@ -307,8 +312,13 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         userId={userId}
         isOpen={isCreateOpen}
         initialName={search.trim()}
-        onClose={() => setIsCreateOpen(false)}
+        onClose={() => {
+          blockHistoryModalUntilRef.current = Date.now() + 800;
+          setIsCreateOpen(false);
+        }}
         onCreated={() => {
+          blockHistoryModalUntilRef.current = Date.now() + 800;
+          setHistoryModalExercise(null);
           setRefreshKey((prev) => prev + 1);
         }}
       />

@@ -250,9 +250,19 @@ export class CloudStorageService {
         const existingWeIds = (existingWe || []).map((r: any) => r.id);
         const toDeleteWe = existingWeIds.filter((id: string) => !currentWeIds.includes(id));
         if (toDeleteWe.length > 0) {
+          // Explicitly delete child workout_sets first to avoid foreign key violations
+          await supabase.from('workout_sets').delete().in('workout_exercise_id', toDeleteWe);
           await supabase.from('workout_exercises').delete().in('id', toDeleteWe);
         }
       } else {
+        const { data: existingWe } = await supabase
+          .from('workout_exercises')
+          .select('id')
+          .eq('workout_id', workout.id);
+        const existingWeIds = (existingWe || []).map((r: any) => r.id);
+        if (existingWeIds.length > 0) {
+          await supabase.from('workout_sets').delete().in('workout_exercise_id', existingWeIds);
+        }
         await supabase.from('workout_exercises').delete().eq('workout_id', workout.id);
       }
 
@@ -386,6 +396,18 @@ export class CloudStorageService {
     if (!isSupabaseConfigured() || !supabase) return false;
 
     try {
+      // 1. Delete dependent sets and exercises first to ensure clean cascade across all schema versions
+      const { data: existingWe } = await supabase
+        .from('workout_exercises')
+        .select('id')
+        .eq('workout_id', workoutId);
+      const existingWeIds = (existingWe || []).map((r: any) => r.id);
+      if (existingWeIds.length > 0) {
+        await supabase.from('workout_sets').delete().in('workout_exercise_id', existingWeIds);
+        await supabase.from('workout_exercises').delete().eq('workout_id', workoutId);
+      }
+
+      // 2. Delete workout row
       const { error } = await supabase.from('workouts').delete().eq('id', workoutId);
       if (error) {
         console.warn('deleteWorkout error:', error.message);

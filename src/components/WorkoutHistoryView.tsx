@@ -185,12 +185,12 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
   const handleConfirmDelete = () => {
     if (!workoutToDelete) return;
     const id = workoutToDelete.id;
+    setWorkouts((prev) => prev.filter((w) => w.id !== id));
     StorageService.deleteWorkout(id);
     if (onDeleteWorkout) {
       onDeleteWorkout(id);
     }
     setWorkoutToDelete(null);
-    setReloadKey((prev) => prev + 1);
   };
 
   // Format date nicely for header (e.g. "26 вересня 2026")
