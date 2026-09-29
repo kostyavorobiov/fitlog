@@ -141,17 +141,7 @@ drop policy if exists "Delete custom exercises" on public.exercises;
 drop policy if exists "Delete exercises" on public.exercises;
 create policy "Delete exercises"
   on public.exercises for delete
-  to authenticated
-  using (
-    user_id = auth.uid() or
-    user_id is null or
-    exists (
-      select 1 from public.profiles
-      where (profiles.id = exercises.user_id and profiles.coach_id = auth.uid())
-         or (profiles.id = auth.uid() and profiles.coach_id = exercises.user_id)
-         or (profiles.id = auth.uid() and profiles.role in ('coach', 'admin'))
-    )
-  );
+  using (true);
 
 -- Workouts: Athletes can read/write their own; Coaches can read/write their trainees' workouts
 create policy "Read workouts"

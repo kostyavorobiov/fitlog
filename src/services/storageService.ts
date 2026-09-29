@@ -132,11 +132,11 @@ export class StorageService {
     const byName = all.find((ex) => ex.name.toLowerCase() === id.toLowerCase());
     if (byName) return byName;
 
-    // Fallback: search stored workouts for an embedded exerciseName and muscleGroup
+    // Fallback: search stored workouts for an embedded exerciseName and muscleGroup (display only)
     for (const w of memoryStore.workouts) {
       const matchWe = w.exercises?.find((we) => (we.exerciseId === id || we.id === id) && we.exerciseName && we.exerciseName !== 'Вправа');
       if (matchWe && matchWe.exerciseName) {
-        const reconstructed: Exercise = {
+        return {
           id,
           userId: null,
           name: matchWe.exerciseName,
@@ -145,8 +145,6 @@ export class StorageService {
           createdAt: '2026-01-01T00:00:00.000Z',
           isDefault: id.startsWith('def_ex') || id.startsWith('global_ex'),
         };
-        this.saveExercise(reconstructed);
-        return reconstructed;
       }
     }
 
@@ -214,6 +212,14 @@ export class StorageService {
 
   static async deleteExercise(exerciseId: string): Promise<boolean> {
     memoryStore.exercises = memoryStore.exercises.filter((e) => e.id !== exerciseId);
+
+    // Also remove from all workouts in memory so it's not referenced or revived
+    memoryStore.workouts.forEach((w) => {
+      if (Array.isArray(w.exercises)) {
+        w.exercises = w.exercises.filter((we) => we.exerciseId !== exerciseId);
+      }
+    });
+
     try {
       return await CloudStorageService.deleteExercise(exerciseId);
     } catch (e) {
@@ -581,21 +587,6 @@ export class StorageService {
             we.muscleGroup = ex.muscleGroup;
           }
         }
-        // Auto-register exercise in memory store if not present
-        if (we.exerciseId && we.exerciseName && we.exerciseName !== 'Вправа') {
-          const existing = this.getExerciseById(we.exerciseId);
-          if (!existing || existing.name === 'Вправа') {
-            this.saveExercise({
-              id: we.exerciseId,
-              userId: null,
-              name: we.exerciseName,
-              muscleGroup: we.muscleGroup || 'full_body',
-              description: '',
-              createdAt: '2026-01-01T00:00:00.000Z',
-              isDefault: we.exerciseId.startsWith('def_ex') || we.exerciseId.startsWith('global_ex'),
-            });
-          }
-        }
       });
     }
 
@@ -712,26 +703,6 @@ export class StorageService {
     const localUserWorkouts = memoryStore.workouts.filter((w) => w.userId === userId);
     const localMap = new Map<string, WorkoutPlan>();
     localUserWorkouts.forEach((w) => localMap.set(w.id, w));
-
-    // Auto-register any embedded exercises from incoming workouts into memoryStore.exercises
-    (userWorkouts || []).forEach((w) => {
-      (w.exercises || []).forEach((we) => {
-        if (we.exerciseId && we.exerciseName && we.exerciseName !== 'Вправа') {
-          const existing = this.getExerciseById(we.exerciseId);
-          if (!existing || existing.name === 'Вправа') {
-            this.saveExercise({
-              id: we.exerciseId,
-              userId: null,
-              name: we.exerciseName,
-              muscleGroup: we.muscleGroup || 'full_body',
-              description: '',
-              createdAt: '2026-01-01T00:00:00.000Z',
-              isDefault: we.exerciseId.startsWith('def_ex') || we.exerciseId.startsWith('global_ex'),
-            });
-          }
-        }
-      });
-    });
 
     // Merge cloud workouts with local workouts to ensure exercises added locally are never wiped out
     const mergedUserWorkouts = (userWorkouts || []).map((cw) => {

@@ -120,20 +120,6 @@ export class CloudStorageService {
 
             const muscleGroup = metaMg || exObj?.muscle_group || localEx?.muscleGroup || undefined;
 
-            if (exerciseName && exerciseName !== 'Вправа') {
-              try {
-                StorageService.saveExercise({
-                  id: exObj?.id || we.exercise_id,
-                  userId: exObj?.user_id || null,
-                  name: exerciseName,
-                  muscleGroup: (muscleGroup as any) || 'full_body',
-                  description: exObj?.description || '',
-                  isDefault: Boolean(exObj?.is_default ?? (we.exercise_id.startsWith('def_ex') || we.exercise_id.startsWith('global_ex'))),
-                  createdAt: exObj?.created_at || '2026-01-01T00:00:00.000Z',
-                });
-              } catch {}
-            }
-
             const sets: WorkoutSet[] = (we.workout_sets || [])
               .sort((a: any, b: any) => a.set_number - b.set_number)
               .map((s: any) => ({
@@ -496,8 +482,25 @@ export class CloudStorageService {
   static async deleteExercise(exerciseId: string): Promise<boolean> {
     if (!isSupabaseConfigured() || !supabase) return false;
     try {
-      // Delete any workout_exercises that reference this exercise
-      await supabase.from('workout_exercises').delete().eq('exercise_id', exerciseId);
+      // 1. Delete any workout_sets belonging to workout_exercises referencing this exercise
+      const { data: weList } = await supabase
+        .from('workout_exercises')
+        .select('id')
+        .eq('exercise_id', exerciseId);
+
+      if (weList && weList.length > 0) {
+        const weIds = weList.map((x: any) => x.id);
+        const { error: setsErr } = await supabase.from('workout_sets').delete().in('workout_exercise_id', weIds);
+        if (setsErr) {
+          console.warn('Cascade delete workout_sets warning:', setsErr.message);
+        }
+        const { error: weErr } = await supabase.from('workout_exercises').delete().in('id', weIds);
+        if (weErr) {
+          console.warn('Cascade delete workout_exercises warning:', weErr.message);
+        }
+      }
+
+      // 2. Delete the exercise itself
       const { error } = await supabase.from('exercises').delete().eq('id', exerciseId);
       if (error) {
         console.warn('deleteExercise error:', error.message);
