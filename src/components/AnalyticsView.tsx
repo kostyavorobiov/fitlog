@@ -8,7 +8,6 @@ import {
   Calendar,
   Layers,
   TrendingUp,
-  Activity,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,

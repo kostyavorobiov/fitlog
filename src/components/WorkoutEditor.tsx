@@ -22,7 +22,6 @@ import {
   CheckCircle2,
   Circle,
   Dumbbell,
-  Sparkles,
   Save,
   Check,
   RotateCcw,

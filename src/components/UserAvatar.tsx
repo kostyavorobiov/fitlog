@@ -54,8 +54,8 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     >
       {hasValidImage ? (
         <img
-          src={src!}
-          alt={alt}
+          src={resolvedSrc!}
+          alt={resolvedAlt}
           onError={() => setImgError(true)}
           className="h-full w-full rounded-full object-cover"
         />

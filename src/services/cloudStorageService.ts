@@ -831,14 +831,6 @@ export class CloudStorageService {
   }
 
   /**
-   * Seed default exercises into Supabase exercises table (disabled - unused exercises are purged permanently)
-   */
-  static async ensureDefaultExercises(): Promise<void> {
-    // Unused exercises are permanently deleted. Never resurrect or seed old exercises.
-    return;
-  }
-
-  /**
    * Delete all exercises from Supabase except those currently used in workout_exercises
    */
   static async cleanupUnusedExercises(): Promise<{ deletedCount: number; keptCount: number }> {

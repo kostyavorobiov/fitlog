@@ -60,9 +60,3 @@ export const playSuccessChime = () => {
     console.warn('Audio error', e);
   }
 };
-
-export const playTimerDone = () => {
-  playBeep(880, 0.15);
-  setTimeout(() => playBeep(880, 0.15), 180);
-  setTimeout(() => playBeep(1174.66, 0.35), 360);
-};

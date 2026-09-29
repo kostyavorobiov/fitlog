@@ -99,14 +99,6 @@ export class StorageService {
     return [...memoryStore.exercises];
   }
 
-  static getWorkoutsForUserAndCoach(userId?: string | null, otherUserId?: string | null): WorkoutPlan[] {
-    return memoryStore.workouts.filter((w) => {
-      if (userId && (w.userId === userId || w.assignedByCoachId === userId)) return true;
-      if (otherUserId && (w.userId === otherUserId || w.assignedByCoachId === otherUserId)) return true;
-      return false;
-    });
-  }
-
   static getExercises(_targetUserId?: string | null): Exercise[] {
     return this.initializeExercises();
   }
@@ -881,9 +873,5 @@ export class StorageService {
       console.error('Error getting all past performances:', e);
       return [];
     }
-  }
-
-  static seedDemoDataIfEmpty(_user: User): void {
-    return;
   }
 }
