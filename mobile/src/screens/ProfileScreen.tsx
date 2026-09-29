@@ -18,6 +18,7 @@ import { Card } from '../components/Card';
 import { UserAvatar } from '../components/UserAvatar';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { TraineeService } from '../services/traineeService';
 import { ExerciseService } from '../services/exerciseService';
 import { User, UserRole, Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
@@ -26,6 +27,7 @@ export const ProfileScreen: React.FC = () => {
   const router = useRouter();
   const { user, logout, refreshUser, updateUserProfile, isAdmin, isCoach } = useAuth();
   const { theme, isDark, setTheme } = useTheme();
+  const { handleScroll } = useScrollTabBar();
 
   // Profile edit state
   const [isEditing, setIsEditing] = useState(false);
@@ -374,7 +376,12 @@ export const ProfileScreen: React.FC = () => {
         showAvatar={false}
       />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         {/* 1. Main Profile Card */}
         <Card style={styles.profileCard}>
           <View style={styles.profileHeaderRow}>
@@ -939,7 +946,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 16,
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
   centerContainer: {
     flex: 1,

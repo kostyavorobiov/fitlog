@@ -2,9 +2,10 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { User, UserRole } from '../types/workout';
 import { MobileStorage } from '../lib/storage';
 
-// Dynamically resolve Expo WebBrowser and Linking to support all platforms & test runners
+// Dynamically resolve Expo modules to support all platforms & test runners
 let WebBrowserModule: typeof import('expo-web-browser') | null = null;
 let LinkingModule: typeof import('expo-linking') | null = null;
+let makeRedirectUriFn: typeof import('expo-auth-session').makeRedirectUri | null = null;
 
 const getWebBrowser = () => {
   if (!WebBrowserModule) {
@@ -23,6 +24,16 @@ const getLinking = () => {
     } catch {}
   }
   return LinkingModule;
+};
+
+const getMakeRedirectUri = () => {
+  if (!makeRedirectUriFn) {
+    try {
+      const authSession = require('expo-auth-session');
+      makeRedirectUriFn = authSession.makeRedirectUri;
+    } catch {}
+  }
+  return makeRedirectUriFn;
 };
 
 const ACTIVE_USER_KEY = 'mobile_active_user';
@@ -238,7 +249,14 @@ export class AuthService {
         return { user: null, error: 'Модулі браузера недоступні для цієї платформи' };
       }
 
-      const redirectUrl = Linking.createURL('auth/callback');
+      const makeRedirect = getMakeRedirectUri();
+      const redirectUrl = makeRedirect
+        ? makeRedirect({
+            scheme: 'fitlog',
+            path: 'auth/callback',
+          })
+        : 'fitlog://auth/callback';
+      console.log('[OAuth] redirectUrl:', redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -259,10 +277,35 @@ export class AuthService {
         return { user: null, error: 'Не вдалося згенерувати посилання для Google авторизації' };
       }
 
+      const oauthUrl = new URL(data.url);
+
+      console.log('[OAuth] Supabase OAuth host:', oauthUrl.host);
+      console.log(
+        '[OAuth] Supabase redirect_to:',
+        oauthUrl.searchParams.get('redirect_to')
+      );
+      console.log(
+        '[OAuth] Supabase provider:',
+        oauthUrl.searchParams.get('provider')
+      );
+
+      console.log('[OAuth] OPENING GOOGLE URL:', data.url);
+
+      console.log('[OAuth] EXPECTED RETURN URL:', redirectUrl);
+      console.log('[OAuth] CALLBACK MUST RETURN TO EXPO GO');
+
       const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
+      console.log('[OAuth] BROWSER RESULT TYPE:', res.type);
+      console.log('[OAuth] BROWSER RESULT URL:', 'url' in res ? res.url : undefined);
+
       if (res.type === 'success' && res.url) {
+        console.log('[OAuth] CALLBACK URL:', res.url);
+
         const parsed = Linking.parse(res.url);
+
+        console.log('[OAuth] CALLBACK PATH:', parsed.path);
+        console.log('[OAuth] CALLBACK QUERY:', parsed.queryParams);
 
 
         // 1. PKCE Authorization Code flow

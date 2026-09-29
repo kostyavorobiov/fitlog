@@ -21,6 +21,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { WorkoutService } from '../services/workoutService';
 import { useAuth } from '../context/AuthContext';
+import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutPlan } from '../types/workout';
 
 export type WorkoutFilterStatus = 'all' | 'in_progress' | 'completed';
@@ -29,6 +30,7 @@ export const WorkoutsScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
   const { user } = useAuth();
+  const { handleScroll } = useScrollTabBar();
 
   const [workouts, setWorkouts] = useState<WorkoutPlan[]>([]);
   const [filterStatus, setFilterStatus] = useState<WorkoutFilterStatus>('all');
@@ -237,6 +239,8 @@ export const WorkoutsScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -644,7 +648,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 12,
-    paddingBottom: 32,
+    paddingBottom: 110,
   },
   loadingContainer: {
     padding: 40,

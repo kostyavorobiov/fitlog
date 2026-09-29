@@ -17,6 +17,7 @@ import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { CreateWorkoutModal } from '../components/CreateWorkoutModal';
 import { useAuth } from '../context/AuthContext';
+import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutService } from '../services/workoutService';
 import { WorkoutPlan } from '../types/workout';
 import {
@@ -30,6 +31,7 @@ export const CalendarScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
   const { user } = useAuth();
+  const { handleScroll } = useScrollTabBar();
 
   const [currentMonthDate, setCurrentMonthDate] = useState<Date>(new Date());
   const [selectedDateStr, setSelectedDateStr] = useState<string>(formatLocalDate());
@@ -210,6 +212,8 @@ export const CalendarScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -548,7 +552,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     gap: 16,
-    paddingBottom: 32,
+    paddingBottom: 110,
   },
   monthHeaderCard: {
     padding: 14,

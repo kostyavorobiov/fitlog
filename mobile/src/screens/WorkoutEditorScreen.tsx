@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Card } from '../components/Card';
@@ -45,6 +45,7 @@ const TITLE_PRESETS = [
 export const WorkoutEditorScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id, traineeId } = useLocalSearchParams<{ id: string; traineeId?: string }>();
   const { user } = useAuth();
   const targetUserId = traineeId || user?.id || '';
@@ -63,6 +64,8 @@ export const WorkoutEditorScreen: React.FC = () => {
   workoutRef.current = workout;
 
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const exerciseLayoutsRef = useRef<{ [weId: string]: number }>({});
 
   // Load workout details
   const loadWorkout = useCallback(async () => {
@@ -230,13 +233,30 @@ export const WorkoutEditorScreen: React.FC = () => {
 
     updateAndSave(updated, true);
     setIsSelectorOpen(false);
+
+    // Auto-scroll to newly added exercise smoothly
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 150);
   };
 
   // Remove exercise
   const handleRemoveExercise = (weId: string) => {
     if (!workout) return;
     const currentExercises = workout.exercises || [];
-    const exerciseToRemove = currentExercises.find((e) => e.id === weId);
+    const exerciseIndex = currentExercises.findIndex((e) => e.id === weId);
+    if (exerciseIndex === -1) return;
+
+    const exerciseToRemove = currentExercises[exerciseIndex];
+
+    // Determine target exercise to scroll to:
+    // If deleted is not first -> previous exercise (exerciseIndex - 1)
+    // If deleted is first -> next exercise (exerciseIndex + 1)
+    const targetExercise = exerciseIndex > 0
+      ? currentExercises[exerciseIndex - 1]
+      : currentExercises[exerciseIndex + 1];
+
+    const targetY = targetExercise ? exerciseLayoutsRef.current[targetExercise.id] : undefined;
 
     let updatedExercises = currentExercises
       .filter((e) => e.id !== weId)
@@ -256,7 +276,16 @@ export const WorkoutEditorScreen: React.FC = () => {
       }
     }
 
+    delete exerciseLayoutsRef.current[weId];
+
     updateAndSave({ ...workout, exercises: updatedExercises }, true);
+
+    // Smoothly scroll to previous or next exercise without jarring jump
+    if (typeof targetY === 'number') {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: Math.max(0, targetY - 16), animated: true });
+      }, 100);
+    }
   };
 
   // Move exercise Up / Down
@@ -773,10 +802,15 @@ export const WorkoutEditorScreen: React.FC = () => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.contentScroll}
+          ref={scrollViewRef}
+          contentContainerStyle={[
+            styles.contentScroll,
+            { paddingBottom: 120 + Math.max(insets.bottom, 16) },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -913,6 +947,9 @@ export const WorkoutEditorScreen: React.FC = () => {
             return (
               <View
                 key={ex.id || `ex_${exIndex}`}
+                onLayout={(e) => {
+                  exerciseLayoutsRef.current[ex.id] = e.nativeEvent.layout.y;
+                }}
                 style={[
                   styles.exerciseCardWrap,
                   isSuperset && palette && { borderLeftColor: palette.borderColor, borderLeftWidth: 4 },
@@ -988,7 +1025,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                                 ? { backgroundColor: palette.buttonActiveBg, borderColor: palette.buttonActiveBorder }
                                 : (isDark ? styles.actionBtnDark : styles.actionBtnLight),
                             ]}
-                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                           >
                             <Ionicons
                               name={isSuperset ? 'unlink' : 'link'}
@@ -1003,7 +1040,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                           disabled={exIndex === 0}
                           onPress={() => handleMoveExercise(exIndex, 'up')}
                           style={[styles.actionBtn, exIndex === 0 && { opacity: 0.25 }, isDark ? styles.actionBtnDark : styles.actionBtnLight]}
-                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                         >
                           <Ionicons name="chevron-up" size={15} color={isDark ? '#e4e4e7' : '#3f3f46'} />
                         </TouchableOpacity>
@@ -1013,7 +1050,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                           disabled={exIndex === exercises.length - 1}
                           onPress={() => handleMoveExercise(exIndex, 'down')}
                           style={[styles.actionBtn, exIndex === exercises.length - 1 && { opacity: 0.25 }, isDark ? styles.actionBtnDark : styles.actionBtnLight]}
-                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                         >
                           <Ionicons name="chevron-down" size={15} color={isDark ? '#e4e4e7' : '#3f3f46'} />
                         </TouchableOpacity>
@@ -1022,7 +1059,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                           activeOpacity={0.7}
                           onPress={() => handleRemoveExercise(ex.id)}
                           style={[styles.actionBtn, isDark ? styles.actionBtnDark : styles.actionBtnLight]}
-                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                         >
                           <Ionicons name="trash-outline" size={15} color="#ef4444" />
                         </TouchableOpacity>
@@ -1167,6 +1204,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                                 activeOpacity={0.6}
                                 onPress={() => handleStepAdjust(ex.id, s.id, 'weight', -2.5)}
                                 style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                               >
                                 <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
                                   -
@@ -1190,6 +1228,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                                 activeOpacity={0.6}
                                 onPress={() => handleStepAdjust(ex.id, s.id, 'weight', 2.5)}
                                 style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                               >
                                 <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
                                   +
@@ -1205,6 +1244,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                                 activeOpacity={0.6}
                                 onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', -1)}
                                 style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                               >
                                 <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
                                   -
@@ -1227,6 +1267,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                                 activeOpacity={0.6}
                                 onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', 1)}
                                 style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                               >
                                 <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
                                   +
@@ -1286,11 +1327,30 @@ export const WorkoutEditorScreen: React.FC = () => {
             <Ionicons name="add-circle" size={22} color="#0284c7" />
             <Text style={styles.bigAddExerciseText}>Додати вправу з каталогу</Text>
           </TouchableOpacity>
+
+          {/* Delete Workout Secondary Option at Bottom */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleDeleteWorkout}
+            style={[
+              styles.deleteWorkoutBottomBtn,
+              isDark ? styles.deleteWorkoutBottomBtnDark : styles.deleteWorkoutBottomBtnLight,
+            ]}
+          >
+            <Ionicons name="trash-outline" size={17} color="#ef4444" />
+            <Text style={styles.deleteWorkoutBottomBtnText}>Видалити тренування</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
 
       {/* Sticky Bottom Action Bar */}
-      <View style={[styles.bottomActionBar, isDark ? styles.bottomDark : styles.bottomLight]}>
+      <View
+        style={[
+          styles.bottomActionBar,
+          isDark ? styles.bottomDark : styles.bottomLight,
+          { paddingBottom: Math.max(insets.bottom, 16) },
+        ]}
+      >
         <View style={styles.bottomButtonsRow}>
           <Button
             title={isCompleted ? 'Відновити' : 'Завершити'}
@@ -1571,11 +1631,15 @@ const styles = StyleSheet.create({
   exCardActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   actionBtn: {
-    padding: 5,
-    borderRadius: 6,
+    padding: 7,
+    minWidth: 32,
+    minHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
     borderWidth: 1,
   },
   actionBtnLight: {
@@ -1587,8 +1651,12 @@ const styles = StyleSheet.create({
     borderColor: '#27272a',
   },
   supersetToggleBtn: {
-    padding: 5,
-    borderRadius: 6,
+    padding: 7,
+    minWidth: 32,
+    minHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
     borderWidth: 1,
   },
   pastPerfBanner: {
@@ -1740,11 +1808,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 3,
   },
   stepBtn: {
-    width: 24,
-    height: 32,
+    width: 28,
+    height: 34,
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1756,12 +1824,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#27272a',
   },
   stepBtnText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
   },
   numberInput: {
     flex: 1,
-    height: 32,
+    height: 34,
     borderRadius: 6,
     textAlign: 'center',
     fontSize: 13,
@@ -1820,6 +1888,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#0284c7',
+  },
+  deleteWorkoutBottomBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginTop: 6,
+    marginBottom: 16,
+  },
+  deleteWorkoutBottomBtnLight: {
+    backgroundColor: '#fff1f2',
+    borderColor: '#fecdd3',
+  },
+  deleteWorkoutBottomBtnDark: {
+    backgroundColor: '#3f1218',
+    borderColor: '#7f1d1d',
+  },
+  deleteWorkoutBottomBtnText: {
+    color: '#ef4444',
+    fontSize: 13,
+    fontWeight: '600',
   },
   bottomActionBar: {
     position: 'absolute',

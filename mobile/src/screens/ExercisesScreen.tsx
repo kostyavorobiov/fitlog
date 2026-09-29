@@ -19,6 +19,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '../context/AuthContext';
+import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { ExerciseService } from '../services/exerciseService';
 import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
 
@@ -36,6 +37,7 @@ const MUSCLE_ORDER: MuscleGroup[] = [
 export const ExercisesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const { user, isAdmin } = useAuth();
+  const { handleScroll } = useScrollTabBar();
 
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
@@ -225,6 +227,8 @@ export const ExercisesScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {/* Search Bar */}
         <View style={[styles.searchBar, isDark ? styles.searchBarDark : styles.searchBarLight]}>
@@ -662,6 +666,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 14,
+    paddingBottom: 110,
   },
   addButton: {
     height: 36,

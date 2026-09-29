@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { useAuth } from '../context/AuthContext';
+import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutService } from '../services/workoutService';
 import { WorkoutPlan, MUSCLE_GROUPS } from '../types/workout';
 import { getPeriodRange, PeriodRange } from '../utils/date';
@@ -30,6 +31,7 @@ export const AnalyticsScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
   const { user } = useAuth();
+  const { handleScroll } = useScrollTabBar();
 
   // Support trainer viewing trainee analytics
   const { traineeId, traineeName } = useLocalSearchParams<{
@@ -189,6 +191,8 @@ export const AnalyticsScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -637,7 +641,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     gap: 14,
-    paddingBottom: 36,
+    paddingBottom: 110,
   },
   dateNavCard: {
     padding: 12,

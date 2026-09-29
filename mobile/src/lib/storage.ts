@@ -1,4 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+let AsyncStorage: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  AsyncStorage = require('@react-native-async-storage/async-storage');
+  if (AsyncStorage?.default) {
+    AsyncStorage = AsyncStorage.default;
+  }
+} catch {
+  AsyncStorage = null;
+}
 
 const memoryFallback = new Map<string, string>();
 

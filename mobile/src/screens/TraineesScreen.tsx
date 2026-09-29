@@ -19,6 +19,7 @@ import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { UserAvatar } from '../components/UserAvatar';
 import { useAuth } from '../context/AuthContext';
+import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { TraineeService } from '../services/traineeService';
 import { WorkoutService } from '../services/workoutService';
 import { User, WorkoutPlan } from '../types/workout';
@@ -28,6 +29,7 @@ export const TraineesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
   const { user } = useAuth();
+  const { handleScroll } = useScrollTabBar();
 
   const [trainees, setTrainees] = useState<User[]>([]);
   const [selectedTrainee, setSelectedTrainee] = useState<User | null>(null);
@@ -282,6 +284,8 @@ export const TraineesScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -635,7 +639,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     gap: 14,
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
   coachCodeCard: {
     padding: 14,

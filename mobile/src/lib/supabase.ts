@@ -1,23 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import { MobileStorage } from './storage';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 export const isSupabaseConfigured = (): boolean => {
-  return Boolean(
-    supabaseUrl &&
-    supabaseAnonKey &&
-    supabaseUrl.startsWith('http') &&
-    !supabaseUrl.includes('your-project-id')
-  );
+  return Boolean(supabaseUrl && supabaseAnonKey);
 };
 
 const isWeb = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
-
-
-// Storage adapter compatible with Supabase auth for React Native, Web & Node
 const storageAdapter = {
   getItem: async (key: string): Promise<string | null> => {
     try {
@@ -39,7 +31,7 @@ const storageAdapter = {
 };
 
 export const supabase = isSupabaseConfigured()
-  ? createClient(supabaseUrl, supabaseAnonKey, {
+  ? createClient(supabaseUrl!, supabaseAnonKey!, {
       auth: {
         storage: storageAdapter,
         autoRefreshToken: true,
@@ -48,5 +40,3 @@ export const supabase = isSupabaseConfigured()
       },
     })
   : null;
-
-
