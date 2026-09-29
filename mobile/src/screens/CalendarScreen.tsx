@@ -194,21 +194,7 @@ export const CalendarScreen: React.FC = () => {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Header */}
-      <Header
-        title="Календар"
-        rightAction={
-          <TouchableOpacity
-            style={[styles.headerAddBtn, isDark ? styles.headerAddBtnDark : styles.headerAddBtnLight]}
-            activeOpacity={0.8}
-            onPress={() => setIsCreateModalOpen(true)}
-          >
-            <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
-            <Text style={[styles.headerAddBtnText, isDark ? styles.headerAddTextDark : styles.headerAddTextLight]}>
-              Додати
-            </Text>
-          </TouchableOpacity>
-        }
-      />
+      <Header title="Календар" />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -386,12 +372,14 @@ export const CalendarScreen: React.FC = () => {
             </View>
 
             <TouchableOpacity
-              style={styles.addForDateBtn}
+              style={[styles.addForDateBtn, isDark ? styles.addForDateBtnDark : styles.addForDateBtnLight]}
               activeOpacity={0.8}
               onPress={() => setIsCreateModalOpen(true)}
             >
-              <Ionicons name="add" size={16} color="#0284c7" />
-              <Text style={styles.addForDateText}>Додати на цей день</Text>
+              <Ionicons name="add" size={15} color={isDark ? '#09090b' : '#ffffff'} />
+              <Text style={[styles.addForDateText, isDark ? styles.addForDateTextDark : styles.addForDateTextLight]}>
+                Додати на цей день
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -410,16 +398,8 @@ export const CalendarScreen: React.FC = () => {
                 Тренувань на обрану дату немає
               </Text>
               <Text style={[styles.emptyDayDesc, isDark ? styles.subDark : styles.subLight]}>
-                Заплануйте заняття на цей день, щоб зафіксувати вправи та підходи.
+                Натисніть «Додати на цей день» вище, щоб запланувати тренування.
               </Text>
-              <TouchableOpacity
-                style={styles.emptyCreateBtn}
-                activeOpacity={0.8}
-                onPress={() => setIsCreateModalOpen(true)}
-              >
-                <Ionicons name="add-circle" size={18} color="#ffffff" />
-                <Text style={styles.emptyCreateBtnText}>Створити тренування</Text>
-              </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.workoutsList}>
@@ -757,14 +737,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingVertical: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: 'rgba(2, 132, 199, 0.08)',
+  },
+  addForDateBtnLight: {
+    backgroundColor: '#18181b',
+  },
+  addForDateBtnDark: {
+    backgroundColor: '#f4f4f5',
   },
   addForDateText: {
-    color: '#0284c7',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
+  },
+  addForDateTextLight: {
+    color: '#ffffff',
+  },
+  addForDateTextDark: {
+    color: '#09090b',
   },
   centerContainer: {
     padding: 24,

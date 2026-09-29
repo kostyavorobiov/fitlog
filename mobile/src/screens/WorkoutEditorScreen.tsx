@@ -770,15 +770,6 @@ export const WorkoutEditorScreen: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.7}
             style={styles.iconBtn}
-            onPress={handleRepeatPreviousWorkout}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons name="refresh-circle-outline" size={22} color={isDark ? '#a1a1aa' : '#71717a'} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.iconBtn}
             disabled={isDeleting}
             onPress={handleDeleteWorkout}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -809,7 +800,7 @@ export const WorkoutEditorScreen: React.FC = () => {
           ref={scrollViewRef}
           contentContainerStyle={[
             styles.contentScroll,
-            { paddingBottom: 120 + Math.max(insets.bottom, 16) },
+            { paddingBottom: 40 + Math.max(insets.bottom, 16) },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -913,7 +904,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             </View>
           </Card>
 
-          {/* Repeat Previous Workout Prompt if empty */}
+          {/* Empty Prompt if empty */}
           {exercises.length === 0 && (
             <Card style={styles.emptyPromptCard}>
               <Ionicons name="barbell-outline" size={36} color={isDark ? '#71717a' : '#a1a1aa'} />
@@ -921,23 +912,8 @@ export const WorkoutEditorScreen: React.FC = () => {
                 У цьому тренуванні ще немає вправ
               </Text>
               <Text style={[styles.emptyPromptSub, isDark ? styles.subDark : styles.subLight]}>
-                Ви можете повторити попереднє тренування або додати вправи з каталогу.
+                Додайте вправи з каталогу нижче, щоб розпочати тренування.
               </Text>
-
-              <View style={styles.emptyPromptButtons}>
-                <Button
-                  title="Повторити попереднє"
-                  variant="outline"
-                  onPress={handleRepeatPreviousWorkout}
-                  style={{ flex: 1 }}
-                />
-                <Button
-                  title="Додати вправу"
-                  variant="primary"
-                  onPress={() => setIsSelectorOpen(true)}
-                  style={{ flex: 1 }}
-                />
-              </View>
             </Card>
           )}
 
@@ -989,19 +965,8 @@ export const WorkoutEditorScreen: React.FC = () => {
                         >
                           {ex.exerciseName || 'Вправа'}
                         </Text>
-                        <View style={styles.exBadgeRow}>
-                          <View
-                            style={[
-                              styles.muscleTag,
-                              { backgroundColor: muscle.badgeBg, borderColor: muscle.badgeBorder },
-                            ]}
-                          >
-                            <Text style={[styles.muscleTagText, { color: muscle.color }]}>
-                              {muscle.nameUk}
-                            </Text>
-                          </View>
-
-                          {isSuperset && palette && (
+                        {isSuperset && palette && (
+                          <View style={styles.exBadgeRow}>
                             <View
                               style={[
                                 styles.supersetBadge,
@@ -1013,8 +978,8 @@ export const WorkoutEditorScreen: React.FC = () => {
                                 Суперсет
                               </Text>
                             </View>
-                          )}
-                        </View>
+                          </View>
+                        )}
                       </View>
 
                       {/* Move Up/Down & Delete */}
@@ -1071,20 +1036,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                     </View>
                   </View>
 
-                  {/* Previous performance indicator & fast fill button */}
-                  {pastPerf && pastPerf.sets && pastPerf.sets.length > 0 && (
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => handleApplyPreviousPerformance(ex.id, ex.exerciseId)}
-                      style={[styles.pastPerfBanner, isDark ? styles.pastPerfDark : styles.pastPerfLight]}
-                    >
-                      <Ionicons name="time-outline" size={13} color={isDark ? '#a1a1aa' : '#71717a'} />
-                      <Text style={styles.pastPerfText}>
-                        Останнє: {pastPerf.maxWeight} кг ({pastPerf.sets.map((s) => s.actualReps).join('-')} повт.)
-                      </Text>
-                      <Text style={styles.pastPerfApply}>Повторити ↺</Text>
-                    </TouchableOpacity>
-                  )}
+
 
                   {/* Target Rep Range & Set Count Quick Bar */}
                   <View style={styles.quickSelectorsRow}>
@@ -1344,6 +1296,14 @@ export const WorkoutEditorScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
 
+          {/* Complete / Restore Workout Button directly above Delete Workout */}
+          <Button
+            title={isCompleted ? 'Відновити' : 'Завершити'}
+            variant={isCompleted ? 'outline' : 'primary'}
+            onPress={handleToggleStatus}
+            style={styles.finishWorkoutBtn}
+          />
+
           {/* Delete Workout Secondary Option at Bottom */}
           <TouchableOpacity
             activeOpacity={0.8}
@@ -1358,32 +1318,6 @@ export const WorkoutEditorScreen: React.FC = () => {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      {/* Sticky Bottom Action Bar */}
-      <View
-        style={[
-          styles.bottomActionBar,
-          isDark ? styles.bottomDark : styles.bottomLight,
-          { paddingBottom: Math.max(insets.bottom, 16) },
-        ]}
-      >
-        <View style={styles.bottomButtonsRow}>
-          <Button
-            title={isCompleted ? 'Відновити' : 'Завершити'}
-            variant={isCompleted ? 'outline' : 'primary'}
-            onPress={handleToggleStatus}
-            style={{ flex: 1 }}
-          />
-
-          <Button
-            title="Зберегти"
-            variant="secondary"
-            loading={isSaving}
-            onPress={handleSaveWorkout}
-            style={{ flex: 1 }}
-          />
-        </View>
-      </View>
 
       {/* Exercise Selector Modal */}
       <ExerciseSelectorModal
@@ -1916,6 +1850,10 @@ const styles = StyleSheet.create({
   bigAddExerciseText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  finishWorkoutBtn: {
+    marginTop: 12,
+    marginBottom: 6,
   },
   deleteWorkoutBottomBtn: {
     flexDirection: 'row',

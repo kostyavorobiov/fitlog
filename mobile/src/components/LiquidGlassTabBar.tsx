@@ -75,8 +75,9 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
     };
   }, [user?.id, state.index]);
 
-  // Filter out hidden routes (e.g. href: null)
+  // Filter out hidden routes (e.g. href: null, and strictly exclude profile)
   const visibleRoutes = state.routes.filter((route) => {
+    if (route.name === 'profile') return false;
     const { options } = descriptors[route.key];
     return options.href !== null;
   });
@@ -150,9 +151,8 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
               });
             };
 
-            // Colors exactly mirroring Web: text-zinc-950 dark:text-zinc-100 / text-zinc-500 dark:text-zinc-400
-            const activeColor = isDark ? '#fafafa' : '#09090b';
-            const inactiveColor = isDark ? '#a1a1aa' : '#71717a';
+            const activeColor = isDark ? '#ffffff' : '#09090b';
+            const inactiveColor = isDark ? '#71717a' : '#a1a1aa';
             const color = isFocused ? activeColor : inactiveColor;
 
             return (
@@ -203,60 +203,57 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
 const styles = StyleSheet.create({
   floatingContainer: {
     position: 'absolute',
-    left: 12,
-    right: 12,
+    left: 16,
+    right: 16,
     zIndex: 100,
-    elevation: 8,
+    elevation: 12,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.16,
-    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
   },
   glassCard: {
-    height: 56,
-    // Web mobile version rounded-2xl (16px); legacy borderRadius: 32
-    borderRadius: 16,
+    height: 64,
+    borderRadius: 32,
     overflow: 'hidden',
     borderWidth: 1,
     justifyContent: 'center',
   },
   glassCardLight: {
-    borderColor: 'rgba(255, 255, 255, 0.65)',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
   },
   glassCardDark: {
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    backgroundColor: 'rgba(24, 24, 27, 0.85)',
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    backgroundColor: 'rgba(24, 24, 27, 0.82)',
   },
   fallbackBgLight: {
     backgroundColor: 'rgba(255, 255, 255, 0.88)',
   },
   fallbackBgDark: {
-    backgroundColor: 'rgba(24, 24, 27, 0.88)',
+    backgroundColor: 'rgba(24, 24, 27, 0.85)',
   },
   tabsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     height: '100%',
   },
   tabButton: {
     flex: 1,
-    height: 46,
-    // Web rounded-xl (12px)
-    borderRadius: 12,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 3,
-    paddingHorizontal: 2,
-    marginHorizontal: 1,
+    paddingVertical: 4,
+    gap: 3,
   },
   tabButtonActiveLight: {
-    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   tabButtonActiveDark: {
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   iconWrap: {
     position: 'relative',
@@ -276,7 +273,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '500',
     letterSpacing: -0.2,
-    marginTop: 2,
   },
   tabLabelFocused: {
     fontWeight: '700',
