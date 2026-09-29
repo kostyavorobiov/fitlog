@@ -129,7 +129,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mobileDeleteWorkoutButtonRef = useRef<HTMLButtonElement>(null);
   const [activeInputText, setActiveInputText] = useState<Record<string, string>>({});
 
