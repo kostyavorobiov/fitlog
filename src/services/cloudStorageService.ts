@@ -1,7 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { WorkoutPlan, Exercise, User, WorkoutExercise, WorkoutSet } from '../types/workout';
 import { StorageService } from './storageService';
-import { DEFAULT_EXERCISES } from '../data/defaultExercises';
 
 export class CloudStorageService {
   /**
@@ -32,36 +31,6 @@ export class CloudStorageService {
       }
     }
     return { cleanNotes: rawNotes };
-  }
-
-  /**
-   * Batch seed default exercises into Supabase exercises table
-   */
-  static async seedDefaultExercises(): Promise<boolean> {
-    if (!isSupabaseConfigured() || !supabase) return false;
-    try {
-      const rows = DEFAULT_EXERCISES.map((ex) => ({
-        id: ex.id,
-        user_id: null,
-        name: ex.name,
-        muscle_group: ex.muscleGroup,
-        description: ex.description || '',
-        is_default: true,
-        created_at: '2026-01-01T00:00:00.000Z',
-      }));
-
-      for (let i = 0; i < rows.length; i += 50) {
-        const batch = rows.slice(i, i + 50);
-        const { error } = await supabase.from('exercises').upsert(batch, { onConflict: 'id' });
-        if (error) {
-          console.warn('seedDefaultExercises batch upsert error:', error.message);
-        }
-      }
-      return true;
-    } catch (err) {
-      console.warn('seedDefaultExercises error:', err);
-      return false;
-    }
   }
 
   /**
@@ -460,12 +429,7 @@ export class CloudStorageService {
         return null;
       }
 
-      if (!data || data.length === 0) {
-        CloudStorageService.seedDefaultExercises().catch((e) =>
-          console.warn('seedDefaultExercises error:', e)
-        );
-        return [];
-      }
+      if (!data) return [];
 
       return data.map((item: any) => ({
         id: item.id,

@@ -1,5 +1,4 @@
 import { Exercise, WorkoutPlan, PastExercisePerformance, User, WorkoutSet } from '../types/workout';
-import { DEFAULT_EXERCISES } from '../data/defaultExercises';
 import { CloudStorageService } from './cloudStorageService';
 
 // Generate robust unique IDs
@@ -85,67 +84,33 @@ export class StorageService {
   }
 
   static initializeExercises(): Exercise[] {
-    const defaultList: Exercise[] = DEFAULT_EXERCISES.map((d) => ({
-      id: d.id,
-      userId: d.userId ?? null,
-      name: d.name,
-      muscleGroup: d.muscleGroup,
-      description: d.description || '',
-      isDefault: true,
-      createdAt: '2026-01-01T00:00:00.000Z',
-    }));
-
     if (memoryStore.exercises.length === 0) {
-      const map = new Map<string, Exercise>();
-      // Baseline default exercises
-      defaultList.forEach((e) => map.set(e.id, e));
-
-      // Merge stored exercises from localStorage if present
       const stored = this.getStoredExercises();
       if (Array.isArray(stored) && stored.length > 0) {
-        stored.forEach((e) => {
-          if (e && e.id) {
-            map.set(e.id, {
-              ...e,
-              description: e.description || '',
-              isDefault: e.isDefault ?? e.id.startsWith('def_ex'),
-              createdAt: e.createdAt || '2026-01-01T00:00:00.000Z',
-            });
-          }
-        });
+        memoryStore.exercises = stored;
       }
 
       // Also merge any exercises that might already be in memory workouts
       memoryStore.workouts.forEach((w) => {
         (w.exercises || []).forEach((we) => {
-          if (we.exerciseId && we.exerciseName && we.exerciseName !== 'Вправа' && !map.has(we.exerciseId)) {
-            map.set(we.exerciseId, {
-              id: we.exerciseId,
-              userId: null,
-              name: we.exerciseName,
-              muscleGroup: we.muscleGroup || 'full_body',
-              description: '',
-              createdAt: '2026-01-01T00:00:00.000Z',
-              isDefault: we.exerciseId.startsWith('def_ex') || we.exerciseId.startsWith('global_ex'),
-            });
+          if (we.exerciseId && we.exerciseName && we.exerciseName !== 'Вправа') {
+            const exists = memoryStore.exercises.some((e) => e.id === we.exerciseId);
+            if (!exists) {
+              memoryStore.exercises.push({
+                id: we.exerciseId,
+                userId: null,
+                name: we.exerciseName,
+                muscleGroup: we.muscleGroup || 'full_body',
+                description: '',
+                createdAt: '2026-01-01T00:00:00.000Z',
+                isDefault: we.exerciseId.startsWith('def_ex') || we.exerciseId.startsWith('global_ex'),
+              });
+            }
           }
         });
       });
 
-      memoryStore.exercises = Array.from(map.values());
-      this.persistExercises();
-    } else {
-      // Ensure all baseline default exercises are always present
-      const existingIds = new Set(memoryStore.exercises.map((e) => e.id));
-      let added = false;
-      defaultList.forEach((defEx) => {
-        if (!existingIds.has(defEx.id)) {
-          memoryStore.exercises.push(defEx);
-          existingIds.add(defEx.id);
-          added = true;
-        }
-      });
-      if (added) {
+      if (memoryStore.exercises.length > 0) {
         this.persistExercises();
       }
     }
@@ -168,21 +133,7 @@ export class StorageService {
       const cloudExercises = await CloudStorageService.fetchExercises();
       if (cloudExercises && cloudExercises.length > 0) {
         const cloudMap = new Map<string, Exercise>();
-        // 1. Add all default baseline exercises
-        DEFAULT_EXERCISES.forEach((d) => {
-          cloudMap.set(d.id, {
-            id: d.id,
-            userId: d.userId ?? null,
-            name: d.name,
-            muscleGroup: d.muscleGroup,
-            description: d.description || '',
-            isDefault: true,
-            createdAt: '2026-01-01T00:00:00.000Z',
-          });
-        });
-        // 2. Merge cloud exercises
         cloudExercises.forEach((e) => cloudMap.set(e.id, e));
-        // 3. Merge local exercises that might not have hit cloud
         memoryStore.exercises.forEach((local) => {
           if (!cloudMap.has(local.id)) {
             cloudMap.set(local.id, local);
@@ -191,11 +142,6 @@ export class StorageService {
         memoryStore.exercises = Array.from(cloudMap.values());
         this.persistExercises();
         return [...memoryStore.exercises];
-      } else if (cloudExercises && cloudExercises.length === 0) {
-        // Cloud has 0 exercises: seed baseline catalog in background
-        CloudStorageService.seedDefaultExercises().catch((e) =>
-          console.warn('seedDefaultExercises error:', e)
-        );
       }
     } catch (err) {
       console.warn('syncExercises error:', err);
@@ -230,24 +176,6 @@ export class StorageService {
 
       const idx = parseInt(numMatch[1], 10) - 1;
       if (all[idx]) return all[idx];
-    }
-
-    // Direct check in DEFAULT_EXERCISES
-    const fromDefaults = DEFAULT_EXERCISES.find(
-      (d) => d.id === id || (numMatch && d.id === `def_ex_${numMatch[1]}`)
-    );
-    if (fromDefaults) {
-      const fullEx: Exercise = {
-        id: fromDefaults.id,
-        userId: fromDefaults.userId ?? null,
-        name: fromDefaults.name,
-        muscleGroup: fromDefaults.muscleGroup,
-        description: fromDefaults.description || '',
-        isDefault: true,
-        createdAt: '2026-01-01T00:00:00.000Z',
-      };
-      this.saveExercise(fullEx);
-      return fullEx;
     }
 
     // Check by case-insensitive name match
