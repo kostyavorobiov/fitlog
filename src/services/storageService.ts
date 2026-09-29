@@ -221,7 +221,12 @@ export class StorageService {
     });
 
     try {
-      return await CloudStorageService.deleteExercise(exerciseId);
+      const res = await CloudStorageService.deleteExercise(exerciseId);
+      const cloudExercises = await CloudStorageService.fetchExercises();
+      if (cloudExercises !== null) {
+        memoryStore.exercises = cloudExercises.filter((e) => e.id !== exerciseId);
+      }
+      return res;
     } catch (e) {
       console.warn('CloudStorageService.deleteExercise error:', e);
       return false;

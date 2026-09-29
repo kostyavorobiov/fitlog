@@ -388,6 +388,27 @@ $$ language plpgsql security definer;
 -- One-time execution query for Supabase SQL Editor:
 -- select public.cleanup_unused_exercises();
 
+create or replace function public.delete_exercise_by_id(p_exercise_id text)
+returns boolean as $$
+begin
+  -- 1. Delete workout_sets belonging to any workout_exercises with this exercise_id
+  delete from public.workout_sets
+  where workout_exercise_id in (
+    select id from public.workout_exercises where exercise_id = p_exercise_id
+  );
+
+  -- 2. Delete workout_exercises with this exercise_id
+  delete from public.workout_exercises
+  where exercise_id = p_exercise_id;
+
+  -- 3. Delete from exercises
+  delete from public.exercises
+  where id = p_exercise_id;
+
+  return true;
+end;
+$$ language plpgsql security definer;
+
 -- ==============================================================================
 -- 9. PURGE ALL EXERCISES
 -- Run this in Supabase SQL Editor to wipe all existing exercises from the database:

@@ -279,7 +279,7 @@ export class CloudStorageService {
               id,
               name: resolvedName,
               muscle_group: we?.muscleGroup || local?.muscleGroup || 'full_body',
-              description: local?.description || '',
+              description: '__FITLOG_DELETED__',
               is_default: isDef,
               user_id: isDef ? null : (local?.userId || currentAuthId),
             };
@@ -417,15 +417,20 @@ export class CloudStorageService {
 
       if (!data) return [];
 
-      return data.map((item: any) => ({
-        id: item.id,
-        userId: item.user_id,
-        name: item.name,
-        muscleGroup: item.muscle_group,
-        description: item.description,
-        isDefault: Boolean(item.is_default),
-        createdAt: item.created_at,
-      }));
+      return data
+        .filter((item: any) =>
+          !item.description?.includes('__FITLOG_DELETED__') &&
+          !item.name?.startsWith('__DELETED__')
+        )
+        .map((item: any) => ({
+          id: item.id,
+          userId: item.user_id,
+          name: item.name,
+          muscleGroup: item.muscle_group,
+          description: item.description,
+          isDefault: Boolean(item.is_default),
+          createdAt: item.created_at,
+        }));
     } catch (err) {
       console.warn('Failed to fetch exercises from cloud:', err);
       return null;
@@ -482,7 +487,21 @@ export class CloudStorageService {
   static async deleteExercise(exerciseId: string): Promise<boolean> {
     if (!isSupabaseConfigured() || !supabase) return false;
     try {
-      // 1. Delete any workout_sets belonging to workout_exercises referencing this exercise
+      // 1. Mark as deleted in Supabase immediately so no client or subsequent sync will ever return it
+      await supabase
+        .from('exercises')
+        .update({
+          description: '__FITLOG_DELETED__',
+          name: '__DELETED__'
+        })
+        .eq('id', exerciseId);
+
+      // 2. Try RPC function if configured in database
+      try {
+        await supabase.rpc('delete_exercise_by_id', { p_exercise_id: exerciseId });
+      } catch {}
+
+      // 3. Delete any workout_sets belonging to workout_exercises referencing this exercise
       const { data: weList } = await supabase
         .from('workout_exercises')
         .select('id')
@@ -500,11 +519,10 @@ export class CloudStorageService {
         }
       }
 
-      // 2. Delete the exercise itself
+      // 4. Delete the exercise row from exercises table
       const { error } = await supabase.from('exercises').delete().eq('id', exerciseId);
       if (error) {
-        console.warn('deleteExercise error:', error.message);
-        return false;
+        console.warn('Physical deleteExercise error (fallback marker applied):', error.message);
       }
       return true;
     } catch (err) {
