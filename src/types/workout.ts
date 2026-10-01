@@ -110,6 +110,14 @@ export interface Exercise {
   createdAt: string;
 }
 
+export const isCustomExercise = (ex: Exercise): boolean => {
+  if (!ex) return false;
+  if (ex.isDefault === true) return false;
+  if (ex.id.startsWith('global_ex') || ex.id.startsWith('def_ex')) return false;
+  if (!ex.userId || ex.userId === 'null') return false;
+  return true;
+};
+
 export interface WorkoutSet {
   id: string;
   workoutExerciseId: string;

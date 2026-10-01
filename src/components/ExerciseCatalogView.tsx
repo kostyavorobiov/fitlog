@@ -16,16 +16,7 @@ import {
 } from 'lucide-react';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 
-export const isCustomExercise = (ex: Exercise): boolean => {
-  if (!ex) return false;
-  if (ex.id.startsWith('global_ex') || ex.id.startsWith('def_ex')) return false;
-  if (ex.id.startsWith('custom_ex')) return true;
-  if (ex.userId && ex.userId !== 'null') return true;
-  if (ex.isDefault === false) return true;
-  if (ex.isDefault === true && !ex.userId) return false;
-  if (ex.userId === null) return false;
-  return false;
-};
+export { isCustomExercise } from '../types/workout';
 
 interface ExerciseCatalogViewProps {
   userId: string;

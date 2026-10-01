@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { ExerciseService } from '../services/exerciseService';
+import { isCustomExercise } from '../screens/ExercisesScreen';
 
 interface ExerciseSelectorModalProps {
   visible: boolean;
@@ -84,7 +85,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
     }
 
     const newEx: Exercise = {
-      id: `ex_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      id: `custom_ex_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       userId: userId || null,
       name: customName.trim(),
       muscleGroup: customMuscle,
@@ -280,10 +281,15 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                               {muscle.nameUk}
                             </Text>
                           </View>
-                          {item.isDefault && (
-                            <Text style={[styles.defaultBadge, isDark ? styles.subDark : styles.subLight]}>
-                              Базова
-                            </Text>
+                          {isCustomExercise(item) && (
+                            <View
+                              style={[
+                                styles.ownerBadge,
+                                isDark ? styles.ownerBadgeDark : styles.ownerBadgeLight,
+                              ]}
+                            >
+                              <Text style={styles.ownerBadgeText}>Власна</Text>
+                            </View>
                           )}
                         </View>
                       </View>
@@ -479,8 +485,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  defaultBadge: {
-    fontSize: 11,
+  ownerBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  ownerBadgeLight: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderColor: 'rgba(245, 158, 11, 0.25)',
+  },
+  ownerBadgeDark: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  ownerBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#d97706',
   },
   centerContainer: {
     flex: 1,

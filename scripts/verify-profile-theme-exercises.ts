@@ -5,6 +5,8 @@ import { User, MuscleGroup, MUSCLE_GROUPS, Exercise } from '../mobile/src/types/
 import { MobileStorage } from '../mobile/src/lib/storage';
 import { AuthService } from '../mobile/src/services/authService';
 import { ExerciseService } from '../mobile/src/services/exerciseService';
+import { isCustomExercise as isMobileCustomExercise } from '../mobile/src/types/workout';
+import { isCustomExercise as isWebCustomExercise } from '../src/types/workout';
 
 async function runProfileThemeExercisesVerification() {
   console.log('🚀 [START] FitLog Mobile Profile, Theme, Private & Global Exercises Verification...\n');
@@ -258,6 +260,81 @@ async function runProfileThemeExercisesVerification() {
     true // isAdmin = true
   );
   assert(adminDeleteOk === true, 'Admin successfully deleted global exercise');
+
+  // -------------------------------------------------------------
+  // Test 8: Custom vs Global Exercise Identification (Tag "Власна")
+  // -------------------------------------------------------------
+  console.log('\n📌 Test 8: Custom vs Global Exercise Identification (Tag "Власна")');
+
+  // Case A: Global exercise with isDefault: true and null userId
+  const cleanGlobalEx: Exercise = {
+    id: 'def_ex_bench_press',
+    userId: null,
+    name: 'Жим лежачи',
+    muscleGroup: 'chest',
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+  };
+  assert(isMobileCustomExercise(cleanGlobalEx) === false, 'Mobile: Global exercise with null userId is NOT custom');
+  assert(isWebCustomExercise(cleanGlobalEx) === false, 'Web: Global exercise with null userId is NOT custom');
+
+  // Case B: Global exercise with isDefault: true and legacy user_id attached
+  const legacyGlobalEx: Exercise = {
+    id: 'global_ex_squat_123',
+    userId: '0bb9ee67-9f22-40a4-affd-7bc93dd9e8d6',
+    name: 'Присідання зі штангою',
+    muscleGroup: 'legs',
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+  };
+  assert(isMobileCustomExercise(legacyGlobalEx) === false, 'Mobile: Global exercise with legacy userId is NOT custom');
+  assert(isWebCustomExercise(legacyGlobalEx) === false, 'Web: Global exercise with legacy userId is NOT custom');
+
+  // Case C: Standard def_ex ID without explicit isDefault
+  const defIdEx: Exercise = {
+    id: 'def_ex_deadlift',
+    userId: 'some_user',
+    name: 'Станова тяга',
+    muscleGroup: 'back',
+    createdAt: new Date().toISOString(),
+  };
+  assert(isMobileCustomExercise(defIdEx) === false, 'Mobile: Exercise starting with def_ex is NOT custom');
+  assert(isWebCustomExercise(defIdEx) === false, 'Web: Exercise starting with def_ex is NOT custom');
+
+  // Case D: Standard global_ex ID without explicit isDefault
+  const globalIdEx: Exercise = {
+    id: 'global_ex_pullups',
+    userId: 'some_user',
+    name: 'Підтягування',
+    muscleGroup: 'back',
+    createdAt: new Date().toISOString(),
+  };
+  assert(isMobileCustomExercise(globalIdEx) === false, 'Mobile: Exercise starting with global_ex is NOT custom');
+  assert(isWebCustomExercise(globalIdEx) === false, 'Web: Exercise starting with global_ex is NOT custom');
+
+  // Case E: True custom exercise created by user
+  const trueCustomEx: Exercise = {
+    id: 'custom_ex_my_curl_123',
+    userId: athleteUserId,
+    name: 'Мій супер-згинання',
+    muscleGroup: 'biceps',
+    isDefault: false,
+    createdAt: new Date().toISOString(),
+  };
+  assert(isMobileCustomExercise(trueCustomEx) === true, 'Mobile: User custom exercise IS custom (shows "Власна")');
+  assert(isWebCustomExercise(trueCustomEx) === true, 'Web: User custom exercise IS custom (shows "Власна")');
+
+  // Case F: Normalization in ExerciseService.getExercises
+  await MobileStorage.setItem('mobile_exercises_cache', [
+    cleanGlobalEx,
+    legacyGlobalEx,
+    trueCustomEx,
+  ]);
+  const fetchedNormalized = await ExerciseService.getExercises(athleteUserId);
+  const normalizedGlobal = fetchedNormalized.find((e) => e.id === legacyGlobalEx.id);
+  assert(normalizedGlobal?.userId === null, 'ExerciseService normalizes legacy global exercise userId to null');
+  assert(normalizedGlobal?.isDefault === true, 'ExerciseService normalizes legacy global exercise isDefault to true');
+  assert(isMobileCustomExercise(normalizedGlobal!) === false, 'Normalized global exercise is NOT custom');
 
   // -------------------------------------------------------------
   // Summary

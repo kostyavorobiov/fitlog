@@ -24,15 +24,18 @@ export class ExerciseService {
         if (!error && data) {
           const mapped: Exercise[] = data
             .filter((e: any) => e.description !== '__FITLOG_DELETED__')
-            .map((e: any) => ({
-              id: e.id,
-              userId: e.user_id,
-              name: e.name,
-              muscleGroup: e.muscle_group,
-              description: e.description || '',
-              isDefault: Boolean(e.is_default),
-              createdAt: e.created_at,
-            }));
+            .map((e: any) => {
+              const isDef = Boolean(e.is_default) || e.id.startsWith('def_ex') || e.id.startsWith('global_ex');
+              return {
+                id: e.id,
+                userId: isDef ? null : e.user_id,
+                name: e.name,
+                muscleGroup: e.muscle_group,
+                description: e.description || '',
+                isDefault: isDef,
+                createdAt: e.created_at,
+              };
+            });
 
           await MobileStorage.setItem(EXERCISES_CACHE_KEY, mapped);
           return mapped;
@@ -45,10 +48,18 @@ export class ExerciseService {
     }
 
     const cached = await MobileStorage.getItem<Exercise[]>(EXERCISES_CACHE_KEY, []);
+    const normalized = cached.map((e) => {
+      const isDef = Boolean(e.isDefault) || e.id.startsWith('def_ex') || e.id.startsWith('global_ex');
+      return {
+        ...e,
+        userId: isDef ? null : e.userId,
+        isDefault: isDef,
+      };
+    });
     if (userId) {
-      return cached.filter((e) => e.isDefault || !e.userId || e.userId === userId);
+      return normalized.filter((e) => e.isDefault || !e.userId || e.userId === userId);
     }
-    return cached.filter((e) => e.isDefault || !e.userId);
+    return normalized.filter((e) => e.isDefault || !e.userId);
   }
 
   /**

@@ -34,16 +34,7 @@ const MUSCLE_ORDER: MuscleGroup[] = [
   'other',
 ];
 
-export const isCustomExercise = (ex: Exercise): boolean => {
-  if (!ex) return false;
-  if (ex.id.startsWith('global_ex') || ex.id.startsWith('def_ex')) return false;
-  if (ex.id.startsWith('custom_ex')) return true;
-  if (ex.userId && ex.userId !== 'null') return true;
-  if (ex.isDefault === false) return true;
-  if (ex.isDefault === true && !ex.userId) return false;
-  if (ex.userId === null) return false;
-  return false;
-};
+export { isCustomExercise } from '../types/workout';
 
 export const ExercisesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
@@ -149,7 +140,8 @@ export const ExercisesScreen: React.FC = () => {
 
   // Handle open edit modal (only for own exercises or admin)
   const handleOpenEditModal = (ex: Exercise) => {
-    const isOwner = ex.userId === user?.id;
+    const isCustom = isCustomExercise(ex);
+    const isOwner = isCustom && ex.userId === user?.id;
     if (!isOwner && !isAdmin) {
       Alert.alert('Заборонено', 'Ви можете редагувати лише власні приватні вправи');
       return;
@@ -195,7 +187,8 @@ export const ExercisesScreen: React.FC = () => {
 
   // Delete exercise with confirmation
   const handleDeleteExercise = (ex: Exercise) => {
-    const isOwner = ex.userId === user?.id;
+    const isCustom = isCustomExercise(ex);
+    const isOwner = isCustom && ex.userId === user?.id;
     if (!isOwner && !isAdmin) {
       Alert.alert('Заборонено', 'Ви можете видаляти лише власні приватні вправи');
       return;
@@ -411,9 +404,9 @@ export const ExercisesScreen: React.FC = () => {
           <View style={styles.grid}>
             {filteredExercises.map((ex) => {
               const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
-              const isOwner = ex.userId === user?.id;
-              const isGlobal = ex.isDefault || ex.userId === null;
-              const canEdit = isOwner || isAdmin;
+              const isCustom = isCustomExercise(ex);
+              const isOwner = isCustom && ex.userId === user?.id;
+              const canEdit = (isCustom && isOwner) || (!isCustom && isAdmin);
 
               return (
                 <Card key={ex.id} style={styles.exCard}>
@@ -436,8 +429,8 @@ export const ExercisesScreen: React.FC = () => {
                           </Text>
                         </View>
 
-                        {/* Owner / Global badge */}
-                        {isOwner ? (
+                        {/* Owner badge: ONLY for custom exercises */}
+                        {isCustom && (
                           <View
                             style={[
                               styles.ownerBadge,
@@ -446,18 +439,7 @@ export const ExercisesScreen: React.FC = () => {
                           >
                             <Text style={styles.ownerBadgeText}>Власна</Text>
                           </View>
-                        ) : isGlobal ? (
-                          <View
-                            style={[
-                              styles.globalBadge,
-                              isDark ? styles.globalBadgeDark : styles.globalBadgeLight,
-                            ]}
-                          >
-                            <Text style={[styles.globalBadgeText, isDark ? styles.subDark : styles.subLight]}>
-                              Базова
-                            </Text>
-                          </View>
-                        ) : null}
+                        )}
                       </View>
                     </View>
 

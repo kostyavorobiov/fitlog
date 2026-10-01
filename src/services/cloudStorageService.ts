@@ -444,15 +444,18 @@ export class CloudStorageService {
           !item.description?.includes('__FITLOG_DELETED__') &&
           !item.name?.startsWith('__DELETED__')
         )
-        .map((item: any) => ({
-          id: item.id,
-          userId: item.user_id,
-          name: item.name,
-          muscleGroup: item.muscle_group,
-          description: item.description,
-          isDefault: Boolean(item.is_default),
-          createdAt: item.created_at,
-        }));
+        .map((item: any) => {
+          const isDef = Boolean(item.is_default) || item.id.startsWith('def_ex') || item.id.startsWith('global_ex');
+          return {
+            id: item.id,
+            userId: isDef ? null : item.user_id,
+            name: item.name,
+            muscleGroup: item.muscle_group,
+            description: item.description,
+            isDefault: isDef,
+            createdAt: item.created_at,
+          };
+        });
     } catch (err) {
       console.warn('Failed to fetch exercises from cloud:', err);
       return null;
