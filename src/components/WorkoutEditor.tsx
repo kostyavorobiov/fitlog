@@ -230,39 +230,17 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     'Тяга / Жим / Ноги',
   ];
 
-  const getExerciseOriginBadge = (ex: Exercise | undefined): { text: string; className: string } | null => {
+  function getExerciseOriginBadge(ex: Exercise | undefined): { text: string; className: string; } | null {
     if (!ex || ex.isDefault || !ex.userId || ex.userId === 'null') return null;
     const activeId = StorageService.getActiveUserId() || userId;
-    if (ex.userId === activeId) {
-      return {
-        text: 'Власна',
-        className: 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300',
-      };
-    }
     const currentUser = StorageService.getUserById(activeId);
-    const isCoachEx =
-      (workout.assignedByCoachId && ex.userId === workout.assignedByCoachId) ||
+    const isCoachEx = (workout.assignedByCoachId && ex.userId === workout.assignedByCoachId) ||
       (currentUser?.coachId && ex.userId === currentUser.coachId);
-    if (isCoachEx) {
-      return {
-        text: 'Від тренера',
-        className: 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300',
-      };
-    }
-    const isTraineeEx =
-      (workout.userId && ex.userId === workout.userId) ||
+    const isTraineeEx = (workout.userId && ex.userId === workout.userId) ||
       (currentUser?.traineeIds && currentUser.traineeIds.includes(ex.userId));
-    if (isTraineeEx) {
-      return {
-        text: 'Від підопічного',
-        className: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300',
-      };
-    }
-    return {
-      text: 'Власна',
-      className: 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300',
-    };
-  };
+
+
+  }
 
   // Position exercise card top edge slightly below the top navbar without smooth scrolling
   const scrollToExerciseCard = (exerciseId: string) => {

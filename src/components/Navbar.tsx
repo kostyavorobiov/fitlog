@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Calendar,
   Activity,
+  BarChart2,
   Dumbbell,
   BookOpen,
   Users,
@@ -371,7 +372,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
           }`}
         >
-          <Activity className="h-5 w-5 mb-0.5" />
+          <BarChart2 className="h-5 w-5 mb-0.5" />
           <span className="text-[10px]">Аналітика</span>
         </button>
 
