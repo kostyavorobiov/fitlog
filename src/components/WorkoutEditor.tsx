@@ -139,7 +139,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       try {
         const len = input.value.length;
         input.setSelectionRange(len, len);
-      } catch {}
+      } catch { }
     };
     moveToEnd();
     requestAnimationFrame(moveToEnd);
@@ -789,25 +789,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               )}
             </div>
 
-            {/* Autosave Real-time Status Badge */}
-            <div className="flex items-center space-x-1.5 text-[10px] sm:text-[11px] font-semibold shrink-0">
-              {autoSaveStatus === 'saving' ? (
-                <span className="inline-flex items-center space-x-1 rounded-md px-2 py-0.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 animate-pulse">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
-                  <span>Збереження...</span>
-                </span>
-              ) : autoSaveStatus === 'saved' ? (
-                <span className="inline-flex items-center space-x-1 rounded-md px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 animate-fade-in">
-                  <Check className="h-3 w-3 stroke-[2.5]" />
-                  <span>Збережено</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center space-x-1 rounded-md px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
-                  <Check className="h-3 w-3" />
-                  <span>Автозбереження</span>
-                </span>
-              )}
-            </div>
           </div>
 
           {/* Title input - Functional and non-blocking */}
@@ -942,11 +923,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <button
                             type="button"
                             onClick={() => handleToggleSuperset(weIndex)}
-                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer inline-flex items-center text-xs font-semibold ${
-                              isSuperset && supersetPalette
+                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer inline-flex items-center text-xs font-semibold ${isSuperset && supersetPalette
                                 ? supersetPalette.buttonActive
                                 : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400'
-                            }`}
+                              }`}
                             title={isSuperset ? "Роз'єднати суперсет" : 'Обʼєднати в суперсет'}
                           >
                             {isSuperset ? <Unlink className="h-3.5 w-3.5" /> : <Link className="h-3.5 w-3.5" />}
@@ -996,11 +976,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                 key={range}
                                 type="button"
                                 onClick={() => handleTargetRepsRangeChange(weItem.id, range)}
-                                className={`px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer shrink-0 ${
-                                  isSelected
+                                className={`px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer shrink-0 ${isSelected
                                     ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
                                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                                }`}
+                                  }`}
                               >
                                 {range}
                               </button>
@@ -1022,11 +1001,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                 key={cnt}
                                 type="button"
                                 onClick={() => handleSetCountChange(weItem.id, cnt)}
-                                className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-colors flex items-center justify-center cursor-pointer ${
-                                  active
+                                className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-colors flex items-center justify-center cursor-pointer ${active
                                     ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
                                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                                }`}
+                                  }`}
                                 title={`Встановити ${cnt} підходи`}
                               >
                                 {cnt}
@@ -1057,9 +1035,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       return (
                         <div
                           key={setItem.id}
-                          className={`flex items-center justify-between gap-1.5 py-1.5 border-b border-zinc-100 dark:border-zinc-800/60 last:border-b-0 ${
-                            isDone ? 'opacity-90' : ''
-                          }`}
+                          className={`flex items-center justify-between gap-1.5 py-1.5 border-b border-zinc-100 dark:border-zinc-800/60 last:border-b-0 ${isDone ? 'opacity-90' : ''
+                            }`}
                         >
                           {/* Номер підходу */}
                           <span className="w-5 text-center font-mono text-xs font-bold text-zinc-500 dark:text-zinc-400 shrink-0">
@@ -1212,11 +1189,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <button
                             type="button"
                             onClick={() => handleToggleCompleteSet(weItem.id, setItem)}
-                            className={`h-7 w-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
-                              isDone
+                            className={`h-7 w-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 ${isDone
                                 ? 'bg-emerald-600 text-white'
                                 : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-white'
-                            }`}
+                              }`}
                             title={isDone ? 'Позначити як незавершений' : 'Завершити підхід'}
                           >
                             {isDone ? (
@@ -1302,8 +1278,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           isSuperset
                             ? "Роз'єднати суперсет"
                             : weIndex === currentExList.length - 1
-                            ? 'Обʼєднати з попередньою вправою в суперсет'
-                            : 'Обʼєднати в суперсет'
+                              ? 'Обʼєднати з попередньою вправою в суперсет'
+                              : 'Обʼєднати в суперсет'
                         }
                       >
                         {isSuperset ? <Unlink className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Link className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
