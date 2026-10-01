@@ -21,7 +21,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { ExerciseService } from '../services/exerciseService';
-import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
+import { MUSCLE_GROUPS, MuscleGroup, Exercise, isCustomExercise } from '../types/workout';
 
 const MUSCLE_ORDER: MuscleGroup[] = [
   'chest',
@@ -34,7 +34,7 @@ const MUSCLE_ORDER: MuscleGroup[] = [
   'other',
 ];
 
-export { isCustomExercise } from '../types/workout';
+export { isCustomExercise };
 
 export const ExercisesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';

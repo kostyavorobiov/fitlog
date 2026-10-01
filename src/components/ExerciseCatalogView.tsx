@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
+import { Exercise, MuscleGroup, MUSCLE_GROUPS, isCustomExercise } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CreateExerciseModal } from './CreateExerciseModal';
 import { EditExerciseModal } from './EditExerciseModal';
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 
-export { isCustomExercise } from '../types/workout';
+export { isCustomExercise };
 
 interface ExerciseCatalogViewProps {
   userId: string;
