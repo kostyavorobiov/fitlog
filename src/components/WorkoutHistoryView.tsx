@@ -11,6 +11,7 @@ import {
   Plus,
   Trash2,
   Layers,
+  Clock,
 } from 'lucide-react';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 
@@ -439,68 +440,93 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 (acc, ex) => acc + (ex.sets?.length || 0),
                 0
               );
+              let totalVolume = 0;
+              (w.exercises || []).forEach((ex) => {
+                (ex.sets || []).forEach((s) => {
+                  if (s.completedAt && s.weight && s.actualReps) {
+                    totalVolume += s.weight * s.actualReps;
+                  }
+                });
+              });
 
               return (
                 <div
                   key={w.id}
                   onClick={() => onSelectWorkout(w)}
-                  className="group cursor-pointer rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors flex items-center justify-between gap-3"
+                  className="group cursor-pointer rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors space-y-1.5"
                 >
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <div className="flex items-center space-x-2 text-xs">
+                  {/* Row 1: Status · Date · Trash */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
                       <span
                         className={`font-semibold ${isDone
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : w.status === 'in_progress'
-                            ? 'text-amber-600 dark:text-amber-400'
+                            ? 'text-amber-500 dark:text-amber-400'
                             : 'text-zinc-500 dark:text-zinc-400'
                           }`}
                       >
-                        {isDone
-                          ? 'Завершено'
-                          : w.status === 'in_progress'
-                            ? 'У процесі'
-                            : 'Заплановано'}
+                        {isDone ? 'Завершено' : w.status === 'in_progress' ? 'У процесі' : 'Заплановано'}
+                      </span>
+                      <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                      <span className="flex items-center gap-1 text-zinc-400 dark:text-zinc-500 font-mono">
+                        <CalendarIcon className="h-3 w-3 shrink-0" />
+                        <span>{w.scheduledDate}</span>
                       </span>
                       {w.assignedByCoachId && (
                         <>
                           <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                          <span className="text-indigo-600 dark:text-indigo-400 text-xs font-medium">
-                            Від тренера
-                          </span>
+                          <span className="text-indigo-500 dark:text-indigo-400 font-medium">Від тренера</span>
                         </>
                       )}
                     </div>
-                    <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white transition-colors truncate">
-                      {w.title || 'Тренування без назви'}
-                    </h4>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                      {exercisesCount} вправ · {setsCount} підходів
-                    </p>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => setWorkoutToDelete(w)}
+                        className="shrink-0 p-1.5 rounded-lg text-zinc-300 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                        title="Видалити тренування"
+                        aria-label="Видалити тренування"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
 
-                  <div
-                    className="flex items-center space-x-1.5 shrink-0"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setWorkoutToDelete(w)}
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                      title="Видалити тренування"
-                      aria-label="Видалити тренування"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                  {/* Row 2: Title */}
+                  <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 truncate leading-tight">
+                    {w.title || 'Тренування без назви'}
+                  </h4>
 
-                    <button
-                      type="button"
-                      onClick={() => onSelectWorkout(w)}
-                      className="flex items-center space-x-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors"
-                    >
-                      <span>{isDone ? 'Переглянути' : 'Відкрити'}</span>
-                      <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
-                    </button>
+                  {/* Row 3: Stats */}
+                  <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Layers className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                      <span className="font-semibold text-zinc-700 dark:text-zinc-300">{exercisesCount}</span>
+                      <span>вправ</span>
+                    </span>
+                    <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                    <span>
+                      <span className="font-semibold text-zinc-700 dark:text-zinc-300">{setsCount}</span>
+                      {' підходів'}
+                    </span>
+                    {totalVolume > 0 && (
+                      <>
+                        <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                        <span className="font-semibold text-zinc-700 dark:text-zinc-300 font-mono">
+                          {totalVolume.toLocaleString()} кг
+                        </span>
+                      </>
+                    )}
+                    {w.durationMinutes && w.durationMinutes > 0 && (
+                      <>
+                        <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 shrink-0" />
+                          <span>{w.durationMinutes} хв</span>
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               );
