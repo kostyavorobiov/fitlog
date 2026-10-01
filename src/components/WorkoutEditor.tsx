@@ -977,11 +977,11 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   {/* Mobile Config Row */}
                   <div className="px-3 py-2 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 space-y-2">
                     {/* Reps Range */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap w-20 shrink-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
                         Повторення:
                       </span>
-                      <div className="flex items-center gap-1 flex-wrap">
+                      <div className="flex items-center gap-1">
                         {(['4-6', '6-8', '8-10', '8-12', '10-15'] as const).map((range) => {
                           const isSelected = (weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12') === range;
                           return (
@@ -1002,9 +1002,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     </div>
 
                     {/* Sets Count */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap w-20 shrink-0">
-                        Сетів:
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                        Підходи:
                       </span>
                       <div className="flex items-center gap-1">
                         {[2, 3, 4, 5].map((cnt) => {
@@ -1312,9 +1312,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 </div>
 
                 {/* Desktop Config Row: Reps Range + Sets Count */}
-                <div className="hidden sm:flex items-center gap-4 px-5 py-3 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800">
+                <div className="hidden sm:block px-5 py-3 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 space-y-2">
                   {/* Reps Range */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
                       Повторення:
                     </span>
@@ -1338,13 +1338,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     </div>
                   </div>
 
-                  {/* Divider */}
-                  <div className="h-5 w-px bg-zinc-200 dark:bg-zinc-700 shrink-0" />
-
                   {/* Sets Count */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                      Сетів:
+                      Підходи:
                     </span>
                     <div className="flex items-center gap-1">
                       {[2, 3, 4, 5].map((cnt) => {
