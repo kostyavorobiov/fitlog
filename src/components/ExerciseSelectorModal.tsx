@@ -9,6 +9,9 @@ import { useSwipeGesture } from '../utils/useSwipeGesture';
 interface ExerciseSelectorModalProps {
   isOpen: boolean;
   userId: string;
+  workoutUserId?: string;
+  coachId?: string;
+  existingExerciseIds?: string[];
   onClose: () => void;
   onSelect: (exercise: Exercise) => void;
   onOpenCreateModal: (initialName?: string) => void;
@@ -17,6 +20,9 @@ interface ExerciseSelectorModalProps {
 export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   isOpen,
   userId,
+  workoutUserId,
+  coachId,
+  existingExerciseIds,
   onClose,
   onSelect,
   onOpenCreateModal,
@@ -67,8 +73,46 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   }, [isOpen]);
 
   const exercises = useMemo(() => {
-    return StorageService.getExercises(userId);
-  }, [userId, isOpen, refreshKey]);
+    return StorageService.getExercises(userId, {
+      forWorkoutPlan: true,
+      workoutUserId: workoutUserId || userId,
+      coachId,
+      existingExerciseIds,
+    });
+  }, [userId, workoutUserId, coachId, existingExerciseIds, isOpen, refreshKey]);
+
+  const getCustomBadge = (ex: Exercise): { text: string; className: string } | null => {
+    if (!isCustomExercise(ex)) return null;
+    if (ex.userId === userId) {
+      return {
+        text: 'Власна',
+        className: 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300',
+      };
+    }
+    const currentUser = StorageService.getUserById(userId);
+    const isMyCoach =
+      (coachId && ex.userId === coachId) ||
+      (currentUser?.coachId && ex.userId === currentUser.coachId);
+    if (isMyCoach) {
+      return {
+        text: 'Від тренера',
+        className: 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300',
+      };
+    }
+    const isMyTrainee =
+      (workoutUserId && workoutUserId !== userId && ex.userId === workoutUserId) ||
+      (currentUser?.traineeIds && currentUser.traineeIds.includes(ex.userId || ''));
+    if (isMyTrainee) {
+      return {
+        text: 'Від підопічного',
+        className: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300',
+      };
+    }
+    return {
+      text: 'Власна',
+      className: 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300',
+    };
+  };
 
   const filtered = useMemo(() => {
     return exercises.filter((ex) => {
@@ -243,11 +287,15 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                       <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate">
                         {ex.name}
                       </span>
-                      {isCustomExercise(ex) && (
-                        <span className="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 text-[9px] font-medium text-amber-700 dark:text-amber-300">
-                          Власна
-                        </span>
-                      )}
+                      {(() => {
+                        const badge = getCustomBadge(ex);
+                        if (!badge) return null;
+                        return (
+                          <span className={`rounded border px-1.5 py-0.2 text-[9px] font-medium ${badge.className}`}>
+                            {badge.text}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 text-xs">
                       <span className="inline-flex rounded px-2 py-0.5 text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">

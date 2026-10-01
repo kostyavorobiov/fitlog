@@ -119,6 +119,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     return map;
   }, [currentExList]);
 
+  const existingExerciseIds = useMemo(() => {
+    return currentExList.map((e) => e.exerciseId);
+  }, [currentExList]);
+
   // Strictly respect requirement 6: Do NOT auto open exercise selector modal; show workout form directly!
   const [isSelectorOpen, setIsSelectorOpen] = useState(Boolean(autoOpenExerciseSelector));
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -1733,6 +1737,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       <ExerciseSelectorModal
         isOpen={isSelectorOpen}
         userId={userId}
+        workoutUserId={workout.userId}
+        coachId={workout.assignedByCoachId || undefined}
+        existingExerciseIds={existingExerciseIds}
         onClose={() => setIsSelectorOpen(false)}
         onSelect={handleSelectExercise}
         onOpenCreateModal={(initialName) => {

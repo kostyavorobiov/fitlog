@@ -221,7 +221,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
             const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
             const lastPerf = StorageService.getLastExercisePerformance(userId, ex.id);
             const isCustom = isCustomExercise(ex);
-            const canEdit = isCoachOrAdmin || isCustom || ex.userId === userId;
+            const canEdit = (isCustom && ex.userId === userId) || (!isCustom && isCoachOrAdmin);
 
             return (
               <div
