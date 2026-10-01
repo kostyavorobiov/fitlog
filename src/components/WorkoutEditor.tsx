@@ -34,6 +34,7 @@ import {
   ArrowLeft,
   Link,
   Unlink,
+  X,
 } from 'lucide-react';
 
 const SUPERSET_PALETTES = [
@@ -1218,122 +1219,110 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 </div>
 
                 {/* ================= DESKTOP VIEW (hidden sm:block) ================= */}
+
                 {/* Desktop Exercise Header */}
-                <div className="hidden sm:flex p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex-wrap items-center justify-between gap-2.5">
-                  <div className="flex items-center space-x-2.5 min-w-0 flex-1">
-                    {/* Drag Handle */}
+                <div className="hidden sm:flex items-center justify-between gap-3 px-5 py-4 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {/* Drag handle */}
                     <div
-                      className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors flex items-center"
-                      title="Перетягніть картку вправи для зміни порядку"
+                      className="cursor-grab active:cursor-grabbing text-zinc-300 hover:text-zinc-500 dark:text-zinc-600 dark:hover:text-zinc-400 transition-colors shrink-0"
+                      title="Перетягніть для зміни порядку"
                     >
                       <GripVertical className="h-4 w-4" />
                     </div>
 
-                    <span className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 font-mono border border-zinc-200 dark:border-zinc-700">
+                    {/* #N badge */}
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-300 font-mono border border-zinc-200 dark:border-zinc-700">
                       #{weIndex + 1}
                     </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                        <h4 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 break-words leading-snug">
-                          {exerciseName}
-                        </h4>
-                        {(() => {
-                          const badge = getExerciseOriginBadge(exercise);
-                          if (!badge) return null;
-                          return (
-                            <span className={`rounded border px-1.5 py-0.2 text-[9px] font-medium ${badge.className}`}>
-                              {badge.text}
-                            </span>
-                          );
-                        })()}
-                        <span
-                          className={`inline-flex rounded-md px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold ${muscleInfo.badgeBg} border ${muscleInfo.badgeBorder}`}
-                        >
-                          {muscleInfo.nameUk}
-                        </span>
-                        {isSuperset && (
-                          <span
-                            className={`inline-flex items-center space-x-1 rounded-md px-2 py-0.5 text-[9px] sm:text-[10px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
-                          >
-                            <Link className="h-3 w-3" />
-                            <span>Суперсет</span>
+
+                    {/* Exercise name */}
+                    <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
+                      <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                        {exerciseName}
+                      </h4>
+                      {(() => {
+                        const badge = getExerciseOriginBadge(exercise);
+                        if (!badge) return null;
+                        return (
+                          <span className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${badge.className}`}>
+                            {badge.text}
                           </span>
-                        )}
-                      </div>
+                        );
+                      })()}
+                      {isSuperset && (
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
+                        >
+                          <Link className="h-3 w-3" />
+                          <span>Суперсет</span>
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Exercise Action Buttons */}
-                  <div className="flex items-center space-x-1.5 shrink-0 flex-wrap gap-y-1">
-                    {/* Superset toggle button on EVERY exercise if workout has > 1 exercises */}
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {currentExList.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleToggleSuperset(weIndex)}
-                        className={`p-1.5 rounded-lg border transition-colors cursor-pointer inline-flex items-center space-x-1 text-xs font-semibold ${isSuperset && supersetPalette
+                        className={`p-2 rounded-lg border transition-colors cursor-pointer ${isSuperset && supersetPalette
                           ? supersetPalette.buttonActive
-                          : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-800 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20'
+                          : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400'
                           }`}
-                        title={
-                          isSuperset
-                            ? "Роз'єднати суперсет"
-                            : weIndex === currentExList.length - 1
-                              ? 'Обʼєднати з попередньою вправою в суперсет'
-                              : 'Обʼєднати в суперсет'
-                        }
+                        title={isSuperset ? "Роз'єднати суперсет" : weIndex === currentExList.length - 1 ? 'Обʼєднати з попередньою вправою в суперсет' : 'Обʼєднати в суперсет'}
                       >
-                        {isSuperset ? <Unlink className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Link className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-                        <span className="hidden md:inline">{isSuperset ? "Роз'єднати" : 'Суперсет'}</span>
+                        {isSuperset ? <Unlink className="h-4 w-4" /> : <Link className="h-4 w-4" />}
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => handleMoveExercise(weIndex, 'up')}
                       disabled={weIndex === 0}
-                      className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                       title="Вгору"
                     >
-                      <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <ChevronUp className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
                       onClick={() => handleMoveExercise(weIndex, 'down')}
                       disabled={weIndex === currentExList.length - 1}
-                      className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                       title="Вниз"
                     >
-                      <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <ChevronDown className="h-4 w-4" />
                     </button>
-
                     <button
                       type="button"
                       onClick={() => handleRemoveExercise(weItem.id)}
-                      className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-800 transition-colors cursor-pointer"
+                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-rose-400 hover:text-rose-600 dark:text-rose-500 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-800 transition-colors cursor-pointer"
                       title="Видалити вправу"
                     >
-                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
-                {/* Desktop Exercise Config Bar */}
-                <div className="hidden sm:grid bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 p-2.5 sm:px-4 sm:py-2.5 grid-cols-2 gap-3">
-                  {/* Target Rep Range (4-6, 6-8, 8-12, 10-12, 10-15) */}
-                  <div className="flex items-center justify-between gap-2 bg-white dark:bg-zinc-900 rounded-lg p-2 border border-zinc-200 dark:border-zinc-800">
-                    <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
-                      Діапазон:
+                {/* Desktop Config Row: Reps Range + Sets Count */}
+                <div className="hidden sm:flex items-center gap-4 px-5 py-3 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800">
+                  {/* Reps Range */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                      Повторення:
                     </span>
-                    <div className="flex items-center space-x-1 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-950 p-0.5">
-                      {(['4-6', '6-8', '8-12', '10-12', '10-15'] as const).map((range) => {
+                    <div className="flex items-center gap-1">
+                      {(['4-6', '6-8', '8-10', '8-12', '10-15'] as const).map((range) => {
                         const isSelected = (weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12') === range;
                         return (
                           <button
                             key={range}
                             type="button"
                             onClick={() => handleTargetRepsRangeChange(weItem.id, range)}
-                            className={`px-2 py-0.5 rounded text-[11px] sm:text-xs font-semibold transition-colors cursor-pointer ${isSelected
-                              ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
-                              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${isSelected
+                              ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-900 dark:border-zinc-100'
+                              : 'bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-800 dark:hover:text-white'
                               }`}
                           >
                             {range}
@@ -1343,12 +1332,15 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     </div>
                   </div>
 
-                  {/* Fast Set Count selector (2, 3, 4, 5) */}
-                  <div className="flex items-center justify-between gap-2 bg-white dark:bg-zinc-900 rounded-lg p-2 border border-zinc-200 dark:border-zinc-800">
-                    <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
-                      Підходи:
+                  {/* Divider */}
+                  <div className="h-5 w-px bg-zinc-200 dark:bg-zinc-700 shrink-0" />
+
+                  {/* Sets Count */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                      Сетів:
                     </span>
-                    <div className="flex items-center space-x-1 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-950 p-0.5">
+                    <div className="flex items-center gap-1">
                       {[2, 3, 4, 5].map((cnt) => {
                         const active = (weItem.setCount || weItem.sets.length) === cnt;
                         return (
@@ -1356,11 +1348,11 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                             key={cnt}
                             type="button"
                             onClick={() => handleSetCountChange(weItem.id, cnt)}
-                            className={`h-6 w-6 sm:h-6 sm:w-7 rounded text-[11px] sm:text-xs font-semibold transition-colors flex items-center justify-center cursor-pointer ${active
-                              ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
-                              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                            className={`h-8 w-8 rounded-lg text-xs font-bold transition-colors cursor-pointer border ${active
+                              ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-900 dark:border-zinc-100'
+                              : 'bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-800 dark:hover:text-white'
                               }`}
-                            title={`Встановити ${cnt} підходи`}
+                            title={`${cnt} підходи`}
                           >
                             {cnt}
                           </button>
@@ -1370,242 +1362,198 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   </div>
                 </div>
 
-                {/* DESKTOP VIEW FOR SETS (Clean tabular layout for tablet & PC) */}
-                <div className="hidden sm:block p-4 overflow-x-auto">
-                  <table className="w-full text-left text-xs min-w-[500px]">
-                    <thead>
-                      <tr className="border-b border-zinc-200 dark:border-zinc-800 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        <th className="pb-2.5 w-14 text-center">№</th>
-                        <th className="pb-2.5">Вага (кг)</th>
-                        <th className="pb-2.5">Повторення (повт.)</th>
-                        <th className="pb-2.5 w-28 text-center">Завершено</th>
-                        <th className="pb-2.5 w-12 text-center"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {weItem.sets.map((setItem) => {
-                        const isDone = Boolean(setItem.completedAt);
+                {/* Desktop Sets Table */}
+                <div className="hidden sm:block">
+                  {/* Table header */}
+                  <div className="grid gap-2 px-5 py-2.5 bg-zinc-50/60 dark:bg-zinc-800/20 border-b border-zinc-100 dark:border-zinc-800"
+                    style={{ gridTemplateColumns: '3rem 1fr 1fr 5rem 2.5rem' }}
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Сет</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Вага (кг)</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Повторення</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Статус</span>
+                    <span />
+                  </div>
 
-                        return (
-                          <tr
-                            key={setItem.id}
-                            className={`group transition-colors ${isDone ? 'bg-emerald-50/60 dark:bg-emerald-950/20' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
-                              }`}
-                          >
-                            {/* Set # */}
-                            <td className="py-2.5 text-center">
-                              <span
-                                className={`inline-flex h-6 w-6 items-center justify-center rounded font-mono text-xs font-bold ${isDone
-                                  ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
-                                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
-                                  }`}
-                              >
-                                {setItem.setNumber}
-                              </span>
-                            </td>
+                  {/* Table rows */}
+                  <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {weItem.sets.map((setItem) => {
+                      const isDone = Boolean(setItem.completedAt);
+                      return (
+                        <div
+                          key={setItem.id}
+                          className={`grid items-center gap-2 px-5 py-2.5 transition-colors ${isDone ? 'bg-emerald-50/70 dark:bg-emerald-950/20' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}
+                          style={{ gridTemplateColumns: '3rem 1fr 1fr 5rem 2.5rem' }}
+                        >
+                          {/* Set number */}
+                          <div className="text-center">
+                            <span className="font-mono text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                              {setItem.setNumber}
+                            </span>
+                          </div>
 
-                            {/* Weight (kg) */}
-                            <td className="py-2.5 pr-4">
-                              <div className="flex items-center space-x-1.5 max-w-[170px]">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setActiveInputText((prev) => {
-                                      const copy = { ...prev };
-                                      delete copy[`${setItem.id}_weight`];
-                                      return copy;
-                                    });
-                                    handleUpdateSet(
-                                      weItem.id,
-                                      setItem.id,
-                                      'weight',
-                                      Math.max(0, (setItem.weight || 0) - 2.5)
-                                    );
-                                  }}
-                                  className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
-                                  title="Зменшити вагу на 2.5 кг"
-                                >
-                                  <Minus className="h-4 w-4 stroke-[2.5]" />
-                                </button>
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  value={
-                                    activeInputText[`${setItem.id}_weight`] !== undefined
-                                      ? activeInputText[`${setItem.id}_weight`]
-                                      : (setItem.weight === 0 ? '' : setItem.weight)
-                                  }
-                                  onChange={(e) => {
-                                    const rawVal = e.target.value.replace(',', '.');
-                                    if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
-                                      const num = rawVal === '' ? 0 : parseFloat(rawVal) || 0;
-                                      handleUpdateSet(weItem.id, setItem.id, 'weight', num);
-                                      setActiveInputText((prev) => ({ ...prev, [`${setItem.id}_weight`]: rawVal }));
-                                    }
-                                  }}
-                                  onFocus={handleInputCursorToEnd}
-                                  onClick={handleInputCursorToEnd}
-                                  onBlur={() => {
-                                    setActiveInputText((prev) => {
-                                      const copy = { ...prev };
-                                      delete copy[`${setItem.id}_weight`];
-                                      return copy;
-                                    });
-                                  }}
-                                  className="w-20 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1.5 font-mono text-center text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100 focus:outline-none"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setActiveInputText((prev) => {
-                                      const copy = { ...prev };
-                                      delete copy[`${setItem.id}_weight`];
-                                      return copy;
-                                    });
-                                    handleUpdateSet(
-                                      weItem.id,
-                                      setItem.id,
-                                      'weight',
-                                      (setItem.weight || 0) + 2.5
-                                    );
-                                  }}
-                                  className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
-                                  title="Збільшити вагу на 2.5 кг"
-                                >
-                                  <Plus className="h-4 w-4 stroke-[2.5]" />
-                                </button>
-                                <span className="text-zinc-500 dark:text-zinc-400 text-xs font-medium">кг</span>
-                              </div>
-                            </td>
+                          {/* Weight stepper */}
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_weight`];
+                                  return copy;
+                                });
+                                handleUpdateSet(weItem.id, setItem.id, 'weight', Math.max(0, (setItem.weight || 0) - 2.5));
+                              }}
+                              className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0 text-sm font-bold"
+                              title="−2.5 кг"
+                            >
+                              <Minus className="h-4 w-4 stroke-[2.5]" />
+                            </button>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={
+                                activeInputText[`${setItem.id}_weight`] !== undefined
+                                  ? activeInputText[`${setItem.id}_weight`]
+                                  : (setItem.weight === 0 ? '0' : setItem.weight)
+                              }
+                              onChange={(e) => {
+                                const rawVal = e.target.value.replace(',', '.');
+                                if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+                                  const num = rawVal === '' ? 0 : parseFloat(rawVal) || 0;
+                                  handleUpdateSet(weItem.id, setItem.id, 'weight', num);
+                                  setActiveInputText((prev) => ({ ...prev, [`${setItem.id}_weight`]: rawVal }));
+                                }
+                              }}
+                              onFocus={handleInputCursorToEnd}
+                              onClick={handleInputCursorToEnd}
+                              onBlur={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_weight`];
+                                  return copy;
+                                });
+                              }}
+                              className="w-14 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-sm font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_weight`];
+                                  return copy;
+                                });
+                                handleUpdateSet(weItem.id, setItem.id, 'weight', (setItem.weight || 0) + 2.5);
+                              }}
+                              className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                              title="+2.5 кг"
+                            >
+                              <Plus className="h-4 w-4 stroke-[2.5]" />
+                            </button>
+                          </div>
 
-                            {/* Actual Reps */}
-                            <td className="py-2.5 pr-4">
-                              <div className="flex items-center space-x-1.5 max-w-[170px]">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setActiveInputText((prev) => {
-                                      const copy = { ...prev };
-                                      delete copy[`${setItem.id}_actualReps`];
-                                      return copy;
-                                    });
-                                    handleUpdateSet(
-                                      weItem.id,
-                                      setItem.id,
-                                      'actualReps',
-                                      Math.max(0, (setItem.actualReps || 0) - 1)
-                                    );
-                                  }}
-                                  className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
-                                  title="Зменшити повторення"
-                                >
-                                  <Minus className="h-4 w-4 stroke-[2.5]" />
-                                </button>
-                                <input
-                                  type="text"
-                                  inputMode="numeric"
-                                  value={
-                                    activeInputText[`${setItem.id}_actualReps`] !== undefined
-                                      ? activeInputText[`${setItem.id}_actualReps`]
-                                      : (setItem.actualReps === null ? '' : setItem.actualReps)
-                                  }
-                                  onChange={(e) => {
-                                    const rawVal = e.target.value;
-                                    if (rawVal === '' || /^\d+$/.test(rawVal)) {
-                                      const num = rawVal === '' ? null : parseInt(rawVal, 10);
-                                      handleUpdateSet(weItem.id, setItem.id, 'actualReps', num);
-                                      setActiveInputText((prev) => ({ ...prev, [`${setItem.id}_actualReps`]: rawVal }));
-                                    }
-                                  }}
-                                  onFocus={handleInputCursorToEnd}
-                                  onClick={handleInputCursorToEnd}
-                                  onBlur={() => {
-                                    setActiveInputText((prev) => {
-                                      const copy = { ...prev };
-                                      delete copy[`${setItem.id}_actualReps`];
-                                      return copy;
-                                    });
-                                  }}
-                                  className={`w-16 rounded-lg border px-2 py-1.5 font-mono text-center text-xs font-bold focus:outline-none ${isDone
-                                    ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
-                                    : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100'
-                                    }`}
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setActiveInputText((prev) => {
-                                      const copy = { ...prev };
-                                      delete copy[`${setItem.id}_actualReps`];
-                                      return copy;
-                                    });
-                                    handleUpdateSet(
-                                      weItem.id,
-                                      setItem.id,
-                                      'actualReps',
-                                      (setItem.actualReps || 0) + 1
-                                    );
-                                  }}
-                                  className="h-8 w-8 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
-                                  title="Збільшити повторення"
-                                >
-                                  <Plus className="h-4 w-4 stroke-[2.5]" />
-                                </button>
-                                <span className="text-zinc-500 dark:text-zinc-400 text-xs font-medium">повт</span>
-                              </div>
-                            </td>
+                          {/* Reps stepper */}
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_actualReps`];
+                                  return copy;
+                                });
+                                handleUpdateSet(weItem.id, setItem.id, 'actualReps', Math.max(0, (setItem.actualReps || 0) - 1));
+                              }}
+                              className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                              title="−1 повторення"
+                            >
+                              <Minus className="h-4 w-4 stroke-[2.5]" />
+                            </button>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={
+                                activeInputText[`${setItem.id}_actualReps`] !== undefined
+                                  ? activeInputText[`${setItem.id}_actualReps`]
+                                  : (setItem.actualReps === null ? '' : setItem.actualReps)
+                              }
+                              onChange={(e) => {
+                                const rawVal = e.target.value;
+                                if (rawVal === '' || /^\d+$/.test(rawVal)) {
+                                  const num = rawVal === '' ? null : parseInt(rawVal, 10);
+                                  handleUpdateSet(weItem.id, setItem.id, 'actualReps', num);
+                                  setActiveInputText((prev) => ({ ...prev, [`${setItem.id}_actualReps`]: rawVal }));
+                                }
+                              }}
+                              onFocus={handleInputCursorToEnd}
+                              onClick={handleInputCursorToEnd}
+                              onBlur={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_actualReps`];
+                                  return copy;
+                                });
+                              }}
+                              className="w-14 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-sm font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveInputText((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[`${setItem.id}_actualReps`];
+                                  return copy;
+                                });
+                                handleUpdateSet(weItem.id, setItem.id, 'actualReps', (setItem.actualReps || 0) + 1);
+                              }}
+                              className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                              title="+1 повторення"
+                            >
+                              <Plus className="h-4 w-4 stroke-[2.5]" />
+                            </button>
+                          </div>
 
-                            {/* Completion Checkmark */}
-                            <td className="py-2.5 text-center">
-                              <button
-                                type="button"
-                                onClick={() => handleToggleCompleteSet(weItem.id, setItem)}
-                                className={`inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors cursor-pointer ${isDone
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-400 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-white'
-                                  }`}
-                                title={isDone ? 'Позначити як незавершений' : 'Завершити підхід'}
-                              >
-                                {isDone ? (
-                                  <Check className="h-4 w-4 stroke-[2.5]" />
-                                ) : (
-                                  <Circle className="h-4 w-4" />
-                                )}
-                              </button>
-                            </td>
+                          {/* Status (checkmark) */}
+                          <div className="flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCompleteSet(weItem.id, setItem)}
+                              className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors cursor-pointer ${isDone
+                                ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                : 'border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-300 dark:text-zinc-600 hover:border-emerald-400 hover:text-emerald-400'
+                                }`}
+                              title={isDone ? 'Позначити як незавершений' : 'Завершити підхід'}
+                            >
+                              <Check className="h-4 w-4 stroke-[2.5]" />
+                            </button>
+                          </div>
 
-                            {/* Delete set */}
-                            <td className="py-2.5 text-center">
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveSet(weItem.id, setItem.id)}
-                                className="text-zinc-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 p-1 rounded transition-colors opacity-60 group-hover:opacity-100 cursor-pointer"
-                                title="Видалити підхід"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                          {/* Delete set */}
+                          <div className="flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSet(weItem.id, setItem.id)}
+                              className="text-zinc-300 dark:text-zinc-600 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 rounded-lg transition-colors cursor-pointer"
+                              title="Видалити підхід"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-                {/* Add Set Button (Desktop Only) */}
-                <div className="hidden sm:flex p-3 sm:px-4 sm:py-3 items-center justify-between border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40">
+                  {/* Add Set — full width dashed */}
                   <button
                     type="button"
                     onClick={() => handleAddSet(weItem.id)}
-                    className="inline-flex items-center space-x-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                    className="hidden sm:flex w-full items-center justify-center gap-2 py-3.5 border-t border-dashed border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer rounded-b-xl"
                   >
-                    <Plus className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
+                    <Plus className="h-3.5 w-3.5" />
                     <span>Додати підхід</span>
                   </button>
-
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Підходів: <strong className="text-zinc-800 dark:text-zinc-200">{weItem.sets.length}</strong>
-                  </div>
                 </div>
               </div>
             );
