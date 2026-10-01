@@ -256,15 +256,6 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                       </span>
                     </>
                   )}
-                  {w.durationMinutes && w.durationMinutes > 0 && (
-                    <>
-                      <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 shrink-0" />
-                        <span>{w.durationMinutes} хв</span>
-                      </span>
-                    </>
-                  )}
                 </div>
               </div>
             );

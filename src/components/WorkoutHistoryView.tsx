@@ -399,11 +399,6 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              {selectedDateWorkouts.length === 0
-                ? 'На цей день немає тренувань'
-                : `Тренувань на дату: ${selectedDateWorkouts.length}`}
-            </p>
           </div>
 
           <button
