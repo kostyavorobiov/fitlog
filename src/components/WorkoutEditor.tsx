@@ -119,10 +119,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     return map;
   }, [currentExList]);
 
-  const existingExerciseIds = useMemo(() => {
-    return currentExList.map((e) => e.exerciseId);
-  }, [currentExList]);
-
   // Strictly respect requirement 6: Do NOT auto open exercise selector modal; show workout form directly!
   const [isSelectorOpen, setIsSelectorOpen] = useState(Boolean(autoOpenExerciseSelector));
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -232,6 +228,40 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     'Full Body',
     'Тяга / Жим / Ноги',
   ];
+
+  const getExerciseOriginBadge = (ex: Exercise | undefined): { text: string; className: string } | null => {
+    if (!ex || ex.isDefault || !ex.userId || ex.userId === 'null') return null;
+    const activeId = StorageService.getActiveUserId() || userId;
+    if (ex.userId === activeId) {
+      return {
+        text: 'Власна',
+        className: 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300',
+      };
+    }
+    const currentUser = StorageService.getUserById(activeId);
+    const isCoachEx =
+      (workout.assignedByCoachId && ex.userId === workout.assignedByCoachId) ||
+      (currentUser?.coachId && ex.userId === currentUser.coachId);
+    if (isCoachEx) {
+      return {
+        text: 'Від тренера',
+        className: 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300',
+      };
+    }
+    const isTraineeEx =
+      (workout.userId && ex.userId === workout.userId) ||
+      (currentUser?.traineeIds && currentUser.traineeIds.includes(ex.userId));
+    if (isTraineeEx) {
+      return {
+        text: 'Від підопічного',
+        className: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300',
+      };
+    }
+    return {
+      text: 'Власна',
+      className: 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300',
+    };
+  };
 
   // Position exercise card top edge slightly below the top navbar without smooth scrolling
   const scrollToExerciseCard = (exerciseId: string) => {
@@ -889,13 +919,22 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   <div className="p-3 space-y-2">
                     {/* Верхня частина картки: номер вправи, назва вправи (центрується відносно номера в 1 рядок або переноситься на 2 рядки), кнопки дій */}
                     <div className="flex items-center justify-between gap-1.5 min-w-0">
-                      <div className="flex items-center space-x-1.5 min-w-0 flex-1">
+                      <div className="flex items-center space-x-1.5 min-w-0 flex-1 flex-wrap gap-y-1">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 font-mono border border-zinc-200 dark:border-zinc-700">
                           #{weIndex + 1}
                         </span>
-                        <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 break-words leading-snug flex-1">
+                        <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 break-words leading-snug">
                           {exerciseName}
                         </h4>
+                        {(() => {
+                          const badge = getExerciseOriginBadge(exercise);
+                          if (!badge) return null;
+                          return (
+                            <span className={`rounded border px-1.5 py-0.2 text-[9px] font-medium ${badge.className}`}>
+                              {badge.text}
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       <div className="flex items-center space-x-1 shrink-0">
@@ -1222,6 +1261,15 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         <h4 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 break-words leading-snug">
                           {exerciseName}
                         </h4>
+                        {(() => {
+                          const badge = getExerciseOriginBadge(exercise);
+                          if (!badge) return null;
+                          return (
+                            <span className={`rounded border px-1.5 py-0.2 text-[9px] font-medium ${badge.className}`}>
+                              {badge.text}
+                            </span>
+                          );
+                        })()}
                         <span
                           className={`inline-flex rounded-md px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold ${muscleInfo.badgeBg} border ${muscleInfo.badgeBorder}`}
                         >
@@ -1736,10 +1784,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       {/* Modals */}
       <ExerciseSelectorModal
         isOpen={isSelectorOpen}
-        userId={userId}
-        workoutUserId={workout.userId}
-        coachId={workout.assignedByCoachId || undefined}
-        existingExerciseIds={existingExerciseIds}
+        userId={StorageService.getActiveUserId() || userId}
         onClose={() => setIsSelectorOpen(false)}
         onSelect={handleSelectExercise}
         onOpenCreateModal={(initialName) => {
@@ -1750,7 +1795,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       <CreateExerciseModal
         isOpen={isCreateOpen}
-        userId={userId}
+        userId={StorageService.getActiveUserId() || userId}
         initialName={createExerciseInitialName}
         onClose={() => {
           setIsCreateOpen(false);

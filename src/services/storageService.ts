@@ -125,74 +125,33 @@ export class StorageService {
       ex.id.startsWith('global_ex') ||
       ex.id.startsWith('def_ex');
 
-    // 1. WORKOUT PLANS CONTEXT:
-    // In workout plans, trainee can see coach's custom exercises, and coach can see trainee's custom exercises.
-    if (options?.forWorkoutPlan) {
-      const allowedOwnerIds = new Set<string>();
-
-      if (effectiveUserId) allowedOwnerIds.add(effectiveUserId);
-      if (activeId) allowedOwnerIds.add(activeId);
-      if (options.workoutUserId) allowedOwnerIds.add(options.workoutUserId);
-      if (options.coachId) allowedOwnerIds.add(options.coachId);
-      if (options.traineeId) allowedOwnerIds.add(options.traineeId);
-
-      // Trainee's coach
-      const workoutOwnerId = options.workoutUserId || effectiveUserId;
-      const workoutOwner = workoutOwnerId ? this.getUserById(workoutOwnerId) : null;
-      if (workoutOwner?.coachId) {
-        allowedOwnerIds.add(workoutOwner.coachId);
-      }
-
-      const activeUser = activeId ? this.getUserById(activeId) : null;
-      if (activeUser?.coachId) {
-        allowedOwnerIds.add(activeUser.coachId);
-      }
-
-      // Coach's trainees
-      if (activeUser?.traineeIds && activeUser.traineeIds.length > 0) {
-        activeUser.traineeIds.forEach((tId) => allowedOwnerIds.add(tId));
-      }
-      if (workoutOwner?.traineeIds && workoutOwner.traineeIds.length > 0) {
-        workoutOwner.traineeIds.forEach((tId) => allowedOwnerIds.add(tId));
-      }
-
-      // Cross-reference any users in memory who have coachId matching activeUser or workoutOwner
-      memoryStore.users.forEach((u) => {
-        if (activeId && u.coachId === activeId) {
-          allowedOwnerIds.add(u.id);
-        }
-        if (effectiveUserId && u.coachId === effectiveUserId) {
-          allowedOwnerIds.add(u.id);
-        }
-        if (workoutOwnerId && u.coachId === workoutOwnerId) {
-          allowedOwnerIds.add(u.id);
-        }
-        if (activeUser?.coachId && u.id === activeUser.coachId) {
-          allowedOwnerIds.add(u.id);
-        }
-        if (workoutOwner?.coachId && u.id === workoutOwner.coachId) {
-          allowedOwnerIds.add(u.id);
-        }
-      });
-
-      return all.filter((ex) => {
-        if (isGlobal(ex)) return true;
-        if (options.existingExerciseIds && options.existingExerciseIds.includes(ex.id)) return true;
-        return ex.userId ? allowedOwnerIds.has(ex.userId) : false;
-      });
-    }
-
-    // 2. GENERAL CONTEXT (Catalog, Profile, etc.):
-    // If targetUserId is explicitly null (e.g. ProfileView admin refresh) or no user context at all:
+    // Custom exercises are only visible to the user who added them.
+    // When adding/selecting exercises, coach and trainee do NOT see each other's custom exercises.
     if (!effectiveUserId || targetUserId === null) {
       return all.filter(isGlobal);
     }
 
-    // Custom exercises are only visible to the user who added them
     return all.filter((ex) => {
       if (isGlobal(ex)) return true;
       return ex.userId === effectiveUserId;
     });
+  }
+
+  /**
+   * Retrieves all exercises for an ALREADY CREATED workout plan.
+   * In a created plan, coach and trainee can both see the exercises that belong to this plan.
+   */
+  static getExercisesForWorkout(workout: WorkoutPlan): Exercise[] {
+    const list: Exercise[] = [];
+    const seen = new Set<string>();
+    (workout.exercises || []).forEach((we) => {
+      if (!seen.has(we.exerciseId)) {
+        seen.add(we.exerciseId);
+        const ex = this.getExerciseById(we.exerciseId);
+        if (ex) list.push(ex);
+      }
+    });
+    return list;
   }
 
   static getExerciseById(id: string): Exercise | undefined {
