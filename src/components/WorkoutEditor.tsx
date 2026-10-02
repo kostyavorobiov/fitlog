@@ -238,8 +238,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       (currentUser?.coachId && ex.userId === currentUser.coachId);
     const isTraineeEx = (workout.userId && ex.userId === workout.userId) ||
       (currentUser?.traineeIds && currentUser.traineeIds.includes(ex.userId));
-
-
   }
 
   // Position exercise card top edge slightly below the top navbar without smooth scrolling

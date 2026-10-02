@@ -309,11 +309,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* Modern Mobile Bottom Navigation Bar - Liquid Glass style with Safe-Area Inset */}
+      {/* Mobile Bottom Navigation Bar — pill style */}
       <nav
         data-no-swipe="true"
         aria-label="Mobile Navigation"
-        className={`md:hidden fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 rounded-2xl bg-white/75 dark:bg-zinc-900/80 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] px-2 py-1.5 flex items-center justify-around transition-all duration-300 ease-in-out ${
+        className={`md:hidden fixed bottom-4 inset-x-4 max-w-sm mx-auto z-40 rounded-full bg-zinc-100 dark:bg-zinc-800 shadow-lg px-2 py-1.5 flex items-center justify-around transition-all duration-300 ease-in-out ${
           isNavVisible
             ? 'translate-y-0 opacity-100 pointer-events-auto'
             : 'translate-y-28 opacity-0 pointer-events-none'
@@ -322,93 +322,88 @@ export const Navbar: React.FC<NavbarProps> = ({
           marginBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
+        {/* Тренування */}
         <button
           type="button"
           onTouchStart={() => handleNavSelect('editor')}
-          onPointerDown={(e) => {
-            if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor');
-          }}
+          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor'); }}
           onClick={() => handleNavSelect('editor')}
-          className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
+          className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
             currentTab === 'editor'
-              ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'
-              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+              : 'text-zinc-500 dark:text-zinc-400'
           }`}
         >
-          <Dumbbell className="h-5 w-5 mb-0.5" />
-          <span className="text-[10px]">Тренування</span>
+          <Dumbbell className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Тренування</span>
           {hasActiveWorkout && currentTab !== 'editor' && (
-            <span className="absolute top-1.5 right-2.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
+            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
           )}
         </button>
 
+        {/* Календар */}
         <button
           type="button"
           onTouchStart={() => handleNavSelect('history')}
-          onPointerDown={(e) => {
-            if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history');
-          }}
+          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history'); }}
           onClick={() => handleNavSelect('history')}
-          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
             currentTab === 'history'
-              ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'
-              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+              : 'text-zinc-500 dark:text-zinc-400'
           }`}
         >
-          <Calendar className="h-5 w-5 mb-0.5" />
-          <span className="text-[10px]">Календар</span>
+          <Calendar className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Календар</span>
         </button>
 
+        {/* Аналітика */}
         <button
           type="button"
           onTouchStart={() => handleNavSelect('analytics')}
-          onPointerDown={(e) => {
-            if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics');
-          }}
+          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics'); }}
           onClick={() => handleNavSelect('analytics')}
-          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
             currentTab === 'analytics'
-              ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'
-              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+              : 'text-zinc-500 dark:text-zinc-400'
           }`}
         >
-          <BarChart2 className="h-5 w-5 mb-0.5" />
-          <span className="text-[10px]">Аналітика</span>
+          <BarChart2 className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Аналітика</span>
         </button>
 
+        {/* Вправи */}
         <button
           type="button"
           onTouchStart={() => handleNavSelect('catalog')}
-          onPointerDown={(e) => {
-            if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog');
-          }}
+          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog'); }}
           onClick={() => handleNavSelect('catalog')}
-          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
             currentTab === 'catalog'
-              ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'
-              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+              : 'text-zinc-500 dark:text-zinc-400'
           }`}
         >
-          <BookOpen className="h-5 w-5 mb-0.5" />
-          <span className="text-[10px]">Вправи</span>
+          <BookOpen className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Вправи</span>
         </button>
 
+        {/* Підопічні (тільки для тренерів/адмінів) */}
         {(user?.role === 'coach' || isAdmin) && (
           <button
             type="button"
             onTouchStart={() => handleNavSelect('trainees')}
-            onPointerDown={(e) => {
-              if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees');
-            }}
+            onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees'); }}
             onClick={() => handleNavSelect('trainees')}
-            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] cursor-pointer active:scale-95 ${
+            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
               currentTab === 'trainees'
-                ? 'text-zinc-950 dark:text-zinc-100 font-bold bg-zinc-900/10 dark:bg-white/10 shadow-2xs'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+                : 'text-zinc-500 dark:text-zinc-400'
             }`}
           >
-            <Users className="h-5 w-5 mb-0.5" />
-            <span className="text-[10px]">Підопічні</span>
+            <Users className="h-[18px] w-[18px] shrink-0" />
+            <span className="text-[9px] font-semibold leading-none">Підопічні</span>
           </button>
         )}
       </nav>

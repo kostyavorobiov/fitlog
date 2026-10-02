@@ -96,7 +96,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           }
         });
       });
-    } catch {}
+    } catch { }
     return map;
   }, [userId, isOpen]);
 
@@ -125,7 +125,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[12px] px-3 sm:items-center sm:p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fade-in"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
     >
@@ -133,7 +133,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-xl max-h-[85vh] my-auto flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
+        className="relative z-10 w-full max-w-xl max-h-[97dvh] sm:max-h-[85vh] flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -180,11 +180,10 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           <div className="flex space-x-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
             <button
               onClick={() => setSelectedMuscle('all')}
-              className={`rounded-lg px-2.5 py-1 font-medium whitespace-nowrap transition ${
-                selectedMuscle === 'all'
-                  ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold'
-                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-              }`}
+              className={`rounded-lg px-2.5 py-1 font-medium whitespace-nowrap transition ${selectedMuscle === 'all'
+                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                }`}
             >
               Всі ({exercises.length})
             </button>
@@ -196,11 +195,10 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 <button
                   key={groupKey}
                   onClick={() => setSelectedMuscle(groupKey)}
-                  className={`rounded-lg px-2.5 py-1 font-medium whitespace-nowrap transition border ${
-                    isSelected
-                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-semibold'
-                      : 'border-transparent bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                  }`}
+                  className={`rounded-lg px-2.5 py-1 font-medium whitespace-nowrap transition border ${isSelected
+                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-semibold'
+                    : 'border-transparent bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    }`}
                 >
                   {info.nameUk} ({count})
                 </button>
