@@ -230,14 +230,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     'Тяга / Жим / Ноги',
   ];
 
-  function getExerciseOriginBadge(ex: Exercise | undefined): { text: string; className: string; } | null {
-    if (!ex || ex.isDefault || !ex.userId || ex.userId === 'null') return null;
-    const activeId = StorageService.getActiveUserId() || userId;
-    const currentUser = StorageService.getUserById(activeId);
-    const isCoachEx = (workout.assignedByCoachId && ex.userId === workout.assignedByCoachId) ||
-      (currentUser?.coachId && ex.userId === currentUser.coachId);
-    const isTraineeEx = (workout.userId && ex.userId === workout.userId) ||
-      (currentUser?.traineeIds && currentUser.traineeIds.includes(ex.userId));
+  // All exercises are now user-owned, no origin badge needed
+  function getExerciseOriginBadge(_ex: Exercise | undefined): { text: string; className: string; } | null {
+    return null;
   }
 
   // Position exercise card top edge slightly below the top navbar without smooth scrolling

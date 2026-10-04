@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { UserAvatar } from './UserAvatar';
 
 interface NavbarProps {
@@ -30,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { user, isAdmin } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const isDark = theme === 'dark';
 
   const [isNavVisible, setIsNavVisible] = useState(true);
@@ -227,9 +229,37 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </nav>
 
-            {/* Right Header Actions: Theme Switcher & User Avatar */}
-            <div className="flex items-center space-x-2 shrink-0">
-              {/* Theme Toggle Button */}
+            {/* Right Header Actions: Language + Theme + User Avatar */}
+            <div className="flex items-center space-x-1.5 shrink-0">
+              {/* Language Switcher */}
+              <div className="flex items-center rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 p-0.5 gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => setLanguage('uk')}
+                  className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
+                    language === 'uk'
+                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950'
+                      : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                  }`}
+                  title="Українська"
+                >
+                  УКР
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
+                    language === 'en'
+                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950'
+                      : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                  }`}
+                  title="English"
+                >
+                  ENG
+                </button>
+              </div>
+
+              {/* Theme Toggle Button — round */}
               <button
                 type="button"
                 onTouchStart={() => {
@@ -243,7 +273,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }
                 }}
                 onClick={toggleTheme}
-                className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="h-9 w-9 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 title={isDark ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
                 aria-label={isDark ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
               >

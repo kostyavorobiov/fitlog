@@ -98,24 +98,24 @@ export class StorageService {
     }
   }
 
-  static async syncExercises(): Promise<Exercise[]> {
-    try {
-      const cloudExercises = await CloudStorageService.fetchExercises();
-      if (cloudExercises !== null) {
-        memoryStore.exercises = cloudExercises;
-        return [...memoryStore.exercises];
-      }
-    } catch (err) {
-      console.warn('syncExercises error:', err);
-    }
-    return [...memoryStore.exercises];
-  }
+  /**
+   * Migrate global/default exercises that were used in a user's workouts
+   * into that user's personal exercise library. Runs once per session.
+   */
+  private static migratedUserIds = new Set<string>();
 
-  static getExercises(targetUserId?: string | null, options?: GetExercisesOptions): Exercise[] {
-    const all = this.initializeExercises();
+  static migrateGlobalExercisesToUser(userId: string): void {
+    if (!userId || this.migratedUserIds.has(userId)) return;
+    this.migratedUserIds.add(userId);
 
-    const activeId = this.getActiveUserId();
-    const effectiveUserId = targetUserId !== undefined ? targetUserId : activeId;
+    const all = [...memoryStore.exercises];
+    const userWorkouts = memoryStore.workouts.filter((w) => w.userId === userId || w.assignedByCoachId);
+
+    // Collect exerciseIds used by this user's workouts
+    const usedExIds = new Set<string>();
+    userWorkouts.forEach((w) => {
+      (w.exercises || []).forEach((we) => { if (we.exerciseId) usedExIds.add(we.exerciseId); });
+    });
 
     const isGlobal = (ex: Exercise) =>
       ex.isDefault === true ||
@@ -125,16 +125,79 @@ export class StorageService {
       ex.id.startsWith('global_ex') ||
       ex.id.startsWith('def_ex');
 
-    // Custom exercises are only visible to the user who added them.
-    // When adding/selecting exercises, coach and trainee do NOT see each other's custom exercises.
-    if (!effectiveUserId || targetUserId === null) {
-      return all.filter(isGlobal);
+    const alreadyOwned = new Set(all.filter((ex) => ex.userId === userId).map((ex) => ex.name.toLowerCase().trim()));
+    const toMigrate = all.filter((ex) => isGlobal(ex) && usedExIds.has(ex.id));
+
+    toMigrate.forEach((globalEx) => {
+      // Skip if user already has an exercise with same name
+      if (alreadyOwned.has(globalEx.name.toLowerCase().trim())) {
+        // Still remap workout references to the existing user exercise
+        const ownedEx = all.find(
+          (e) => e.userId === userId && e.name.toLowerCase().trim() === globalEx.name.toLowerCase().trim()
+        );
+        if (ownedEx) {
+          memoryStore.workouts.forEach((w) => {
+            if (w.userId !== userId && w.assignedByCoachId !== userId) return;
+            (w.exercises || []).forEach((we) => {
+              if (we.exerciseId === globalEx.id) we.exerciseId = ownedEx.id;
+            });
+          });
+        }
+        return;
+      }
+
+      const newEx: Exercise = {
+        ...globalEx,
+        id: generateId('custom_ex'),
+        userId,
+        isDefault: false,
+      };
+      memoryStore.exercises.push(newEx);
+      alreadyOwned.add(newEx.name.toLowerCase().trim());
+
+      // Remap workout references from global id → new user-owned id
+      memoryStore.workouts.forEach((w) => {
+        (w.exercises || []).forEach((we) => {
+          if (we.exerciseId === globalEx.id) we.exerciseId = newEx.id;
+        });
+      });
+
+      // Persist to cloud (best-effort, non-blocking)
+      CloudStorageService.saveExercise(newEx).catch(() => {});
+    });
+  }
+
+  static async syncExercises(): Promise<Exercise[]> {
+    try {
+      const cloudExercises = await CloudStorageService.fetchExercises();
+      if (cloudExercises !== null) {
+        memoryStore.exercises = cloudExercises;
+        // Run migration for the active user after fresh cloud sync
+        const activeId = this.getActiveUserId();
+        if (activeId) this.migrateGlobalExercisesToUser(activeId);
+        return [...memoryStore.exercises];
+      }
+    } catch (err) {
+      console.warn('syncExercises error:', err);
+    }
+    return [...memoryStore.exercises];
+  }
+
+  /**
+   * Returns exercises visible to the given user.
+   * Post-migration: only returns user's own exercises (no global pool).
+   */
+  static getExercises(targetUserId?: string | null, _options?: GetExercisesOptions): Exercise[] {
+    const all = this.initializeExercises();
+    const activeId = this.getActiveUserId();
+    const effectiveUserId = targetUserId !== undefined ? targetUserId : activeId;
+
+    if (!effectiveUserId || effectiveUserId === 'null') {
+      // No user — return nothing (no more global pool)
+      return [];
     }
 
-    return all.filter((ex) => {
-      if (isGlobal(ex)) return true;
-      return ex.userId === effectiveUserId;
-    });
+    return all.filter((ex) => ex.userId === effectiveUserId);
   }
 
   /**
@@ -219,21 +282,17 @@ export class StorageService {
     return newExercise;
   }
 
+  /**
+   * @deprecated Global exercises are no longer used.
+   * Creates a user-scoped exercise instead. The userId of the active user is used.
+   */
   static async createGlobalExercise(exerciseData: Omit<Exercise, 'id' | 'createdAt' | 'userId' | 'isDefault'>): Promise<Exercise> {
-    const newExercise: Exercise = {
+    const activeId = this.getActiveUserId();
+    return this.createExercise({
       ...exerciseData,
-      id: generateId('global_ex'),
-      userId: null,
-      isDefault: true,
-      createdAt: new Date().toISOString(),
-    };
-    memoryStore.exercises.push(newExercise);
-    try {
-      await CloudStorageService.saveExercise(newExercise);
-    } catch (e) {
-      console.warn('CloudStorageService.saveExercise global exercise error:', e);
-    }
-    return newExercise;
+      userId: activeId,
+      isDefault: false,
+    });
   }
 
   static updateExercise(exercise: Exercise): void {
@@ -828,13 +887,17 @@ export class StorageService {
    */
   static async syncWithCloud(userId: string): Promise<void> {
     try {
-      // Ensure exercises are synchronized before loading workouts
+      // 1. Load exercises first
       await this.syncExercises();
 
+      // 2. Load workouts
       const cloudWorkouts = await CloudStorageService.fetchWorkouts(userId);
       if (cloudWorkouts !== null) {
         this.setWorkoutsForUser(userId, cloudWorkouts);
       }
+
+      // 3. NOW run migration: workouts are in memory, we can find which global exercises were used
+      this.migrateGlobalExercisesToUser(userId);
     } catch (err) {
       console.warn('syncWithCloud error:', err);
     }

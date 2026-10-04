@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { X, Plus, Dumbbell, Loader2 } from 'lucide-react';
 import { MuscleGroup, MUSCLE_GROUPS, Exercise } from '../types/workout';
 import { StorageService } from '../services/storageService';
-import { useAuth } from '../context/AuthContext';
 
 interface CreateExerciseModalProps {
   userId: string;
@@ -20,12 +19,9 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   onCreated,
   initialName = '',
 }) => {
-  const { isAdmin, isCoach } = useAuth();
-  const canCreateGlobal = Boolean(isAdmin || isCoach);
   const [name, setName] = useState(initialName);
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>('chest');
   const [description, setDescription] = useState('');
-  const [isGlobal, setIsGlobal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const backdropMouseDownRef = React.useRef(false);
@@ -33,7 +29,6 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     setName(initialName);
-    setIsGlobal(false);
     setIsSubmitting(false);
     setError('');
     const originalOverflow = document.body.style.overflow;
@@ -57,26 +52,17 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
 
     try {
       const creatorId = StorageService.getActiveUserId() || userId;
-      const isGlobalSelected = canCreateGlobal && isGlobal;
-
-      const created = isGlobalSelected
-        ? await StorageService.createGlobalExercise({
-            name: name.trim(),
-            muscleGroup,
-            description: description.trim() || undefined,
-          })
-        : await StorageService.createExercise({
-            userId: creatorId,
-            name: name.trim(),
-            muscleGroup,
-            description: description.trim() || undefined,
-            isDefault: false,
-          });
+      const created = await StorageService.createExercise({
+        userId: creatorId,
+        name: name.trim(),
+        muscleGroup,
+        description: description.trim() || undefined,
+        isDefault: false,
+      });
 
       onCreated(created);
       setName('');
       setDescription('');
-      setIsGlobal(false);
       setError('');
       onClose();
     } catch (err: any) {
@@ -123,8 +109,8 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             <Dumbbell className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Нова вправа в базу</h3>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Вправа буде доступна для вибору у всіх тренуваннях</p>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Нова вправа</h3>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Вправа буде додана до вашої особистої бази</p>
           </div>
         </div>
 
@@ -191,23 +177,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             />
           </div>
 
-          {canCreateGlobal && (
-            <div className="flex items-center space-x-2.5 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 p-2.5">
-              <input
-                type="checkbox"
-                id="is-global-checkbox"
-                checked={isGlobal}
-                onChange={(e) => setIsGlobal(e.target.checked)}
-                className="h-4 w-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
-              />
-              <label
-                htmlFor="is-global-checkbox"
-                className="text-xs text-amber-950 dark:text-amber-200 cursor-pointer select-none"
-              >
-                <span className="font-bold">Global</span> (додає вправу в глобальну базу)
-              </label>
-            </div>
-          )}
+
 
           <div className="flex items-center space-x-2 pt-2">
             <button

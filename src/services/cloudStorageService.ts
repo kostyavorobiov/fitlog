@@ -421,16 +421,33 @@ export class CloudStorageService {
   }
 
   /**
-   * Fetch custom and global exercises from Supabase
+   * Fetch user-owned and global exercises from Supabase.
+   * Global exercises are included here so the client-side migration can copy
+   * them into user-owned records. After migration, getExercises() filters to user-only.
    */
   static async fetchExercises(_userId?: string): Promise<Exercise[] | null> {
     if (!isSupabaseConfigured() || !supabase) return null;
 
     try {
-      const { data, error } = await supabase
+      const { data: authData } = await supabase.auth.getUser();
+      const currentAuthId = authData?.user?.id || null;
+
+      // Fetch: user's own exercises + global/default exercises (for migration)
+      let query = supabase
         .from('exercises')
         .select('*')
         .order('name');
+
+      if (currentAuthId) {
+        // user's own OR global (is_default=true OR user_id IS NULL)
+        query = supabase
+          .from('exercises')
+          .select('*')
+          .or(`user_id.eq.${currentAuthId},is_default.eq.true,user_id.is.null`)
+          .order('name');
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.warn('fetchExercises error:', error.message);

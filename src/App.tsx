@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { WorkoutPlan, User } from './types/workout';
 import { StorageService, generateId } from './services/storageService';
 import { Navbar } from './components/Navbar';
@@ -232,9 +233,11 @@ const MainContent: React.FC = () => {
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <MainContent />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <MainContent />
+        </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

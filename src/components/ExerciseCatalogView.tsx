@@ -25,7 +25,6 @@ interface ExerciseCatalogViewProps {
 export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId }) => {
   const [search, setSearch] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
-  const [onlyCustom, setOnlyCustom] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
@@ -69,30 +68,15 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
     return StorageService.getExercises(userId);
   }, [userId, refreshKey]);
 
-  const customCount = useMemo(() => {
-    return exercises.filter(isCustomExercise).length;
-  }, [exercises]);
-
-  const displayedBase = useMemo(() => {
-    return onlyCustom ? exercises.filter(isCustomExercise) : exercises;
-  }, [exercises, onlyCustom]);
-
   const filtered = useMemo(() => {
     return exercises.filter((ex) => {
       const matchSearch =
         ex.name.toLowerCase().includes(search.toLowerCase()) ||
         (ex.description && ex.description.toLowerCase().includes(search.toLowerCase()));
-
       const matchMuscle = selectedMuscle === 'all' || ex.muscleGroup === selectedMuscle;
-      const isCustom = isCustomExercise(ex);
-      const matchCustom = !onlyCustom || isCustom;
-
-      return matchSearch && matchMuscle && matchCustom;
+      return matchSearch && matchMuscle;
     });
-  }, [exercises, search, selectedMuscle, onlyCustom]);
-
-  const currentUser = StorageService.getUserById(userId);
-  const isCoachOrAdmin = !currentUser || currentUser.role === 'coach' || currentUser.role === 'admin';
+  }, [exercises, search, selectedMuscle]);
 
   const handleConfirmDelete = async () => {
     if (!exerciseToDelete) return;
@@ -144,16 +128,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
               </button>
             )}
           </div>
-
-          <label className="flex items-center space-x-2 cursor-pointer self-start sm:self-center text-xs text-zinc-700 dark:text-zinc-300 select-none">
-            <input
-              type="checkbox"
-              checked={onlyCustom}
-              onChange={(e) => setOnlyCustom(e.target.checked)}
-              className="rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500 cursor-pointer"
-            />
-            <span>Тільки мої вправи ({customCount})</span>
-          </label>
         </div>
 
         {/* Muscle group tabs */}
@@ -166,11 +140,11 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
               : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
           >
-            Всі м'язи ({displayedBase.length})
+            Всі мʼязи ({exercises.length})
           </button>
           {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => {
             const info = MUSCLE_GROUPS[groupKey];
-            const count = displayedBase.filter((e) => e.muscleGroup === groupKey).length;
+            const count = exercises.filter((e) => e.muscleGroup === groupKey).length;
             const isSelected = selectedMuscle === groupKey;
             return (
               <button
@@ -194,9 +168,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         {filtered.length === 0 ? (
           <div className="col-span-full rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 p-10 text-center space-y-2">
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              {onlyCustom
-                ? 'У вас ще немає створених власних вправ.'
-                : 'Вправ не знайдено.'}
+              {'Вправ не знайдено.'}
             </p>
             <button
               type="button"
@@ -211,8 +183,8 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
           filtered.map((ex) => {
             const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
             const lastPerf = StorageService.getLastExercisePerformance(userId, ex.id);
-            const isCustom = isCustomExercise(ex);
-            const canEdit = (isCustom && ex.userId === userId) || (!isCustom && isCoachOrAdmin);
+            // All exercises are now user-owned — everyone can edit their own
+            const canEdit = ex.userId === userId;
 
             return (
               <div
@@ -229,11 +201,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                       {ex.name}
                     </h3>
                     <div className="flex items-center space-x-1 shrink-0">
-                      {isCustom && (
-                        <span className="rounded border border-amber-200 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 dark:text-amber-300">
-                          Власна
-                        </span>
-                      )}
                       <span className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
                         {muscleInfo.nameUk}
                       </span>
@@ -245,7 +212,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                             setExerciseToEdit(ex);
                           }}
                           className="p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ml-0.5"
-                          title={isCustom ? "Редагувати власну вправу" : "Редагувати вправу"}
+                          title="Редагувати вправу"
                           aria-label={`Редагувати вправу ${ex.name}`}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -259,7 +226,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                             setExerciseToDelete(ex);
                           }}
                           className="p-1 rounded text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer ml-0.5"
-                          title={isCustom ? "Видалити власну вправу" : "Видалити вправу"}
+                          title="Видалити вправу"
                           aria-label={`Видалити вправу ${ex.name}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -345,7 +312,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
 
       <ConfirmDeleteModal
         isOpen={Boolean(exerciseToDelete)}
-        title={exerciseToDelete && isCustomExercise(exerciseToDelete) ? "Видалити власну вправу?" : "Видалити вправу з бази?"}
+        title="Видалити вправу?"
         message={`Ви впевнені, що хочете видалити вправу "${exerciseToDelete?.name || ''}"? Її буде вилучено з бази вправ.`}
         confirmLabel="Видалити"
         cancelLabel="Скасувати"
