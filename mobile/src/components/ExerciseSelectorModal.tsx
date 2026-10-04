@@ -15,7 +15,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { ExerciseService } from '../services/exerciseService';
-import { isCustomExercise } from '../screens/ExercisesScreen';
 
 interface ExerciseSelectorModalProps {
   visible: boolean;
@@ -281,16 +280,6 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                               {muscle.nameUk}
                             </Text>
                           </View>
-                          {isCustomExercise(item) && (
-                            <View
-                              style={[
-                                styles.ownerBadge,
-                                isDark ? styles.ownerBadgeDark : styles.ownerBadgeLight,
-                              ]}
-                            >
-                              <Text style={styles.ownerBadgeText}>Власна</Text>
-                            </View>
-                          )}
                         </View>
                       </View>
 

@@ -21,7 +21,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { ExerciseService } from '../services/exerciseService';
-import { MUSCLE_GROUPS, MuscleGroup, Exercise, isCustomExercise } from '../types/workout';
+import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
 
 const MUSCLE_ORDER: MuscleGroup[] = [
   'chest',
@@ -34,8 +34,6 @@ const MUSCLE_ORDER: MuscleGroup[] = [
   'other',
 ];
 
-export { isCustomExercise };
-
 export const ExercisesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const { user, isAdmin } = useAuth();
@@ -44,7 +42,6 @@ export const ExercisesScreen: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [onlyCustom, setOnlyCustom] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Create Modal State
@@ -75,20 +72,14 @@ export const ExercisesScreen: React.FC = () => {
     loadExercises();
   }, [loadExercises]);
 
-  const customCount = useMemo(() => {
-    return exercises.filter(isCustomExercise).length;
-  }, [exercises]);
-
   const filteredExercises = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return exercises.filter((ex) => {
       const matchesSearch = !q || ex.name.toLowerCase().includes(q);
       const matchesMuscle = selectedMuscle === 'all' || ex.muscleGroup === selectedMuscle;
-      const isCustom = isCustomExercise(ex);
-      const matchesCustom = !onlyCustom || isCustom;
-      return matchesSearch && matchesMuscle && matchesCustom;
+      return matchesSearch && matchesMuscle;
     });
-  }, [exercises, searchQuery, selectedMuscle, onlyCustom]);
+  }, [exercises, searchQuery, selectedMuscle]);
 
   // Handle open create modal
   const handleOpenCreateModal = () => {
@@ -140,10 +131,9 @@ export const ExercisesScreen: React.FC = () => {
 
   // Handle open edit modal (only for own exercises or admin)
   const handleOpenEditModal = (ex: Exercise) => {
-    const isCustom = isCustomExercise(ex);
-    const isOwner = isCustom && ex.userId === user?.id;
+    const isOwner = ex.userId === user?.id;
     if (!isOwner && !isAdmin) {
-      Alert.alert('Заборонено', 'Ви можете редагувати лише власні приватні вправи');
+      Alert.alert('Заборонено', 'Ви можете редагувати лише власні вправи');
       return;
     }
 
@@ -187,10 +177,9 @@ export const ExercisesScreen: React.FC = () => {
 
   // Delete exercise with confirmation
   const handleDeleteExercise = (ex: Exercise) => {
-    const isCustom = isCustomExercise(ex);
-    const isOwner = isCustom && ex.userId === user?.id;
+    const isOwner = ex.userId === user?.id;
     if (!isOwner && !isAdmin) {
-      Alert.alert('Заборонено', 'Ви можете видаляти лише власні приватні вправи');
+      Alert.alert('Заборонено', 'Ви можете видаляти лише власні вправи');
       return;
     }
 
@@ -245,7 +234,7 @@ export const ExercisesScreen: React.FC = () => {
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        {/* Search Bar & Custom Filter */}
+        {/* Search Bar */}
         <View style={styles.filterBarContainer}>
           <View style={[styles.searchBar, isDark ? styles.searchBarDark : styles.searchBarLight]}>
             <Ionicons
@@ -269,33 +258,6 @@ export const ExercisesScreen: React.FC = () => {
               </TouchableOpacity>
             )}
           </View>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setOnlyCustom((prev) => !prev)}
-            style={[
-              styles.customToggleChip,
-              onlyCustom
-                ? (isDark ? styles.customToggleActiveDark : styles.customToggleActiveLight)
-                : (isDark ? styles.customToggleInactiveDark : styles.customToggleInactiveLight),
-            ]}
-          >
-            <Ionicons
-              name={onlyCustom ? 'checkmark-circle' : 'ellipse-outline'}
-              size={15}
-              color={onlyCustom ? (isDark ? '#09090b' : '#ffffff') : (isDark ? '#a1a1aa' : '#71717a')}
-            />
-            <Text
-              style={[
-                styles.customToggleText,
-                onlyCustom
-                  ? (isDark ? styles.textPrimaryDark : styles.textPrimaryLight)
-                  : (isDark ? styles.subDark : styles.subLight),
-              ]}
-            >
-              Тільки власні ({customCount})
-            </Text>
-          </TouchableOpacity>
         </View>
 
         {/* Muscle group tabs */}
@@ -404,9 +366,8 @@ export const ExercisesScreen: React.FC = () => {
           <View style={styles.grid}>
             {filteredExercises.map((ex) => {
               const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
-              const isCustom = isCustomExercise(ex);
-              const isOwner = isCustom && ex.userId === user?.id;
-              const canEdit = (isCustom && isOwner) || (!isCustom && isAdmin);
+              const isOwner = ex.userId === user?.id;
+              const canEdit = isOwner || isAdmin;
 
               return (
                 <Card key={ex.id} style={styles.exCard}>
@@ -428,18 +389,6 @@ export const ExercisesScreen: React.FC = () => {
                             {muscleInfo.nameUk}
                           </Text>
                         </View>
-
-                        {/* Owner badge: ONLY for custom exercises */}
-                        {isCustom && (
-                          <View
-                            style={[
-                              styles.ownerBadge,
-                              isDark ? styles.ownerBadgeDark : styles.ownerBadgeLight,
-                            ]}
-                          >
-                            <Text style={styles.ownerBadgeText}>Власна</Text>
-                          </View>
-                        )}
                       </View>
                     </View>
 
