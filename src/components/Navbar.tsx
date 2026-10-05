@@ -114,11 +114,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Top Header - Liquid Glass with Mobile Auto-Hide */}
       <header
         data-no-swipe="true"
-        className={`sticky top-0 z-40 w-full border-b border-zinc-200/70 dark:border-zinc-800/70 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl transition-all duration-300 ease-in-out ${
-          isNavVisible
-            ? 'translate-y-0 opacity-100'
-            : '-translate-y-full opacity-0 pointer-events-none md:translate-y-0 md:opacity-100 md:pointer-events-auto'
-        }`}
+        className={`sticky top-0 z-40 w-full border-b border-zinc-200/70 dark:border-zinc-800/70 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl transition-all duration-300 ease-in-out ${isNavVisible
+          ? 'translate-y-0 opacity-100'
+          : '-translate-y-full opacity-0 pointer-events-none md:translate-y-0 md:opacity-100 md:pointer-events-auto'
+          }`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
@@ -132,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => handleNavSelect('editor')}
             >
               <span className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 hover:text-zinc-700 dark:hover:text-white transition-colors">
-                Workout diary
+                Your workout diary
               </span>
             </div>
 
@@ -145,11 +144,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor');
                 }}
                 onClick={() => handleNavSelect('editor')}
-                className={`relative flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                  currentTab === 'editor'
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
-                }`}
+                className={`relative flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'editor'
+                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  }`}
               >
                 <Dumbbell className="h-4 w-4" />
                 <span>Тренування</span>
@@ -165,11 +163,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history');
                 }}
                 onClick={() => handleNavSelect('history')}
-                className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                  currentTab === 'history'
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
-                }`}
+                className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'history'
+                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  }`}
               >
                 <Calendar className="h-4 w-4" />
                 <span>Календар</span>
@@ -182,11 +179,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics');
                 }}
                 onClick={() => handleNavSelect('analytics')}
-                className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                  currentTab === 'analytics'
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
-                }`}
+                className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'analytics'
+                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  }`}
               >
                 <Activity className="h-4 w-4" />
                 <span>Аналітика</span>
@@ -199,11 +195,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog');
                 }}
                 onClick={() => handleNavSelect('catalog')}
-                className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                  currentTab === 'catalog'
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
-                }`}
+                className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'catalog'
+                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  }`}
               >
                 <BookOpen className="h-4 w-4" />
                 <span>Вправи</span>
@@ -217,11 +212,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees');
                   }}
                   onClick={() => handleNavSelect('trainees')}
-                  className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                    currentTab === 'trainees'
-                      ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
-                  }`}
+                  className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'trainees'
+                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                    }`}
                 >
                   <Users className="h-4 w-4" />
                   <span>Підопічні</span>
@@ -236,11 +230,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setLanguage('uk')}
-                  className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
-                    language === 'uk'
-                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950'
-                      : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-                  }`}
+                  className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${language === 'uk'
+                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                    }`}
                   title="Українська"
                 >
                   УКР
@@ -248,11 +241,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setLanguage('en')}
-                  className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
-                    language === 'en'
-                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950'
-                      : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-                  }`}
+                  className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${language === 'en'
+                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                    }`}
                   title="English"
                 >
                   ENG
@@ -290,11 +282,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                       if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('profile');
                     }}
                     onClick={() => handleNavSelect('profile')}
-                    className={`relative flex items-center justify-center rounded-full p-0.5 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-400 active:scale-95 ${
-                      currentTab === 'profile'
-                        ? 'border-zinc-900 dark:border-zinc-100 ring-2 ring-zinc-300 dark:ring-zinc-700'
-                        : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
-                    }`}
+                    className={`relative flex items-center justify-center rounded-full p-0.5 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-400 active:scale-95 ${currentTab === 'profile'
+                      ? 'border-zinc-900 dark:border-zinc-100 ring-2 ring-zinc-300 dark:ring-zinc-700'
+                      : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                      }`}
                     style={{ minWidth: '40px', minHeight: '40px' }}
                     title="Мій профіль"
                     aria-label="Мій профіль"
@@ -343,11 +334,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       <nav
         data-no-swipe="true"
         aria-label="Mobile Navigation"
-        className={`md:hidden fixed bottom-4 inset-x-4 max-w-sm mx-auto z-40 rounded-full bg-zinc-100 dark:bg-zinc-800 shadow-lg px-2 py-1.5 flex items-center justify-around transition-all duration-300 ease-in-out ${
-          isNavVisible
-            ? 'translate-y-0 opacity-100 pointer-events-auto'
-            : 'translate-y-28 opacity-0 pointer-events-none'
-        }`}
+        className={`md:hidden fixed bottom-4 inset-x-4 max-w-sm mx-auto z-40 rounded-full bg-zinc-100 dark:bg-zinc-800 shadow-lg px-2 py-1.5 flex items-center justify-around transition-all duration-300 ease-in-out ${isNavVisible
+          ? 'translate-y-0 opacity-100 pointer-events-auto'
+          : 'translate-y-28 opacity-0 pointer-events-none'
+          }`}
         style={{
           marginBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
@@ -358,11 +348,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           onTouchStart={() => handleNavSelect('editor')}
           onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor'); }}
           onClick={() => handleNavSelect('editor')}
-          className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
-            currentTab === 'editor'
-              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-              : 'text-zinc-500 dark:text-zinc-400'
-          }`}
+          className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'editor'
+            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+            : 'text-zinc-500 dark:text-zinc-400'
+            }`}
         >
           <Dumbbell className="h-[18px] w-[18px] shrink-0" />
           <span className="text-[9px] font-semibold leading-none">Тренування</span>
@@ -377,11 +366,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           onTouchStart={() => handleNavSelect('history')}
           onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history'); }}
           onClick={() => handleNavSelect('history')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
-            currentTab === 'history'
-              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-              : 'text-zinc-500 dark:text-zinc-400'
-          }`}
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'history'
+            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+            : 'text-zinc-500 dark:text-zinc-400'
+            }`}
         >
           <Calendar className="h-[18px] w-[18px] shrink-0" />
           <span className="text-[9px] font-semibold leading-none">Календар</span>
@@ -393,11 +381,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           onTouchStart={() => handleNavSelect('analytics')}
           onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics'); }}
           onClick={() => handleNavSelect('analytics')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
-            currentTab === 'analytics'
-              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-              : 'text-zinc-500 dark:text-zinc-400'
-          }`}
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'analytics'
+            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+            : 'text-zinc-500 dark:text-zinc-400'
+            }`}
         >
           <BarChart2 className="h-[18px] w-[18px] shrink-0" />
           <span className="text-[9px] font-semibold leading-none">Аналітика</span>
@@ -409,11 +396,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           onTouchStart={() => handleNavSelect('catalog')}
           onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog'); }}
           onClick={() => handleNavSelect('catalog')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
-            currentTab === 'catalog'
-              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-              : 'text-zinc-500 dark:text-zinc-400'
-          }`}
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'catalog'
+            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+            : 'text-zinc-500 dark:text-zinc-400'
+            }`}
         >
           <BookOpen className="h-[18px] w-[18px] shrink-0" />
           <span className="text-[9px] font-semibold leading-none">Вправи</span>
@@ -426,11 +412,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             onTouchStart={() => handleNavSelect('trainees')}
             onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees'); }}
             onClick={() => handleNavSelect('trainees')}
-            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${
-              currentTab === 'trainees'
-                ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-                : 'text-zinc-500 dark:text-zinc-400'
-            }`}
+            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'trainees'
+              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+              : 'text-zinc-500 dark:text-zinc-400'
+              }`}
           >
             <Users className="h-[18px] w-[18px] shrink-0" />
             <span className="text-[9px] font-semibold leading-none">Підопічні</span>

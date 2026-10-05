@@ -1053,19 +1053,6 @@ export const WorkoutEditorScreen: React.FC = () => {
                         >
                           <Ionicons name="trash-outline" size={15} color="#ef4444" />
                         </TouchableOpacity>
-
-                        <TouchableOpacity
-                          activeOpacity={0.7}
-                          onPress={() => handleToggleExpand(ex.id)}
-                          style={[styles.actionBtn, isDark ? styles.actionBtnDark : styles.actionBtnLight]}
-                          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                        >
-                          <Ionicons
-                            name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                            size={15}
-                            color={isDark ? '#e4e4e7' : '#3f3f46'}
-                          />
-                        </TouchableOpacity>
                       </View>
                     </View>
                   </View>

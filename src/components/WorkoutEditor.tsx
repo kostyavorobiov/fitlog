@@ -971,18 +971,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleExpand(weItem.id)}
-                        className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-                        title={isExpanded ? 'Згорнути' : 'Розгорнути'}
-                      >
-                        {isExpanded ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )}
-                      </button>
                     </div>
                   </div>
 
@@ -1305,18 +1293,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       title="Видалити вправу"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleExpand(weItem.id)}
-                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-                      title={isExpanded ? 'Згорнути' : 'Розгорнути'}
-                    >
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
                     </button>
                   </div>
                 </div>
