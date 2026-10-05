@@ -44,36 +44,48 @@ const SUPERSET_PALETTES = [
     badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30',
     buttonActive: 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60',
     nameUk: 'Смарагдовий',
+    lineBg: 'bg-emerald-500',
+    text: 'text-emerald-600 dark:text-emerald-400',
   },
   {
     border: 'border-l-4 border-l-amber-500',
     badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30',
     buttonActive: 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60',
     nameUk: 'Бурштиновий',
+    lineBg: 'bg-amber-500',
+    text: 'text-amber-600 dark:text-amber-400',
   },
   {
     border: 'border-l-4 border-l-indigo-500',
     badge: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30',
     buttonActive: 'border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60',
     nameUk: 'Індиго',
+    lineBg: 'bg-indigo-500',
+    text: 'text-indigo-600 dark:text-indigo-400',
   },
   {
     border: 'border-l-4 border-l-rose-500',
     badge: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30',
     buttonActive: 'border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60',
     nameUk: 'Рожевий',
+    lineBg: 'bg-rose-500',
+    text: 'text-rose-600 dark:text-rose-400',
   },
   {
     border: 'border-l-4 border-l-cyan-500',
     badge: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30',
     buttonActive: 'border-cyan-300 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60',
     nameUk: 'Блакитний',
+    lineBg: 'bg-cyan-500',
+    text: 'text-cyan-600 dark:text-cyan-400',
   },
   {
     border: 'border-l-4 border-l-purple-500',
     badge: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/30',
     buttonActive: 'border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60',
     nameUk: 'Фіолетовий',
+    lineBg: 'bg-purple-500',
+    text: 'text-purple-600 dark:text-purple-400',
   },
 ];
 
@@ -156,6 +168,194 @@ const ExerciseProgressRing: React.FC<{
   );
 };
 
+const SupersetModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  targetWeId: string | null;
+  exercises: WorkoutExercise[];
+  supersetLabels: Map<string, { letter: string; index: number; tag: string; groupCount: number }>;
+  onJoinWithExisting: (sourceWeId: string, candidateWeId: string) => void;
+  onAddNewToSuperset: (sourceWeId: string) => void;
+  onUnlinkExercise: (weId: string) => void;
+}> = ({
+  isOpen,
+  onClose,
+  targetWeId,
+  exercises,
+  supersetLabels,
+  onJoinWithExisting,
+  onAddNewToSuperset,
+  onUnlinkExercise,
+}) => {
+  if (!isOpen || !targetWeId) return null;
+  const targetEx = exercises.find((e) => e.id === targetWeId);
+  if (!targetEx) return null;
+
+  const currentGroupId = targetEx.supersetGroupId;
+  const groupExercises = currentGroupId
+    ? exercises.filter((e) => e.supersetGroupId === currentGroupId)
+    : [targetEx];
+  const groupCount = groupExercises.length;
+  const canAddMore = groupCount < 3;
+  const supersetInfo = supersetLabels.get(targetEx.id);
+
+  // Eligible candidate exercises to join from current workout
+  const eligibleCandidates = exercises.filter(
+    (e) => e.id !== targetWeId && (!e.supersetGroupId || e.supersetGroupId !== currentGroupId)
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+              <Link className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                Налаштування суперсету
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {targetEx.exerciseName} {supersetInfo && <span className="font-extrabold text-indigo-600 dark:text-indigo-400">({supersetInfo.tag})</span>}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-4 overflow-y-auto flex-1">
+          {/* Current superset list if in superset */}
+          {currentGroupId && groupCount > 1 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                  Вправи в суперсеті ({groupCount}/3)
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+                  Максимум 3
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {groupExercises.map((ge) => {
+                  const tagInfo = supersetLabels.get(ge.id);
+                  return (
+                    <div
+                      key={ge.id}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border ${
+                        ge.id === targetWeId
+                          ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20'
+                          : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-indigo-500 text-white">
+                          {tagInfo?.tag || 'SS'}
+                        </span>
+                        <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate">
+                          {ge.exerciseName}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-zinc-400">
+                        {ge.sets?.length || 0} підходи
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Add exercise section */}
+          {canAddMore ? (
+            <div className="space-y-3">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                Додати вправу в цей суперсет:
+              </div>
+
+              {/* Add new from catalog */}
+              <button
+                type="button"
+                onClick={() => onAddNewToSuperset(targetWeId)}
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-indigo-300 dark:border-indigo-700 bg-indigo-50/50 dark:bg-indigo-950/20 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-colors cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Додати нову вправу з каталогу</span>
+              </button>
+
+              {/* Choose from current workout */}
+              {eligibleCandidates.length > 0 && (
+                <div>
+                  <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 mb-2">
+                    Або вибрати з поточного тренування:
+                  </div>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {eligibleCandidates.map((cand) => (
+                      <div
+                        key={cand.id}
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/30 transition-colors"
+                      >
+                        <div className="min-w-0 flex-1 pr-2">
+                          <div className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate">
+                            {cand.exerciseName}
+                          </div>
+                          <div className="text-[10px] text-zinc-400">
+                            {cand.sets?.length || 0} підходи
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onJoinWithExisting(targetWeId, cand.id)}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer shrink-0"
+                        >
+                          Обʼєднати
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-xs text-amber-800 dark:text-amber-300">
+              У цьому суперсеті вже є 3 вправи (максимум). Ви можете роз'єднати суперсет або видалити вправу.
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2 bg-zinc-50 dark:bg-zinc-800/40">
+          {currentGroupId && (
+            <button
+              type="button"
+              onClick={() => onUnlinkExercise(targetWeId)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <Unlink className="w-3.5 h-3.5" />
+              <span>Роз'єднати суперсет</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2 px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer text-center"
+          >
+            Закрити
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface WorkoutEditorProps {
   workout: WorkoutPlan;
   userId: string;
@@ -193,19 +393,44 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     return Array.isArray(workout.exercises) ? workout.exercises : [];
   }, [workout.exercises]);
 
-  const supersetColorMap = useMemo(() => {
-    const map = new Map<string, (typeof SUPERSET_PALETTES)[0]>();
-    const uniqueGroups: string[] = [];
+  const { supersetColorMap, supersetLabels } = useMemo(() => {
+    const colorMap = new Map<string, (typeof SUPERSET_PALETTES)[0]>();
+    const labels = new Map<string, { letter: string; index: number; tag: string; groupCount: number }>();
+
+    const groupCounts = new Map<string, number>();
     currentExList.forEach((e) => {
-      if (e.supersetGroupId && !uniqueGroups.includes(e.supersetGroupId)) {
-        uniqueGroups.push(e.supersetGroupId);
+      if (e.supersetGroupId) {
+        groupCounts.set(e.supersetGroupId, (groupCounts.get(e.supersetGroupId) || 0) + 1);
       }
     });
-    uniqueGroups.forEach((groupId, idx) => {
-      map.set(groupId, SUPERSET_PALETTES[idx % SUPERSET_PALETTES.length]);
+
+    const validGroups: string[] = [];
+    currentExList.forEach((e) => {
+      if (e.supersetGroupId && (groupCounts.get(e.supersetGroupId) || 0) >= 2 && !validGroups.includes(e.supersetGroupId)) {
+        validGroups.push(e.supersetGroupId);
+      }
     });
-    return map;
+
+    validGroups.forEach((groupId, idx) => {
+      colorMap.set(groupId, SUPERSET_PALETTES[idx % SUPERSET_PALETTES.length]);
+      const letter = String.fromCharCode(65 + (idx % 26)); // 'A', 'B', 'C'...
+      const groupExercises = currentExList.filter((e) => e.supersetGroupId === groupId);
+      groupExercises.forEach((e, exIdx) => {
+        labels.set(e.id, {
+          letter,
+          index: exIdx + 1,
+          tag: `${letter}${exIdx + 1}`,
+          groupCount: groupExercises.length,
+        });
+      });
+    });
+
+    return { supersetColorMap: colorMap, supersetLabels: labels };
   }, [currentExList]);
+
+  // Superset configuration modal state
+  const [supersetModalWeId, setSupersetModalWeId] = useState<string | null>(null);
+  const [pendingSupersetForWeId, setPendingSupersetForWeId] = useState<string | null>(null);
 
   // Strictly respect requirement 6: Do NOT auto open exercise selector modal; show workout form directly!
   const [isSelectorOpen, setIsSelectorOpen] = useState(Boolean(autoOpenExerciseSelector));
@@ -424,7 +649,20 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       const weId = generateId('we');
       const currentExercises = Array.isArray(currentWorkout.exercises) ? currentWorkout.exercises : [];
-      const isFirstExercise = currentExercises.length === 0;
+
+      let targetGroupId: string | null = null;
+      let baseExercises = currentExercises;
+
+      if (pendingSupersetForWeId) {
+        const sourceEx = currentExercises.find((e) => e.id === pendingSupersetForWeId);
+        targetGroupId = sourceEx?.supersetGroupId || `SS-${generateId('grp').slice(0, 4)}`;
+        if (sourceEx && !sourceEx.supersetGroupId) {
+          baseExercises = currentExercises.map((e) =>
+            e.id === pendingSupersetForWeId ? { ...e, supersetGroupId: targetGroupId } : e
+          );
+        }
+      }
+
       const newWorkoutExercise: WorkoutExercise = {
         id: weId,
         workoutPlanId: currentWorkout.id,
@@ -435,19 +673,36 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         targetRepsRange: targetRange,
         setCount: initialSets.length,
         sets: initialSets.map((s) => ({ ...s, workoutExerciseId: weId })),
+        supersetGroupId: targetGroupId,
       };
+
+      let finalExercises: WorkoutExercise[];
+      if (pendingSupersetForWeId && targetGroupId) {
+        const sourceIdx = baseExercises.findIndex((e) => e.id === pendingSupersetForWeId);
+        let insertIdx = sourceIdx + 1;
+        while (insertIdx < baseExercises.length && baseExercises[insertIdx].supersetGroupId === targetGroupId) {
+          insertIdx++;
+        }
+        finalExercises = [
+          ...baseExercises.slice(0, insertIdx),
+          newWorkoutExercise,
+          ...baseExercises.slice(insertIdx),
+        ].map((e, idx) => ({ ...e, order: idx + 1 }));
+      } else {
+        finalExercises = [...baseExercises, newWorkoutExercise].map((e, idx) => ({ ...e, order: idx + 1 }));
+      }
 
       const updated: WorkoutPlan = {
         ...currentWorkout,
-        exercises: [...currentExercises, newWorkoutExercise],
+        exercises: finalExercises,
       };
 
       updateAndSave(updated);
       setIsSelectorOpen(false);
+      setPendingSupersetForWeId(null);
 
-      if (isFirstExercise) {
-        setExpandedExerciseId(weId);
-      }
+      // Always expand newly added exercise immediately
+      setExpandedExerciseId(weId);
 
       // On mobile: position newly added exercise slightly below the top navbar without smooth scroll
       if (typeof window !== 'undefined' && window.innerWidth < 640) {
@@ -456,6 +711,80 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     } catch (err) {
       console.error('Failed to add exercise to workout:', err);
     }
+  };
+
+  // Join existing exercise from workout into superset (max 3)
+  const handleJoinWithExisting = (sourceWeId: string, candidateWeId: string) => {
+    const currentWorkout = workoutRef.current;
+    const currentExercises = currentWorkout.exercises || [];
+    const sourceEx = currentExercises.find((e) => e.id === sourceWeId);
+    const candidateEx = currentExercises.find((e) => e.id === candidateWeId);
+    if (!sourceEx || !candidateEx) return;
+
+    const existingGroup = sourceEx.supersetGroupId;
+    if (existingGroup) {
+      const count = currentExercises.filter((e) => e.supersetGroupId === existingGroup).length;
+      if (count >= 3) {
+        alert('У суперсеті може бути максимум 3 вправи');
+        return;
+      }
+    }
+
+    const groupId = existingGroup || `SS-${generateId('grp').slice(0, 4)}`;
+
+    const updated = currentExercises.map((e) => {
+      if (e.id === sourceWeId || e.id === candidateWeId) {
+        return { ...e, supersetGroupId: groupId };
+      }
+      return e;
+    });
+
+    const targetCandidate = updated.find((e) => e.id === candidateWeId)!;
+    const withoutCandidate = updated.filter((e) => e.id !== candidateWeId);
+    const sourceIdx = withoutCandidate.findIndex((e) => e.id === sourceWeId);
+    let insertIdx = sourceIdx + 1;
+    while (insertIdx < withoutCandidate.length && withoutCandidate[insertIdx].supersetGroupId === groupId) {
+      insertIdx++;
+    }
+
+    const reordered = [
+      ...withoutCandidate.slice(0, insertIdx),
+      targetCandidate,
+      ...withoutCandidate.slice(insertIdx),
+    ].map((e, idx) => ({ ...e, order: idx + 1 }));
+
+    updateAndSave({ ...currentWorkout, exercises: reordered });
+    setSupersetModalWeId(null);
+    setExpandedExerciseId(candidateWeId);
+  };
+
+  // Unlink exercise from superset (if <= 1 remains, clear group)
+  const handleUnlinkExercise = (weId: string) => {
+    const currentWorkout = workoutRef.current;
+    const currentExercises = currentWorkout.exercises || [];
+    const current = currentExercises.find((e) => e.id === weId);
+    if (!current?.supersetGroupId) return;
+
+    const oldGroup = current.supersetGroupId;
+    let updated = currentExercises.map((e) =>
+      e.id === weId ? { ...e, supersetGroupId: null } : e
+    );
+
+    const remaining = updated.filter((e) => e.supersetGroupId === oldGroup);
+    if (remaining.length <= 1) {
+      updated = updated.map((e) =>
+        e.supersetGroupId === oldGroup ? { ...e, supersetGroupId: null } : e
+      );
+    }
+
+    updateAndSave({ ...currentWorkout, exercises: updated });
+    setSupersetModalWeId(null);
+  };
+
+  const handleAddNewToSuperset = (sourceWeId: string) => {
+    setPendingSupersetForWeId(sourceWeId);
+    setSupersetModalWeId(null);
+    setIsSelectorOpen(true);
   };
 
   // Reorder exercise drag & drop
@@ -686,6 +1015,25 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
     if (isNowCompleted) {
       playSuccessChime();
+
+      // Automatically expand next exercise in superset upon set completion
+      const currentEx = currentWorkout.exercises.find((e) => e.id === weId);
+      if (currentEx?.supersetGroupId) {
+        const groupExercises = currentWorkout.exercises.filter(
+          (e) => e.supersetGroupId === currentEx.supersetGroupId
+        );
+        if (groupExercises.length > 1) {
+          const currentIndexInGroup = groupExercises.findIndex((e) => e.id === weId);
+          const nextIndexInGroup = (currentIndexInGroup + 1) % groupExercises.length;
+          const nextExercise = groupExercises[nextIndexInGroup];
+          if (nextExercise) {
+            setExpandedExerciseId(nextExercise.id);
+            if (typeof window !== 'undefined' && window.innerWidth < 640) {
+              scrollToExerciseCard(nextExercise.id);
+            }
+          }
+        }
+      }
     } else {
       playBeep(400, 0.1);
     }
@@ -940,120 +1288,128 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             const isDragged = draggedIndex === weIndex;
             const isSuperset = Boolean(weItem.supersetGroupId);
             const supersetPalette = weItem.supersetGroupId ? supersetColorMap.get(weItem.supersetGroupId) : null;
+            const supersetInfo = supersetLabels.get(weItem.id);
             const isExpanded = expandedExerciseId === weItem.id;
+            const nextEx = currentExList[weIndex + 1];
+            const hasNextInSameSuperset =
+              Boolean(weItem.supersetGroupId) &&
+              Boolean(nextEx?.supersetGroupId) &&
+              weItem.supersetGroupId === nextEx?.supersetGroupId;
 
             return (
-              <div
-                key={weItem.id}
-                id={`exercise-card-${weItem.id}`}
-                draggable
-                onDragStart={() => handleDragStart(weIndex)}
-                onDragOver={(e) => handleDragOver(e, weIndex)}
-                onDragEnd={handleDragEnd}
-                className={`rounded-xl border bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-colors ${isDragged
-                  ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70'
-                  : isSuperset && supersetPalette
-                    ? `${supersetPalette.border} border-zinc-200 dark:border-zinc-800`
-                    : 'border-zinc-200 dark:border-zinc-800'
-                  }`}
-              >
-                {/* ================= MOBILE VIEW (sm:hidden) ================= */}
-                <div className="block sm:hidden">
-                  <MobileSwipeableExerciseCard
-                    exerciseId={weItem.id}
-                    onDelete={() => handleRemoveExercise(weItem.id)}
-                  >
-
-                    {/* Mobile Exercise Header */}
-                    <div
-                      className={`flex items-center justify-between gap-2 px-3 pt-3 pb-2.5 ${isExpanded ? 'border-b border-zinc-100 dark:border-zinc-800' : ''
-                        }`}
+              <React.Fragment key={weItem.id}>
+                <div
+                  id={`exercise-card-${weItem.id}`}
+                  draggable
+                  onDragStart={() => handleDragStart(weIndex)}
+                  onDragOver={(e) => handleDragOver(e, weIndex)}
+                  onDragEnd={handleDragEnd}
+                  className={`rounded-xl border bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-colors ${isDragged
+                    ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70'
+                    : isSuperset && supersetPalette
+                      ? `${supersetPalette.border} border-zinc-200 dark:border-zinc-800`
+                      : 'border-zinc-200 dark:border-zinc-800'
+                    }`}
+                >
+                  {/* ================= MOBILE VIEW (sm:hidden) ================= */}
+                  <div className="block sm:hidden">
+                    <MobileSwipeableExerciseCard
+                      exerciseId={weItem.id}
+                      onDelete={() => handleRemoveExercise(weItem.id)}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1 select-none">
-                        {/* Vertical Reorder Stepper (Up/Down) */}
-                        <div
-                          className="flex flex-col items-center justify-center shrink-0 -space-y-1 py-0.5 select-none"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => handleMoveExercise(weIndex, 'up')}
-                            disabled={weIndex === 0}
-                            className="p-0.5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none transition-colors cursor-pointer"
-                            title="Перемістити вгору"
-                          >
-                            <ChevronUp className="h-4 w-4 stroke-[2.5]" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleMoveExercise(weIndex, 'down')}
-                            disabled={weIndex === currentExList.length - 1}
-                            className="p-0.5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none transition-colors cursor-pointer"
-                            title="Перемістити вниз"
-                          >
-                            <ChevronDown className="h-4 w-4 stroke-[2.5]" />
-                          </button>
-                        </div>
 
-                        {/* Exercise name + badges (Clickable to toggle expand) */}
-                        <div
-                          onClick={() => handleToggleExpand(weItem.id)}
-                          className="min-w-0 flex-1 flex flex-col justify-center cursor-pointer"
-                        >
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug break-words">
-                              {exerciseName}
-                            </h4>
-                            {(() => {
-                              const badge = getExerciseOriginBadge(exercise);
-                              if (!badge) return null;
-                              return (
-                                <span className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${badge.className}`}>
-                                  {badge.text}
+                      {/* Mobile Exercise Header */}
+                      <div
+                        className={`flex items-center justify-between gap-2 px-3 pt-3 pb-2.5 ${isExpanded ? 'border-b border-zinc-100 dark:border-zinc-800' : ''
+                          }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1 select-none">
+                          {/* Vertical Reorder Stepper (Up/Down) */}
+                          <div
+                            className="flex flex-col items-center justify-center shrink-0 -space-y-1 py-0.5 select-none"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleMoveExercise(weIndex, 'up')}
+                              disabled={weIndex === 0}
+                              className="p-0.5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none transition-colors cursor-pointer"
+                              title="Перемістити вгору"
+                            >
+                              <ChevronUp className="h-4 w-4 stroke-[2.5]" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveExercise(weIndex, 'down')}
+                              disabled={weIndex === currentExList.length - 1}
+                              className="p-0.5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none transition-colors cursor-pointer"
+                              title="Перемістити вниз"
+                            >
+                              <ChevronDown className="h-4 w-4 stroke-[2.5]" />
+                            </button>
+                          </div>
+
+                          {/* Exercise name + badges (Clickable to toggle expand) */}
+                          <div
+                            onClick={() => handleToggleExpand(weItem.id)}
+                            className="min-w-0 flex-1 flex flex-col justify-center cursor-pointer"
+                          >
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug break-words">
+                                {exerciseName}
+                              </h4>
+                              {(() => {
+                                const badge = getExerciseOriginBadge(exercise);
+                                if (!badge) return null;
+                                return (
+                                  <span className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${badge.className}`}>
+                                    {badge.text}
+                                  </span>
+                                );
+                              })()}
+                              {supersetInfo && (
+                                <span
+                                  className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
+                                >
+                                  <Link className="h-2.5 w-2.5" />
+                                  <span>{supersetInfo.tag}</span>
                                 </span>
-                              );
-                            })()}
-                            {isSuperset && (
-                              <span
-                                className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
-                              >
-                                <Link className="h-2.5 w-2.5" />
-                                <span>Суперсет</span>
-                              </span>
+                              )}
+                            </div>
+                            {!isExpanded && (
+                              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                <span>{weItem.sets?.length || 0} підходи</span>
+                                <span>•</span>
+                                <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
+                              </div>
                             )}
                           </div>
-                          {!isExpanded && (
-                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
-                              <span>{weItem.sets?.length || 0} підходи</span>
-                              <span>•</span>
-                              <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
-                            </div>
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          {isExpanded && (
+                            <button
+                              type="button"
+                              onClick={() => setSupersetModalWeId(weItem.id)}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors cursor-pointer ${
+                                supersetInfo && supersetPalette
+                                  ? supersetPalette.buttonActive
+                                  : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+                              }`}
+                              title={supersetInfo ? `Налаштувати суперсет ${supersetInfo.tag}` : 'Налаштувати суперсет'}
+                            >
+                              <Link className="h-3.5 w-3.5" />
+                              <span>{supersetInfo ? `Суперсет ${supersetInfo.tag}` : 'Суперсет'}</span>
+                            </button>
                           )}
+                          <ExerciseProgressRing
+                            completed={(weItem.sets || []).filter((s) => Boolean(s.completedAt)).length}
+                            total={(weItem.sets || []).length}
+                            size={28}
+                          />
                         </div>
                       </div>
-
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                        {currentExList.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleToggleSuperset(weIndex)}
-                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${isSuperset && supersetPalette
-                              ? supersetPalette.buttonActive
-                              : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400'
-                              }`}
-                            title={isSuperset ? "Роз'єднати суперсет" : 'Обʼєднати в суперсет'}
-                          >
-                            {isSuperset ? <Unlink className="h-3.5 w-3.5" /> : <Link className="h-3.5 w-3.5" />}
-                          </button>
-                        )}
-                        <ExerciseProgressRing
-                          completed={(weItem.sets || []).filter((s) => Boolean(s.completedAt)).length}
-                          total={(weItem.sets || []).length}
-                          size={28}
-                        />
-                      </div>
-                    </div>
 
                     {isExpanded && (
                       <>
@@ -1316,12 +1672,12 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                             </span>
                           );
                         })()}
-                        {isSuperset && (
+                        {supersetInfo && (
                           <span
-                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
+                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-extrabold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
                           >
                             <Link className="h-3 w-3" />
-                            <span>Суперсет</span>
+                            <span>{supersetInfo.tag}</span>
                           </span>
                         )}
                       </div>
@@ -1337,17 +1693,19 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    {currentExList.length > 1 && (
+                    {isExpanded && (
                       <button
                         type="button"
-                        onClick={() => handleToggleSuperset(weIndex)}
-                        className={`p-2 rounded-lg border transition-colors cursor-pointer ${isSuperset && supersetPalette
-                          ? supersetPalette.buttonActive
-                          : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400'
-                          }`}
-                        title={isSuperset ? "Роз'єднати суперсет" : weIndex === currentExList.length - 1 ? 'Обʼєднати з попередньою вправою в суперсет' : 'Обʼєднати в суперсет'}
+                        onClick={() => setSupersetModalWeId(weItem.id)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors cursor-pointer ${
+                          supersetInfo && supersetPalette
+                            ? supersetPalette.buttonActive
+                            : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+                        }`}
+                        title={supersetInfo ? `Налаштувати суперсет ${supersetInfo.tag}` : 'Налаштувати суперсет'}
                       >
-                        {isSuperset ? <Unlink className="h-4 w-4" /> : <Link className="h-4 w-4" />}
+                        <Link className="h-3.5 w-3.5" />
+                        <span>{supersetInfo ? `Суперсет ${supersetInfo.tag}` : 'Суперсет'}</span>
                       </button>
                     )}
                     <ExerciseProgressRing
@@ -1601,6 +1959,18 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   </>
                 )}
               </div>
+
+                {/* Superset visual connector line to next exercise in the same superset */}
+                {hasNextInSameSuperset && (
+                  <div className="flex items-center justify-center my-1.5">
+                    <div className="flex items-center gap-2 px-3 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-[10px] font-bold text-zinc-500 dark:text-zinc-400">
+                      <div className={`w-1.5 h-1.5 rounded-full ${supersetPalette?.lineBg || 'bg-indigo-500'}`} />
+                      <span>Суперсет</span>
+                      <div className={`w-1.5 h-1.5 rounded-full ${supersetPalette?.lineBg || 'bg-indigo-500'}`} />
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
             );
           })
         )}
@@ -1792,6 +2162,17 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         confirmLabel="Видалити тренування"
         onConfirm={handleDeleteCurrentWorkout}
         onClose={() => setIsDeleteModalOpen(false)}
+      />
+
+      <SupersetModal
+        isOpen={Boolean(supersetModalWeId)}
+        targetWeId={supersetModalWeId}
+        onClose={() => setSupersetModalWeId(null)}
+        exercises={workout.exercises || []}
+        supersetLabels={supersetLabels}
+        onJoinWithExisting={handleJoinWithExisting}
+        onAddNewToSuperset={handleAddNewToSuperset}
+        onUnlinkExercise={handleUnlinkExercise}
       />
     </div>
   );

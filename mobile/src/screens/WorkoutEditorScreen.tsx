@@ -343,6 +343,247 @@ const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
   );
 };
 
+interface SupersetModalProps {
+  visible: boolean;
+  onClose: () => void;
+  targetWeId: string | null;
+  exercises: WorkoutExercise[];
+  supersetLabels: Map<string, { letter: string; index: number; tag: string; groupCount: number }>;
+  onJoinWithExisting: (sourceWeId: string, candidateWeId: string) => void;
+  onAddNewToSuperset: (sourceWeId: string) => void;
+  onUnlinkExercise: (weId: string) => void;
+  isDark: boolean;
+}
+
+const SupersetModal: React.FC<SupersetModalProps> = ({
+  visible,
+  onClose,
+  targetWeId,
+  exercises,
+  supersetLabels,
+  onJoinWithExisting,
+  onAddNewToSuperset,
+  onUnlinkExercise,
+  isDark,
+}) => {
+  if (!visible || !targetWeId) return null;
+  const targetEx = exercises.find((e) => e.id === targetWeId);
+  if (!targetEx) return null;
+
+  const currentGroupId = targetEx.supersetGroupId;
+  const groupExercises = currentGroupId
+    ? exercises.filter((e) => e.supersetGroupId === currentGroupId)
+    : [targetEx];
+  const groupCount = groupExercises.length;
+  const canAddMore = groupCount < 3;
+  const supersetInfo = supersetLabels.get(targetEx.id);
+
+  const eligibleCandidates = exercises.filter(
+    (e) => e.id !== targetWeId && (!e.supersetGroupId || e.supersetGroupId !== currentGroupId)
+  );
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={onClose}
+        style={styles.supersetModalOverlay}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          style={[
+            styles.supersetModalContent,
+            isDark ? styles.supersetModalDark : styles.supersetModalLight,
+            isDark ? styles.borderDark : styles.borderLight,
+          ]}
+        >
+          {/* Header */}
+          <View style={[styles.supersetModalHeader, isDark ? styles.borderDark : styles.borderLight]}>
+            <View style={styles.supersetModalHeaderLeft}>
+              <View style={styles.supersetModalHeaderIconWrap}>
+                <Ionicons name="link" size={16} color="#818cf8" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.supersetModalTitle, isDark ? styles.textDark : styles.textLight]}>
+                  Налаштування суперсету
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.supersetModalSub, isDark ? styles.subDark : styles.subLight]}
+                >
+                  {targetEx.exerciseName}{' '}
+                  {supersetInfo && (
+                    <Text style={{ fontWeight: '800', color: '#818cf8' }}>
+                      ({supersetInfo.tag})
+                    </Text>
+                  )}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close" size={20} color={isDark ? '#a1a1aa' : '#71717a'} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Body */}
+          <ScrollView style={styles.supersetModalBody} bounces={false}>
+            {/* Current group exercises if >= 2 */}
+            {currentGroupId && groupCount > 1 && (
+              <View style={{ marginBottom: 14 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <Text style={[styles.supersetSectionTitle, isDark ? styles.subDark : styles.subLight]}>
+                    Вправи в суперсеті ({groupCount}/3)
+                  </Text>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#818cf8' }}>
+                    Максимум 3
+                  </Text>
+                </View>
+                {groupExercises.map((ge) => {
+                  const tagInfo = supersetLabels.get(ge.id);
+                  const isCurrent = ge.id === targetWeId;
+                  return (
+                    <View
+                      key={ge.id}
+                      style={[
+                        styles.supersetGroupItem,
+                        isDark ? styles.borderDark : styles.borderLight,
+                        isCurrent && styles.supersetGroupItemActive,
+                      ]}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, marginRight: 8 }}>
+                        <View style={styles.supersetTagBadge}>
+                          <Text style={styles.supersetTagBadgeText}>
+                            {tagInfo?.tag || 'SS'}
+                          </Text>
+                        </View>
+                        <Text
+                          numberOfLines={1}
+                          style={[
+                            { fontSize: 13, fontWeight: '600', flex: 1 },
+                            isDark ? styles.textDark : styles.textLight,
+                          ]}
+                        >
+                          {ge.exerciseName}
+                        </Text>
+                      </View>
+                      <Text style={[{ fontSize: 11 }, isDark ? styles.subDark : styles.subLight]}>
+                        {(ge.sets || []).length} підходи
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* Add exercise options */}
+            {canAddMore ? (
+              <View style={{ marginBottom: 8 }}>
+                <Text style={[styles.supersetSectionTitle, isDark ? styles.subDark : styles.subLight]}>
+                  Додати вправу в цей суперсет:
+                </Text>
+
+                {/* Add new from catalog */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => onAddNewToSuperset(targetWeId)}
+                  style={styles.supersetAddNewBtn}
+                >
+                  <Ionicons name="add" size={16} color="#818cf8" />
+                  <Text style={styles.supersetAddNewBtnText}>
+                    + Додати нову вправу з каталогу
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Choose from current workout */}
+                {eligibleCandidates.length > 0 && (
+                  <View>
+                    <Text style={[{ fontSize: 12, fontWeight: '600', marginBottom: 8 }, isDark ? styles.textDark : styles.textLight]}>
+                      Або вибрати з поточного тренування:
+                    </Text>
+                    {eligibleCandidates.map((cand) => (
+                      <View
+                        key={cand.id}
+                        style={[
+                          styles.supersetCandidateItem,
+                          isDark ? styles.borderDark : styles.borderLight,
+                          isDark ? { backgroundColor: '#18181b' } : { backgroundColor: '#f8fafc' },
+                        ]}
+                      >
+                        <View style={{ flex: 1, marginRight: 10 }}>
+                          <Text
+                            numberOfLines={1}
+                            style={[{ fontSize: 13, fontWeight: '600' }, isDark ? styles.textDark : styles.textLight]}
+                          >
+                            {cand.exerciseName}
+                          </Text>
+                          <Text style={[{ fontSize: 11 }, isDark ? styles.subDark : styles.subLight]}>
+                            {(cand.sets || []).length} підходи
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={() => onJoinWithExisting(targetWeId, cand.id)}
+                          style={styles.supersetJoinBtn}
+                        >
+                          <Text style={styles.supersetJoinBtnText}>
+                            Обʼєднати
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.supersetLimitBanner}>
+                <Text style={styles.supersetLimitText}>
+                  У цьому суперсеті вже є 3 вправи (максимум). Ви можете роз'єднати суперсет або видалити вправу.
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Footer */}
+          <View style={[styles.supersetModalFooter, isDark ? styles.borderDark : styles.borderLight]}>
+            {currentGroupId && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => onUnlinkExercise(targetWeId)}
+                style={styles.supersetUnlinkBtn}
+              >
+                <Ionicons name="unlink" size={14} color="#f43f5e" />
+                <Text style={styles.supersetUnlinkBtnText}>
+                  Роз'єднати суперсет
+                </Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={onClose}
+              style={[
+                styles.supersetCloseBtn,
+                isDark ? styles.actionBtnDark : styles.actionBtnLight,
+              ]}
+            >
+              <Text style={[styles.supersetCloseBtnText, isDark ? styles.textDark : styles.textLight]}>
+                Закрити
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
+  );
+};
+
 export const WorkoutEditorScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
@@ -362,6 +603,8 @@ export const WorkoutEditorScreen: React.FC = () => {
   const [lastPerformances, setLastPerformances] = useState<Record<string, PastExercisePerformance | null>>({});
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [activeRepsPickerWeId, setActiveRepsPickerWeId] = useState<string | null>(null);
+  const [supersetModalWeId, setSupersetModalWeId] = useState<string | null>(null);
+  const [pendingSupersetForWeId, setPendingSupersetForWeId] = useState<string | null>(null);
 
   const handleToggleExpand = (weId: string) => {
     setExpandedExerciseId((prev) => (prev === weId ? null : weId));
@@ -448,22 +691,50 @@ export const WorkoutEditorScreen: React.FC = () => {
     }
   };
 
-  // Map superset groups to palettes
-  const supersetColorMap = useMemo(() => {
-    const map = new Map<string, SupersetPalette>();
-    if (!workout || !workout.exercises) return map;
+  // Map superset groups to palettes and labels (A1, A2, A3)
+  const { supersetColorMap, supersetLabels } = useMemo(() => {
+    const colorMap = new Map<string, SupersetPalette>();
+    const labelMap = new Map<
+      string,
+      { letter: string; index: number; tag: string; groupCount: number }
+    >();
+    const currentExercises = workout?.exercises || [];
 
-    const uniqueGroups: string[] = [];
-    workout.exercises.forEach((e) => {
-      if (e.supersetGroupId && !uniqueGroups.includes(e.supersetGroupId)) {
-        uniqueGroups.push(e.supersetGroupId);
+    const groupOrder: string[] = [];
+    const groupItems = new Map<string, WorkoutExercise[]>();
+
+    currentExercises.forEach((e) => {
+      if (e.supersetGroupId) {
+        if (!groupItems.has(e.supersetGroupId)) {
+          groupOrder.push(e.supersetGroupId);
+          groupItems.set(e.supersetGroupId, []);
+        }
+        groupItems.get(e.supersetGroupId)!.push(e);
       }
     });
 
-    uniqueGroups.forEach((groupId, idx) => {
-      map.set(groupId, SUPERSET_PALETTES[idx % SUPERSET_PALETTES.length]);
+    let validGroupIndex = 0;
+    groupOrder.forEach((groupId) => {
+      const items = groupItems.get(groupId) || [];
+      if (items.length >= 2) {
+        const palette = SUPERSET_PALETTES[validGroupIndex % SUPERSET_PALETTES.length];
+        colorMap.set(groupId, palette);
+
+        const letter = String.fromCharCode(65 + (validGroupIndex % 26));
+        items.forEach((item, exIdx) => {
+          labelMap.set(item.id, {
+            letter,
+            index: exIdx + 1,
+            tag: `${letter}${exIdx + 1}`,
+            groupCount: items.length,
+          });
+        });
+
+        validGroupIndex++;
+      }
     });
-    return map;
+
+    return { supersetColorMap: colorMap, supersetLabels: labelMap };
   }, [workout?.exercises]);
 
   // Handle title change
@@ -521,7 +792,19 @@ export const WorkoutEditorScreen: React.FC = () => {
     }
 
     const currentExercises = workout.exercises || [];
-    const isFirstExercise = currentExercises.length === 0;
+    let baseExercises = currentExercises;
+    let targetGroupId: string | null = null;
+
+    if (pendingSupersetForWeId) {
+      const sourceEx = currentExercises.find((e) => e.id === pendingSupersetForWeId);
+      targetGroupId = sourceEx?.supersetGroupId || `SS-${Date.now().toString().slice(-4)}`;
+      if (sourceEx && !sourceEx.supersetGroupId) {
+        baseExercises = currentExercises.map((e) =>
+          e.id === pendingSupersetForWeId ? { ...e, supersetGroupId: targetGroupId } : e
+        );
+      }
+    }
+
     const newWorkoutExercise: WorkoutExercise = {
       id: weId,
       workoutPlanId: workout.id,
@@ -532,23 +815,45 @@ export const WorkoutEditorScreen: React.FC = () => {
       targetRepsRange: targetRange,
       setCount: initialSets.length,
       sets: initialSets,
+      supersetGroupId: targetGroupId,
     };
+
+    let finalExercises: WorkoutExercise[];
+    if (pendingSupersetForWeId && targetGroupId) {
+      const sourceIdx = baseExercises.findIndex((e) => e.id === pendingSupersetForWeId);
+      let insertIdx = sourceIdx + 1;
+      while (insertIdx < baseExercises.length && baseExercises[insertIdx].supersetGroupId === targetGroupId) {
+        insertIdx++;
+      }
+      finalExercises = [
+        ...baseExercises.slice(0, insertIdx),
+        newWorkoutExercise,
+        ...baseExercises.slice(insertIdx),
+      ].map((e, idx) => ({ ...e, order: idx + 1 }));
+    } else {
+      finalExercises = [...baseExercises, newWorkoutExercise].map((e, idx) => ({ ...e, order: idx + 1 }));
+    }
 
     const updated: WorkoutPlan = {
       ...workout,
-      exercises: [...currentExercises, newWorkoutExercise],
+      exercises: finalExercises,
     };
 
     updateAndSave(updated, true);
     setIsSelectorOpen(false);
+    setPendingSupersetForWeId(null);
 
-    if (isFirstExercise) {
-      setExpandedExerciseId(weId);
-    }
+    // Always expand newly added exercise immediately
+    setExpandedExerciseId(weId);
 
     // Auto-scroll to newly added exercise smoothly
     setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
+      const targetY = exerciseLayoutsRef.current[weId];
+      if (targetY !== undefined) {
+        scrollViewRef.current?.scrollTo({ y: Math.max(0, targetY - 20), animated: true });
+      } else {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }
     }, 150);
   };
 
@@ -622,57 +927,78 @@ export const WorkoutEditorScreen: React.FC = () => {
     updateAndSave({ ...workout, exercises: renumbered }, true);
   };
 
-  // Superset toggle logic: join adjacent or unlink
-  const handleToggleSuperset = (weIndex: number) => {
+  // Join existing exercise from workout into superset (max 3)
+  const handleJoinWithExisting = (sourceWeId: string, candidateWeId: string) => {
     if (!workout) return;
-    const items = [...(workout.exercises || [])];
-    const current = items[weIndex];
-    if (!current) return;
+    const currentExercises = workout.exercises || [];
+    const sourceEx = currentExercises.find((e) => e.id === sourceWeId);
+    const candidateEx = currentExercises.find((e) => e.id === candidateWeId);
+    if (!sourceEx || !candidateEx) return;
 
-    if (current.supersetGroupId) {
-      // Unlink current exercise
-      const oldGroup = current.supersetGroupId;
-      let updated = items.map((e) => (e.id === current.id ? { ...e, supersetGroupId: null } : e));
-
-      // If only 1 remains in old group, clear it too
-      const remaining = updated.filter((e) => e.supersetGroupId === oldGroup);
-      if (remaining.length <= 1) {
-        updated = updated.map((e) => (e.supersetGroupId === oldGroup ? { ...e, supersetGroupId: null } : e));
-      }
-      updateAndSave({ ...workout, exercises: updated }, true);
-    } else {
-      // Connect with neighbor
-      const next = items[weIndex + 1];
-      const prev = items[weIndex - 1];
-
-      if (next && next.supersetGroupId) {
-        // Join next superset
-        const updated = items.map((e, idx) =>
-          idx === weIndex ? { ...e, supersetGroupId: next.supersetGroupId } : e
-        );
-        updateAndSave({ ...workout, exercises: updated }, true);
-      } else if (prev && prev.supersetGroupId) {
-        // Join prev superset
-        const updated = items.map((e, idx) =>
-          idx === weIndex ? { ...e, supersetGroupId: prev.supersetGroupId } : e
-        );
-        updateAndSave({ ...workout, exercises: updated }, true);
-      } else if (next) {
-        // Create new superset with next
-        const newGroupId = `SS-${Date.now().toString().slice(-4)}`;
-        const updated = items.map((e, idx) =>
-          idx === weIndex || idx === weIndex + 1 ? { ...e, supersetGroupId: newGroupId } : e
-        );
-        updateAndSave({ ...workout, exercises: updated }, true);
-      } else if (prev) {
-        // Create new superset with prev
-        const newGroupId = `SS-${Date.now().toString().slice(-4)}`;
-        const updated = items.map((e, idx) =>
-          idx === weIndex || idx === weIndex - 1 ? { ...e, supersetGroupId: newGroupId } : e
-        );
-        updateAndSave({ ...workout, exercises: updated }, true);
+    const existingGroup = sourceEx.supersetGroupId;
+    if (existingGroup) {
+      const count = currentExercises.filter((e) => e.supersetGroupId === existingGroup).length;
+      if (count >= 3) {
+        Alert.alert('Обмеження', 'У суперсеті може бути максимум 3 вправи');
+        return;
       }
     }
+
+    const groupId = existingGroup || `SS-${Date.now().toString().slice(-4)}`;
+
+    const updated = currentExercises.map((e) => {
+      if (e.id === sourceWeId || e.id === candidateWeId) {
+        return { ...e, supersetGroupId: groupId };
+      }
+      return e;
+    });
+
+    const targetCandidate = updated.find((e) => e.id === candidateWeId)!;
+    const withoutCandidate = updated.filter((e) => e.id !== candidateWeId);
+    const sourceIdx = withoutCandidate.findIndex((e) => e.id === sourceWeId);
+    let insertIdx = sourceIdx + 1;
+    while (insertIdx < withoutCandidate.length && withoutCandidate[insertIdx].supersetGroupId === groupId) {
+      insertIdx++;
+    }
+
+    const reordered = [
+      ...withoutCandidate.slice(0, insertIdx),
+      targetCandidate,
+      ...withoutCandidate.slice(insertIdx),
+    ].map((e, idx) => ({ ...e, order: idx + 1 }));
+
+    updateAndSave({ ...workout, exercises: reordered }, true);
+    setSupersetModalWeId(null);
+    setExpandedExerciseId(candidateWeId);
+  };
+
+  // Unlink exercise from superset (if <= 1 remains, clear group)
+  const handleUnlinkExercise = (weId: string) => {
+    if (!workout) return;
+    const currentExercises = workout.exercises || [];
+    const current = currentExercises.find((e) => e.id === weId);
+    if (!current?.supersetGroupId) return;
+
+    const oldGroup = current.supersetGroupId;
+    let updated = currentExercises.map((e) =>
+      e.id === weId ? { ...e, supersetGroupId: null } : e
+    );
+
+    const remaining = updated.filter((e) => e.supersetGroupId === oldGroup);
+    if (remaining.length <= 1) {
+      updated = updated.map((e) =>
+        e.supersetGroupId === oldGroup ? { ...e, supersetGroupId: null } : e
+      );
+    }
+
+    updateAndSave({ ...workout, exercises: updated }, true);
+    setSupersetModalWeId(null);
+  };
+
+  const handleAddNewToSuperset = (sourceWeId: string) => {
+    setPendingSupersetForWeId(sourceWeId);
+    setSupersetModalWeId(null);
+    setIsSelectorOpen(true);
   };
 
   // Change target reps range
@@ -826,6 +1152,30 @@ export const WorkoutEditorScreen: React.FC = () => {
     };
 
     updateAndSave(updatedWorkout, true);
+
+    // After completing a set, automatically expand next exercise in superset
+    if (isNowCompleted) {
+      const currentEx = (workout.exercises || []).find((e) => e.id === weId);
+      if (currentEx?.supersetGroupId) {
+        const groupExercises = (workout.exercises || []).filter(
+          (e) => e.supersetGroupId === currentEx.supersetGroupId
+        );
+        if (groupExercises.length > 1) {
+          const currentIndexInGroup = groupExercises.findIndex((e) => e.id === weId);
+          const nextIndexInGroup = (currentIndexInGroup + 1) % groupExercises.length;
+          const nextExercise = groupExercises[nextIndexInGroup];
+          if (nextExercise) {
+            setExpandedExerciseId(nextExercise.id);
+            setTimeout(() => {
+              const targetY = exerciseLayoutsRef.current[nextExercise.id];
+              if (targetY !== undefined) {
+                scrollViewRef.current?.scrollTo({ y: Math.max(0, targetY - 20), animated: true });
+              }
+            }, 100);
+          }
+        }
+      }
+    }
   };
 
   // Toggle warmup flag
@@ -1237,127 +1587,145 @@ export const WorkoutEditorScreen: React.FC = () => {
             const muscle = MUSCLE_GROUPS[ex.muscleGroup || 'other'] || MUSCLE_GROUPS.other;
             const isSuperset = Boolean(ex.supersetGroupId);
             const palette = ex.supersetGroupId ? supersetColorMap.get(ex.supersetGroupId) : null;
+            const supersetInfo = supersetLabels.get(ex.id);
             const pastPerf = lastPerformances[ex.exerciseId];
             const isExpanded = expandedExerciseId === ex.id;
+            const nextEx = exercises[exIndex + 1];
+            const hasNextInSameSuperset =
+              Boolean(ex.supersetGroupId) &&
+              Boolean(nextEx?.supersetGroupId) &&
+              ex.supersetGroupId === nextEx?.supersetGroupId;
 
             return (
-              <View
-                key={ex.id || `ex_${exIndex}`}
-                onLayout={(e) => {
-                  exerciseLayoutsRef.current[ex.id] = e.nativeEvent.layout.y;
-                }}
-                style={[
-                  styles.exerciseCardWrap,
-                  isSuperset && palette && { borderLeftColor: palette.borderColor, borderLeftWidth: 4 },
-                ]}
-              >
-                <SwipeableExerciseCard
-                  onDelete={() => handleRemoveExercise(ex.id)}
-                  isDark={isDark}
+              <React.Fragment key={ex.id || `ex_${exIndex}`}>
+                <View
+                  onLayout={(e) => {
+                    exerciseLayoutsRef.current[ex.id] = e.nativeEvent.layout.y;
+                  }}
+                  style={[
+                    styles.exerciseCardWrap,
+                    isSuperset && palette && { borderLeftColor: palette.borderColor, borderLeftWidth: 4 },
+                  ]}
                 >
-                  <Card style={styles.exerciseCard}>
-                    {/* Exercise Card Header */}
-                    <View style={[styles.exHeader, isExpanded && (isDark ? styles.borderBottomDark : styles.borderBottomLight)]}>
-                      {/* Index/Reorder, Name & Collapsed Summary */}
-                      <View style={styles.exHeaderTitleRow}>
-                        {/* Vertical Reorder Stepper (Up/Down) */}
-                        <View style={styles.reorderColumn}>
-                          <TouchableOpacity
-                            activeOpacity={0.6}
-                            disabled={exIndex === 0}
-                            onPress={() => handleMoveExercise(exIndex, 'up')}
-                            style={[styles.reorderBtn, exIndex === 0 && { opacity: 0.25 }]}
-                            hitSlop={{ top: 8, bottom: 2, left: 8, right: 8 }}
-                          >
-                            <Ionicons
-                              name="chevron-up"
-                              size={16}
-                              color={exIndex === 0 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
-                            />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            activeOpacity={0.6}
-                            disabled={exIndex === exercises.length - 1}
-                            onPress={() => handleMoveExercise(exIndex, 'down')}
-                            style={[styles.reorderBtn, exIndex === exercises.length - 1 && { opacity: 0.25 }]}
-                            hitSlop={{ top: 2, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <Ionicons
-                              name="chevron-down"
-                              size={16}
-                              color={exIndex === exercises.length - 1 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
-                            />
-                          </TouchableOpacity>
-                        </View>
-
-                        <TouchableOpacity
-                          activeOpacity={0.7}
-                          onPress={() => handleToggleExpand(ex.id)}
-                          style={styles.exHeaderLeftTouchable}
-                        >
-                          <View style={styles.exTitleContainer}>
-                            <Text
-                              numberOfLines={2}
-                              style={[styles.exTitleText, isDark ? styles.textDark : styles.textLight]}
-                            >
-                              {ex.exerciseName || 'Вправа'}
-                            </Text>
-                            {isSuperset && palette && (
-                              <View style={styles.exBadgeRow}>
-                                <View
-                                  style={[
-                                    styles.supersetBadge,
-                                    { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder },
-                                  ]}
-                                >
-                                  <Ionicons name="link" size={10} color={palette.badgeText} />
-                                  <Text style={[styles.supersetBadgeText, { color: palette.badgeText }]}>
-                                    Суперсет
-                                  </Text>
-                                </View>
-                              </View>
-                            )}
-                            {!isExpanded && (
-                              <View style={styles.collapsedSummaryRow}>
-                                <Text style={[styles.collapsedSummaryText, isDark ? styles.subDark : styles.subLight]}>
-                                  {(ex.sets || []).length} підходи • {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'} повт.
-                                </Text>
-                              </View>
-                            )}
-                          </View>
-                        </TouchableOpacity>
-
-                        {/* Action buttons (Delete, Superset & Toggle) */}
-                        <View style={styles.exCardActions}>
-                          {exercises.length > 1 && (
+                  <SwipeableExerciseCard
+                    onDelete={() => handleRemoveExercise(ex.id)}
+                    isDark={isDark}
+                  >
+                    <Card style={styles.exerciseCard}>
+                      {/* Exercise Card Header */}
+                      <View style={[styles.exHeader, isExpanded && (isDark ? styles.borderBottomDark : styles.borderBottomLight)]}>
+                        {/* Index/Reorder, Name & Collapsed Summary */}
+                        <View style={styles.exHeaderTitleRow}>
+                          {/* Vertical Reorder Stepper (Up/Down) */}
+                          <View style={styles.reorderColumn}>
                             <TouchableOpacity
-                              activeOpacity={0.7}
-                              onPress={() => handleToggleSuperset(exIndex)}
-                              style={[
-                                styles.supersetToggleBtn,
-                                isSuperset && palette
-                                  ? { backgroundColor: palette.buttonActiveBg, borderColor: palette.buttonActiveBorder }
-                                  : (isDark ? styles.actionBtnDark : styles.actionBtnLight),
-                              ]}
-                              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                              activeOpacity={0.6}
+                              disabled={exIndex === 0}
+                              onPress={() => handleMoveExercise(exIndex, 'up')}
+                              style={[styles.reorderBtn, exIndex === 0 && { opacity: 0.25 }]}
+                              hitSlop={{ top: 8, bottom: 2, left: 8, right: 8 }}
                             >
                               <Ionicons
-                                name={isSuperset ? 'unlink' : 'link'}
-                                size={15}
-                                color={isSuperset && palette ? palette.buttonActiveText : (isDark ? '#a1a1aa' : '#71717a')}
+                                name="chevron-up"
+                                size={16}
+                                color={exIndex === 0 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
                               />
                             </TouchableOpacity>
-                          )}
+                            <TouchableOpacity
+                              activeOpacity={0.6}
+                              disabled={exIndex === exercises.length - 1}
+                              onPress={() => handleMoveExercise(exIndex, 'down')}
+                              style={[styles.reorderBtn, exIndex === exercises.length - 1 && { opacity: 0.25 }]}
+                              hitSlop={{ top: 2, bottom: 8, left: 8, right: 8 }}
+                            >
+                              <Ionicons
+                                name="chevron-down"
+                                size={16}
+                                color={exIndex === exercises.length - 1 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
+                              />
+                            </TouchableOpacity>
+                          </View>
 
-                          <ExerciseProgressRing
-                            completed={(ex.sets || []).filter((s) => Boolean(s.completedAt)).length}
-                            total={(ex.sets || []).length}
-                            size={30}
-                            isDark={isDark}
-                          />
+                          <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => handleToggleExpand(ex.id)}
+                            style={styles.exHeaderLeftTouchable}
+                          >
+                            <View style={styles.exTitleContainer}>
+                              <Text
+                                numberOfLines={2}
+                                style={[styles.exTitleText, isDark ? styles.textDark : styles.textLight]}
+                              >
+                                {ex.exerciseName || 'Вправа'}
+                              </Text>
+                              {supersetInfo && palette && (
+                                <View style={styles.exBadgeRow}>
+                                  <View
+                                    style={[
+                                      styles.supersetBadge,
+                                      { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder },
+                                    ]}
+                                  >
+                                    <Ionicons name="link" size={10} color={palette.badgeText} />
+                                    <Text style={[styles.supersetBadgeText, { color: palette.badgeText }]}>
+                                      {supersetInfo.tag}
+                                    </Text>
+                                  </View>
+                                </View>
+                              )}
+                              {!isExpanded && (
+                                <View style={styles.collapsedSummaryRow}>
+                                  <Text style={[styles.collapsedSummaryText, isDark ? styles.subDark : styles.subLight]}>
+                                    {(ex.sets || []).length} підходи • {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'} повт.
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+
+                          {/* Action buttons (Superset & Progress ring) */}
+                          <View style={styles.exCardActions}>
+                            {isExpanded && (
+                              <TouchableOpacity
+                                activeOpacity={0.7}
+                                onPress={() => setSupersetModalWeId(ex.id)}
+                                style={[
+                                  styles.supersetToggleBtn,
+                                  supersetInfo && palette
+                                    ? { backgroundColor: palette.buttonActiveBg, borderColor: palette.buttonActiveBorder }
+                                    : (isDark ? styles.actionBtnDark : styles.actionBtnLight),
+                                ]}
+                                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                              >
+                                <Ionicons
+                                  name="link"
+                                  size={13}
+                                  color={supersetInfo && palette ? palette.buttonActiveText : (isDark ? '#e4e4e7' : '#334155')}
+                                />
+                                <Text
+                                  style={[
+                                    styles.supersetBtnText,
+                                    {
+                                      color: supersetInfo && palette
+                                        ? palette.buttonActiveText
+                                        : (isDark ? '#e4e4e7' : '#334155'),
+                                    },
+                                  ]}
+                                >
+                                  {supersetInfo ? `Суперсет ${supersetInfo.tag}` : 'Суперсет'}
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+
+                            <ExerciseProgressRing
+                              completed={(ex.sets || []).filter((s) => Boolean(s.completedAt)).length}
+                              total={(ex.sets || []).length}
+                              size={30}
+                              isDark={isDark}
+                            />
+                          </View>
                         </View>
                       </View>
-                    </View>
 
                     {isExpanded && (
                       <>
@@ -1550,11 +1918,30 @@ export const WorkoutEditorScreen: React.FC = () => {
                         </TouchableOpacity>
                       </>
                     )}
-                  </Card>
-                </SwipeableExerciseCard>
-              </View>
-            );
-          })}
+                    </Card>
+                  </SwipeableExerciseCard>
+                </View>
+
+              {/* Superset visual connector line to next exercise in the same superset */}
+              {hasNextInSameSuperset && (
+                <View style={styles.supersetConnectorRow}>
+                  <View style={[styles.supersetConnectorDot, { backgroundColor: palette?.borderColor || '#6366f1' }]} />
+                  <View
+                    style={[
+                      styles.supersetConnectorPill,
+                      isDark ? styles.supersetConnectorPillDark : styles.supersetConnectorPillLight,
+                    ]}
+                  >
+                    <Text style={[styles.supersetConnectorText, isDark ? styles.subDark : styles.subLight]}>
+                      Суперсет
+                    </Text>
+                  </View>
+                  <View style={[styles.supersetConnectorDot, { backgroundColor: palette?.borderColor || '#6366f1' }]} />
+                </View>
+              )}
+            </React.Fragment>
+          );
+        })}
 
           {/* Add Exercise Big Button */}
           <TouchableOpacity
@@ -1597,6 +1984,19 @@ export const WorkoutEditorScreen: React.FC = () => {
         userId={user?.id}
         onClose={() => setIsSelectorOpen(false)}
         onSelectExercise={handleSelectExercise}
+      />
+
+      {/* Superset Configuration Modal */}
+      <SupersetModal
+        visible={Boolean(supersetModalWeId)}
+        onClose={() => setSupersetModalWeId(null)}
+        targetWeId={supersetModalWeId}
+        exercises={workout.exercises || []}
+        supersetLabels={supersetLabels}
+        onJoinWithExisting={handleJoinWithExisting}
+        onAddNewToSuperset={handleAddNewToSuperset}
+        onUnlinkExercise={handleUnlinkExercise}
+        isDark={isDark}
       />
 
       {/* Reps Range Picker Modal */}
@@ -2023,13 +2423,219 @@ const styles = StyleSheet.create({
     borderColor: '#27272a',
   },
   supersetToggleBtn: {
-    padding: 7,
-    minWidth: 32,
-    minHeight: 32,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    minHeight: 30,
     borderRadius: 8,
     borderWidth: 1,
+  },
+  supersetBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  supersetConnectorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginVertical: 4,
+  },
+  supersetConnectorDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  supersetConnectorPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  supersetConnectorPillLight: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  supersetConnectorPillDark: {
+    backgroundColor: '#27272a',
+    borderColor: '#3f3f46',
+  },
+  supersetConnectorText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  supersetModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  supersetModalContent: {
+    width: '100%',
+    maxWidth: 420,
+    maxHeight: '85%',
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  supersetModalLight: {
+    backgroundColor: '#ffffff',
+  },
+  supersetModalDark: {
+    backgroundColor: '#18181b',
+  },
+  supersetModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  supersetModalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  supersetModalHeaderIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+  },
+  supersetModalTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  supersetModalSub: {
+    fontSize: 12,
+    marginTop: 1,
+  },
+  supersetModalBody: {
+    padding: 16,
+  },
+  supersetSectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  supersetGroupItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 6,
+  },
+  supersetGroupItemActive: {
+    borderColor: '#6366f1',
+    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+  },
+  supersetTagBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: '#6366f1',
+  },
+  supersetTagBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  supersetAddNewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#6366f1',
+    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+    marginBottom: 12,
+  },
+  supersetAddNewBtnText: {
+    color: '#818cf8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  supersetCandidateItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 6,
+  },
+  supersetJoinBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#6366f1',
+  },
+  supersetJoinBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  supersetLimitBanner: {
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    marginBottom: 10,
+  },
+  supersetLimitText: {
+    color: '#f59e0b',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  supersetModalFooter: {
+    flexDirection: 'row',
+    gap: 8,
+    padding: 12,
+    borderTopWidth: 1,
+  },
+  supersetUnlinkBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 63, 94, 0.3)',
+    backgroundColor: 'rgba(244, 63, 94, 0.08)',
+  },
+  supersetUnlinkBtnText: {
+    color: '#f43f5e',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  supersetCloseBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  supersetCloseBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   pastPerfBanner: {
     flexDirection: 'row',
