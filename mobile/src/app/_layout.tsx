@@ -4,8 +4,14 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { AuthService } from '../services/authService';
 import { ThemeProvider as AppThemeProvider, useTheme as useAppTheme } from '../context/ThemeContext';
+
+// Ensure browser session can complete redirect for OAuth flows
+WebBrowser.maybeCompleteAuthSession();
 
 function RootNavigator() {
   const { user, isLoading } = useAuth();
@@ -56,6 +62,23 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    const subscription = Linking.addEventListener('url', async ({ url }) => {
+      console.log('[RootLayout] Deep link received:', url);
+      if (url && (url.includes('auth/callback') || url.includes('code=') || url.includes('access_token='))) {
+        try {
+          await AuthService.handleAuthCallbackUrl(url);
+        } catch (e) {
+          console.warn('[RootLayout] Error handling deep link auth:', e);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <SafeAreaProvider>
       <AppThemeProvider>

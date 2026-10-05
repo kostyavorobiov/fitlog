@@ -233,6 +233,120 @@ export class AuthService {
     return MobileStorage.getItem<User | null>(ACTIVE_USER_KEY, null);
   }
 
+  private static processedCodes = new Set<string>();
+
+  /**
+   * Handle incoming auth callback URL or parameters (from WebBrowser or Deep Link)
+   */
+  static async handleAuthCallbackUrl(
+    input: string | Record<string, any> | null | undefined
+  ): Promise<{ user: User | null; error?: string }> {
+    if (!input) {
+      const active = await this.getCurrentUser();
+      return { user: active };
+    }
+
+    if (!isSupabaseConfigured() || !supabase) {
+      return { user: null, error: 'Supabase не налаштовано' };
+    }
+
+    try {
+      const Linking = getLinking();
+      let code: string | undefined;
+      let accessToken: string | undefined;
+      let refreshToken: string | undefined;
+      let errorDesc: string | undefined;
+
+      if (typeof input === 'string') {
+        const rawUrl = input;
+        const parsed = Linking?.parse ? Linking.parse(rawUrl) : null;
+
+        // Extract query parameters
+        code = (parsed?.queryParams?.code as string) || undefined;
+        errorDesc =
+          (parsed?.queryParams?.error_description as string) ||
+          (parsed?.queryParams?.error as string) ||
+          undefined;
+
+        // Extract hash fragments (#access_token=...&refresh_token=...)
+        if (rawUrl.includes('#')) {
+          const hash = rawUrl.split('#')[1];
+          const hashParams = new URLSearchParams(hash);
+          accessToken = hashParams.get('access_token') || undefined;
+          refreshToken = hashParams.get('refresh_token') || undefined;
+          if (!errorDesc) {
+            errorDesc = hashParams.get('error_description') || hashParams.get('error') || undefined;
+          }
+        }
+
+        // If queryParams didn't catch code, extract via URLSearchParams
+        if (!code && rawUrl.includes('?')) {
+          const queryPart = rawUrl.split('?')[1].split('#')[0];
+          const queryParams = new URLSearchParams(queryPart);
+          code = queryParams.get('code') || undefined;
+          if (!errorDesc) {
+            errorDesc = queryParams.get('error_description') || queryParams.get('error') || undefined;
+          }
+        }
+      } else if (typeof input === 'object') {
+        code = input.code;
+        accessToken = input.access_token;
+        refreshToken = input.refresh_token;
+        errorDesc = input.error_description || input.error;
+      }
+
+      if (errorDesc) {
+        return { user: null, error: decodeURIComponent(errorDesc) };
+      }
+
+      // 1. PKCE Authorization Code flow
+      if (code) {
+        if (this.processedCodes.has(code)) {
+          const activeUser = await this.getCurrentUser();
+          return { user: activeUser };
+        }
+
+        this.processedCodes.add(code);
+        const { data: sessionData, error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeErr) {
+          console.warn('[AuthService.handleAuthCallbackUrl] Exchange code error:', exchangeErr.message);
+          const activeUser = await this.getCurrentUser();
+          if (activeUser) return { user: activeUser };
+          return { user: null, error: exchangeErr.message };
+        }
+
+        if (sessionData.user) {
+          const user = await this.handleSupabaseUser(sessionData.user);
+          return { user };
+        }
+      }
+
+      // 2. Implicit / Hash token flow
+      if (accessToken && refreshToken) {
+        const { data: sessionData, error: setSessionErr } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (setSessionErr) {
+          return { user: null, error: setSessionErr.message };
+        }
+
+        if (sessionData.user) {
+          const user = await this.handleSupabaseUser(sessionData.user);
+          return { user };
+        }
+      }
+
+      // 3. Fallback: check if session is already active
+      const active = await this.getCurrentUser();
+      return { user: active };
+    } catch (e: any) {
+      console.warn('[AuthService.handleAuthCallbackUrl] Error:', e);
+      return { user: null, error: e?.message || 'Помилка обробки авторизації' };
+    }
+  }
+
   /**
    * Sign in using Google OAuth (Expo WebBrowser + Supabase OAuth)
    */
@@ -250,13 +364,25 @@ export class AuthService {
       }
 
       const makeRedirect = getMakeRedirectUri();
-      const redirectUrl = makeRedirect
-        ? makeRedirect({
+      let redirectUrl = 'fitlog://auth/callback';
+      if (makeRedirect) {
+        try {
+          const generated = makeRedirect({
             scheme: 'fitlog',
             path: 'auth/callback',
-          })
-        : 'fitlog://auth/callback';
-      console.log('[OAuth] redirectUrl:', redirectUrl);
+            native: 'fitlog://auth/callback',
+          });
+          if (generated) {
+            // Clean up any double or triple slashes after scheme
+            redirectUrl = generated.replace(/^(fitlog:\/)\/+/i, 'fitlog://');
+          }
+        } catch {
+          redirectUrl = 'fitlog://auth/callback';
+        }
+      }
+
+      console.log('[OAuth] Generated redirectUrl:', redirectUrl);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -277,81 +403,24 @@ export class AuthService {
         return { user: null, error: 'Не вдалося згенерувати посилання для Google авторизації' };
       }
 
-      const oauthUrl = new URL(data.url);
-
-      console.log('[OAuth] Supabase OAuth host:', oauthUrl.host);
-      console.log(
-        '[OAuth] Supabase redirect_to:',
-        oauthUrl.searchParams.get('redirect_to')
-      );
-      console.log(
-        '[OAuth] Supabase provider:',
-        oauthUrl.searchParams.get('provider')
-      );
-
-      console.log('[OAuth] OPENING GOOGLE URL:', data.url);
-
-      console.log('[OAuth] EXPECTED RETURN URL:', redirectUrl);
-      console.log('[OAuth] CALLBACK MUST RETURN TO EXPO GO');
+      console.log('[OAuth] Opening auth session with URL:', data.url);
 
       const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
-      console.log('[OAuth] BROWSER RESULT TYPE:', res.type);
-      console.log('[OAuth] BROWSER RESULT URL:', 'url' in res ? res.url : undefined);
+      console.log('[OAuth] WebBrowser result:', res.type);
 
       if (res.type === 'success' && res.url) {
-        console.log('[OAuth] CALLBACK URL:', res.url);
+        return await this.handleAuthCallbackUrl(res.url);
+      }
 
-        const parsed = Linking.parse(res.url);
-
-        console.log('[OAuth] CALLBACK PATH:', parsed.path);
-        console.log('[OAuth] CALLBACK QUERY:', parsed.queryParams);
-
-
-        // 1. PKCE Authorization Code flow
-        const code = (parsed.queryParams?.code as string) || undefined;
-        if (code) {
-          const { data: sessionData, error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeErr) {
-            return { user: null, error: exchangeErr.message };
-          }
-          if (sessionData.user) {
-            const user = await this.handleSupabaseUser(sessionData.user);
-            return { user };
-          }
-        }
-
-        // 2. Implicit / Hash token flow
-        let accessToken = parsed.queryParams?.access_token as string | undefined;
-        let refreshToken = parsed.queryParams?.refresh_token as string | undefined;
-
-        if (!accessToken && res.url.includes('#')) {
-          const hash = res.url.split('#')[1];
-          const hashParams = new URLSearchParams(hash);
-          accessToken = hashParams.get('access_token') || undefined;
-          refreshToken = hashParams.get('refresh_token') || undefined;
-        }
-
-        if (accessToken && refreshToken) {
-          const { data: sessionData, error: setSessionErr } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-
-          if (setSessionErr) {
-            return { user: null, error: setSessionErr.message };
-          }
-
-          if (sessionData.user) {
-            const user = await this.handleSupabaseUser(sessionData.user);
-            return { user };
-          }
-        }
-
-        // 3. Fallback check active session
-        const active = await this.getCurrentUser();
+      // If dismissed or cancelled, wait briefly and check if callback route or linking listener already established session
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      const active = await this.getCurrentUser();
+      if (active) {
         return { user: active };
-      } else if (res.type === 'cancel' || res.type === 'dismiss') {
+      }
+
+      if (res.type === 'cancel' || res.type === 'dismiss') {
         return { user: null, error: 'Авторизацію скасовано' };
       }
 
