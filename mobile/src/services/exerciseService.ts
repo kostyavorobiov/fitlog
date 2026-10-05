@@ -304,34 +304,16 @@ export class ExerciseService {
       return false;
     }
 
-    // 1. Update local cache
-    const filtered = all.filter((e) => e.id !== exerciseId);
-    await MobileStorage.setItem(EXERCISES_CACHE_KEY, filtered);
-
-    // 2. Persist deletion in Supabase
     if (isSupabaseConfigured() && supabase) {
       try {
-        const { data: rpcRes, error: rpcError } = await supabase.rpc('delete_exercise_by_id', {
-          p_exercise_id: exerciseId,
-        });
-
-        if (!rpcError && rpcRes) {
-          return true;
-        }
-
-        // Fallback soft delete / direct delete
-        const { error } = await supabase
-          .from('exercises')
-          .update({ description: '__FITLOG_DELETED__' })
-          .eq('id', exerciseId);
-
-        return !error;
-      } catch (e) {
-        console.warn('[ExerciseService.deleteExercise] Error:', e);
+        const { data, error } = await supabase.rpc('delete_exercise_by_id', { p_exercise_id: exerciseId });
+        if (error || data !== true) return false;
+      } catch (error) {
+        console.warn('[ExerciseService.deleteExercise]', error);
         return false;
       }
     }
-
+    await MobileStorage.setItem(EXERCISES_CACHE_KEY, all.filter((e) => e.id !== exerciseId));
     return true;
   }
 }

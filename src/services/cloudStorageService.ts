@@ -40,6 +40,8 @@ export class CloudStorageService {
     if (!isSupabaseConfigured() || !supabase) return null;
 
     try {
+      const fetchRevision = StorageService.getWorkoutRevision();
+      const pendingAtStart = StorageService.getPendingWorkoutIds();
       let query = supabase
         .from('workouts')
         .select(`
@@ -98,7 +100,7 @@ export class CloudStorageService {
 
       if (!workoutsData) return [];
 
-      return workoutsData.map((w: any) => {
+      const mapped = workoutsData.map((w: any) => {
         const exercises: WorkoutExercise[] = (w.workout_exercises || [])
           .sort((a: any, b: any) => a.order_index - b.order_index)
           .map((we: any) => {
@@ -163,6 +165,8 @@ export class CloudStorageService {
           exercises,
         };
       });
+      StorageService.markWorkoutsFetched(mapped, fetchRevision, pendingAtStart);
+      return mapped;
     } catch (err) {
       console.warn('Failed to fetch from cloud:', err);
       return null;
@@ -170,254 +174,50 @@ export class CloudStorageService {
   }
 
   private static workoutSavePromises = new Map<string, Promise<boolean>>();
-  private static pendingWorkoutSaves = new Map<string, WorkoutPlan>();
 
-  /**
-   * Upsert a complete workout to Supabase with automatic serialization & trailing queue
-   */
-  static async saveWorkout(workout: WorkoutPlan): Promise<boolean> {
-    if (!isSupabaseConfigured() || !supabase) return false;
+  // Each caller receives the result for its own immutable snapshot.
+  static saveWorkout(workout: WorkoutPlan): Promise<boolean> {
+    const snapshot = JSON.parse(JSON.stringify(workout)) as WorkoutPlan;
+    return this.enqueueWorkoutWrite(workout.id, () => this.executeSaveWorkout(snapshot));
+  }
 
-    if (this.workoutSavePromises.has(workout.id)) {
-      this.pendingWorkoutSaves.set(workout.id, workout);
-      return this.workoutSavePromises.get(workout.id)!;
-    }
-
-    const runSave = async (wToSave: WorkoutPlan): Promise<boolean> => {
-      try {
-        return await this.executeSaveWorkout(wToSave);
-      } finally {
-        const next = this.pendingWorkoutSaves.get(wToSave.id);
-        if (next) {
-          this.pendingWorkoutSaves.delete(wToSave.id);
-          const nextPromise = runSave(next);
-          this.workoutSavePromises.set(wToSave.id, nextPromise);
-          await nextPromise;
-        } else {
-          this.workoutSavePromises.delete(wToSave.id);
-        }
-      }
-    };
-
-    const promise = runSave(workout);
-    this.workoutSavePromises.set(workout.id, promise);
-    return promise;
+  private static enqueueWorkoutWrite(id: string, write: () => Promise<boolean>): Promise<boolean> {
+    const previous = this.workoutSavePromises.get(id) || Promise.resolve(true);
+    const next = previous.catch(() => false).then(write).catch((error) => {
+      console.warn('Workout write failed:', error);
+      return false;
+    });
+    this.workoutSavePromises.set(id, next);
+    void next.finally(() => {
+      if (this.workoutSavePromises.get(id) === next) this.workoutSavePromises.delete(id);
+    });
+    return next;
   }
 
   private static async executeSaveWorkout(workout: WorkoutPlan): Promise<boolean> {
     if (!isSupabaseConfigured() || !supabase) return false;
-
-    try {
-      let effectiveCoachId = workout.assignedByCoachId || null;
-      if (!effectiveCoachId) {
-        const { data: authData } = await supabase.auth.getUser();
-        if (authData?.user?.id && authData.user.id !== workout.userId) {
-          effectiveCoachId = authData.user.id;
-        }
-      }
-
-      // 1. Upsert Workout row
-      const { error: wError } = await supabase.from('workouts').upsert(
-        {
-          id: workout.id,
-          user_id: workout.userId,
-          assigned_by_coach_id: effectiveCoachId,
-          title: workout.title || 'Тренування',
-          scheduled_date: workout.scheduledDate,
-          status: workout.status,
-          completed_at: workout.completedAt || null,
-          notes: workout.notes || '',
-          duration_minutes: workout.durationMinutes || null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'id' }
-      );
-
-      if (wError) {
-        console.warn('saveWorkout error:', wError.message);
-        return false;
-      }
-
-      // 2. Manage workout_exercises deletion of removed items
-      const currentWeIds = (workout.exercises || []).map((we) => we.id);
-
-      if (currentWeIds.length > 0) {
-        const { data: existingWe } = await supabase
-          .from('workout_exercises')
-          .select('id')
-          .eq('workout_id', workout.id);
-
-        const existingWeIds = (existingWe || []).map((r: any) => r.id);
-        const toDeleteWe = existingWeIds.filter((id: string) => !currentWeIds.includes(id));
-        if (toDeleteWe.length > 0) {
-          // Explicitly delete child workout_sets first to avoid foreign key violations
-          await supabase.from('workout_sets').delete().in('workout_exercise_id', toDeleteWe);
-          await supabase.from('workout_exercises').delete().in('id', toDeleteWe);
-        }
-      } else {
-        const { data: existingWe } = await supabase
-          .from('workout_exercises')
-          .select('id')
-          .eq('workout_id', workout.id);
-        const existingWeIds = (existingWe || []).map((r: any) => r.id);
-        if (existingWeIds.length > 0) {
-          await supabase.from('workout_sets').delete().in('workout_exercise_id', existingWeIds);
-        }
-        await supabase.from('workout_exercises').delete().eq('workout_id', workout.id);
-      }
-
-      // 3. Upsert current exercises and their sets
-      if (workout.exercises && workout.exercises.length > 0) {
-        // Ensure all referenced exercises exist in Supabase exercises table to prevent FK errors
-        const exIds = Array.from(new Set(workout.exercises.map((e) => e.exerciseId)));
-        const { data: dbExs } = await supabase.from('exercises').select('id').in('id', exIds);
-        const dbExSet = new Set((dbExs || []).map((x: any) => x.id));
-        const missing = exIds.filter((id) => !dbExSet.has(id));
-
-        if (missing.length > 0) {
-          const { data: authData } = await supabase.auth.getUser();
-          const currentAuthId = authData?.user?.id || null;
-
-          const missingRows = missing.map((id) => {
-            const we = workout.exercises.find((e) => e.exerciseId === id);
-            const local = StorageService.getExerciseById(id);
-            const resolvedName = (we?.exerciseName && we.exerciseName !== 'Вправа')
-              ? we.exerciseName
-              : (local?.name && local.name !== 'Вправа' ? local.name : 'Вправа');
-            const isDef = local?.isDefault ?? (id.startsWith('def_ex') || id.startsWith('global_ex'));
-            return {
-              id,
-              name: resolvedName,
-              muscle_group: we?.muscleGroup || local?.muscleGroup || 'full_body',
-              description: '__FITLOG_DELETED__',
-              is_default: isDef,
-              user_id: isDef ? null : (local?.userId || currentAuthId),
-            };
-          });
-          const { error: insErr } = await supabase.from('exercises').upsert(missingRows, { onConflict: 'id' });
-          if (insErr) {
-            console.warn('Could not upsert missing exercises with user_id null, retrying with auth user:', insErr.message);
-            if (currentAuthId) {
-              const fallbackRows = missingRows.map((r) => ({ ...r, user_id: currentAuthId }));
-              await supabase.from('exercises').upsert(fallbackRows, { onConflict: 'id' });
-            }
-          }
-        }
-
-        // Collect exercises for upsert with embedded metadata in notes
-        const weRows = workout.exercises.map((we, idx) => {
-          const localEx = StorageService.getExerciseById(we.exerciseId);
-          const effectiveExName = (we.exerciseName && we.exerciseName !== 'Вправа')
-            ? we.exerciseName
-            : (localEx?.name && localEx.name !== 'Вправа' ? localEx.name : undefined);
-          const effectiveMg = we.muscleGroup || localEx?.muscleGroup || undefined;
-
-          const notesWithMeta = CloudStorageService.encodeExerciseMeta(
-            effectiveExName,
-            effectiveMg,
-            we.notes
-          );
-
-          return {
-            id: we.id,
-            workout_id: workout.id,
-            exercise_id: we.exerciseId,
-            order_index: we.order || idx + 1,
-            set_count: we.setCount || we.sets.length,
-            target_reps_range: we.targetRepsRange || '8-12',
-            notes: notesWithMeta,
-            superset_group_id: we.supersetGroupId || null,
-          };
-        });
-
-        const { error: weError } = await supabase
-          .from('workout_exercises')
-          .upsert(weRows, { onConflict: 'id' });
-
-        if (weError) {
-          console.warn('saveWorkout exercises error:', weError.message);
-        }
-
-        // 4. Clean up deleted sets and upsert current sets
-        const remainingWeIds = workout.exercises.map((we) => we.id);
-        const currentSetIds = workout.exercises.flatMap((we) => (we.sets || []).map((s) => s.id));
-
-        const { data: existingSets } = await supabase
-          .from('workout_sets')
-          .select('id')
-          .in('workout_exercise_id', remainingWeIds);
-
-        const existingSetIds = (existingSets || []).map((r: any) => r.id);
-        const setsToDelete = existingSetIds.filter((id: string) => !currentSetIds.includes(id));
-        if (setsToDelete.length > 0) {
-          await supabase.from('workout_sets').delete().in('id', setsToDelete);
-        }
-
-        // Collect all sets for upsert
-        const setRows: any[] = [];
-        workout.exercises.forEach((we) => {
-          (we.sets || []).forEach((s) => {
-            setRows.push({
-              id: s.id,
-              workout_exercise_id: we.id,
-              set_number: s.setNumber,
-              target_reps_range: s.targetRepsRange || '8-12',
-              weight: s.weight || 0,
-              actual_reps: s.actualReps !== null && s.actualReps !== undefined ? s.actualReps : null,
-              completed_at: s.completedAt || null,
-              notes: s.notes || '',
-              is_warmup: Boolean(s.isWarmup),
-            });
-          });
-        });
-
-        if (setRows.length > 0) {
-          const { error: sError } = await supabase
-            .from('workout_sets')
-            .upsert(setRows, { onConflict: 'id' });
-
-          if (sError) {
-            console.warn('saveWorkout sets error:', sError.message);
-          }
-        }
-      }
-
-      return true;
-    } catch (err) {
-      console.warn('Failed to save to cloud:', err);
-      return false;
-    }
+    const payload = {
+      ...workout,
+      exercises: workout.exercises.map((we) => ({
+        ...we,
+        notes: this.encodeExerciseMeta(we.exerciseName, we.muscleGroup, we.notes),
+      })),
+    };
+    const { data, error } = await supabase.rpc('save_workout', { p_workout: payload });
+    if (error) console.warn('save_workout failed:', error.message);
+    return !error && data === true;
   }
 
   /**
    * Delete a workout from Supabase
    */
-  static async deleteWorkout(workoutId: string): Promise<boolean> {
-    if (!isSupabaseConfigured() || !supabase) return false;
-
-    try {
-      // 1. Delete dependent sets and exercises first to ensure clean cascade across all schema versions
-      const { data: existingWe } = await supabase
-        .from('workout_exercises')
-        .select('id')
-        .eq('workout_id', workoutId);
-      const existingWeIds = (existingWe || []).map((r: any) => r.id);
-      if (existingWeIds.length > 0) {
-        await supabase.from('workout_sets').delete().in('workout_exercise_id', existingWeIds);
-        await supabase.from('workout_exercises').delete().eq('workout_id', workoutId);
-      }
-
-      // 2. Delete workout row
+  static deleteWorkout(workoutId: string): Promise<boolean> {
+    return this.enqueueWorkoutWrite(workoutId, async () => {
+      if (!isSupabaseConfigured() || !supabase) return false;
+      // Child rows are deleted by the existing ON DELETE CASCADE constraints.
       const { error } = await supabase.from('workouts').delete().eq('id', workoutId);
-      if (error) {
-        console.warn('deleteWorkout error:', error.message);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.warn('Failed to delete workout in cloud:', err);
-      return false;
-    }
+      return !error;
+    });
   }
 
   /**
@@ -549,46 +349,12 @@ export class CloudStorageService {
   static async deleteExercise(exerciseId: string): Promise<boolean> {
     if (!isSupabaseConfigured() || !supabase) return false;
     try {
-      // 1. Mark as deleted in Supabase immediately so no client or subsequent sync will ever return it
-      await supabase
-        .from('exercises')
-        .update({
-          description: '__FITLOG_DELETED__',
-          name: '__DELETED__'
-        })
-        .eq('id', exerciseId);
-
-      // 2. Try RPC function if configured in database
-      try {
-        await supabase.rpc('delete_exercise_by_id', { p_exercise_id: exerciseId });
-      } catch {}
-
-      // 3. Delete any workout_sets belonging to workout_exercises referencing this exercise
-      const { data: weList } = await supabase
-        .from('workout_exercises')
-        .select('id')
-        .eq('exercise_id', exerciseId);
-
-      if (weList && weList.length > 0) {
-        const weIds = weList.map((x: any) => x.id);
-        const { error: setsErr } = await supabase.from('workout_sets').delete().in('workout_exercise_id', weIds);
-        if (setsErr) {
-          console.warn('Cascade delete workout_sets warning:', setsErr.message);
-        }
-        const { error: weErr } = await supabase.from('workout_exercises').delete().in('id', weIds);
-        if (weErr) {
-          console.warn('Cascade delete workout_exercises warning:', weErr.message);
-        }
-      }
-
-      // 4. Delete the exercise row from exercises table
-      const { error } = await supabase.from('exercises').delete().eq('id', exerciseId);
-      if (error) {
-        console.warn('Physical deleteExercise error (fallback marker applied):', error.message);
-      }
-      return true;
-    } catch (err) {
-      console.warn('Failed to delete exercise in cloud:', err);
+      const { data, error } = await supabase.rpc('delete_exercise_by_id', {
+        p_exercise_id: exerciseId,
+      });
+      return !error && data === true;
+    } catch (error) {
+      console.warn('Failed to archive exercise:', error);
       return false;
     }
   }
@@ -811,68 +577,20 @@ export class CloudStorageService {
    */
   static async assignTrainee(coachId: string, traineeId: string): Promise<boolean> {
     if (!isSupabaseConfigured() || !supabase) return false;
-
     try {
-      // 1. Try RPC assign_trainee_to_coach (bypasses RLS with security definer)
-      try {
-        const { data: rpcRes, error: rpcError } = await supabase.rpc('assign_trainee_to_coach', {
-          p_coach_id: coachId,
-          p_trainee_id: traineeId,
-        });
-
-        if (!rpcError && rpcRes !== false) {
-          return true;
-        }
-      } catch {}
-
-      // 2. Direct table update fallback
-      const { error } = await supabase
-        .from('profiles')
-        .update({ coach_id: coachId, updated_at: new Date().toISOString() })
-        .eq('id', traineeId);
-
-      if (error) {
-        console.warn('CloudStorageService.assignTrainee error:', error.message);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.warn('CloudStorageService.assignTrainee failed:', err);
-      return false;
-    }
+      const { data, error } = await supabase.rpc('assign_trainee_to_coach', {
+        p_coach_id: coachId, p_trainee_id: traineeId,
+      });
+      return !error && data === true;
+    } catch { return false; }
   }
 
-  /**
-   * Remove trainee from coach in Supabase
-   */
-  static async removeTrainee(coachId: string, traineeId: string): Promise<boolean> {
+  static async removeTrainee(_coachId: string, traineeId: string): Promise<boolean> {
     if (!isSupabaseConfigured() || !supabase) return false;
-
     try {
-      // 1. Try RPC unlink_trainee (bypasses RLS with security definer)
-      const { data: rpcRes, error: rpcError } = await supabase.rpc('unlink_trainee', {
-        p_trainee_id: traineeId,
-      });
-
-      if (!rpcError && rpcRes !== false) {
-        return true;
-      }
-
-      // 2. Direct table update fallback
-      const { error } = await supabase
-        .from('profiles')
-        .update({ coach_id: null, updated_at: new Date().toISOString() })
-        .eq('id', traineeId);
-
-      if (error) {
-        console.warn('CloudStorageService.removeTrainee update error:', error.message);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.warn('CloudStorageService.removeTrainee failed:', err);
-      return false;
-    }
+      const { data, error } = await supabase.rpc('unlink_trainee', { p_trainee_id: traineeId });
+      return !error && data === true;
+    } catch { return false; }
   }
 
   /**

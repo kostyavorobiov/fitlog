@@ -28,7 +28,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       let profile = await CloudStorageService.fetchProfile(sbUser.id);
       const email = sbUser.email || '';
-      const isHardcodedAdmin = email.toLowerCase() === 'kvorobiov9@gmail.com';
       const userMeta = sbUser.user_metadata || {};
       const fullName = userMeta.full_name || userMeta.name || email.split('@')[0] || 'Користувач';
       const nameParts = fullName.trim().split(' ');
@@ -37,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const avatarUrl = userMeta.avatar_url || userMeta.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName)}`;
 
       if (!profile) {
-        const cuid = isHardcodedAdmin ? 'cmug5e9xj0000j5d57meirzop' : generateCuid();
+        const cuid = generateCuid();
         profile = {
           id: sbUser.id,
           profileCode: cuid,
@@ -45,14 +44,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastName,
           name: fullName,
           email,
-          role: isHardcodedAdmin ? 'admin' : 'athlete',
+          role: 'athlete',
           image: avatarUrl,
           createdAt: sbUser.created_at || new Date().toISOString(),
         };
         await CloudStorageService.upsertProfile(profile);
-      } else if (isHardcodedAdmin && profile.role !== 'admin') {
-        profile.role = 'admin';
-        await CloudStorageService.updateProfile(profile.id, { role: 'admin' });
       }
 
       if (profile.role === 'coach' || profile.role === 'admin') {
@@ -248,7 +244,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updated: User = {
       ...user,
       ...updates,
-      role: user.email.toLowerCase() === 'kvorobiov9@gmail.com' ? 'admin' : (updates.role || user.role),
+      role: user.role === 'admin' ? 'admin' : (updates.role === 'admin' ? user.role : (updates.role || user.role)),
       name: `${updates.firstName ?? user.firstName} ${updates.lastName ?? user.lastName}`.trim(),
     };
     StorageService.saveUser(updated);
@@ -263,7 +259,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isAdmin = user?.email.toLowerCase() === 'kvorobiov9@gmail.com' || user?.role === 'admin';
+  const isAdmin = user?.role === 'admin';
   const isCoach = user?.role === 'coach' || isAdmin;
 
   return (

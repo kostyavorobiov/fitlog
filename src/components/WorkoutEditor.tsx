@@ -228,7 +228,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [saveNoticeMessage, setSaveNoticeMessage] = useState('Зміни в тренуванні успішно збережено!');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeInputText, setActiveInputText] = useState<Record<string, string>>({});
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
@@ -305,7 +305,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       };
       workoutRef.current = enriched;
       setWorkout(enriched);
-      StorageService.saveWorkout(enriched);
+      const savePromise = StorageService.saveWorkout(enriched);
       onSave(enriched);
 
       // Visual feedback: real-time autosave indicator
@@ -313,12 +313,11 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current);
       }
-      autoSaveTimerRef.current = setTimeout(() => {
-        setAutoSaveStatus('saved');
-        autoSaveTimerRef.current = setTimeout(() => {
-          setAutoSaveStatus('idle');
-        }, 2000);
-      }, 400);
+      void savePromise.then((success) => {
+        if (workoutRef.current !== enriched) return;
+        setAutoSaveStatus(success ? 'saved' : 'error');
+        if (success) autoSaveTimerRef.current = setTimeout(() => setAutoSaveStatus('idle'), 2000);
+      });
     } catch (err) {
       console.error('Error in updateAndSave:', err);
       setAutoSaveStatus('idle');
@@ -898,6 +897,12 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-52 sm:pb-28 animate-fade-in max-w-5xl mx-auto">
+      {autoSaveStatus !== 'idle' && (
+        <div role={autoSaveStatus === 'error' ? 'alert' : 'status'} className="text-xs text-zinc-600 dark:text-zinc-300">
+          {autoSaveStatus === 'saving' ? 'Збереження…' : autoSaveStatus === 'saved' ? 'Збережено' : 'Не вдалося зберегти зміни. Перевірте з’єднання.'}
+          {autoSaveStatus === 'error' && <button type="button" className="ml-2 underline" onClick={() => updateAndSave(workoutRef.current)}>Повторити</button>}
+        </div>
+      )}
       {/* Back button to return to workouts list */}
       {onBack && (
         <div className="flex items-center justify-between">

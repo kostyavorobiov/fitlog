@@ -225,73 +225,27 @@ export class TraineeService {
    */
   static async unlinkTrainee(coachId: string, traineeId: string): Promise<boolean> {
     if (!coachId || !traineeId) return false;
-
-    // 1. Remove from local cache
-    const cacheKey = `${TRAINEES_CACHE_KEY}_${coachId}`;
-    const cached = await MobileStorage.getItem<User[]>(cacheKey, []);
-    const filtered = cached.filter((t) => t.id !== traineeId);
-    await MobileStorage.setItem(cacheKey, filtered);
-
-    // 2. Unlink in Supabase
     if (isSupabaseConfigured() && supabase) {
       try {
-        // Try RPC unlink_trainee
-        const { data: rpcRes, error: rpcErr } = await supabase.rpc('unlink_trainee', {
-          p_trainee_id: traineeId,
-        });
-
-        if (!rpcErr && rpcRes !== false) {
-          return true;
-        }
-
-        // Direct table update fallback
-        const { error } = await supabase
-          .from('profiles')
-          .update({ coach_id: null, updated_at: new Date().toISOString() })
-          .eq('id', traineeId);
-
-        return !error;
-      } catch (e) {
-        console.warn('[TraineeService.unlinkTrainee] Error:', e);
-        return false;
-      }
+        const { data, error } = await supabase.rpc('unlink_trainee', { p_trainee_id: traineeId });
+        if (error || data !== true) return false;
+      } catch { return false; }
     }
-
+    const cacheKey = `${TRAINEES_CACHE_KEY}_${coachId}`;
+    const cached = await MobileStorage.getItem<User[]>(cacheKey, []);
+    await MobileStorage.setItem(cacheKey, cached.filter((t) => t.id !== traineeId));
     return true;
   }
 
-  /**
-   * Assign a coach to a trainee
-   */
   static async assignCoach(traineeId: string, coachId: string): Promise<boolean> {
     if (!traineeId || !coachId) return false;
-
-    if (isSupabaseConfigured() && supabase) {
-      try {
-        // Try RPC assign_trainee_to_coach first (bypasses RLS with security definer)
-        const { data: rpcRes, error: rpcErr } = await supabase.rpc('assign_trainee_to_coach', {
-          p_coach_id: coachId,
-          p_trainee_id: traineeId,
-        });
-
-        if (!rpcErr && rpcRes !== false) {
-          return true;
-        }
-
-        // Direct update fallback
-        const { error } = await supabase
-          .from('profiles')
-          .update({ coach_id: coachId, updated_at: new Date().toISOString() })
-          .eq('id', traineeId);
-
-        return !error;
-      } catch (e) {
-        console.warn('[TraineeService.assignCoach] Error:', e);
-        return false;
-      }
-    }
-
-    return true;
+    if (!isSupabaseConfigured() || !supabase) return true;
+    try {
+      const { data, error } = await supabase.rpc('assign_trainee_to_coach', {
+        p_coach_id: coachId, p_trainee_id: traineeId,
+      });
+      return !error && data === true;
+    } catch { return false; }
   }
 
   /**

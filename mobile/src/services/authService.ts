@@ -167,8 +167,8 @@ export class AuthService {
       name,
     };
 
+    if (isSupabaseConfigured() && !await this.upsertProfile(updated)) return null;
     await MobileStorage.setItem(ACTIVE_USER_KEY, updated);
-    await this.upsertProfile(updated);
     this.notifyListeners(updated);
     return updated;
   }
@@ -178,7 +178,6 @@ export class AuthService {
    */
   static async handleSupabaseUser(sbUser: any): Promise<User> {
     const email = sbUser.email || '';
-    const isHardcodedAdmin = email.toLowerCase() === 'kvorobiov9@gmail.com';
     const userMeta = sbUser.user_metadata || {};
     const fullName = userMeta.full_name || userMeta.name || email.split('@')[0] || 'Користувач';
     const nameParts = fullName.trim().split(' ');
@@ -189,7 +188,7 @@ export class AuthService {
     let profile = await this.fetchProfile(sbUser.id);
 
     if (!profile) {
-      const cuid = isHardcodedAdmin ? 'cmug5e9xj0000j5d57meirzop' : generateCuid();
+      const cuid = generateCuid();
       profile = {
         id: sbUser.id,
         profileCode: cuid,
@@ -197,13 +196,10 @@ export class AuthService {
         lastName,
         name: fullName,
         email,
-        role: isHardcodedAdmin ? 'admin' : 'athlete',
+        role: 'athlete',
         image: avatarUrl,
         createdAt: sbUser.created_at || new Date().toISOString(),
       };
-      await this.upsertProfile(profile);
-    } else if (isHardcodedAdmin && profile.role !== 'admin') {
-      profile.role = 'admin';
       await this.upsertProfile(profile);
     }
 

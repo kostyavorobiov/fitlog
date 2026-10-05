@@ -439,6 +439,8 @@ export const WorkoutEditorScreen: React.FC = () => {
     return () => {
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+        if (workoutRef.current) void WorkoutService.saveWorkout(workoutRef.current);
       }
     };
   }, []);
@@ -459,12 +461,14 @@ export const WorkoutEditorScreen: React.FC = () => {
 
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
     }
 
     if (immediateSave) {
       WorkoutService.saveWorkout(updated);
     } else {
       autoSaveTimerRef.current = setTimeout(() => {
+        autoSaveTimerRef.current = null;
         if (workoutRef.current) {
           WorkoutService.saveWorkout(workoutRef.current);
         }
@@ -1124,6 +1128,10 @@ export const WorkoutEditorScreen: React.FC = () => {
           onPress: async () => {
             setIsDeleting(true);
             try {
+              if (autoSaveTimerRef.current) {
+                clearTimeout(autoSaveTimerRef.current);
+                autoSaveTimerRef.current = null;
+              }
               const effectiveUserId = workout.userId || targetUserId;
               const ok = await WorkoutService.deleteWorkout(
                 effectiveUserId,
