@@ -13,6 +13,7 @@ import { ExerciseSelectorModal } from './ExerciseSelectorModal';
 import { CreateExerciseModal } from './CreateExerciseModal';
 import { ExerciseHistoryModal } from './ExerciseHistoryModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { MobileSwipeableExerciseCard } from './MobileSwipeableExerciseCard';
 import { playSuccessChime, playBeep } from '../utils/audio';
 import {
   Calendar,
@@ -879,6 +880,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               >
                 {/* ================= MOBILE VIEW (sm:hidden) ================= */}
                 <div className="block sm:hidden">
+                  <MobileSwipeableExerciseCard
+                    exerciseId={weItem.id}
+                    onDelete={() => handleRemoveExercise(weItem.id)}
+                  >
 
                   {/* Mobile Exercise Header */}
                   <div
@@ -1192,6 +1197,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       </div>
                     </>
                   )}
+                  </MobileSwipeableExerciseCard>
                 </div>
 
                 {/* ================= DESKTOP VIEW (hidden sm:block) ================= */}

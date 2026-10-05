@@ -13,6 +13,7 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { ProfileView } from './components/ProfileView';
 import { TraineesView } from './components/TraineesView';
 import { GoogleAuthModal } from './components/GoogleAuthModal';
+import { PullToRefresh } from './components/PullToRefresh';
 
 const MainContent: React.FC = () => {
   const { user, isLoading, isCoach, isAdmin } = useAuth();
@@ -134,6 +135,9 @@ const MainContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-150">
+      {/* Pull To Refresh for mobile Web */}
+      <PullToRefresh />
+
       {/* Navigation */}
       <Navbar
         currentTab={currentTab}

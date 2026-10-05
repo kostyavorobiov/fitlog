@@ -11,6 +11,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,6 +44,136 @@ const TITLE_PRESETS = [
   'Full Body',
   'Кардіо + Кор',
 ];
+
+interface SwipeableExerciseCardProps {
+  onDelete: () => void;
+  isDark: boolean;
+  children: React.ReactNode;
+}
+
+const SWIPE_DELETE_WIDTH = 84;
+const SWIPE_THRESHOLD = -40;
+
+const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
+  onDelete,
+  isDark,
+  children,
+}) => {
+  const panX = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+  const isOpenRef = useRef(false);
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return (
+            Math.abs(gestureState.dx) > 12 &&
+            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5
+          );
+        },
+        onPanResponderGrant: () => {
+          panX.stopAnimation();
+        },
+        onPanResponderMove: (_, gestureState) => {
+          const base = isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0;
+          const newX = Math.min(0, Math.max(-SWIPE_DELETE_WIDTH - 20, base + gestureState.dx));
+          panX.setValue(newX);
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          const currentVal = (panX as any)._value ?? (isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0);
+          if (gestureState.dx < -30 || currentVal < SWIPE_THRESHOLD) {
+            isOpenRef.current = true;
+            Animated.spring(panX, {
+              toValue: -SWIPE_DELETE_WIDTH,
+              useNativeDriver: true,
+              bounciness: 4,
+            }).start();
+          } else {
+            isOpenRef.current = false;
+            Animated.spring(panX, {
+              toValue: 0,
+              useNativeDriver: true,
+              bounciness: 4,
+            }).start();
+          }
+        },
+        onPanResponderTerminate: () => {
+          isOpenRef.current = false;
+          Animated.spring(panX, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        },
+      }),
+    [panX]
+  );
+
+  const handleDelete = () => {
+    Animated.parallel([
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(panX, {
+        toValue: -350,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onDelete();
+    });
+  };
+
+  const closeSwipe = () => {
+    if (isOpenRef.current) {
+      isOpenRef.current = false;
+      Animated.spring(panX, {
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  return (
+    <Animated.View style={[styles.swipeContainer, { opacity: opacityAnim }]}>
+      {/* Background Red Delete Button */}
+      <View style={styles.swipeDeleteActionBg}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={handleDelete}
+          style={styles.swipeDeleteBtn}
+          accessibilityLabel="Видалити вправу"
+        >
+          <Ionicons name="trash" size={20} color="#ffffff" />
+          <Text style={styles.swipeDeleteBtnText}>Видалити</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Foreground Swipeable Card */}
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.swipeForeground,
+          {
+            transform: [{ translateX: panX }],
+            backgroundColor: isDark ? '#18181b' : '#ffffff',
+          },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={closeSwipe}
+          disabled={!isOpenRef.current}
+        >
+          {children}
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
+  );
+};
 
 export const WorkoutEditorScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
@@ -951,7 +1083,11 @@ export const WorkoutEditorScreen: React.FC = () => {
                   isSuperset && palette && { borderLeftColor: palette.borderColor, borderLeftWidth: 4 },
                 ]}
               >
-                <Card style={styles.exerciseCard}>
+                <SwipeableExerciseCard
+                  onDelete={() => handleRemoveExercise(ex.id)}
+                  isDark={isDark}
+                >
+                  <Card style={styles.exerciseCard}>
                   {/* Exercise Card Header */}
                   <View style={[styles.exHeader, isExpanded && (isDark ? styles.borderBottomDark : styles.borderBottomLight)]}>
                     {/* Index/Reorder, Name & Collapsed Summary */}
@@ -1252,7 +1388,8 @@ export const WorkoutEditorScreen: React.FC = () => {
                     </>
                   )}
                 </Card>
-              </View>
+              </SwipeableExerciseCard>
+            </View>
             );
           })}
 
@@ -1560,6 +1697,39 @@ const styles = StyleSheet.create({
   },
   exerciseCardWrap: {
     borderRadius: 12,
+  },
+  swipeContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 12,
+  },
+  swipeDeleteActionBg: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 84,
+    backgroundColor: '#ef4444',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  swipeDeleteBtn: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeDeleteBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  swipeForeground: {
+    borderRadius: 12,
+    zIndex: 2,
   },
   exerciseCard: {
     padding: 12,
