@@ -878,15 +878,57 @@ export const WorkoutEditorScreen: React.FC = () => {
     if (isNowCompleted) {
       const currentEx = updatedExercises.find((e) => e.id === weId);
       if (currentEx) {
-        // Superset navigation: after 1 set, advance to next exercise in superset; loop back on last
+        // Superset navigation: cycle exercises or advance when superset is completed
         if (currentEx.supersetGroupId) {
           const supersetExercises = updatedExercises.filter(
             (e) => e.supersetGroupId === currentEx.supersetGroupId
           );
           if (supersetExercises.length > 1) {
+            // Check if all sets of all exercises in this superset are completed
+            const isAllSupersetCompleted = supersetExercises.every(
+              (e) => e.sets && e.sets.length > 0 && e.sets.every((s) => Boolean(s.completedAt))
+            );
+
+            if (isAllSupersetCompleted) {
+              // Find the index of the last exercise belonging to this superset in the workout
+              let lastSupersetExIndex = -1;
+              for (let i = 0; i < updatedExercises.length; i++) {
+                if (updatedExercises[i].supersetGroupId === currentEx.supersetGroupId) {
+                  lastSupersetExIndex = i;
+                }
+              }
+
+              if (lastSupersetExIndex >= 0 && lastSupersetExIndex < updatedExercises.length - 1) {
+                // Next exercise in workout after the superset
+                const nextExAfterSuperset = updatedExercises[lastSupersetExIndex + 1];
+                setExpandedExerciseId(nextExAfterSuperset.id);
+                scrollToExerciseCard(nextExAfterSuperset.id);
+              } else {
+                // Superset is at the end of workout: open the last exercise
+                const lastEx = updatedExercises[updatedExercises.length - 1];
+                if (lastEx) {
+                  setExpandedExerciseId(lastEx.id);
+                  scrollToExerciseCard(lastEx.id);
+                }
+              }
+              return;
+            }
+
+            // Superset is still in progress: find next exercise with remaining sets, cycling forward
             const currentIdxInSuperset = supersetExercises.findIndex((e) => e.id === currentEx.id);
-            const nextIdxInSuperset = (currentIdxInSuperset + 1) % supersetExercises.length;
-            const nextEx = supersetExercises[nextIdxInSuperset];
+            let nextEx: WorkoutExercise | null = null;
+            for (let step = 1; step <= supersetExercises.length; step++) {
+              const candidate = supersetExercises[(currentIdxInSuperset + step) % supersetExercises.length];
+              if (candidate.sets && candidate.sets.some((s) => !s.completedAt)) {
+                nextEx = candidate;
+                break;
+              }
+            }
+            if (!nextEx) {
+              const nextIdxInSuperset = (currentIdxInSuperset + 1) % supersetExercises.length;
+              nextEx = supersetExercises[nextIdxInSuperset];
+            }
+
             if (nextEx) {
               setExpandedExerciseId(nextEx.id);
               scrollToExerciseCard(nextEx.id);
