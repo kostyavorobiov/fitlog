@@ -23,6 +23,7 @@ import { Button } from '../components/Button';
 import { ExerciseSelectorModal } from '../components/ExerciseSelectorModal';
 import { useAuth } from '../context/AuthContext';
 import { WorkoutService } from '../services/workoutService';
+import { ExerciseService } from '../services/exerciseService';
 import {
   WorkoutPlan,
   WorkoutExercise,
@@ -35,6 +36,16 @@ import {
 } from '../types/workout';
 
 import { SupersetPalette, SUPERSET_PALETTES } from '../constants/supersets';
+
+export const computeWorkoutStatus = (exercises: WorkoutExercise[]): 'completed' | 'in_progress' => {
+  if (!exercises || exercises.length === 0) return 'in_progress';
+  const totalSets = exercises.reduce((acc, ex) => acc + (ex.sets ? ex.sets.length : 0), 0);
+  if (totalSets === 0) return 'in_progress';
+  const allSetsDone = exercises.every(
+    (ex) => ex.sets && ex.sets.length > 0 && ex.sets.every((s) => Boolean(s.completedAt))
+  );
+  return allSetsDone ? 'completed' : 'in_progress';
+};
 
 const TITLE_PRESETS = [
   'Груди та Тріцепс',
@@ -395,13 +406,22 @@ export const WorkoutEditorScreen: React.FC = () => {
     }
   }, [id, targetUserId]);
 
+  const scrollToExerciseCard = (weId: string) => {
+    setTimeout(() => {
+      const y = exerciseLayoutsRef.current[weId];
+      if (typeof y === 'number') {
+        scrollViewRef.current?.scrollTo({ y: Math.max(0, y - 20), animated: true });
+      }
+    }, 120);
+  };
+
   const loadPerformancesForWorkout = async (w: WorkoutPlan, ownerUserId?: string) => {
     const effectiveUserId = ownerUserId || w.userId || targetUserId;
     if (!effectiveUserId || !w.exercises) return;
     const perfs: Record<string, PastExercisePerformance | null> = {};
     for (const ex of w.exercises) {
       try {
-        const perf = await WorkoutService.getLastExercisePerformance(effectiveUserId, ex.exerciseId, w.id);
+        const perf = await WorkoutService.getLastExercisePerformance(effectiveUserId, ex.exerciseId, w.id, ex.exerciseName);
         perfs[ex.exerciseId] = perf;
       } catch {
         perfs[ex.exerciseId] = null;
@@ -429,6 +449,10 @@ export const WorkoutEditorScreen: React.FC = () => {
     if (user?.id && updated.userId !== user.id && !updated.assignedByCoachId) {
       updated.assignedByCoachId = user.id;
     }
+
+    const autoStatus = computeWorkoutStatus(updated.exercises || []);
+    updated.status = autoStatus;
+    updated.completedAt = autoStatus === 'completed' ? (updated.completedAt || new Date().toISOString()) : null;
 
     setWorkout(updated);
     workoutRef.current = updated;
@@ -484,13 +508,39 @@ export const WorkoutEditorScreen: React.FC = () => {
   const handleSelectExercise = async (exercise: Exercise) => {
     if (!workout || !user) return;
 
-    // Check if exercise has previous performance
+    const effectiveUserId = workout.userId || targetUserId || user.id;
+
+    // Check if exercise has previous performance across workout history
     let lastPerf: PastExercisePerformance | null = null;
     try {
-      lastPerf = await WorkoutService.getLastExercisePerformance(user.id, exercise.id, workout.id);
+      lastPerf = await WorkoutService.getLastExercisePerformance(effectiveUserId, exercise.id, workout.id, exercise.name);
       setLastPerformances((prev) => ({ ...prev, [exercise.id]: lastPerf }));
     } catch (e) {
       console.warn('Error getting last exercise performance:', e);
+    }
+
+    // If coach is creating/adding exercise for trainee, automatically copy it into trainee's custom catalog
+    const isTraineeWorkout = Boolean(traineeId || (workout && workout.userId && workout.userId !== user.id) || (workout && workout.assignedByCoachId));
+    const effectiveTraineeId = workout.userId || traineeId;
+    if (isTraineeWorkout && effectiveTraineeId && exercise.userId !== effectiveTraineeId) {
+      try {
+        const traineeExercises = await ExerciseService.getExercises(effectiveTraineeId);
+        const exists = traineeExercises.some(
+          (e) => e.name.toLowerCase().trim() === exercise.name.toLowerCase().trim()
+        );
+        if (!exists) {
+          const cloned: Exercise = {
+            ...exercise,
+            id: `custom_ex_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            userId: effectiveTraineeId,
+            isDefault: false,
+            createdAt: new Date().toISOString(),
+          };
+          await ExerciseService.createExercise(cloned);
+        }
+      } catch (err) {
+        console.warn('Failed to add exercise to trainee library:', err);
+      }
     }
 
     const targetRange = (lastPerf?.sets?.[0]?.targetRepsRange || '8-12') as string;
@@ -521,7 +571,6 @@ export const WorkoutEditorScreen: React.FC = () => {
     }
 
     const currentExercises = workout.exercises || [];
-    const isFirstExercise = currentExercises.length === 0;
     const newWorkoutExercise: WorkoutExercise = {
       id: weId,
       workoutPlanId: workout.id,
@@ -542,13 +591,12 @@ export const WorkoutEditorScreen: React.FC = () => {
     updateAndSave(updated, true);
     setIsSelectorOpen(false);
 
-    if (isFirstExercise) {
-      setExpandedExerciseId(weId);
-    }
+    // Automatically expand newly added exercise card
+    setExpandedExerciseId(weId);
 
     // Auto-scroll to newly added exercise smoothly
     setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
+      scrollToExerciseCard(weId);
     }, 150);
   };
 
@@ -821,11 +869,50 @@ export const WorkoutEditorScreen: React.FC = () => {
 
     const updatedWorkout: WorkoutPlan = {
       ...workout,
-      status: workout.status === 'planned' ? 'in_progress' : workout.status,
       exercises: updatedExercises,
     };
 
     updateAndSave(updatedWorkout, true);
+
+    // Auto-advance logic
+    if (isNowCompleted) {
+      const currentEx = updatedExercises.find((e) => e.id === weId);
+      if (currentEx) {
+        // Superset navigation: after 1 set, advance to next exercise in superset; loop back on last
+        if (currentEx.supersetGroupId) {
+          const supersetExercises = updatedExercises.filter(
+            (e) => e.supersetGroupId === currentEx.supersetGroupId
+          );
+          if (supersetExercises.length > 1) {
+            const currentIdxInSuperset = supersetExercises.findIndex((e) => e.id === currentEx.id);
+            const nextIdxInSuperset = (currentIdxInSuperset + 1) % supersetExercises.length;
+            const nextEx = supersetExercises[nextIdxInSuperset];
+            if (nextEx) {
+              setExpandedExerciseId(nextEx.id);
+              scrollToExerciseCard(nextEx.id);
+            }
+            return;
+          }
+        }
+
+        // Regular exercise: after all sets are completed, advance to next exercise in workout
+        const isAllSetsOfExCompleted =
+          currentEx.sets &&
+          currentEx.sets.length > 0 &&
+          currentEx.sets.every((s) => Boolean(s.completedAt));
+
+        if (isAllSetsOfExCompleted) {
+          const currentExIndex = updatedExercises.findIndex((e) => e.id === weId);
+          if (currentExIndex < updatedExercises.length - 1) {
+            const nextEx = updatedExercises[currentExIndex + 1];
+            if (nextEx) {
+              setExpandedExerciseId(nextEx.id);
+              scrollToExerciseCard(nextEx.id);
+            }
+          }
+        }
+      }
+    }
   };
 
   // Toggle warmup flag
@@ -1077,7 +1164,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             {workout.title || 'Тренування'}
           </Text>
           <Text style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
-            {workout.scheduledDate} • {isCompleted ? 'Завершено' : `${completedSets}/${totalSets} підходів`}
+            {workout.scheduledDate} • {isCompleted ? 'Виконано ✓' : 'В процесі ⚡'} ({completedSets}/{totalSets} підходів)
           </Text>
         </View>
 
@@ -1568,14 +1655,6 @@ export const WorkoutEditorScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
 
-          {/* Complete / Restore Workout Button directly above Delete Workout */}
-          <Button
-            title={isCompleted ? 'Відновити' : 'Завершити'}
-            variant={isCompleted ? 'outline' : 'primary'}
-            onPress={handleToggleStatus}
-            style={styles.finishWorkoutBtn}
-          />
-
           {/* Delete Workout Secondary Option at Bottom */}
           <TouchableOpacity
             activeOpacity={0.8}
@@ -1594,7 +1673,7 @@ export const WorkoutEditorScreen: React.FC = () => {
       {/* Exercise Selector Modal */}
       <ExerciseSelectorModal
         visible={isSelectorOpen}
-        userId={user?.id}
+        userId={(workout?.userId || traineeId || user?.id)}
         onClose={() => setIsSelectorOpen(false)}
         onSelectExercise={handleSelectExercise}
       />

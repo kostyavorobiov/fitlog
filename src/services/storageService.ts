@@ -167,14 +167,17 @@ export class StorageService {
     });
   }
 
-  static async syncExercises(): Promise<Exercise[]> {
+  static async syncExercises(targetUserId?: string): Promise<Exercise[]> {
     try {
-      const cloudExercises = await CloudStorageService.fetchExercises();
+      const cloudExercises = await CloudStorageService.fetchExercises(targetUserId);
       if (cloudExercises !== null) {
         memoryStore.exercises = cloudExercises;
         // Run migration for the active user after fresh cloud sync
         const activeId = this.getActiveUserId();
         if (activeId) this.migrateGlobalExercisesToUser(activeId);
+        if (targetUserId && targetUserId !== activeId) {
+          this.migrateGlobalExercisesToUser(targetUserId);
+        }
         return [...memoryStore.exercises];
       }
     } catch (err) {
@@ -914,32 +917,69 @@ export class StorageService {
     excludeWorkoutId?: string
   ): PastExercisePerformance | null {
     try {
-      const workouts = this.getWorkouts(userId);
+      let workouts = this.getWorkouts(userId);
+      if (!Array.isArray(workouts) || workouts.length === 0) {
+        workouts = memoryStore.workouts.filter((w) => !memoryStore.deletedWorkoutIds.has(w.id));
+      }
       if (!Array.isArray(workouts)) return null;
+
+      // Find the target exercise to match by normalized name as well
+      let targetEx = this.getExerciseById(exerciseId);
+      if (!targetEx) {
+        for (const w of workouts) {
+          const matchWe = w.exercises?.find((item) => item.exerciseId === exerciseId || item.id === exerciseId);
+          if (matchWe && matchWe.exerciseName && matchWe.exerciseName !== 'Вправа') {
+            targetEx = {
+              id: exerciseId,
+              userId: null,
+              name: matchWe.exerciseName,
+              muscleGroup: matchWe.muscleGroup || 'full_body',
+              isDefault: false,
+              createdAt: '',
+            };
+            break;
+          }
+        }
+      }
+      const targetName = targetEx?.name?.toLowerCase().trim();
 
       // Look for previous workouts in reverse chronological order
       for (const w of workouts) {
         if (!w || (excludeWorkoutId && w.id === excludeWorkoutId)) continue;
         if (!Array.isArray(w.exercises)) continue;
 
-        const we = w.exercises.find((item) => item && item.exerciseId === exerciseId);
+        // Match by exact exerciseId OR normalized exerciseName
+        const we = w.exercises.find((item) => {
+          if (!item) return false;
+          if (item.exerciseId === exerciseId) return true;
+          if (targetName && item.exerciseName && item.exerciseName.toLowerCase().trim() === targetName) {
+            return true;
+          }
+          return false;
+        });
+
         if (!we || !Array.isArray(we.sets) || we.sets.length === 0) continue;
 
         // Check if there are any completed sets or sets with actual reps
         const validSets = we.sets
-          .filter((s) => s && s.actualReps !== null && s.actualReps > 0 && s.weight > 0)
+          .filter((s) => s && (
+            Boolean(s.completedAt) ||
+            Boolean((s as any).completed) ||
+            (s.actualReps !== null && s.actualReps !== undefined && s.actualReps > 0)
+          ))
           .sort((a, b) => a.setNumber - b.setNumber);
 
         if (validSets.length > 0) {
           let maxWeight = 0;
           let totalVolume = 0;
           const setSummaries = validSets.map((s) => {
-            if (s.weight > maxWeight) maxWeight = s.weight;
-            totalVolume += s.weight * (s.actualReps || 0);
+            const wVal = Number(s.weight) || 0;
+            if (wVal > maxWeight) maxWeight = wVal;
+            totalVolume += wVal * (s.actualReps || 0);
             return {
               setNumber: s.setNumber,
-              weight: s.weight,
-              actualReps: s.actualReps as number,
+              weight: wVal,
+              actualReps: s.actualReps !== null && s.actualReps !== undefined ? Number(s.actualReps) : 0,
               targetRepsRange: s.targetRepsRange,
             };
           });
@@ -966,29 +1006,64 @@ export class StorageService {
    */
   static getAllPastPerformances(userId: string, exerciseId: string): PastExercisePerformance[] {
     try {
-      const workouts = this.getWorkouts(userId);
+      let workouts = this.getWorkouts(userId);
+      if (!Array.isArray(workouts) || workouts.length === 0) {
+        workouts = memoryStore.workouts.filter((w) => !memoryStore.deletedWorkoutIds.has(w.id));
+      }
       if (!Array.isArray(workouts)) return [];
       const results: PastExercisePerformance[] = [];
 
+      let targetEx = this.getExerciseById(exerciseId);
+      if (!targetEx) {
+        for (const w of workouts) {
+          const matchWe = w.exercises?.find((item) => item.exerciseId === exerciseId || item.id === exerciseId);
+          if (matchWe && matchWe.exerciseName && matchWe.exerciseName !== 'Вправа') {
+            targetEx = {
+              id: exerciseId,
+              userId: null,
+              name: matchWe.exerciseName,
+              muscleGroup: matchWe.muscleGroup || 'full_body',
+              isDefault: false,
+              createdAt: '',
+            };
+            break;
+          }
+        }
+      }
+      const targetName = targetEx?.name?.toLowerCase().trim();
+
       for (const w of workouts) {
         if (!w || !Array.isArray(w.exercises)) continue;
-        const we = w.exercises.find((item) => item && item.exerciseId === exerciseId);
+        const we = w.exercises.find((item) => {
+          if (!item) return false;
+          if (item.exerciseId === exerciseId) return true;
+          if (targetName && item.exerciseName && item.exerciseName.toLowerCase().trim() === targetName) {
+            return true;
+          }
+          return false;
+        });
+
         if (!we || !Array.isArray(we.sets)) continue;
 
         const validSets = we.sets
-          .filter((s) => s && s.actualReps !== null && s.actualReps > 0 && s.weight > 0)
+          .filter((s) => s && (
+            Boolean(s.completedAt) ||
+            Boolean((s as any).completed) ||
+            (s.actualReps !== null && s.actualReps !== undefined && s.actualReps > 0)
+          ))
           .sort((a, b) => a.setNumber - b.setNumber);
 
         if (validSets.length > 0) {
           let maxWeight = 0;
           let totalVolume = 0;
           const setSummaries = validSets.map((s) => {
-            if (s.weight > maxWeight) maxWeight = s.weight;
-            totalVolume += s.weight * (s.actualReps || 0);
+            const wVal = Number(s.weight) || 0;
+            if (wVal > maxWeight) maxWeight = wVal;
+            totalVolume += wVal * (s.actualReps || 0);
             return {
               setNumber: s.setNumber,
-              weight: s.weight,
-              actualReps: s.actualReps as number,
+              weight: wVal,
+              actualReps: s.actualReps !== null && s.actualReps !== undefined ? Number(s.actualReps) : 0,
               targetRepsRange: s.targetRepsRange,
             };
           });

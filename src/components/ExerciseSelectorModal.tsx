@@ -54,7 +54,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     setSearch('');
-    StorageService.syncExercises().then(() => {
+    StorageService.syncExercises(userId).then(() => {
       setRefreshKey((prev) => prev + 1);
     });
     const scrollY = window.scrollY;

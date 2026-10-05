@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   ScrollView,
   View,
@@ -12,6 +12,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,6 +28,135 @@ import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutPlan } from '../types/workout';
 
 export type WorkoutFilterStatus = 'all' | 'in_progress' | 'completed';
+
+export function formatDateDDMMYY(dateStr?: string): string {
+  if (!dateStr) return '';
+  const dateOnly = dateStr.split('T')[0];
+  const parts = dateOnly.split('-');
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    const shortYear = year.length === 4 ? year.slice(2) : year;
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${shortYear}`;
+  }
+  return dateStr;
+}
+
+interface SwipeableWorkoutCardProps {
+  onDelete: () => void;
+  isDark: boolean;
+  children: React.ReactNode;
+}
+
+const SWIPE_DELETE_WIDTH = 84;
+const SWIPE_THRESHOLD = -40;
+
+const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
+  onDelete,
+  isDark,
+  children,
+}) => {
+  const panX = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+  const isOpenRef = useRef(false);
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return (
+            Math.abs(gestureState.dx) > 12 &&
+            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5
+          );
+        },
+        onPanResponderGrant: () => {
+          panX.stopAnimation();
+        },
+        onPanResponderMove: (_, gestureState) => {
+          const base = isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0;
+          const newX = Math.min(0, Math.max(-SWIPE_DELETE_WIDTH - 20, base + gestureState.dx));
+          panX.setValue(newX);
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          const currentVal = (panX as any)._value ?? (isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0);
+          if (gestureState.dx < -30 || currentVal < SWIPE_THRESHOLD) {
+            isOpenRef.current = true;
+            Animated.spring(panX, {
+              toValue: -SWIPE_DELETE_WIDTH,
+              useNativeDriver: true,
+              bounciness: 4,
+            }).start();
+          } else {
+            isOpenRef.current = false;
+            Animated.spring(panX, {
+              toValue: 0,
+              useNativeDriver: true,
+              bounciness: 4,
+            }).start();
+          }
+        },
+        onPanResponderTerminate: () => {
+          isOpenRef.current = false;
+          Animated.spring(panX, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        },
+      }),
+    [panX]
+  );
+
+  const handleDelete = () => {
+    onDelete();
+  };
+
+  const closeSwipe = () => {
+    if (isOpenRef.current) {
+      isOpenRef.current = false;
+      Animated.spring(panX, {
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  return (
+    <Animated.View style={[styles.swipeContainer, { opacity: opacityAnim }]}>
+      {/* Background Red Delete Button */}
+      <View style={styles.swipeDeleteActionBg}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={handleDelete}
+          style={styles.swipeDeleteBtn}
+          accessibilityLabel="Видалити тренування"
+        >
+          <Ionicons name="trash" size={20} color="#ffffff" />
+          <Text style={styles.swipeDeleteBtnText}>Видалити</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Foreground Swipeable Card */}
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.swipeForeground,
+          {
+            transform: [{ translateX: panX }],
+            backgroundColor: isDark ? '#18181b' : '#ffffff',
+          },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={closeSwipe}
+          disabled={!isOpenRef.current}
+        >
+          {children}
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
+  );
+};
 
 export const WorkoutsScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
@@ -306,141 +437,107 @@ export const WorkoutsScreen: React.FC = () => {
               const exercises = w.exercises || [];
               const totalSets = exercises.reduce((acc, ex) => acc + (ex.sets ? ex.sets.length : 0), 0);
 
-              let totalVolume = 0;
-              exercises.forEach((ex) => {
-                (ex.sets || []).forEach((s) => {
-                  if ((s.completedAt || isCompleted) && s.weight && s.actualReps) {
-                    totalVolume += s.weight * s.actualReps;
-                  }
-                });
-              });
-
               return (
-                <TouchableOpacity
+                <SwipeableWorkoutCard
                   key={w.id}
-                  activeOpacity={0.7}
-                  onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
+                  isDark={isDark}
+                  onDelete={() => handleDeleteWorkout(w)}
                 >
-                  <Card style={styles.workoutCard}>
-                    {/* Top Row: Status, Date, Coach, Delete Action */}
-                    <View style={styles.cardTopRow}>
-                      <View style={styles.cardBadgesRow}>
-                        <Text
-                          style={[
-                            styles.statusText,
-                            {
-                              color: isCompleted
-                                ? (isDark ? '#34d399' : '#059669')
-                                : isInProgress
-                                  ? (isDark ? '#fbbf24' : '#d97706')
-                                  : (isDark ? '#a1a1aa' : '#71717a'),
-                            },
-                          ]}
-                        >
-                          {isCompleted ? 'Завершено' : isInProgress ? 'У процесі' : 'Заплановано'}
-                        </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
+                  >
+                    <Card style={styles.workoutCard}>
+                      {/* Top Row: Status, Coach */}
+                      <View style={styles.cardTopRow}>
+                        <View style={styles.cardBadgesRow}>
+                          <Text
+                            style={[
+                              styles.statusText,
+                              {
+                                color: isCompleted
+                                  ? (isDark ? '#34d399' : '#059669')
+                                  : isInProgress
+                                    ? (isDark ? '#fbbf24' : '#d97706')
+                                    : (isDark ? '#a1a1aa' : '#71717a'),
+                              },
+                            ]}
+                          >
+                            {isCompleted ? 'Завершено' : isInProgress ? 'У процесі' : 'Заплановано'}
+                          </Text>
 
-                        <Text style={[styles.dotSep, isDark ? styles.dotDark : styles.dotLight]}>·</Text>
+                          {w.assignedByCoachId && (
+                            <>
+                              <Text style={[styles.dotSep, isDark ? styles.dotDark : styles.dotLight]}>·</Text>
+                              <Text style={[styles.coachText, isDark ? styles.coachDark : styles.coachLight]}>
+                                Від тренера
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                      </View>
 
-                        <View style={styles.dateWrap}>
+                      {/* Workout Title */}
+                      <Text
+                        numberOfLines={1}
+                        style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
+                      >
+                        {w.title || 'Тренування без назви'}
+                      </Text>
+
+                      {/* Metrics Row: Date first, then exercises count, then sets count (no kg sum) */}
+                      <View style={styles.cardMetricsRow}>
+                        <View style={styles.metricItem}>
                           <Ionicons
                             name="calendar-outline"
-                            size={12}
-                            color={isDark ? '#71717a' : '#a1a1aa'}
+                            size={13}
+                            color={isDark ? '#71717a' : '#94a3b8'}
                           />
-                          <Text style={[styles.dateText, isDark ? styles.subDark : styles.subLight]}>
-                            {w.scheduledDate}
+                          <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                            {formatDateDDMMYY(w.scheduledDate)}
                           </Text>
                         </View>
 
-                        {w.assignedByCoachId && (
-                          <>
-                            <Text style={[styles.dotSep, isDark ? styles.dotDark : styles.dotLight]}>·</Text>
-                            <Text style={[styles.coachText, isDark ? styles.coachDark : styles.coachLight]}>
-                              Від тренера
-                            </Text>
-                          </>
-                        )}
+                        <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+
+                        <View style={styles.metricItem}>
+                          <Ionicons
+                            name="layers-outline"
+                            size={14}
+                            color={isDark ? '#71717a' : '#94a3b8'}
+                          />
+                          <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                            <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                              {exercises.length}
+                            </Text>{' '}
+                            вправ
+                          </Text>
+                        </View>
+
+                        <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+
+                        <View style={styles.metricItem}>
+                          <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                            <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                              {totalSets}
+                            </Text>{' '}
+                            підходів
+                          </Text>
+                        </View>
                       </View>
 
-                      {/* Delete Quick Button */}
-                      <TouchableOpacity
-                        activeOpacity={0.6}
-                        onPress={(e) => {
-                          e.stopPropagation?.();
-                          handleDeleteWorkout(w);
-                        }}
-                        style={styles.cardDeleteBtn}
-                      >
-                        <Ionicons
-                          name="trash-outline"
-                          size={16}
-                          color={isDark ? '#71717a' : '#a1a1aa'}
-                        />
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* Workout Title */}
-                    <Text
-                      numberOfLines={1}
-                      style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
-                    >
-                      {w.title || 'Тренування без назви'}
-                    </Text>
-
-                    {/* Metrics Row */}
-                    <View style={styles.cardMetricsRow}>
-                      <View style={styles.metricItem}>
-                        <Ionicons
-                          name="layers-outline"
-                          size={14}
-                          color={isDark ? '#71717a' : '#94a3b8'}
-                        />
-                        <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
-                          <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
-                            {exercises.length}
-                          </Text>{' '}
-                          вправ
+                      {/* Notes snippet */}
+                      {w.notes ? (
+                        <Text
+                          numberOfLines={1}
+                          style={[styles.notesSnippet, isDark ? styles.subDark : styles.subLight]}
+                        >
+                          {w.notes}
                         </Text>
-                      </View>
-
-                      <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
-
-                      <View style={styles.metricItem}>
-                        <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
-                          <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
-                            {totalSets}
-                          </Text>{' '}
-                          підходів
-                        </Text>
-                      </View>
-
-                      {totalVolume > 0 && (
-                        <>
-                          <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
-                          <View style={styles.metricItem}>
-                            <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
-                              <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
-                                {totalVolume}
-                              </Text>{' '}
-                              кг
-                            </Text>
-                          </View>
-                        </>
-                      )}
-                    </View>
-
-                    {/* Notes snippet */}
-                    {w.notes ? (
-                      <Text
-                        numberOfLines={1}
-                        style={[styles.notesSnippet, isDark ? styles.subDark : styles.subLight]}
-                      >
-                        {w.notes}
-                      </Text>
-                    ) : null}
-                  </Card>
-                </TouchableOpacity>
+                      ) : null}
+                    </Card>
+                  </TouchableOpacity>
+                </SwipeableWorkoutCard>
               );
             })}
           </View>
@@ -912,5 +1009,38 @@ const styles = StyleSheet.create({
   },
   borderDark: {
     borderColor: '#27272a',
+  },
+  swipeContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 12,
+  },
+  swipeDeleteActionBg: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 84,
+    backgroundColor: '#ef4444',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  swipeDeleteBtn: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeDeleteBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  swipeForeground: {
+    borderRadius: 12,
+    zIndex: 2,
   },
 });

@@ -23,9 +23,7 @@ import {
   CheckCircle2,
   Circle,
   Dumbbell,
-  Save,
   Check,
-  RotateCcw,
   ChevronUp,
   ChevronDown,
   Layers,
@@ -37,6 +35,21 @@ import {
   Unlink,
   X,
 } from 'lucide-react';
+
+const computeWorkoutStatus = (exercises: WorkoutExercise[]): 'completed' | 'in_progress' => {
+  if (!exercises || exercises.length === 0) return 'in_progress';
+  let totalSets = 0;
+  let completedSets = 0;
+  for (const ex of exercises) {
+    const sets = ex.sets || [];
+    if (sets.length === 0) return 'in_progress';
+    for (const s of sets) {
+      totalSets++;
+      if (s.completedAt) completedSets++;
+    }
+  }
+  return totalSets > 0 && completedSets === totalSets ? 'completed' : 'in_progress';
+};
 
 const SUPERSET_PALETTES = [
   {
@@ -280,7 +293,17 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         }
         return we;
       });
-      const enriched: WorkoutPlan = { ...updated, exercises: enrichedExercises };
+      const autoStatus = computeWorkoutStatus(enrichedExercises);
+      const completedAt = autoStatus === 'completed'
+        ? (updated.completedAt || new Date().toISOString())
+        : null;
+
+      const enriched: WorkoutPlan = {
+        ...updated,
+        exercises: enrichedExercises,
+        status: autoStatus,
+        completedAt,
+      };
       workoutRef.current = enriched;
       setWorkout(enriched);
       StorageService.saveWorkout(enriched);
@@ -422,9 +445,40 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         ];
       }
 
+      // If coach is creating/adding exercise for trainee, automatically copy it into trainee's custom catalog
+      const effectiveTraineeId = currentWorkout.userId || userId;
+      const activeUserId = StorageService.getActiveUserId();
+      const isTraineeWorkout = Boolean(
+        currentWorkout.assignedByCoachId ||
+        (currentWorkout.userId && currentWorkout.userId !== activeUserId)
+      );
+
+      if (isTraineeWorkout && effectiveTraineeId && exercise.userId !== effectiveTraineeId) {
+        try {
+          const traineeExercises = StorageService.getExercises(effectiveTraineeId);
+          const exists = traineeExercises.some(
+            (e) => e.name.toLowerCase().trim() === exercise.name.toLowerCase().trim()
+          );
+          if (!exists) {
+            const cloned: Exercise = {
+              ...exercise,
+              id: generateId('custom_ex'),
+              userId: effectiveTraineeId,
+              isDefault: false,
+              createdAt: new Date().toISOString(),
+            };
+            StorageService.saveExercise(cloned);
+            CloudStorageService.saveExercise(cloned).catch((err) => {
+              console.warn('Failed to save exercise to trainee cloud:', err);
+            });
+          }
+        } catch (err) {
+          console.warn('Failed to add exercise to trainee library:', err);
+        }
+      }
+
       const weId = generateId('we');
       const currentExercises = Array.isArray(currentWorkout.exercises) ? currentWorkout.exercises : [];
-      const isFirstExercise = currentExercises.length === 0;
       const newWorkoutExercise: WorkoutExercise = {
         id: weId,
         workoutPlanId: currentWorkout.id,
@@ -445,14 +499,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       updateAndSave(updated);
       setIsSelectorOpen(false);
 
-      if (isFirstExercise) {
-        setExpandedExerciseId(weId);
-      }
-
-      // On mobile: position newly added exercise slightly below the top navbar without smooth scroll
-      if (typeof window !== 'undefined' && window.innerWidth < 640) {
-        scrollToExerciseCard(weId);
-      }
+      // Auto-expand newly added exercise card and scroll to it
+      setExpandedExerciseId(weId);
+      scrollToExerciseCard(weId);
     } catch (err) {
       console.error('Failed to add exercise to workout:', err);
     }
@@ -678,7 +727,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
     const updatedWorkout = {
       ...currentWorkout,
-      status: 'in_progress' as const,
       exercises: updatedExercises,
     };
 
@@ -686,6 +734,43 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
     if (isNowCompleted) {
       playSuccessChime();
+
+      const currentEx = updatedExercises.find((e) => e.id === weId);
+      if (currentEx) {
+        // Superset navigation: after 1 set, advance to next exercise in superset; loop back on last
+        if (currentEx.supersetGroupId) {
+          const supersetExercises = updatedExercises.filter(
+            (e) => e.supersetGroupId === currentEx.supersetGroupId
+          );
+          if (supersetExercises.length > 1) {
+            const currentIdxInSuperset = supersetExercises.findIndex((e) => e.id === currentEx.id);
+            const nextIdxInSuperset = (currentIdxInSuperset + 1) % supersetExercises.length;
+            const nextEx = supersetExercises[nextIdxInSuperset];
+            if (nextEx) {
+              setExpandedExerciseId(nextEx.id);
+              scrollToExerciseCard(nextEx.id);
+            }
+            return;
+          }
+        }
+
+        // Regular exercise: after all sets are completed, advance to next exercise in workout
+        const isAllSetsOfExCompleted =
+          currentEx.sets &&
+          currentEx.sets.length > 0 &&
+          currentEx.sets.every((s) => Boolean(s.completedAt));
+
+        if (isAllSetsOfExCompleted) {
+          const currentExIndex = updatedExercises.findIndex((e) => e.id === weId);
+          if (currentExIndex < updatedExercises.length - 1) {
+            const nextEx = updatedExercises[currentExIndex + 1];
+            if (nextEx) {
+              setExpandedExerciseId(nextEx.id);
+              scrollToExerciseCard(nextEx.id);
+            }
+          }
+        }
+      }
     } else {
       playBeep(400, 0.1);
     }
@@ -741,47 +826,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         updateAndSave({ ...currentWorkout, exercises: updated });
       }
     }
-  };
-
-  // Explicitly save workout changes without completing
-  const handleSaveWorkout = async () => {
-    updateAndSave(workoutRef.current);
-    onSave(workoutRef.current);
-    await CloudStorageService.saveWorkout(workoutRef.current);
-    setSaveNoticeMessage('Зміни в тренуванні успішно збережено!');
-    setSaveSuccessNotice(true);
-    setTimeout(() => setSaveSuccessNotice(false), 3000);
-  };
-
-  // Complete entire workout (marks status as 'completed')
-  const handleFinishWorkout = async () => {
-    const completedAt = new Date().toISOString();
-    const updated: WorkoutPlan = {
-      ...workoutRef.current,
-      status: 'completed',
-      completedAt,
-      durationMinutes: workoutRef.current.durationMinutes || 60,
-    };
-    updateAndSave(updated);
-    await CloudStorageService.saveWorkout(updated);
-    playSuccessChime();
-    setSaveNoticeMessage('Тренування успішно виконано! Результати зафіксовані.');
-    setSaveSuccessNotice(true);
-    setTimeout(() => setSaveSuccessNotice(false), 3500);
-  };
-
-  // Restore workout to in_progress status
-  const handleRestoreWorkout = async () => {
-    const updated: WorkoutPlan = {
-      ...workoutRef.current,
-      status: 'in_progress',
-      completedAt: null,
-    };
-    updateAndSave(updated);
-    await CloudStorageService.saveWorkout(updated);
-    setSaveNoticeMessage('Тренування відновлено в процесі');
-    setSaveSuccessNotice(true);
-    setTimeout(() => setSaveSuccessNotice(false), 3000);
   };
 
   // Delete current workout
@@ -847,16 +891,12 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               <span
                 className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold border ${workout.status === 'completed'
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                  : workout.status === 'in_progress'
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700'
-                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
+                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700'
                   }`}
               >
                 {workout.status === 'completed'
-                  ? 'Завершено ✓'
-                  : workout.status === 'in_progress'
-                    ? 'У процесі ⚡'
-                    : 'Заплановано'}
+                  ? 'Виконано ✓'
+                  : 'В процесі ⚡'}
               </span>
               {workout.assignedByCoachId && (
                 <span className="inline-flex items-center space-x-1 rounded-md px-2 py-0.5 text-[10px] font-semibold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
@@ -1619,41 +1659,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
           <span>Додати вправу</span>
         </button>
 
-        {/* Row: Зберегти + Виконано / Відновити */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={handleSaveWorkout}
-            className="flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white py-2.5 px-3 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer shadow-xs"
-            title="Зберегти поточний стан тренування"
-          >
-            <Save className="h-4 w-4" />
-            <span>Зберегти</span>
-          </button>
-
-          {workout.status !== 'completed' ? (
-            <button
-              type="button"
-              onClick={handleFinishWorkout}
-              className="flex items-center justify-center space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-3 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer shadow-xs"
-              title="Позначити тренування як виконане"
-            >
-              <Check className="h-4 w-4 stroke-[2.5]" />
-              <span>Виконано</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleRestoreWorkout}
-              className="flex items-center justify-center space-x-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white py-2.5 px-3 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer shadow-xs"
-              title="Відновити тренування (продовжити виконання)"
-            >
-              <RotateCcw className="h-4 w-4" />
-              <span>Відновити</span>
-            </button>
-          )}
-        </div>
-
         {/* Видалити тренування */}
         <button
           type="button"
@@ -1706,38 +1711,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
             <button
               type="button"
-              onClick={handleSaveWorkout}
-              className="flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
-              title="Зберегти поточний стан тренування"
-            >
-              <Save className="h-4 w-4" />
-              <span>Зберегти</span>
-            </button>
-
-            {workout.status !== 'completed' ? (
-              <button
-                type="button"
-                onClick={handleFinishWorkout}
-                className="flex items-center justify-center space-x-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
-                title="Позначити тренування як виконане"
-              >
-                <Check className="h-4 w-4 stroke-[2.5]" />
-                <span>Виконано</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleRestoreWorkout}
-                className="flex items-center justify-center space-x-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 text-xs font-semibold transition-colors cursor-pointer active:scale-[0.98]"
-                title="Відновити тренування (продовжити виконання)"
-              >
-                <RotateCcw className="h-4 w-4" />
-                <span>Відновити</span>
-              </button>
-            )}
-
-            <button
-              type="button"
               onClick={() => setIsDeleteModalOpen(true)}
               className="rounded-lg border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors shrink-0 cursor-pointer"
               title="Видалити це тренування"
@@ -1752,7 +1725,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       {/* Modals */}
       <ExerciseSelectorModal
         isOpen={isSelectorOpen}
-        userId={StorageService.getActiveUserId() || userId}
+        userId={workout.userId || userId}
         onClose={() => setIsSelectorOpen(false)}
         onSelect={handleSelectExercise}
         onOpenCreateModal={(initialName) => {
@@ -1763,7 +1736,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       <CreateExerciseModal
         isOpen={isCreateOpen}
-        userId={StorageService.getActiveUserId() || userId}
+        userId={workout.userId || userId}
         initialName={createExerciseInitialName}
         onClose={() => {
           setIsCreateOpen(false);
@@ -1777,7 +1750,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       <ExerciseHistoryModal
         exercise={historyModalExercise}
-        userId={userId}
+        userId={workout.userId || userId}
         isOpen={Boolean(historyModalExercise)}
         onClose={() => setHistoryModalExercise(null)}
       />

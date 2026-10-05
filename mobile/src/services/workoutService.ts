@@ -329,33 +329,55 @@ export class WorkoutService {
   static async getLastExercisePerformance(
     userId: string,
     exerciseId: string,
-    excludeWorkoutId?: string
+    excludeWorkoutId?: string,
+    exerciseName?: string
   ): Promise<PastExercisePerformance | null> {
     try {
       const workouts = await this.getWorkouts(userId);
       if (!Array.isArray(workouts)) return null;
 
+      let targetName = exerciseName?.toLowerCase().trim();
+      if (!targetName) {
+        try {
+          const cachedExercises = await MobileStorage.getItem<any[]>('mobile_exercises_cache', []);
+          const found = cachedExercises.find((e: any) => e.id === exerciseId);
+          if (found && found.name) targetName = found.name.toLowerCase().trim();
+        } catch { }
+      }
+
       for (const w of workouts) {
         if (!w || (excludeWorkoutId && w.id === excludeWorkoutId)) continue;
         if (!Array.isArray(w.exercises)) continue;
 
-        const we = w.exercises.find((item) => item && item.exerciseId === exerciseId);
+        const we = w.exercises.find((item) => {
+          if (!item) return false;
+          if (item.exerciseId === exerciseId) return true;
+          if (targetName && item.exerciseName && item.exerciseName.toLowerCase().trim() === targetName) {
+            return true;
+          }
+          return false;
+        });
         if (!we || !Array.isArray(we.sets) || we.sets.length === 0) continue;
 
         const validSets = we.sets
-          .filter((s) => s && s.actualReps !== null && s.actualReps > 0 && s.weight > 0)
+          .filter((s) => s && (
+            Boolean(s.completedAt) ||
+            Boolean((s as any).completed) ||
+            (s.actualReps !== null && s.actualReps !== undefined && s.actualReps > 0)
+          ))
           .sort((a, b) => a.setNumber - b.setNumber);
 
         if (validSets.length > 0) {
           let maxWeight = 0;
           let totalVolume = 0;
           const setSummaries: PastExerciseSetSummary[] = validSets.map((s) => {
-            if (s.weight > maxWeight) maxWeight = s.weight;
-            totalVolume += s.weight * (s.actualReps || 0);
+            const wVal = Number(s.weight) || 0;
+            if (wVal > maxWeight) maxWeight = wVal;
+            totalVolume += wVal * (s.actualReps || 0);
             return {
               setNumber: s.setNumber,
-              weight: s.weight,
-              actualReps: s.actualReps as number,
+              weight: wVal,
+              actualReps: s.actualReps !== null && s.actualReps !== undefined ? Number(s.actualReps) : 0,
               targetRepsRange: s.targetRepsRange,
             };
           });

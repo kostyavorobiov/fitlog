@@ -425,25 +425,28 @@ export class CloudStorageService {
    * Global exercises are included here so the client-side migration can copy
    * them into user-owned records. After migration, getExercises() filters to user-only.
    */
-  static async fetchExercises(_userId?: string): Promise<Exercise[] | null> {
+  static async fetchExercises(targetUserId?: string): Promise<Exercise[] | null> {
     if (!isSupabaseConfigured() || !supabase) return null;
 
     try {
       const { data: authData } = await supabase.auth.getUser();
       const currentAuthId = authData?.user?.id || null;
 
-      // Fetch: user's own exercises + global/default exercises (for migration)
+      // Fetch: user's own exercises + target user's exercises (e.g. trainee) + global/default exercises
       let query = supabase
         .from('exercises')
         .select('*')
         .order('name');
 
-      if (currentAuthId) {
-        // user's own OR global (is_default=true OR user_id IS NULL)
+      if (currentAuthId || targetUserId) {
+        const filters: string[] = ['is_default.eq.true', 'user_id.is.null'];
+        if (currentAuthId) filters.push(`user_id.eq.${currentAuthId}`);
+        if (targetUserId && targetUserId !== currentAuthId) filters.push(`user_id.eq.${targetUserId}`);
+
         query = supabase
           .from('exercises')
           .select('*')
-          .or(`user_id.eq.${currentAuthId},is_default.eq.true,user_id.is.null`)
+          .or(filters.join(','))
           .order('name');
       }
 

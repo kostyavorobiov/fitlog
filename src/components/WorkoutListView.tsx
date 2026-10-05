@@ -3,15 +3,26 @@ import { WorkoutPlan } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { MobileSwipeableWorkoutCard } from './MobileSwipeableWorkoutCard';
 import {
   Plus,
   Calendar,
-  Trash2,
   Layers,
-  Clock,
 } from 'lucide-react';
 
 import { useSwipeGesture } from '../utils/useSwipeGesture';
+
+export function formatDateDDMMYY(dateStr?: string): string {
+  if (!dateStr) return '';
+  const dateOnly = dateStr.split('T')[0];
+  const parts = dateOnly.split('-');
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    const shortYear = year.length === 4 ? year.slice(2) : year;
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${shortYear}`;
+  }
+  return dateStr;
+}
 
 interface WorkoutListViewProps {
   userId: string;
@@ -180,84 +191,63 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
               0
             );
 
-            let totalVolume = 0;
-            (w.exercises || []).forEach((ex) => {
-              (ex.sets || []).forEach((s) => {
-                if (s.completedAt && s.weight && s.actualReps) {
-                  totalVolume += s.weight * s.actualReps;
-                }
-              });
-            });
-
             return (
-              <div
+              <MobileSwipeableWorkoutCard
                 key={w.id}
-                onClick={() => onSelectWorkout(w)}
-                className="group rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer space-y-1.5"
+                workoutId={w.id}
+                onDelete={() => setWorkoutToDelete(w)}
               >
-                {/* Row 1: Status · Date · Trash */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
-                    <span
-                      className={`font-semibold ${isCompleted
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : w.status === 'in_progress'
-                          ? 'text-amber-500 dark:text-amber-400'
-                          : 'text-zinc-500 dark:text-zinc-400'
-                        }`}
-                    >
-                      {isCompleted ? 'Завершено' : w.status === 'in_progress' ? 'У процесі' : 'Заплановано'}
+                <div
+                  onClick={() => onSelectWorkout(w)}
+                  className="group rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer space-y-1.5"
+                >
+                  {/* Row 1: Status & Coach info */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
+                      <span
+                        className={`font-semibold ${isCompleted
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : w.status === 'in_progress'
+                            ? 'text-amber-500 dark:text-amber-400'
+                            : 'text-zinc-500 dark:text-zinc-400'
+                          }`}
+                      >
+                        {isCompleted ? 'Завершено' : w.status === 'in_progress' ? 'У процесі' : 'Заплановано'}
+                      </span>
+                      {w.assignedByCoachId && (
+                        <>
+                          <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                          <span className="text-indigo-500 dark:text-indigo-400 font-medium">Від тренера</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Row 2: Title */}
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 truncate leading-tight">
+                    {w.title || 'Тренування без назви'}
+                  </h3>
+
+                  {/* Row 3: Stats - Date before exercises count, dd/mm/yy format, no kg sum */}
+                  <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="flex items-center gap-1 font-mono text-zinc-600 dark:text-zinc-400">
+                      <Calendar className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                      <span>{formatDateDDMMYY(w.scheduledDate)}</span>
                     </span>
                     <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                    <span className="flex items-center gap-1 text-zinc-400 dark:text-zinc-500 font-mono">
-                      <Calendar className="h-3 w-3 shrink-0" />
-                      <span>{w.scheduledDate}</span>
+                    <span className="flex items-center gap-1">
+                      <Layers className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                      <span className="font-semibold text-zinc-700 dark:text-zinc-300">{(w.exercises || []).length}</span>
+                      <span>вправ</span>
                     </span>
-                    {w.assignedByCoachId && (
-                      <>
-                        <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                        <span className="text-indigo-500 dark:text-indigo-400 font-medium">Від тренера</span>
-                      </>
-                    )}
+                    <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                    <span>
+                      <span className="font-semibold text-zinc-700 dark:text-zinc-300">{totalSets}</span>
+                      {' підходів'}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setWorkoutToDelete(w); }}
-                    className="shrink-0 p-1.5 rounded-lg text-zinc-300 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                    title="Видалити тренування"
-                    aria-label="Видалити тренування"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
                 </div>
-
-                {/* Row 2: Title */}
-                <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 truncate leading-tight">
-                  {w.title || 'Тренування без назви'}
-                </h3>
-
-                {/* Row 3: Stats */}
-                <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  <span className="flex items-center gap-1">
-                    <Layers className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">{(w.exercises || []).length}</span>
-                    <span>вправ</span>
-                  </span>
-                  <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                  <span>
-                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">{totalSets}</span>
-                    {' підходів'}
-                  </span>
-                  {totalVolume > 0 && (
-                    <>
-                      <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                      <span className="font-semibold text-zinc-700 dark:text-zinc-300 font-mono">
-                        {totalVolume.toLocaleString()} кг
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
+              </MobileSwipeableWorkoutCard>
             );
           })}
         </div>
