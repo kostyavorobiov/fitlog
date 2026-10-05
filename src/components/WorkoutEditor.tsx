@@ -95,10 +95,17 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   autoOpenExerciseSelector = false,
   traineeName,
 }) => {
-  const [workout, setWorkout] = useState<WorkoutPlan>(() => ({
-    ...initialWorkout,
-    exercises: Array.isArray(initialWorkout?.exercises) ? initialWorkout.exercises : [],
-  }));
+  const [workout, setWorkout] = useState<WorkoutPlan>(() => {
+    const rawExercises = Array.isArray(initialWorkout?.exercises) ? initialWorkout.exercises : [];
+    const normalizedExercises = rawExercises.map((e) => ({
+      ...e,
+      sets: Array.isArray(e.sets) ? e.sets : [],
+    }));
+    return {
+      ...initialWorkout,
+      exercises: normalizedExercises,
+    };
+  });
   const workoutRef = useRef<WorkoutPlan>(workout);
   workoutRef.current = workout;
 
@@ -153,13 +160,18 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
   // Sync state if initialWorkout changes (e.g. user selected another workout)
   useEffect(() => {
+    const rawExercises = Array.isArray(initialWorkout?.exercises) ? initialWorkout.exercises : [];
+    const normalizedExercises = rawExercises.map((e) => ({
+      ...e,
+      sets: Array.isArray(e.sets) ? e.sets : [],
+    }));
     const normalized: WorkoutPlan = {
       ...initialWorkout,
-      exercises: Array.isArray(initialWorkout?.exercises) ? initialWorkout.exercises : [],
+      exercises: normalizedExercises,
     };
     setWorkout(normalized);
     workoutRef.current = normalized;
-  }, [initialWorkout.id]);
+  }, [initialWorkout?.id]);
 
   // Clean up timer on unmount
   useEffect(() => {
@@ -924,7 +936,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <div className="flex items-center gap-2 mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
                             <span>{weItem.sets?.length || 0} підходи</span>
                             <span>•</span>
-                            <span>{weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12'} повт.</span>
+                            <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
                           </div>
                         )}
                       </div>
@@ -995,7 +1007,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                             Повторити:
                           </span>
                           <select
-                            value={weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12'}
+                            value={weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'}
                             onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
                             className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
                           >
@@ -1024,7 +1036,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
                     {/* Set rows */}
                     <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                      {weItem.sets.map((setItem) => {
+                      {(weItem.sets || []).map((setItem) => {
                         const isDone = Boolean(setItem.completedAt);
                         return (
                           <div
@@ -1259,7 +1271,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                           <span>{weItem.sets?.length || 0} підходи</span>
                           <span>•</span>
-                          <span>{weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12'} повт.</span>
+                          <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
                         </div>
                       )}
                     </div>
@@ -1330,7 +1342,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           Повторити:
                         </span>
                         <select
-                          value={weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12'}
+                          value={weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'}
                           onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
                           className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
                         >
@@ -1358,7 +1370,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
                   {/* Table rows */}
                   <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {weItem.sets.map((setItem) => {
+                    {(weItem.sets || []).map((setItem) => {
                       const isDone = Boolean(setItem.completedAt);
                       return (
                         <div
@@ -1594,7 +1606,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
         {/* Видалити тренування */}
         <button
-          ref={mobileDeleteWorkoutButtonRef}
           type="button"
           onClick={() => setIsDeleteModalOpen(true)}
           className="w-full flex items-center justify-center space-x-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 py-2.5 px-3 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-[0.99] transition-all cursor-pointer"
