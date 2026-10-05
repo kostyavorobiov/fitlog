@@ -77,6 +77,85 @@ const SUPERSET_PALETTES = [
   },
 ];
 
+const ExerciseProgressRing: React.FC<{
+  completed: number;
+  total: number;
+  size?: number;
+}> = ({ completed, total, size = 30 }) => {
+  const isAllDone = total > 0 && completed >= total;
+  const progress = total > 0 ? Math.min(1, Math.max(0, completed / total)) : 0;
+  const strokeWidth = size >= 32 ? 3 : 2.5;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progress);
+
+  return (
+    <div
+      className="relative flex items-center justify-center shrink-0 select-none"
+      style={{ width: size, height: size }}
+      title={
+        isAllDone
+          ? 'Всі підходи виконано!'
+          : `Прогрес: ${completed}/${total} підходів`
+      }
+    >
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="transform -rotate-90 pointer-events-none"
+      >
+        {/* Track circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill={
+            isAllDone
+              ? 'rgba(16, 185, 129, 0.08)'
+              : progress > 0
+              ? 'rgba(59, 130, 246, 0.06)'
+              : 'none'
+          }
+          className="stroke-zinc-200 dark:stroke-zinc-700"
+          strokeWidth={strokeWidth}
+        />
+        {/* Progress arc */}
+        {progress > 0 && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={isAllDone ? '#10b981' : '#3b82f6'}
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-300 ease-out"
+          />
+        )}
+      </svg>
+      {/* Center label */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        {isAllDone ? (
+          <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 stroke-[3]" />
+        ) : (
+          <span
+            className={`font-mono text-[9px] font-bold leading-none ${
+              progress > 0
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-zinc-400 dark:text-zinc-500'
+            }`}
+          >
+            {total > 0 ? `${completed}/${total}` : '0'}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 interface WorkoutEditorProps {
   workout: WorkoutPlan;
   userId: string;
@@ -954,7 +1033,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                         {currentExList.length > 1 && (
                           <button
                             type="button"
@@ -968,7 +1047,11 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                             {isSuperset ? <Unlink className="h-3.5 w-3.5" /> : <Link className="h-3.5 w-3.5" />}
                           </button>
                         )}
-
+                        <ExerciseProgressRing
+                          completed={(weItem.sets || []).filter((s) => Boolean(s.completedAt)).length}
+                          total={(weItem.sets || []).length}
+                          size={28}
+                        />
                       </div>
                     </div>
 
@@ -1267,6 +1350,11 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         {isSuperset ? <Unlink className="h-4 w-4" /> : <Link className="h-4 w-4" />}
                       </button>
                     )}
+                    <ExerciseProgressRing
+                      completed={(weItem.sets || []).filter((s) => Boolean(s.completedAt)).length}
+                      total={(weItem.sets || []).length}
+                      size={32}
+                    />
                     <button
                       type="button"
                       onClick={() => handleMoveExercise(weIndex, 'up')}

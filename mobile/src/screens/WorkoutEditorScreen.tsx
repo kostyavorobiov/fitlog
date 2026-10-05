@@ -175,6 +175,174 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
   );
 };
 
+interface ExerciseProgressRingProps {
+  completed: number;
+  total: number;
+  size?: number;
+  strokeWidth?: number;
+  isDark?: boolean;
+}
+
+const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
+  completed,
+  total,
+  size = 30,
+  strokeWidth = 2.5,
+  isDark = false,
+}) => {
+  const isAllDone = total > 0 && completed >= total;
+  const progress = total > 0 ? Math.min(1, Math.max(0, completed / total)) : 0;
+  const halfSize = size / 2;
+
+  const color = isAllDone ? '#10b981' : '#3b82f6';
+  const trackColor = isDark ? '#27272a' : '#e2e8f0';
+  const bgFill = isAllDone
+    ? 'rgba(16, 185, 129, 0.08)'
+    : progress > 0
+    ? 'rgba(59, 130, 246, 0.06)'
+    : 'transparent';
+
+  const rightAngle = -135 + Math.min(progress, 0.5) * 360;
+  const leftAngle = progress <= 0.5 ? 45 : 45 + (progress - 0.5) * 360;
+
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+      }}
+      accessibilityLabel={`Прогрес вправи: ${completed} з ${total} підходів`}
+    >
+      {/* Background track circle */}
+      <View
+        style={{
+          position: 'absolute',
+          width: size,
+          height: size,
+          borderRadius: halfSize,
+          borderWidth: strokeWidth,
+          borderColor: trackColor,
+          backgroundColor: bgFill,
+        }}
+      />
+
+      {/* Progress Ring */}
+      {isAllDone ? (
+        <View
+          style={{
+            position: 'absolute',
+            width: size,
+            height: size,
+            borderRadius: halfSize,
+            borderWidth: strokeWidth,
+            borderColor: '#10b981',
+          }}
+        />
+      ) : progress > 0 ? (
+        <>
+          {/* Right half (0 - 180 deg) */}
+          <View
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              width: halfSize,
+              height: size,
+              overflow: 'hidden',
+            }}
+          >
+            <View
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                width: size,
+                height: size,
+                borderRadius: halfSize,
+                borderWidth: strokeWidth,
+                borderColor: 'transparent',
+                borderTopColor: color,
+                borderRightColor: color,
+                transform: [{ rotate: `${rightAngle}deg` }],
+              }}
+            />
+          </View>
+
+          {/* Left half (180 - 360 deg) */}
+          {progress > 0.5 && (
+            <View
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: halfSize,
+                height: size,
+                overflow: 'hidden',
+              }}
+            >
+              <View
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  width: size,
+                  height: size,
+                  borderRadius: halfSize,
+                  borderWidth: strokeWidth,
+                  borderColor: 'transparent',
+                  borderTopColor: color,
+                  borderRightColor: color,
+                  transform: [{ rotate: `${leftAngle}deg` }],
+                }}
+              />
+            </View>
+          )}
+        </>
+      ) : null}
+
+      {/* Center Label / Checkmark */}
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {isAllDone ? (
+          <Ionicons name="checkmark" size={13} color="#10b981" />
+        ) : (
+          <Text
+            style={{
+              fontSize: 9,
+              fontWeight: '700',
+              fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+              color:
+                progress > 0
+                  ? isDark
+                    ? '#60a5fa'
+                    : '#2563eb'
+                  : isDark
+                  ? '#71717a'
+                  : '#a1a1aa',
+              includeFontPadding: false,
+              textAlign: 'center',
+            }}
+          >
+            {total > 0 ? `${completed}/${total}` : '0'}
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+};
+
 export const WorkoutEditorScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
@@ -1181,7 +1349,12 @@ export const WorkoutEditorScreen: React.FC = () => {
                             </TouchableOpacity>
                           )}
 
-
+                          <ExerciseProgressRing
+                            completed={(ex.sets || []).filter((s) => Boolean(s.completedAt)).length}
+                            total={(ex.sets || []).length}
+                            size={30}
+                            isDark={isDark}
+                          />
                         </View>
                       </View>
                     </View>
