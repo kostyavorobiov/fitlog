@@ -954,31 +954,43 @@ export const WorkoutEditorScreen: React.FC = () => {
                 <Card style={styles.exerciseCard}>
                   {/* Exercise Card Header */}
                   <View style={[styles.exHeader, isExpanded && (isDark ? styles.borderBottomDark : styles.borderBottomLight)]}>
-                    {/* Index, Name & Collapsed Summary */}
+                    {/* Index/Reorder, Name & Collapsed Summary */}
                     <View style={styles.exHeaderTitleRow}>
+                      {/* Vertical Reorder Stepper (Up/Down) */}
+                      <View style={styles.reorderColumn}>
+                        <TouchableOpacity
+                          activeOpacity={0.6}
+                          disabled={exIndex === 0}
+                          onPress={() => handleMoveExercise(exIndex, 'up')}
+                          style={[styles.reorderBtn, exIndex === 0 && { opacity: 0.25 }]}
+                          hitSlop={{ top: 8, bottom: 2, left: 8, right: 8 }}
+                        >
+                          <Ionicons
+                            name="chevron-up"
+                            size={16}
+                            color={exIndex === 0 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          activeOpacity={0.6}
+                          disabled={exIndex === exercises.length - 1}
+                          onPress={() => handleMoveExercise(exIndex, 'down')}
+                          style={[styles.reorderBtn, exIndex === exercises.length - 1 && { opacity: 0.25 }]}
+                          hitSlop={{ top: 2, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Ionicons
+                            name="chevron-down"
+                            size={16}
+                            color={exIndex === exercises.length - 1 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
+                          />
+                        </TouchableOpacity>
+                      </View>
+
                       <TouchableOpacity
                         activeOpacity={0.7}
                         onPress={() => handleToggleExpand(ex.id)}
                         style={styles.exHeaderLeftTouchable}
                       >
-                        <View
-                          style={[
-                            styles.exIndexBadge,
-                            isSuperset && palette
-                              ? { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder }
-                              : (isDark ? styles.exIndexDark : styles.exIndexLight),
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.exIndexText,
-                              isSuperset && palette ? { color: palette.badgeText } : (isDark ? styles.textDark : styles.textLight),
-                            ]}
-                          >
-                            #{exIndex + 1}
-                          </Text>
-                        </View>
-
                         <View style={styles.exTitleContainer}>
                           <Text
                             numberOfLines={2}
@@ -1011,7 +1023,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                         </View>
                       </TouchableOpacity>
 
-                      {/* Move Up/Down, Delete & Toggle */}
+                      {/* Action buttons (Delete, Superset & Toggle) */}
                       <View style={styles.exCardActions}>
                         {exercises.length > 1 && (
                           <TouchableOpacity
@@ -1032,26 +1044,6 @@ export const WorkoutEditorScreen: React.FC = () => {
                             />
                           </TouchableOpacity>
                         )}
-
-                        <TouchableOpacity
-                          activeOpacity={0.7}
-                          disabled={exIndex === 0}
-                          onPress={() => handleMoveExercise(exIndex, 'up')}
-                          style={[styles.actionBtn, exIndex === 0 && { opacity: 0.25 }, isDark ? styles.actionBtnDark : styles.actionBtnLight]}
-                          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                        >
-                          <Ionicons name="chevron-up" size={15} color={isDark ? '#e4e4e7' : '#3f3f46'} />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          activeOpacity={0.7}
-                          disabled={exIndex === exercises.length - 1}
-                          onPress={() => handleMoveExercise(exIndex, 'down')}
-                          style={[styles.actionBtn, exIndex === exercises.length - 1 && { opacity: 0.25 }, isDark ? styles.actionBtnDark : styles.actionBtnLight]}
-                          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                        >
-                          <Ionicons name="chevron-down" size={15} color={isDark ? '#e4e4e7' : '#3f3f46'} />
-                        </TouchableOpacity>
 
                         <TouchableOpacity
                           activeOpacity={0.7}
@@ -1604,11 +1596,23 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
   },
+  reorderColumn: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 2,
+    marginTop: -2,
+  },
+  reorderBtn: {
+    paddingVertical: 0,
+    paddingHorizontal: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   exHeaderLeftTouchable: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
   },
   collapsedSummaryRow: {
     marginTop: 3,
