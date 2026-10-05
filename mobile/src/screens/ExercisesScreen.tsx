@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   ScrollView,
   View,
@@ -11,6 +11,8 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,6 +35,130 @@ const MUSCLE_ORDER: MuscleGroup[] = [
   'full_body',
   'other',
 ];
+
+interface SwipeableExerciseCardProps {
+  onDelete: () => void;
+  isDark: boolean;
+  disabled?: boolean;
+  children: React.ReactNode;
+}
+
+const SWIPE_DELETE_WIDTH = 84;
+const SWIPE_THRESHOLD = -40;
+
+const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
+  onDelete,
+  isDark,
+  disabled = false,
+  children,
+}) => {
+  const panX = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+  const isOpenRef = useRef(false);
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (disabled) return false;
+          return (
+            Math.abs(gestureState.dx) > 12 &&
+            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5
+          );
+        },
+        onPanResponderGrant: () => {
+          panX.stopAnimation();
+        },
+        onPanResponderMove: (_, gestureState) => {
+          const base = isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0;
+          const newX = Math.min(0, Math.max(-SWIPE_DELETE_WIDTH - 20, base + gestureState.dx));
+          panX.setValue(newX);
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          const currentVal = (panX as any)._value ?? (isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0);
+          if (gestureState.dx < -30 || currentVal < SWIPE_THRESHOLD) {
+            isOpenRef.current = true;
+            Animated.spring(panX, {
+              toValue: -SWIPE_DELETE_WIDTH,
+              useNativeDriver: true,
+              bounciness: 4,
+            }).start();
+          } else {
+            isOpenRef.current = false;
+            Animated.spring(panX, {
+              toValue: 0,
+              useNativeDriver: true,
+              bounciness: 4,
+            }).start();
+          }
+        },
+        onPanResponderTerminate: () => {
+          isOpenRef.current = false;
+          Animated.spring(panX, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        },
+      }),
+    [disabled, panX]
+  );
+
+  const handleDelete = () => {
+    onDelete();
+  };
+
+  const closeSwipe = () => {
+    if (isOpenRef.current) {
+      isOpenRef.current = false;
+      Animated.spring(panX, {
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  if (disabled) {
+    return <View style={styles.swipeContainer}>{children}</View>;
+  }
+
+  return (
+    <Animated.View style={[styles.swipeContainer, { opacity: opacityAnim }]}>
+      {/* Background Red Delete Button */}
+      <View style={styles.swipeDeleteActionBg}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={handleDelete}
+          style={styles.swipeDeleteBtn}
+          accessibilityLabel="Видалити вправу"
+        >
+          <Ionicons name="trash" size={20} color="#ffffff" />
+          <Text style={styles.swipeDeleteBtnText}>Видалити</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Foreground Swipeable Card */}
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.swipeForeground,
+          {
+            transform: [{ translateX: panX }],
+            backgroundColor: isDark ? '#18181b' : '#ffffff',
+          },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={closeSwipe}
+          disabled={!isOpenRef.current}
+        >
+          {children}
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
+  );
+};
 
 export const ExercisesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
@@ -370,50 +496,49 @@ export const ExercisesScreen: React.FC = () => {
               const canEdit = isOwner || isAdmin;
 
               return (
-                <Card key={ex.id} style={styles.exCard}>
-                  <View style={styles.exCardHeader}>
-                    <View style={{ flex: 1, gap: 4 }}>
-                      <Text style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}>
-                        {ex.name}
-                      </Text>
+                <SwipeableExerciseCard
+                  key={ex.id}
+                  isDark={isDark}
+                  disabled={!canEdit}
+                  onDelete={() => handleDeleteExercise(ex)}
+                >
+                  <Card style={styles.exCard}>
+                    <View style={styles.exCardHeader}>
+                      <View style={{ flex: 1, gap: 4 }}>
+                        <Text style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}>
+                          {ex.name}
+                        </Text>
 
-                      <View style={styles.badgesRow}>
-                        {/* Muscle group badge */}
-                        <View
-                          style={[
-                            styles.muscleBadge,
-                            { backgroundColor: muscleInfo.badgeBg, borderColor: muscleInfo.badgeBorder },
-                          ]}
-                        >
-                          <Text style={[styles.muscleBadgeText, { color: muscleInfo.color }]}>
-                            {muscleInfo.nameUk}
-                          </Text>
+                        <View style={styles.badgesRow}>
+                          {/* Muscle group badge */}
+                          <View
+                            style={[
+                              styles.muscleBadge,
+                              { backgroundColor: muscleInfo.badgeBg, borderColor: muscleInfo.badgeBorder },
+                            ]}
+                          >
+                            <Text style={[styles.muscleBadgeText, { color: muscleInfo.color }]}>
+                              {muscleInfo.nameUk}
+                            </Text>
+                          </View>
                         </View>
                       </View>
+
+                      {/* Action buttons: Edit for own exercises or admin */}
+                      {canEdit ? (
+                        <View style={styles.actionsRow}>
+                          <TouchableOpacity
+                            style={[styles.iconButton, isDark ? styles.btnOutlineDark : styles.btnOutlineLight]}
+                            onPress={() => handleOpenEditModal(ex)}
+                            activeOpacity={0.7}
+                          >
+                            <Ionicons name="pencil-outline" size={15} color={isDark ? '#fafafa' : '#09090b'} />
+                          </TouchableOpacity>
+                        </View>
+                      ) : null}
                     </View>
-
-                    {/* Action buttons: Edit & Delete for own exercises or admin */}
-                    {canEdit ? (
-                      <View style={styles.actionsRow}>
-                        <TouchableOpacity
-                          style={[styles.iconButton, isDark ? styles.btnOutlineDark : styles.btnOutlineLight]}
-                          onPress={() => handleOpenEditModal(ex)}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="pencil-outline" size={15} color={isDark ? '#fafafa' : '#09090b'} />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={[styles.iconButton, styles.deleteBtnBg]}
-                          onPress={() => handleDeleteExercise(ex)}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="trash-outline" size={15} color="#f43f5e" />
-                        </TouchableOpacity>
-                      </View>
-                    ) : null}
-                  </View>
-                </Card>
+                  </Card>
+                </SwipeableExerciseCard>
               );
             })}
           </View>
@@ -1052,5 +1177,39 @@ const styles = StyleSheet.create({
   },
   subDark: {
     color: '#a1a1aa',
+  },
+  swipeContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 16,
+  },
+  swipeDeleteActionBg: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: 84,
+    backgroundColor: '#dc2626',
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 0,
+  },
+  swipeDeleteBtn: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeDeleteBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  swipeForeground: {
+    zIndex: 1,
+    borderRadius: 16,
   },
 });

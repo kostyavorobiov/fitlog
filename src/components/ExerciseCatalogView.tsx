@@ -5,13 +5,13 @@ import { CreateExerciseModal } from './CreateExerciseModal';
 import { EditExerciseModal } from './EditExerciseModal';
 import { ExerciseHistoryModal } from './ExerciseHistoryModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { MobileSwipeableExerciseCard } from './MobileSwipeableExerciseCard';
 import {
   Search,
   Plus,
   Dumbbell,
   Sparkles,
   ChevronRight,
-  Trash2,
   Pencil,
 } from 'lucide-react';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
@@ -187,88 +187,80 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
             const canEdit = ex.userId === userId;
 
             return (
-              <div
+              <MobileSwipeableExerciseCard
                 key={ex.id}
-                onClick={() => {
-                  if (Date.now() < blockHistoryModalUntilRef.current) return;
-                  setHistoryModalExercise(ex);
-                }}
-                className="group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer flex flex-col justify-between"
+                exerciseId={ex.id}
+                disabled={!canEdit}
+                onDelete={() => setExerciseToDelete(ex)}
               >
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white transition-colors">
-                      {ex.name}
-                    </h3>
-                    <div className="flex items-center space-x-1 shrink-0">
-                      <span className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
-                        {muscleInfo.nameUk}
-                      </span>
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExerciseToEdit(ex);
-                          }}
-                          className="p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ml-0.5"
-                          title="Редагувати вправу"
-                          aria-label={`Редагувати вправу ${ex.name}`}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExerciseToDelete(ex);
-                          }}
-                          className="p-1 rounded text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer ml-0.5"
-                          title="Видалити вправу"
-                          aria-label={`Видалити вправу ${ex.name}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
+                <div
+                  onClick={() => {
+                    if (Date.now() < blockHistoryModalUntilRef.current) return;
+                    setHistoryModalExercise(ex);
+                  }}
+                  className="group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer flex flex-col justify-between h-full"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white transition-colors">
+                        {ex.name}
+                      </h3>
+                      <div className="flex items-center space-x-1 shrink-0">
+                        <span className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                          {muscleInfo.nameUk}
+                        </span>
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExerciseToEdit(ex);
+                            }}
+                            className="p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ml-0.5"
+                            title="Редагувати вправу"
+                            aria-label={`Редагувати вправу ${ex.name}`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    {ex.description && (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-2.5">
+                        {ex.description}
+                      </p>
+                    )}
                   </div>
 
-                  {ex.description && (
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-2.5">
-                      {ex.description}
-                    </p>
-                  )}
-                </div>
+                  {/* Bottom stats hint */}
+                  <div className="border-t border-zinc-100 dark:border-zinc-800 pt-2 mt-2 flex items-center justify-between text-xs">
+                    {lastPerf ? (
+                      <div className="flex items-center space-x-1.5 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
+                        <Sparkles className="h-3 w-3 text-amber-500" />
+                        <span>
+                          Останній: {lastPerf.maxWeight} кг ({lastPerf.sets.length} підх.)
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-zinc-400 text-[11px]">Ще не виконувалась</span>
+                    )}
 
-                {/* Bottom stats hint */}
-                <div className="border-t border-zinc-100 dark:border-zinc-800 pt-2 mt-2 flex items-center justify-between text-xs">
-                  {lastPerf ? (
-                    <div className="flex items-center space-x-1.5 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
-                      <Sparkles className="h-3 w-3 text-amber-500" />
-                      <span>
-                        Останній: {lastPerf.maxWeight} кг ({lastPerf.sets.length} підх.)
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-zinc-400 text-[11px]">Ще не виконувалась</span>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (Date.now() < blockHistoryModalUntilRef.current) return;
-                      setHistoryModalExercise(ex);
-                    }}
-                    className="flex items-center space-x-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-colors"
-                  >
-                    <span>Історія та рекорди</span>
-                    <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (Date.now() < blockHistoryModalUntilRef.current) return;
+                        setHistoryModalExercise(ex);
+                      }}
+                      className="flex items-center space-x-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-colors"
+                    >
+                      <span>Історія та рекорди</span>
+                      <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </MobileSwipeableExerciseCard>
             );
           })
         )}

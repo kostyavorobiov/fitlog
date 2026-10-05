@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import { Trash2 } from 'lucide-react';
 
 interface MobileSwipeableExerciseCardProps {
-  exerciseId: string;
+  exerciseId?: string;
   onDelete: () => void;
+  disabled?: boolean;
   children: React.ReactNode;
 }
 
@@ -12,6 +13,7 @@ const SWIPE_THRESHOLD = 40;
 
 export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardProps> = ({
   onDelete,
+  disabled = false,
   children,
 }) => {
   const [offsetX, setOffsetX] = useState(0);
@@ -23,6 +25,8 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   const isHorizontalRef = useRef<boolean | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (disabled) return;
+
     // Do not initiate swipe on input fields, buttons, or select dropdowns
     const target = e.target as HTMLElement | null;
     if (target?.closest('input, textarea, select, button, [data-no-swipe], .no-swipe')) {
@@ -37,7 +41,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (isHorizontalRef.current === false) return;
+    if (disabled || isHorizontalRef.current === false) return;
 
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
@@ -57,6 +61,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
     }
 
     if (isHorizontalRef.current === true) {
+      e.stopPropagation();
       const base = isOpenRef.current ? -BUTTON_WIDTH : 0;
       const targetX = base + dx;
       // Clamp between -BUTTON_WIDTH - 20 and 0
@@ -89,12 +94,16 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
     // Smooth exit animation before calling deletion logic
     setTimeout(() => {
       onDelete();
+      setIsDeleting(false);
+      isOpenRef.current = false;
+      setOffsetX(0);
     }, 220);
   };
 
-  const handleCardClick = () => {
-    // If card was open, close it on tap
+  const handleCardClick = (e: React.MouseEvent) => {
+    // If card was open, close it on tap and consume event
     if (isOpenRef.current) {
+      e.stopPropagation();
       isOpenRef.current = false;
       setOffsetX(0);
     }
@@ -102,7 +111,8 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl transition-all duration-200 ${
+      data-no-swipe="true"
+      className={`no-swipe relative overflow-hidden rounded-xl transition-all duration-200 ${
         isDeleting
           ? 'max-h-0 opacity-0 -translate-x-full my-0 py-0 overflow-hidden'
           : 'max-h-[3000px]'
@@ -124,6 +134,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
           }}
           className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-white font-bold text-xs active:bg-rose-700 transition-colors cursor-pointer select-none"
           title="Видалити вправу"
+          aria-label="Видалити вправу"
         >
           <Trash2 className="h-5 w-5" />
           <span>Видалити</span>
