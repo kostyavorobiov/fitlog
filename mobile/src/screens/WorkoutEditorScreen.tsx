@@ -10,6 +10,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -59,6 +60,12 @@ export const WorkoutEditorScreen: React.FC = () => {
   const [saveNoticeMsg, setSaveNoticeMsg] = useState<string>('Збережено ✓');
   const [isTitleModalOpen, setIsTitleModalOpen] = useState<boolean>(false);
   const [lastPerformances, setLastPerformances] = useState<Record<string, PastExercisePerformance | null>>({});
+  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+  const [activeRepsPickerWeId, setActiveRepsPickerWeId] = useState<string | null>(null);
+
+  const handleToggleExpand = (weId: string) => {
+    setExpandedExerciseId((prev) => (prev === weId ? null : weId));
+  };
 
   const workoutRef = useRef<WorkoutPlan | null>(null);
   workoutRef.current = workout;
@@ -214,6 +221,7 @@ export const WorkoutEditorScreen: React.FC = () => {
     }
 
     const currentExercises = workout.exercises || [];
+    const isFirstExercise = currentExercises.length === 0;
     const newWorkoutExercise: WorkoutExercise = {
       id: weId,
       workoutPlanId: workout.id,
@@ -234,6 +242,10 @@ export const WorkoutEditorScreen: React.FC = () => {
     updateAndSave(updated, true);
     setIsSelectorOpen(false);
 
+    if (isFirstExercise) {
+      setExpandedExerciseId(weId);
+    }
+
     // Auto-scroll to newly added exercise smoothly
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -243,6 +255,9 @@ export const WorkoutEditorScreen: React.FC = () => {
   // Remove exercise
   const handleRemoveExercise = (weId: string) => {
     if (!workout) return;
+    if (expandedExerciseId === weId) {
+      setExpandedExerciseId(null);
+    }
     const currentExercises = workout.exercises || [];
     const exerciseIndex = currentExercises.findIndex((e) => e.id === weId);
     if (exerciseIndex === -1) return;
@@ -923,6 +938,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             const isSuperset = Boolean(ex.supersetGroupId);
             const palette = ex.supersetGroupId ? supersetColorMap.get(ex.supersetGroupId) : null;
             const pastPerf = lastPerformances[ex.exerciseId];
+            const isExpanded = expandedExerciseId === ex.id;
 
             return (
               <View
@@ -937,52 +953,65 @@ export const WorkoutEditorScreen: React.FC = () => {
               >
                 <Card style={styles.exerciseCard}>
                   {/* Exercise Card Header */}
-                  <View style={styles.exHeader}>
-                    {/* Index & Name */}
+                  <View style={[styles.exHeader, isExpanded && (isDark ? styles.borderBottomDark : styles.borderBottomLight)]}>
+                    {/* Index, Name & Collapsed Summary */}
                     <View style={styles.exHeaderTitleRow}>
-                      <View
-                        style={[
-                          styles.exIndexBadge,
-                          isSuperset && palette
-                            ? { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder }
-                            : (isDark ? styles.exIndexDark : styles.exIndexLight),
-                        ]}
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => handleToggleExpand(ex.id)}
+                        style={styles.exHeaderLeftTouchable}
                       >
-                        <Text
+                        <View
                           style={[
-                            styles.exIndexText,
-                            isSuperset && palette ? { color: palette.badgeText } : (isDark ? styles.textDark : styles.textLight),
+                            styles.exIndexBadge,
+                            isSuperset && palette
+                              ? { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder }
+                              : (isDark ? styles.exIndexDark : styles.exIndexLight),
                           ]}
                         >
-                          #{exIndex + 1}
-                        </Text>
-                      </View>
+                          <Text
+                            style={[
+                              styles.exIndexText,
+                              isSuperset && palette ? { color: palette.badgeText } : (isDark ? styles.textDark : styles.textLight),
+                            ]}
+                          >
+                            #{exIndex + 1}
+                          </Text>
+                        </View>
 
-                      <View style={styles.exTitleContainer}>
-                        <Text
-                          numberOfLines={2}
-                          style={[styles.exTitleText, isDark ? styles.textDark : styles.textLight]}
-                        >
-                          {ex.exerciseName || 'Вправа'}
-                        </Text>
-                        {isSuperset && palette && (
-                          <View style={styles.exBadgeRow}>
-                            <View
-                              style={[
-                                styles.supersetBadge,
-                                { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder },
-                              ]}
-                            >
-                              <Ionicons name="link" size={10} color={palette.badgeText} />
-                              <Text style={[styles.supersetBadgeText, { color: palette.badgeText }]}>
-                                Суперсет
+                        <View style={styles.exTitleContainer}>
+                          <Text
+                            numberOfLines={2}
+                            style={[styles.exTitleText, isDark ? styles.textDark : styles.textLight]}
+                          >
+                            {ex.exerciseName || 'Вправа'}
+                          </Text>
+                          {isSuperset && palette && (
+                            <View style={styles.exBadgeRow}>
+                              <View
+                                style={[
+                                  styles.supersetBadge,
+                                  { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder },
+                                ]}
+                              >
+                                <Ionicons name="link" size={10} color={palette.badgeText} />
+                                <Text style={[styles.supersetBadgeText, { color: palette.badgeText }]}>
+                                  Суперсет
+                                </Text>
+                              </View>
+                            </View>
+                          )}
+                          {!isExpanded && (
+                            <View style={styles.collapsedSummaryRow}>
+                              <Text style={[styles.collapsedSummaryText, isDark ? styles.subDark : styles.subLight]}>
+                                {(ex.sets || []).length} підходи • {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'} повт.
                               </Text>
                             </View>
-                          </View>
-                        )}
-                      </View>
+                          )}
+                        </View>
+                      </TouchableOpacity>
 
-                      {/* Move Up/Down & Delete */}
+                      {/* Move Up/Down, Delete & Toggle */}
                       <View style={styles.exCardActions}>
                         {exercises.length > 1 && (
                           <TouchableOpacity
@@ -1032,253 +1061,217 @@ export const WorkoutEditorScreen: React.FC = () => {
                         >
                           <Ionicons name="trash-outline" size={15} color="#ef4444" />
                         </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
 
-
-
-                  {/* Target Rep Range & Set Count Quick Bar */}
-                  <View style={styles.quickSelectorsRow}>
-                    {/* Rep Range Selector */}
-                    <View style={styles.repsSelector}>
-                      <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
-                        Повторення:
-                      </Text>
-                      <View style={styles.chipsRow}>
-                        {REPS_RANGES.map((rng) => {
-                          const isSel = (ex.targetRepsRange || '8-12') === rng;
-                          return (
-                            <TouchableOpacity
-                              key={rng}
-                              onPress={() => handleTargetRepsRangeChange(ex.id, rng)}
-                              style={[
-                                styles.rangeChip,
-                                isSel
-                                  ? (isDark ? styles.rangeChipActiveDark : styles.rangeChipActiveLight)
-                                  : (isDark ? styles.chipDark : styles.chipLight),
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.rangeChipText,
-                                  isSel
-                                    ? (isDark ? styles.rangeChipTextActiveDark : styles.rangeChipTextActiveLight)
-                                    : (isDark ? styles.subDark : styles.subLight),
-                                ]}
-                              >
-                                {rng}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    </View>
-
-                    {/* Set Count Fast Selector */}
-                    <View style={styles.setsCountSelector}>
-                      <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
-                        Сетів:
-                      </Text>
-                      <View style={styles.chipsRow}>
-                        {[2, 3, 4, 5].map((cnt) => {
-                          const isSel = (ex.sets || []).length === cnt;
-                          return (
-                            <TouchableOpacity
-                              key={cnt}
-                              onPress={() => handleSetCountChange(ex.id, cnt)}
-                              style={[
-                                styles.setCountChip,
-                                isSel
-                                  ? (isDark ? styles.rangeChipActiveDark : styles.rangeChipActiveLight)
-                                  : (isDark ? styles.chipDark : styles.chipLight),
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.rangeChipText,
-                                  isSel
-                                    ? (isDark ? styles.rangeChipTextActiveDark : styles.rangeChipTextActiveLight)
-                                    : (isDark ? styles.subDark : styles.subLight),
-                                ]}
-                              >
-                                {cnt}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Sets Table */}
-                  <View style={styles.setsTable}>
-                    {/* Table Header */}
-                    <View style={[styles.tableHeaderRow, isDark ? styles.borderDark : styles.borderLight]}>
-                      <Text style={[styles.thCell, styles.thSet, isDark ? styles.subDark : styles.subLight]}>
-                        Сет
-                      </Text>
-                      <Text style={[styles.thCell, styles.thWeight, isDark ? styles.subDark : styles.subLight]}>
-                        Вага (кг)
-                      </Text>
-                      <Text style={[styles.thCell, styles.thReps, isDark ? styles.subDark : styles.subLight]}>
-                        Повторення
-                      </Text>
-                      <Text style={[styles.thCell, styles.thDone, isDark ? styles.subDark : styles.subLight]}>
-                        Статус
-                      </Text>
-                      <Text style={[styles.thCell, styles.thAction, isDark ? styles.subDark : styles.subLight]}>
-                      </Text>
-                    </View>
-
-                    {/* Table Rows */}
-                    {(ex.sets || []).map((s, sIndex) => {
-                      const isDone = Boolean(s.completedAt);
-                      return (
-                        <View
-                          key={s.id || `s_${sIndex}`}
-                          style={[
-                            styles.setTableRow,
-                            isDone && (isDark ? styles.setRowDoneDark : styles.setRowDoneLight),
-                            sIndex > 0 && [styles.setRowDivider, isDark ? styles.borderDark : styles.borderLight],
-                          ]}
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={() => handleToggleExpand(ex.id)}
+                          style={[styles.actionBtn, isDark ? styles.actionBtnDark : styles.actionBtnLight]}
+                          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                         >
-                          {/* Set number */}
+                          <Ionicons
+                            name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                            size={15}
+                            color={isDark ? '#e4e4e7' : '#3f3f46'}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+
+                  {isExpanded && (
+                    <>
+                      {/* Target Rep Range Dropdown Bar (Sets count row deleted) */}
+                      <View style={[styles.quickSelectorsRow, isDark ? styles.quickSelectorsRowDark : styles.quickSelectorsRowLight]}>
+                        <View style={styles.repsDropdownRow}>
+                          <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
+                            Повторити:
+                          </Text>
                           <TouchableOpacity
                             activeOpacity={0.7}
-                            onPress={() => handleToggleWarmup(ex.id, s.id)}
-                            style={styles.tdSet}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            onPress={() => setActiveRepsPickerWeId(ex.id)}
+                            style={[
+                              styles.repsDropdownBtn,
+                              isDark ? styles.repsDropdownBtnDark : styles.repsDropdownBtnLight,
+                            ]}
                           >
-                            <Text
-                              style={[
-                                styles.setNumberText,
-                                s.isWarmup ? styles.warmupText : (isDark ? styles.textDark : styles.textLight),
-                              ]}
-                            >
-                              {s.setNumber || sIndex + 1}
-                              {s.isWarmup ? ' (Р)' : ''}
+                            <Text style={[styles.repsDropdownBtnText, isDark ? styles.textDark : styles.textLight]}>
+                              {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'}
                             </Text>
-                          </TouchableOpacity>
-
-                          {/* Weight numeric input + steppers */}
-                          <View style={styles.tdWeight}>
-                            <View style={styles.stepperContainer}>
-                              <TouchableOpacity
-                                activeOpacity={0.6}
-                                onPress={() => handleStepAdjust(ex.id, s.id, 'weight', -2.5)}
-                                style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
-                                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                              >
-                                <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                  -
-                                </Text>
-                              </TouchableOpacity>
-
-                              <TextInput
-                                style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
-                                keyboardType="decimal-pad"
-                                inputMode="decimal"
-                                value={s.weight !== null && s.weight !== undefined ? String(s.weight) : ''}
-                                onChangeText={(val) => {
-                                  const clean = val.replace(',', '.');
-                                  const parsed = parseFloat(clean);
-                                  handleUpdateSet(ex.id, s.id, 'weight', isNaN(parsed) ? 0 : parsed);
-                                }}
-                                selectTextOnFocus
-                              />
-
-                              <TouchableOpacity
-                                activeOpacity={0.6}
-                                onPress={() => handleStepAdjust(ex.id, s.id, 'weight', 2.5)}
-                                style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
-                                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                              >
-                                <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                  +
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-
-                          {/* Actual Reps numeric input + steppers */}
-                          <View style={styles.tdReps}>
-                            <View style={styles.stepperContainer}>
-                              <TouchableOpacity
-                                activeOpacity={0.6}
-                                onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', -1)}
-                                style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
-                                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                              >
-                                <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                  -
-                                </Text>
-                              </TouchableOpacity>
-
-                              <TextInput
-                                style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
-                                keyboardType="number-pad"
-                                inputMode="numeric"
-                                value={s.actualReps !== null && s.actualReps !== undefined ? String(s.actualReps) : ''}
-                                onChangeText={(val) => {
-                                  const parsed = parseInt(val, 10);
-                                  handleUpdateSet(ex.id, s.id, 'actualReps', isNaN(parsed) ? 0 : parsed);
-                                }}
-                                selectTextOnFocus
-                              />
-
-                              <TouchableOpacity
-                                activeOpacity={0.6}
-                                onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', 1)}
-                                style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
-                                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                              >
-                                <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                  +
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-
-                          {/* Completed toggle */}
-                          <TouchableOpacity
-                            activeOpacity={0.7}
-                            onPress={() => handleToggleCompleteSet(ex.id, s)}
-                            style={styles.tdDone}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <Ionicons
-                              name={isDone ? 'checkmark-circle' : 'ellipse-outline'}
-                              size={26}
-                              color={isDone ? '#10b981' : (isDark ? '#52525b' : '#d4d4d8')}
-                            />
-                          </TouchableOpacity>
-
-                          {/* Remove set */}
-                          <TouchableOpacity
-                            activeOpacity={0.7}
-                            onPress={() => handleRemoveSet(ex.id, s.id)}
-                            style={styles.tdAction}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <Ionicons name="close" size={18} color={isDark ? '#71717a' : '#a1a1aa'} />
+                            <Ionicons name="chevron-down" size={13} color={isDark ? '#a1a1aa' : '#71717a'} />
                           </TouchableOpacity>
                         </View>
-                      );
-                    })}
-                  </View>
+                      </View>
 
-                  {/* Add set button */}
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => handleAddSet(ex.id)}
-                    style={[styles.addSetBtn, isDark ? styles.borderDark : styles.borderLight]}
-                  >
-                    <Ionicons name="add" size={16} color={isDark ? '#fafafa' : '#09090b'} />
-                    <Text style={[styles.addSetBtnText, isDark ? styles.textDark : styles.textLight]}>
-                      Додати підхід
-                    </Text>
-                  </TouchableOpacity>
+                      {/* Sets Table */}
+                      <View style={styles.setsTable}>
+                        {/* Table Header */}
+                        <View style={[styles.tableHeaderRow, isDark ? styles.borderDark : styles.borderLight]}>
+                          <Text style={[styles.thCell, styles.thSet, isDark ? styles.subDark : styles.subLight]}>
+                            Сет
+                          </Text>
+                          <Text style={[styles.thCell, styles.thWeight, isDark ? styles.subDark : styles.subLight]}>
+                            Вага (кг)
+                          </Text>
+                          <Text style={[styles.thCell, styles.thReps, isDark ? styles.subDark : styles.subLight]}>
+                            Повторення
+                          </Text>
+                          <Text style={[styles.thCell, styles.thDone, isDark ? styles.subDark : styles.subLight]}>
+                            Статус
+                          </Text>
+                          <Text style={[styles.thCell, styles.thAction, isDark ? styles.subDark : styles.subLight]}>
+                          </Text>
+                        </View>
+
+                        {/* Table Rows */}
+                        {(ex.sets || []).map((s, sIndex) => {
+                          const isDone = Boolean(s.completedAt);
+                          return (
+                            <View
+                              key={s.id || `s_${sIndex}`}
+                              style={[
+                                styles.setTableRow,
+                                isDone && (isDark ? styles.setRowDoneDark : styles.setRowDoneLight),
+                                sIndex > 0 && [styles.setRowDivider, isDark ? styles.borderDark : styles.borderLight],
+                              ]}
+                            >
+                              {/* Set number */}
+                              <TouchableOpacity
+                                activeOpacity={0.7}
+                                onPress={() => handleToggleWarmup(ex.id, s.id)}
+                                style={styles.tdSet}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              >
+                                <Text
+                                  style={[
+                                    styles.setNumberText,
+                                    s.isWarmup ? styles.warmupText : (isDark ? styles.textDark : styles.textLight),
+                                  ]}
+                                >
+                                  {s.setNumber || sIndex + 1}
+                                  {s.isWarmup ? ' (Р)' : ''}
+                                </Text>
+                              </TouchableOpacity>
+
+                              {/* Weight numeric input + steppers */}
+                              <View style={styles.tdWeight}>
+                                <View style={styles.stepperContainer}>
+                                  <TouchableOpacity
+                                    activeOpacity={0.6}
+                                    onPress={() => handleStepAdjust(ex.id, s.id, 'weight', -2.5)}
+                                    style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                                    hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                                  >
+                                    <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                                      -
+                                    </Text>
+                                  </TouchableOpacity>
+
+                                  <TextInput
+                                    style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
+                                    keyboardType="decimal-pad"
+                                    inputMode="decimal"
+                                    value={s.weight !== null && s.weight !== undefined ? String(s.weight) : ''}
+                                    onChangeText={(val) => {
+                                      const clean = val.replace(',', '.');
+                                      const parsed = parseFloat(clean);
+                                      handleUpdateSet(ex.id, s.id, 'weight', isNaN(parsed) ? 0 : parsed);
+                                    }}
+                                    selectTextOnFocus
+                                  />
+
+                                  <TouchableOpacity
+                                    activeOpacity={0.6}
+                                    onPress={() => handleStepAdjust(ex.id, s.id, 'weight', 2.5)}
+                                    style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                                    hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                                  >
+                                    <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                                      +
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+
+                              {/* Actual Reps numeric input + steppers */}
+                              <View style={styles.tdReps}>
+                                <View style={styles.stepperContainer}>
+                                  <TouchableOpacity
+                                    activeOpacity={0.6}
+                                    onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', -1)}
+                                    style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                                    hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                                  >
+                                    <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                                      -
+                                    </Text>
+                                  </TouchableOpacity>
+
+                                  <TextInput
+                                    style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
+                                    keyboardType="number-pad"
+                                    inputMode="numeric"
+                                    value={s.actualReps !== null && s.actualReps !== undefined ? String(s.actualReps) : ''}
+                                    onChangeText={(val) => {
+                                      const parsed = parseInt(val, 10);
+                                      handleUpdateSet(ex.id, s.id, 'actualReps', isNaN(parsed) ? 0 : parsed);
+                                    }}
+                                    selectTextOnFocus
+                                  />
+
+                                  <TouchableOpacity
+                                    activeOpacity={0.6}
+                                    onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', 1)}
+                                    style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                                    hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                                  >
+                                    <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                                      +
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+
+                              {/* Completed toggle */}
+                              <TouchableOpacity
+                                activeOpacity={0.7}
+                                onPress={() => handleToggleCompleteSet(ex.id, s)}
+                                style={styles.tdDone}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              >
+                                <Ionicons
+                                  name={isDone ? 'checkmark-circle' : 'ellipse-outline'}
+                                  size={26}
+                                  color={isDone ? '#10b981' : (isDark ? '#52525b' : '#d4d4d8')}
+                                />
+                              </TouchableOpacity>
+
+                              {/* Remove set */}
+                              <TouchableOpacity
+                                activeOpacity={0.7}
+                                onPress={() => handleRemoveSet(ex.id, s.id)}
+                                style={styles.tdAction}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              >
+                                <Ionicons name="close" size={18} color={isDark ? '#71717a' : '#a1a1aa'} />
+                              </TouchableOpacity>
+                            </View>
+                          );
+                        })}
+                      </View>
+
+                      {/* Add set button */}
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => handleAddSet(ex.id)}
+                        style={[styles.addSetBtn, isDark ? styles.borderDark : styles.borderLight]}
+                      >
+                        <Ionicons name="add" size={16} color={isDark ? '#fafafa' : '#09090b'} />
+                        <Text style={[styles.addSetBtnText, isDark ? styles.textDark : styles.textLight]}>
+                          Додати підхід
+                        </Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
                 </Card>
               </View>
             );
@@ -1326,6 +1319,81 @@ export const WorkoutEditorScreen: React.FC = () => {
         onClose={() => setIsSelectorOpen(false)}
         onSelectExercise={handleSelectExercise}
       />
+
+      {/* Reps Range Picker Modal */}
+      <Modal
+        visible={Boolean(activeRepsPickerWeId)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setActiveRepsPickerWeId(null)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setActiveRepsPickerWeId(null)}
+          style={styles.repsModalOverlay}
+        >
+          <View
+            style={[
+              styles.repsModalContent,
+              isDark ? styles.repsModalDark : styles.repsModalLight,
+            ]}
+          >
+            <View style={styles.repsModalHeader}>
+              <Text style={[styles.repsModalTitle, isDark ? styles.textDark : styles.textLight]}>
+                Повторити:
+              </Text>
+              <TouchableOpacity
+                onPress={() => setActiveRepsPickerWeId(null)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close" size={20} color={isDark ? '#a1a1aa' : '#71717a'} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.repsModalList}>
+              {REPS_RANGES.map((rng) => {
+                const currentEx = exercises.find((e) => e.id === activeRepsPickerWeId);
+                const isSelected = (currentEx?.targetRepsRange || currentEx?.sets?.[0]?.targetRepsRange || '8-12') === rng;
+
+                return (
+                  <TouchableOpacity
+                    key={rng}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      if (activeRepsPickerWeId) {
+                        handleTargetRepsRangeChange(activeRepsPickerWeId, rng);
+                      }
+                      setActiveRepsPickerWeId(null);
+                    }}
+                    style={[
+                      styles.repsModalItem,
+                      isSelected && (isDark ? styles.repsModalItemActiveDark : styles.repsModalItemActiveLight),
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.repsModalItemText,
+                        isSelected
+                          ? (isDark ? styles.repsModalItemTextActiveDark : styles.repsModalItemTextActiveLight)
+                          : (isDark ? styles.textDark : styles.textLight),
+                      ]}
+                    >
+                      {rng}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark"
+                        size={18}
+                        color={isDark ? '#fafafa' : '#18181b'}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -1521,10 +1589,33 @@ const styles = StyleSheet.create({
   exHeader: {
     gap: 6,
   },
+  borderBottomLight: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    paddingBottom: 8,
+  },
+  borderBottomDark: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#27272a',
+    paddingBottom: 8,
+  },
   exHeaderTitleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
+  },
+  exHeaderLeftTouchable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  collapsedSummaryRow: {
+    marginTop: 3,
+  },
+  collapsedSummaryText: {
+    fontSize: 11,
+    fontWeight: '500',
   },
   exIndexBadge: {
     width: 26,
@@ -1642,64 +1733,121 @@ const styles = StyleSheet.create({
   },
   quickSelectorsRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
   },
-  repsSelector: {
-    flex: 1,
-    gap: 4,
+  quickSelectorsRowLight: {
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
-  setsCountSelector: {
-    gap: 4,
+  quickSelectorsRowDark: {
+    backgroundColor: '#18181b',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  repsDropdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   selectorLabel: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  chipsRow: {
+  repsDropdownBtn: {
     flexDirection: 'row',
-    gap: 4,
-  },
-  rangeChip: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  setCountChip: {
-    width: 28,
-    height: 24,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
   },
-  chipLight: {
-    backgroundColor: '#f1f5f9',
+  repsDropdownBtnLight: {
+    backgroundColor: '#ffffff',
     borderColor: '#e2e8f0',
   },
-  chipDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+  repsDropdownBtnDark: {
+    backgroundColor: '#27272a',
+    borderColor: '#3f3f46',
   },
-  rangeChipActiveLight: {
-    backgroundColor: '#18181b',
-    borderColor: '#18181b',
-  },
-  rangeChipActiveDark: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#f4f4f5',
-  },
-  rangeChipText: {
-    fontSize: 10,
+  repsDropdownBtnText: {
+    fontSize: 12,
     fontWeight: '600',
   },
-  rangeChipTextActiveLight: {
-    color: '#ffffff',
+  repsModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
   },
-  rangeChipTextActiveDark: {
+  repsModalContent: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  repsModalLight: {
+    backgroundColor: '#ffffff',
+  },
+  repsModalDark: {
+    backgroundColor: '#18181b',
+    borderWidth: 1,
+    borderColor: '#27272a',
+  },
+  repsModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  repsModalTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  repsModalList: {
+    gap: 4,
+  },
+  repsModalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  repsModalItemActiveLight: {
+    backgroundColor: '#f1f5f9',
+  },
+  repsModalItemActiveDark: {
+    backgroundColor: '#27272a',
+  },
+  repsModalItemText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  repsModalItemTextActiveLight: {
+    fontWeight: '700',
     color: '#09090b',
+  },
+  repsModalItemTextActiveDark: {
+    fontWeight: '700',
+    color: '#fafafa',
   },
   setsTable: {
     marginTop: 4,

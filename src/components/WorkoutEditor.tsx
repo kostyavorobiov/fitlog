@@ -131,8 +131,12 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mobileDeleteWorkoutButtonRef = useRef<HTMLButtonElement>(null);
   const [activeInputText, setActiveInputText] = useState<Record<string, string>>({});
+  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+
+  const handleToggleExpand = (exerciseId: string) => {
+    setExpandedExerciseId((prev) => (prev === exerciseId ? null : exerciseId));
+  };
 
   const handleInputCursorToEnd = (e: React.SyntheticEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
@@ -328,6 +332,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       const weId = generateId('we');
       const currentExercises = Array.isArray(currentWorkout.exercises) ? currentWorkout.exercises : [];
+      const isFirstExercise = currentExercises.length === 0;
       const newWorkoutExercise: WorkoutExercise = {
         id: weId,
         workoutPlanId: currentWorkout.id,
@@ -347,6 +352,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       updateAndSave(updated);
       setIsSelectorOpen(false);
+
+      if (isFirstExercise) {
+        setExpandedExerciseId(weId);
+      }
 
       // On mobile: position newly added exercise slightly below the top navbar without smooth scroll
       if (typeof window !== 'undefined' && window.innerWidth < 640) {
@@ -421,6 +430,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     const updatedExercises = currentWorkout.exercises
       .filter((e) => e.id !== weId)
       .map((e, idx) => ({ ...e, order: idx + 1 }));
+
+    if (expandedExerciseId === weId) {
+      setExpandedExerciseId(null);
+    }
 
     updateAndSave({ ...currentWorkout, exercises: updatedExercises });
 
@@ -850,6 +863,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             const isDragged = draggedIndex === weIndex;
             const isSuperset = Boolean(weItem.supersetGroupId);
             const supersetPalette = weItem.supersetGroupId ? supersetColorMap.get(weItem.supersetGroupId) : null;
+            const isExpanded = expandedExerciseId === weItem.id;
 
             return (
               <div
@@ -870,39 +884,54 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 <div className="block sm:hidden">
 
                   {/* Mobile Exercise Header */}
-                  <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-2.5 border-b border-zinc-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div
+                    className={`flex items-center justify-between gap-2 px-3 pt-3 pb-2.5 ${isExpanded ? 'border-b border-zinc-100 dark:border-zinc-800' : ''
+                      }`}
+                  >
+                    <div
+                      onClick={() => handleToggleExpand(weItem.id)}
+                      className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer select-none"
+                    >
                       {/* #N badge */}
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-[11px] font-bold text-zinc-600 dark:text-zinc-300 font-mono border border-zinc-200 dark:border-zinc-700">
                         #{weIndex + 1}
                       </span>
                       {/* Exercise name + badges */}
-                      <div className="min-w-0 flex-1 flex items-center gap-1.5 flex-wrap">
-                        <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug break-words">
-                          {exerciseName}
-                        </h4>
-                        {(() => {
-                          const badge = getExerciseOriginBadge(exercise);
-                          if (!badge) return null;
-                          return (
-                            <span className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${badge.className}`}>
-                              {badge.text}
+                      <div className="min-w-0 flex-1 flex flex-col justify-center">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug break-words">
+                            {exerciseName}
+                          </h4>
+                          {(() => {
+                            const badge = getExerciseOriginBadge(exercise);
+                            if (!badge) return null;
+                            return (
+                              <span className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${badge.className}`}>
+                                {badge.text}
+                              </span>
+                            );
+                          })()}
+                          {isSuperset && (
+                            <span
+                              className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
+                            >
+                              <Link className="h-2.5 w-2.5" />
+                              <span>Суперсет</span>
                             </span>
-                          );
-                        })()}
-                        {isSuperset && (
-                          <span
-                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
-                          >
-                            <Link className="h-2.5 w-2.5" />
-                            <span>Суперсет</span>
-                          </span>
+                          )}
+                        </div>
+                        {!isExpanded && (
+                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+                            <span>{weItem.sets?.length || 0} підходи</span>
+                            <span>•</span>
+                            <span>{weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12'} повт.</span>
+                          </div>
                         )}
                       </div>
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                       {currentExList.length > 1 && (
                         <button
                           type="button"
@@ -942,62 +971,42 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleExpand(weItem.id)}
+                        className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                        title={isExpanded ? 'Згорнути' : 'Розгорнути'}
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
-                  {/* Mobile Config Row */}
-                  <div className="px-3 py-2 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 space-y-2">
-                    {/* Reps Range */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                        Повторення:
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {(['4-6', '6-8', '8-10', '8-12', '10-15'] as const).map((range) => {
-                          const isSelected = (weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12') === range;
-                          return (
-                            <button
-                              key={range}
-                              type="button"
-                              onClick={() => handleTargetRepsRangeChange(weItem.id, range)}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer border ${isSelected
-                                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-900 dark:border-zinc-100'
-                                : 'bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
-                                }`}
-                            >
-                              {range}
-                            </button>
-                          );
-                        })}
+                  {isExpanded && (
+                    <>
+                      {/* Mobile Config Row: Reps Dropdown (Sets row deleted) */}
+                      <div className="px-3 py-2 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                            Повторити:
+                          </span>
+                          <select
+                            value={weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12'}
+                            onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
+                            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
+                          >
+                            {(['4-6', '6-8', '8-10', '8-12', '10-15'] as const).map((range) => (
+                              <option key={range} value={range}>
+                                {range}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Sets Count */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                        Підходи:
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {[2, 3, 4, 5].map((cnt) => {
-                          const active = (weItem.setCount || weItem.sets.length) === cnt;
-                          return (
-                            <button
-                              key={cnt}
-                              type="button"
-                              onClick={() => handleSetCountChange(weItem.id, cnt)}
-                              className={`h-8 w-8 rounded-lg text-xs font-bold transition-colors cursor-pointer border ${active
-                                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-900 dark:border-zinc-100'
-                                : 'bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
-                                }`}
-                              title={`${cnt} підходи`}
-                            >
-                              {cnt}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Mobile Sets Section */}
                   <div>
@@ -1193,17 +1202,26 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       <span>Додати підхід</span>
                     </button>
                   </div>
-                </div>
+                </>
+              )}
+            </div>
 
                 {/* ================= DESKTOP VIEW (hidden sm:block) ================= */}
 
                 {/* Desktop Exercise Header */}
-                <div className="hidden sm:flex items-center justify-between gap-3 px-5 py-4 border-b border-zinc-100 dark:border-zinc-800">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div
+                  className={`hidden sm:flex items-center justify-between gap-3 px-5 py-4 ${isExpanded ? 'border-b border-zinc-100 dark:border-zinc-800' : ''
+                    }`}
+                >
+                  <div
+                    onClick={() => handleToggleExpand(weItem.id)}
+                    className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer select-none"
+                  >
                     {/* Drag handle */}
                     <div
                       className="cursor-grab active:cursor-grabbing text-zinc-300 hover:text-zinc-500 dark:text-zinc-600 dark:hover:text-zinc-400 transition-colors shrink-0"
                       title="Перетягніть для зміни порядку"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <GripVertical className="h-4 w-4" />
                     </div>
@@ -1214,32 +1232,41 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     </span>
 
                     {/* Exercise name */}
-                    <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
-                      <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
-                        {exerciseName}
-                      </h4>
-                      {(() => {
-                        const badge = getExerciseOriginBadge(exercise);
-                        if (!badge) return null;
-                        return (
-                          <span className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${badge.className}`}>
-                            {badge.text}
+                    <div className="min-w-0 flex-1 flex flex-col justify-center">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                          {exerciseName}
+                        </h4>
+                        {(() => {
+                          const badge = getExerciseOriginBadge(exercise);
+                          if (!badge) return null;
+                          return (
+                            <span className={`rounded border px-1.5 py-0.5 text-[9px] font-medium ${badge.className}`}>
+                              {badge.text}
+                            </span>
+                          );
+                        })()}
+                        {isSuperset && (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
+                          >
+                            <Link className="h-3 w-3" />
+                            <span>Суперсет</span>
                           </span>
-                        );
-                      })()}
-                      {isSuperset && (
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
-                        >
-                          <Link className="h-3 w-3" />
-                          <span>Суперсет</span>
-                        </span>
+                        )}
+                      </div>
+                      {!isExpanded && (
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                          <span>{weItem.sets?.length || 0} підходи</span>
+                          <span>•</span>
+                          <span>{weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12'} повт.</span>
+                        </div>
                       )}
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                     {currentExList.length > 1 && (
                       <button
                         type="button"
@@ -1279,62 +1306,42 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleExpand(weItem.id)}
+                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                      title={isExpanded ? 'Згорнути' : 'Розгорнути'}
+                    >
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                {/* Desktop Config Row: Reps Range + Sets Count */}
-                <div className="hidden sm:block px-5 py-3 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 space-y-2">
-                  {/* Reps Range */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                      Повторення:
-                    </span>
-                    <div className="flex items-center gap-1">
-                      {(['4-6', '6-8', '8-10', '8-12', '10-15'] as const).map((range) => {
-                        const isSelected = (weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12') === range;
-                        return (
-                          <button
-                            key={range}
-                            type="button"
-                            onClick={() => handleTargetRepsRangeChange(weItem.id, range)}
-                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${isSelected
-                              ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-900 dark:border-zinc-100'
-                              : 'bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-800 dark:hover:text-white'
-                              }`}
-                          >
-                            {range}
-                          </button>
-                        );
-                      })}
+                {isExpanded && (
+                  <>
+                    {/* Desktop Config Row: Reps Dropdown (Sets row deleted) */}
+                    <div className="hidden sm:block px-5 py-3 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                          Повторити:
+                        </span>
+                        <select
+                          value={weItem.targetRepsRange || weItem.sets[0]?.targetRepsRange || '8-12'}
+                          onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
+                        >
+                          {(['4-6', '6-8', '8-10', '8-12', '10-15'] as const).map((range) => (
+                            <option key={range} value={range}>
+                              {range}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Sets Count */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                      Підходи:
-                    </span>
-                    <div className="flex items-center gap-1">
-                      {[2, 3, 4, 5].map((cnt) => {
-                        const active = (weItem.setCount || weItem.sets.length) === cnt;
-                        return (
-                          <button
-                            key={cnt}
-                            type="button"
-                            onClick={() => handleSetCountChange(weItem.id, cnt)}
-                            className={`h-8 w-8 rounded-lg text-xs font-bold transition-colors cursor-pointer border ${active
-                              ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-900 dark:border-zinc-100'
-                              : 'bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-800 dark:hover:text-white'
-                              }`}
-                            title={`${cnt} підходи`}
-                          >
-                            {cnt}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
 
                 {/* Desktop Sets Table */}
                 <div className="hidden sm:block">
@@ -1529,7 +1536,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     <span>Додати підхід</span>
                   </button>
                 </div>
-              </div>
+              </>
+            )}
+          </div>
             );
           })
         )}
