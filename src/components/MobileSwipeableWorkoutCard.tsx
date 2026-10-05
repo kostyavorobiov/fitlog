@@ -4,14 +4,16 @@ import { Trash2 } from 'lucide-react';
 interface MobileSwipeableWorkoutCardProps {
   workoutId: string;
   onDelete: () => void;
+  disabled?: boolean;
   children: React.ReactNode;
 }
 
 const BUTTON_WIDTH = 88;
-const SWIPE_THRESHOLD = 40;
+const SWIPE_THRESHOLD = 36;
 
 export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProps> = ({
   onDelete,
+  disabled = false,
   children,
 }) => {
   const [offsetX, setOffsetX] = useState(0);
@@ -20,68 +22,95 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
   const isOpenRef = useRef(false);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
-  const isHorizontalRef = useRef<boolean | null>(null);
+  const isMovingHorizontallyRef = useRef<boolean | null>(null);
+  const pointerIdRef = useRef<number | null>(null);
+  const hasMovedRef = useRef(false);
+  const justSwipedRef = useRef(false);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (disabled || isDeleting) return;
+    if (e.button !== 0) return; // Only primary mouse button or touch
+
+    // Don't initiate swipe if clicking on interactive elements
     const target = e.target as HTMLElement | null;
-    if (target?.closest('input, textarea, select, button, [data-no-swipe], .no-swipe')) {
-      isHorizontalRef.current = false;
+    if (target?.closest('input, textarea, select, button, a, [data-interactive]')) {
       return;
     }
 
-    startXRef.current = e.touches[0].clientX;
-    startYRef.current = e.touches[0].clientY;
-    isHorizontalRef.current = null;
+    startXRef.current = e.clientX;
+    startYRef.current = e.clientY;
+    pointerIdRef.current = e.pointerId;
+    isMovingHorizontallyRef.current = null;
+    hasMovedRef.current = false;
     setIsDragging(false);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (isHorizontalRef.current === false) return;
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (pointerIdRef.current !== e.pointerId) return;
+    if (isMovingHorizontallyRef.current === false) return;
 
-    const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
-    const dx = currentX - startXRef.current;
-    const dy = currentY - startYRef.current;
+    const dx = e.clientX - startXRef.current;
+    const dy = e.clientY - startYRef.current;
 
-    // Detect horizontal intention on first significant movement
-    if (isHorizontalRef.current === null) {
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 7) {
-        isHorizontalRef.current = false;
+    // Detect intention on first significant movement
+    if (isMovingHorizontallyRef.current === null) {
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 6) {
+        // Vertical movement detected -> allow native scroll
+        isMovingHorizontallyRef.current = false;
         return;
       }
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 7) {
-        isHorizontalRef.current = true;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 6) {
+        // Horizontal movement detected -> take over gesture
+        isMovingHorizontallyRef.current = true;
         setIsDragging(true);
+        hasMovedRef.current = true;
+        try {
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        } catch {}
       }
     }
 
-    if (isHorizontalRef.current === true) {
+    if (isMovingHorizontallyRef.current === true) {
       e.stopPropagation();
       const base = isOpenRef.current ? -BUTTON_WIDTH : 0;
       const targetX = base + dx;
-      const clamped = Math.max(-BUTTON_WIDTH - 20, Math.min(0, targetX));
+      // Clamp between -BUTTON_WIDTH - 25 and 0
+      const clamped = Math.max(-BUTTON_WIDTH - 25, Math.min(0, targetX));
       setOffsetX(clamped);
     }
   };
 
-  const handleTouchEnd = () => {
-    if (isHorizontalRef.current !== true) {
-      return;
-    }
+  const handlePointerEnd = (e: React.PointerEvent) => {
+    if (pointerIdRef.current !== e.pointerId) return;
+    pointerIdRef.current = null;
 
-    setIsDragging(false);
-    isHorizontalRef.current = null;
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {}
 
-    if (offsetX < -SWIPE_THRESHOLD) {
-      isOpenRef.current = true;
-      setOffsetX(-BUTTON_WIDTH);
+    if (isMovingHorizontallyRef.current === true) {
+      setIsDragging(false);
+      isMovingHorizontallyRef.current = null;
+      justSwipedRef.current = true;
+      setTimeout(() => {
+        justSwipedRef.current = false;
+      }, 150);
+
+      if (offsetX < -SWIPE_THRESHOLD) {
+        isOpenRef.current = true;
+        setOffsetX(-BUTTON_WIDTH);
+      } else {
+        isOpenRef.current = false;
+        setOffsetX(0);
+      }
     } else {
-      isOpenRef.current = false;
-      setOffsetX(0);
+      setIsDragging(false);
+      isMovingHorizontallyRef.current = null;
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsDeleting(true);
     setTimeout(() => {
       onDelete();
@@ -91,10 +120,14 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
     }, 220);
   };
 
-  const handleCardClick = () => {
-    if (isOpenRef.current) {
-      isOpenRef.current = false;
-      setOffsetX(0);
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (justSwipedRef.current || hasMovedRef.current || isOpenRef.current) {
+      e.stopPropagation();
+      e.preventDefault();
+      if (isOpenRef.current) {
+        isOpenRef.current = false;
+        setOffsetX(0);
+      }
     }
   };
 
@@ -117,10 +150,7 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
       >
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete();
-          }}
+          onClick={handleDelete}
           className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-white font-bold text-xs active:bg-rose-700 transition-colors cursor-pointer select-none"
           title="Видалити тренування"
           aria-label="Видалити тренування"
@@ -137,11 +167,14 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
           transition: isDragging
             ? 'none'
             : 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)',
+          touchAction: 'pan-y',
+          userSelect: isDragging ? 'none' : 'auto',
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onClick={handleCardClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onClickCapture={handleCardClick}
         className="relative z-10 bg-white dark:bg-zinc-900 rounded-xl"
       >
         {children}

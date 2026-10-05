@@ -78,12 +78,20 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => false,
-        onMoveShouldSetPanResponder: (_, gestureState) => {
+        onStartShouldSetPanResponderCapture: () => false,
+        onMoveShouldSetPanResponderCapture: (_, gestureState) => {
           return (
-            Math.abs(gestureState.dx) > 12 &&
-            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5
+            Math.abs(gestureState.dx) > 10 &&
+            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2
           );
         },
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return (
+            Math.abs(gestureState.dx) > 10 &&
+            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2
+          );
+        },
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           panX.stopAnimation();
         },
