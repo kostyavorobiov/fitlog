@@ -127,8 +127,8 @@ const ExerciseProgressRing: React.FC<{
             isAllDone
               ? 'rgba(16, 185, 129, 0.08)'
               : progress > 0
-              ? 'rgba(59, 130, 246, 0.06)'
-              : 'none'
+                ? 'rgba(59, 130, 246, 0.06)'
+                : 'none'
           }
           className="stroke-zinc-200 dark:stroke-zinc-700"
           strokeWidth={strokeWidth}
@@ -155,11 +155,10 @@ const ExerciseProgressRing: React.FC<{
           <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 stroke-[3]" />
         ) : (
           <span
-            className={`font-mono text-[9px] font-bold leading-none ${
-              progress > 0
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-zinc-400 dark:text-zinc-500'
-            }`}
+            className={`font-mono text-[9px] font-bold leading-none ${progress > 0
+              ? 'text-blue-600 dark:text-blue-400'
+              : 'text-zinc-400 dark:text-zinc-500'
+              }`}
           >
             {total > 0 ? `${completed}/${total}` : '0'}
           </span>
@@ -1150,7 +1149,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                               onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
                               className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
                             >
-                              {(['4-6', '6-8', '8-10', '8-12', '10-15'] as const).map((range) => (
+                              {(['4-6', '6-8', '6-10', '8-10', '8-12', '10-15'] as const).map((range) => (
                                 <option key={range} value={range}>
                                   {range}
                                 </option>
@@ -1200,10 +1199,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                           delete copy[`${setItem.id}_weight`];
                                           return copy;
                                         });
-                                        handleUpdateSet(weItem.id, setItem.id, 'weight', Math.max(0, (setItem.weight || 0) - 2.5));
+                                        handleUpdateSet(weItem.id, setItem.id, 'weight', Math.max(0, (setItem.weight || 0) - 1));
                                       }}
                                       className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
-                                      title="−2.5 кг"
+                                      title="−1 кг"
                                     >
                                       <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
                                     </button>
@@ -1242,10 +1241,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                           delete copy[`${setItem.id}_weight`];
                                           return copy;
                                         });
-                                        handleUpdateSet(weItem.id, setItem.id, 'weight', (setItem.weight || 0) + 2.5);
+                                        handleUpdateSet(weItem.id, setItem.id, 'weight', (setItem.weight || 0) + 1);
                                       }}
                                       className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
-                                      title="+2.5 кг"
+                                      title="+1 кг"
                                     >
                                       <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
                                     </button>
@@ -1527,10 +1526,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                       delete copy[`${setItem.id}_weight`];
                                       return copy;
                                     });
-                                    handleUpdateSet(weItem.id, setItem.id, 'weight', Math.max(0, (setItem.weight || 0) - 2.5));
+                                    handleUpdateSet(weItem.id, setItem.id, 'weight', Math.max(0, (setItem.weight || 0) - 1));
                                   }}
                                   className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0 text-sm font-bold"
-                                  title="−2.5 кг"
+                                  title="−1 кг"
                                 >
                                   <Minus className="h-4 w-4 stroke-[2.5]" />
                                 </button>
@@ -1569,10 +1568,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                       delete copy[`${setItem.id}_weight`];
                                       return copy;
                                     });
-                                    handleUpdateSet(weItem.id, setItem.id, 'weight', (setItem.weight || 0) + 2.5);
+                                    handleUpdateSet(weItem.id, setItem.id, 'weight', (setItem.weight || 0) + 1);
                                   }}
                                   className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
-                                  title="+2.5 кг"
+                                  title="+1 кг"
                                 >
                                   <Plus className="h-4 w-4 stroke-[2.5]" />
                                 </button>

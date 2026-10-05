@@ -210,8 +210,8 @@ const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
   const bgFill = isAllDone
     ? 'rgba(16, 185, 129, 0.08)'
     : progress > 0
-    ? 'rgba(59, 130, 246, 0.06)'
-    : 'transparent';
+      ? 'rgba(59, 130, 246, 0.06)'
+      : 'transparent';
 
   const rightAngle = -135 + Math.min(progress, 0.5) * 360;
   const leftAngle = progress <= 0.5 ? 45 : 45 + (progress - 0.5) * 360;
@@ -340,8 +340,8 @@ const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
                     ? '#60a5fa'
                     : '#2563eb'
                   : isDark
-                  ? '#71717a'
-                  : '#a1a1aa',
+                    ? '#71717a'
+                    : '#a1a1aa',
               includeFontPadding: false,
               textAlign: 'center',
             }}
@@ -831,7 +831,7 @@ export const WorkoutEditorScreen: React.FC = () => {
     updateAndSave({ ...workout, exercises: updatedExercises });
   };
 
-  // Step adjust weight (+/- 2.5) or reps (+/- 1)
+  // Step adjust weight (+/- 1) or reps (+/- 1)
   const handleStepAdjust = (
     weId: string,
     setId: string,
@@ -1564,7 +1564,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                                   <View style={styles.stepperContainer}>
                                     <TouchableOpacity
                                       activeOpacity={0.6}
-                                      onPress={() => handleStepAdjust(ex.id, s.id, 'weight', -2.5)}
+                                      onPress={() => handleStepAdjust(ex.id, s.id, 'weight', -1)}
                                       style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
                                       hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                                     >
@@ -1588,7 +1588,7 @@ export const WorkoutEditorScreen: React.FC = () => {
 
                                     <TouchableOpacity
                                       activeOpacity={0.6}
-                                      onPress={() => handleStepAdjust(ex.id, s.id, 'weight', 2.5)}
+                                      onPress={() => handleStepAdjust(ex.id, s.id, 'weight', 1)}
                                       style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
                                       hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                                     >
