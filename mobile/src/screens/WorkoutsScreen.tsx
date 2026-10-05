@@ -332,8 +332,8 @@ export const WorkoutsScreen: React.FC = () => {
                               color: isCompleted
                                 ? (isDark ? '#34d399' : '#059669')
                                 : isInProgress
-                                ? (isDark ? '#fbbf24' : '#d97706')
-                                : (isDark ? '#a1a1aa' : '#71717a'),
+                                  ? (isDark ? '#fbbf24' : '#d97706')
+                                  : (isDark ? '#a1a1aa' : '#71717a'),
                             },
                           ]}
                         >
@@ -428,22 +428,6 @@ export const WorkoutsScreen: React.FC = () => {
                           </View>
                         </>
                       )}
-
-                      {w.durationMinutes ? (
-                        <>
-                          <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
-                          <View style={styles.metricItem}>
-                            <Ionicons
-                              name="time-outline"
-                              size={13}
-                              color={isDark ? '#71717a' : '#94a3b8'}
-                            />
-                            <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
-                              {w.durationMinutes} хв
-                            </Text>
-                          </View>
-                        </>
-                      ) : null}
                     </View>
 
                     {/* Notes snippet */}
