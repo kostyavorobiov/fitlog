@@ -452,7 +452,7 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 >
                   <div
                     onClick={() => onSelectWorkout(w)}
-                    className="group cursor-pointer rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors space-y-1.5"
+                    className="group cursor-pointer bg-white dark:bg-zinc-900 px-4 py-3.5 transition-colors space-y-1.5"
                   >
                     {/* Row 1: Status · Date */}
                     <div className="flex items-center justify-between gap-2">

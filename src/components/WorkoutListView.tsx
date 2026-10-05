@@ -199,7 +199,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
               >
                 <div
                   onClick={() => onSelectWorkout(w)}
-                  className="group rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer space-y-1.5"
+                  className="group bg-white dark:bg-zinc-900 px-4 py-3.5 transition-colors cursor-pointer space-y-1.5"
                 >
                   {/* Row 1: Status & Coach info */}
                   <div className="flex items-center justify-between gap-2">

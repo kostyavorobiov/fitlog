@@ -111,13 +111,7 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsDeleting(true);
-    setTimeout(() => {
-      onDelete();
-      setIsDeleting(false);
-      isOpenRef.current = false;
-      setOffsetX(0);
-    }, 220);
+    onDelete();
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -134,29 +128,43 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
   return (
     <div
       data-no-swipe="true"
-      className={`no-swipe relative overflow-hidden rounded-xl transition-all duration-200 ${
+      className={`no-swipe relative overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700 ${
         isDeleting
-          ? 'max-h-0 opacity-0 -translate-x-full my-0 py-0 overflow-hidden'
+          ? 'max-h-0 opacity-0 -translate-x-full my-0 py-0 border-transparent overflow-hidden'
           : 'max-h-[3000px]'
       }`}
     >
       {/* Background Delete Action Button */}
       <div
-        className="absolute inset-y-0 right-0 w-[88px] bg-rose-600 dark:bg-rose-600 flex items-center justify-center z-0 rounded-r-xl"
+        className="absolute inset-y-0 right-0 bg-rose-600 dark:bg-rose-600 flex items-center justify-end z-0"
         style={{
-          opacity: offsetX < -8 ? 1 : 0,
-          transition: 'opacity 0.15s ease',
+          width: `${Math.max(BUTTON_WIDTH, -offsetX)}px`,
+          opacity: offsetX < -4 ? 1 : 0,
+          transition: isDragging
+            ? 'none'
+            : 'width 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.15s ease',
         }}
       >
         <button
           type="button"
           onClick={handleDelete}
-          className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-white font-bold text-xs active:bg-rose-700 transition-colors cursor-pointer select-none"
+          className="w-[88px] h-full flex flex-col items-center justify-center gap-1.5 text-white font-bold text-xs hover:bg-rose-700 active:bg-rose-800 transition-colors cursor-pointer select-none"
           title="Видалити тренування"
           aria-label="Видалити тренування"
         >
-          <Trash2 className="h-5 w-5" />
-          <span>Видалити</span>
+          <Trash2
+            className="h-5 w-5 transition-transform"
+            style={{
+              transform: `scale(${Math.min(1, Math.max(0.7, -offsetX / BUTTON_WIDTH))})`,
+            }}
+          />
+          <span
+            style={{
+              opacity: Math.min(1, Math.max(0.6, -offsetX / BUTTON_WIDTH)),
+            }}
+          >
+            Видалити
+          </span>
         </button>
       </div>
 
@@ -175,7 +183,11 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
         onClickCapture={handleCardClick}
-        className="relative z-10 bg-white dark:bg-zinc-900 rounded-xl"
+        className={`relative z-10 bg-white dark:bg-zinc-900 h-full border-r border-transparent ${
+          offsetX < 0
+            ? 'border-zinc-200 dark:border-zinc-800 shadow-[-3px_0_10px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_12px_rgba(0,0,0,0.4)]'
+            : ''
+        }`}
       >
         {children}
       </div>

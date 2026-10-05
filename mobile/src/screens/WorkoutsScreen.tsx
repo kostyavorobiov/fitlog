@@ -129,7 +129,16 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
   };
 
   return (
-    <Animated.View style={[styles.swipeContainer, { opacity: opacityAnim }]}>
+    <Animated.View
+      style={[
+        styles.swipeContainer,
+        {
+          opacity: opacityAnim,
+          borderColor: isDark ? '#27272a' : '#e4e4e7',
+          backgroundColor: isDark ? '#18181b' : '#ffffff',
+        },
+      ]}
+    >
       {/* Background Red Delete Button */}
       <View style={styles.swipeDeleteActionBg}>
         <TouchableOpacity
@@ -151,6 +160,8 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
           {
             transform: [{ translateX: panX }],
             backgroundColor: isDark ? '#18181b' : '#ffffff',
+            borderRightWidth: StyleSheet.hairlineWidth,
+            borderRightColor: isDark ? '#27272a' : '#e4e4e7',
           },
         ]}
       >
@@ -455,7 +466,7 @@ export const WorkoutsScreen: React.FC = () => {
                     activeOpacity={0.7}
                     onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
                   >
-                    <Card style={styles.workoutCard}>
+                    <View style={styles.workoutCard}>
                       {/* Top Row: Status, Coach */}
                       <View style={styles.cardTopRow}>
                         <View style={styles.cardBadgesRow}>
@@ -543,7 +554,7 @@ export const WorkoutsScreen: React.FC = () => {
                           {w.notes}
                         </Text>
                       ) : null}
-                    </Card>
+                    </View>
                   </TouchableOpacity>
                 </SwipeableWorkoutCard>
               );
@@ -1022,6 +1033,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     borderRadius: 12,
+    borderWidth: 1,
   },
   swipeDeleteActionBg: {
     position: 'absolute',
@@ -1030,7 +1042,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 84,
     backgroundColor: '#ef4444',
-    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
@@ -1048,7 +1059,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   swipeForeground: {
-    borderRadius: 12,
     zIndex: 2,
   },
 });

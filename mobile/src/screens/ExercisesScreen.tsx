@@ -128,11 +128,32 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
   };
 
   if (disabled) {
-    return <View style={styles.swipeContainer}>{children}</View>;
+    return (
+      <View
+        style={[
+          styles.swipeContainer,
+          {
+            borderColor: isDark ? '#27272a' : '#e4e4e7',
+            backgroundColor: isDark ? '#18181b' : '#ffffff',
+          },
+        ]}
+      >
+        {children}
+      </View>
+    );
   }
 
   return (
-    <Animated.View style={[styles.swipeContainer, { opacity: opacityAnim }]}>
+    <Animated.View
+      style={[
+        styles.swipeContainer,
+        {
+          opacity: opacityAnim,
+          borderColor: isDark ? '#27272a' : '#e4e4e7',
+          backgroundColor: isDark ? '#18181b' : '#ffffff',
+        },
+      ]}
+    >
       {/* Background Red Delete Button */}
       <View style={styles.swipeDeleteActionBg}>
         <TouchableOpacity
@@ -154,6 +175,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
           {
             transform: [{ translateX: panX }],
             backgroundColor: isDark ? '#18181b' : '#ffffff',
+            borderRightWidth: StyleSheet.hairlineWidth,
+            borderRightColor: isDark ? '#27272a' : '#e4e4e7',
           },
         ]}
       >
@@ -511,7 +534,7 @@ export const ExercisesScreen: React.FC = () => {
                   disabled={!canEdit}
                   onDelete={() => handleDeleteExercise(ex)}
                 >
-                  <Card style={styles.exCard}>
+                  <View style={styles.exCard}>
                     <View style={styles.exCardHeader}>
                       <View style={{ flex: 1, gap: 4 }}>
                         <Text style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}>
@@ -546,7 +569,7 @@ export const ExercisesScreen: React.FC = () => {
                         </View>
                       ) : null}
                     </View>
-                  </Card>
+                  </View>
                 </SwipeableExerciseCard>
               );
             })}
@@ -1191,6 +1214,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     borderRadius: 16,
+    borderWidth: 1,
   },
   swipeDeleteActionBg: {
     position: 'absolute',
@@ -1199,8 +1223,6 @@ const styles = StyleSheet.create({
     right: 0,
     width: 84,
     backgroundColor: '#dc2626',
-    borderTopRightRadius: 16,
-    borderBottomRightRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 0,
@@ -1219,6 +1241,5 @@ const styles = StyleSheet.create({
   },
   swipeForeground: {
     zIndex: 1,
-    borderRadius: 16,
   },
 });
