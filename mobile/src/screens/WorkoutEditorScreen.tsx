@@ -58,15 +58,18 @@ const TITLE_PRESETS = [
 
 interface SwipeableExerciseCardProps {
   onDelete: () => void;
+  onChangeExercise?: () => void;
   isDark: boolean;
   children: React.ReactNode;
 }
 
-const SWIPE_DELETE_WIDTH = 84;
-const SWIPE_THRESHOLD = -40;
+const SWIPE_ACTION_WIDTH = 76;
+const SWIPE_TOTAL_WIDTH = SWIPE_ACTION_WIDTH * 2;
+const SWIPE_THRESHOLD = -35;
 
 const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
   onDelete,
+  onChangeExercise,
   isDark,
   children,
 }) => {
@@ -96,16 +99,16 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
           panX.stopAnimation();
         },
         onPanResponderMove: (_, gestureState) => {
-          const base = isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0;
-          const newX = Math.min(0, Math.max(-SWIPE_DELETE_WIDTH - 20, base + gestureState.dx));
+          const base = isOpenRef.current ? -SWIPE_TOTAL_WIDTH : 0;
+          const newX = Math.min(0, Math.max(-SWIPE_TOTAL_WIDTH - 20, base + gestureState.dx));
           panX.setValue(newX);
         },
         onPanResponderRelease: (_, gestureState) => {
-          const currentVal = (panX as any)._value ?? (isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0);
+          const currentVal = (panX as any)._value ?? (isOpenRef.current ? -SWIPE_TOTAL_WIDTH : 0);
           if (gestureState.dx < -30 || currentVal < SWIPE_THRESHOLD) {
             isOpenRef.current = true;
             Animated.spring(panX, {
-              toValue: -SWIPE_DELETE_WIDTH,
+              toValue: -SWIPE_TOTAL_WIDTH,
               useNativeDriver: true,
               bounciness: 4,
             }).start();
@@ -158,8 +161,23 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
 
   return (
     <Animated.View style={[styles.swipeContainer, { opacity: opacityAnim }]}>
-      {/* Background Red Delete Button */}
-      <View style={styles.swipeDeleteActionBg}>
+      {/* Background Actions: Change (Yellow) & Delete (Red) */}
+      <View style={styles.swipeActionsBg}>
+        {/* Yellow Change Exercise Button */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            closeSwipe();
+            onChangeExercise?.();
+          }}
+          style={styles.swipeChangeBtn}
+          accessibilityLabel="Змінити вправу"
+        >
+          <Ionicons name="swap-horizontal" size={20} color="#09090b" />
+          <Text style={styles.swipeChangeBtnText}>Змінити</Text>
+        </TouchableOpacity>
+
+        {/* Red Delete Button */}
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleDelete}
@@ -380,7 +398,13 @@ export const WorkoutEditorScreen: React.FC = () => {
   const [isTitleModalOpen, setIsTitleModalOpen] = useState<boolean>(false);
   const [lastPerformances, setLastPerformances] = useState<Record<string, PastExercisePerformance | null>>({});
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+  const [exerciseToReplaceId, setExerciseToReplaceId] = useState<string | null>(null);
   const [activeRepsPickerWeId, setActiveRepsPickerWeId] = useState<string | null>(null);
+
+  const handleChangeExercise = (weId: string) => {
+    setExerciseToReplaceId(weId);
+    setIsSelectorOpen(true);
+  };
 
   const handleToggleExpand = (weId: string) => {
     setExpandedExerciseId((prev) => (prev === weId ? null : weId));
@@ -556,6 +580,64 @@ export const WorkoutEditorScreen: React.FC = () => {
     }
 
     const targetRange = (lastPerf?.sets?.[0]?.targetRepsRange || '8-12') as string;
+
+    // Handle replace existing exercise
+    if (exerciseToReplaceId) {
+      const currentExercises = workout.exercises || [];
+      const exIndex = currentExercises.findIndex((e) => e.id === exerciseToReplaceId);
+      if (exIndex === -1) {
+        setExerciseToReplaceId(null);
+        setIsSelectorOpen(false);
+        return;
+      }
+
+      const existingWe = currentExercises[exIndex];
+      const hasCompletedSets = (existingWe.sets || []).some((s) => Boolean(s.completedAt));
+      let updatedSets = existingWe.sets || [];
+
+      if (!hasCompletedSets) {
+        if (lastPerf && Array.isArray(lastPerf.sets) && lastPerf.sets.length > 0) {
+          updatedSets = lastPerf.sets.map((ps, idx) => ({
+            id: (existingWe.sets && existingWe.sets[idx]) ? existingWe.sets[idx].id : `set_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 5)}`,
+            workoutExerciseId: existingWe.id,
+            setNumber: idx + 1,
+            targetRepsRange: ps.targetRepsRange || targetRange,
+            weight: Number(ps.weight) || 20,
+            actualReps: ps.actualReps !== null && ps.actualReps !== undefined ? Number(ps.actualReps) : 10,
+            completedAt: null,
+          }));
+        } else {
+          updatedSets = updatedSets.map((s) => ({
+            ...s,
+            targetRepsRange: targetRange,
+          }));
+        }
+      }
+
+      const updatedExercise: WorkoutExercise = {
+        ...existingWe,
+        exerciseId: exercise.id,
+        exerciseName: exercise.name,
+        muscleGroup: exercise.muscleGroup,
+        targetRepsRange: targetRange,
+        setCount: updatedSets.length,
+        sets: updatedSets,
+      };
+
+      const updatedExercises = [...currentExercises];
+      updatedExercises[exIndex] = updatedExercise;
+
+      const updated: WorkoutPlan = {
+        ...workout,
+        exercises: updatedExercises,
+      };
+
+      updateAndSave(updated, true);
+      setExerciseToReplaceId(null);
+      setIsSelectorOpen(false);
+      return;
+    }
+
     const weId = `we_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     // Initial sets: prefill with past workout data if available
@@ -1243,14 +1325,6 @@ export const WorkoutEditorScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Floating Save Success Banner */}
-      {saveSuccessNotice && (
-        <View style={styles.saveBanner}>
-          <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-          <Text style={styles.saveBannerText}>{saveNoticeMsg}</Text>
-        </View>
-      )}
-
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
@@ -1398,6 +1472,7 @@ export const WorkoutEditorScreen: React.FC = () => {
               >
                 <SwipeableExerciseCard
                   onDelete={() => handleRemoveExercise(ex.id)}
+                  onChangeExercise={() => handleChangeExercise(ex.id)}
                   isDark={isDark}
                 >
                   <Card style={styles.exerciseCard}>
@@ -1732,7 +1807,10 @@ export const WorkoutEditorScreen: React.FC = () => {
       <ExerciseSelectorModal
         visible={isSelectorOpen}
         userId={(workout?.userId || traineeId || user?.id)}
-        onClose={() => setIsSelectorOpen(false)}
+        onClose={() => {
+          setIsSelectorOpen(false);
+          setExerciseToReplaceId(null);
+        }}
         onSelectExercise={handleSelectExercise}
       />
 
@@ -2003,21 +2081,34 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: 12,
   },
-  swipeDeleteActionBg: {
+  swipeActionsBg: {
     position: 'absolute',
     right: 0,
     top: 0,
     bottom: 0,
-    width: 84,
-    backgroundColor: '#ef4444',
+    width: 152,
+    flexDirection: 'row',
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: 'hidden',
     zIndex: 1,
   },
-  swipeDeleteBtn: {
-    width: '100%',
+  swipeChangeBtn: {
+    width: 76,
     height: '100%',
+    backgroundColor: '#f59e0b',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeChangeBtnText: {
+    color: '#09090b',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  swipeDeleteBtn: {
+    width: 76,
+    height: '100%',
+    backgroundColor: '#ef4444',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 4,

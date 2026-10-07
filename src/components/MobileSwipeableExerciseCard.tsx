@@ -1,18 +1,21 @@
 import React, { useState, useRef } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ArrowLeftRight } from 'lucide-react';
 
 interface MobileSwipeableExerciseCardProps {
   exerciseId?: string;
   onDelete: () => void;
+  onChangeExercise?: () => void;
   disabled?: boolean;
   children: React.ReactNode;
 }
 
-const BUTTON_WIDTH = 88;
+const ACTION_BTN_WIDTH = 76;
+const TOTAL_SWIPE_WIDTH = ACTION_BTN_WIDTH * 2;
 const SWIPE_THRESHOLD = 36;
 
 export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardProps> = ({
   onDelete,
+  onChangeExercise,
   disabled = false,
   children,
 }) => {
@@ -72,10 +75,10 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
 
     if (isMovingHorizontallyRef.current === true) {
       e.stopPropagation();
-      const base = isOpenRef.current ? -BUTTON_WIDTH : 0;
+      const base = isOpenRef.current ? -TOTAL_SWIPE_WIDTH : 0;
       const targetX = base + dx;
-      // Clamp between -BUTTON_WIDTH - 25 and 0
-      const clamped = Math.max(-BUTTON_WIDTH - 25, Math.min(0, targetX));
+      // Clamp between -TOTAL_SWIPE_WIDTH - 25 and 0
+      const clamped = Math.max(-TOTAL_SWIPE_WIDTH - 25, Math.min(0, targetX));
       setOffsetX(clamped);
     }
   };
@@ -97,9 +100,9 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
       }, 150);
 
       if (offsetX < -SWIPE_THRESHOLD) {
-        // Snap open revealing delete button
+        // Snap open revealing actions
         isOpenRef.current = true;
-        setOffsetX(-BUTTON_WIDTH);
+        setOffsetX(-TOTAL_SWIPE_WIDTH);
       } else {
         // Snap back to closed state
         isOpenRef.current = false;
@@ -114,6 +117,13 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete();
+  };
+
+  const handleChange = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    isOpenRef.current = false;
+    setOffsetX(0);
+    onChangeExercise?.();
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -136,33 +146,57 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
           : 'max-h-[3000px]'
       }`}
     >
-      {/* Background Delete Action Button */}
+      {/* Background Actions: Change Exercise (Yellow) & Delete Exercise (Red) */}
       <div
-        className="absolute inset-y-0 right-0 bg-rose-600 dark:bg-rose-600 flex items-center justify-end z-0"
+        className="absolute inset-y-0 right-0 flex items-stretch justify-end z-0 overflow-hidden"
         style={{
-          width: `${Math.max(BUTTON_WIDTH, -offsetX)}px`,
+          width: `${Math.max(TOTAL_SWIPE_WIDTH, -offsetX)}px`,
           opacity: offsetX < -4 ? 1 : 0,
           transition: isDragging
             ? 'none'
             : 'width 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.15s ease',
         }}
       >
+        {/* Yellow Change Exercise Button */}
+        <button
+          type="button"
+          onClick={handleChange}
+          className="w-[76px] h-full flex flex-col items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-zinc-950 font-bold text-xs transition-colors cursor-pointer select-none"
+          title="Змінити вправу"
+          aria-label="Змінити вправу"
+        >
+          <ArrowLeftRight
+            className="h-5 w-5 transition-transform"
+            style={{
+              transform: `scale(${Math.min(1, Math.max(0.7, -offsetX / TOTAL_SWIPE_WIDTH))})`,
+            }}
+          />
+          <span
+            style={{
+              opacity: Math.min(1, Math.max(0.6, -offsetX / TOTAL_SWIPE_WIDTH)),
+            }}
+          >
+            Змінити
+          </span>
+        </button>
+
+        {/* Red Delete Button */}
         <button
           type="button"
           onClick={handleDelete}
-          className="w-[88px] h-full flex flex-col items-center justify-center gap-1.5 text-white font-bold text-xs hover:bg-rose-700 active:bg-rose-800 transition-colors cursor-pointer select-none"
+          className="w-[76px] h-full flex flex-col items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 dark:bg-rose-600 dark:hover:bg-rose-700 text-white font-bold text-xs transition-colors cursor-pointer select-none"
           title="Видалити вправу"
           aria-label="Видалити вправу"
         >
           <Trash2
             className="h-5 w-5 transition-transform"
             style={{
-              transform: `scale(${Math.min(1, Math.max(0.7, -offsetX / BUTTON_WIDTH))})`,
+              transform: `scale(${Math.min(1, Math.max(0.7, -offsetX / TOTAL_SWIPE_WIDTH))})`,
             }}
           />
           <span
             style={{
-              opacity: Math.min(1, Math.max(0.6, -offsetX / BUTTON_WIDTH)),
+              opacity: Math.min(1, Math.max(0.6, -offsetX / TOTAL_SWIPE_WIDTH)),
             }}
           >
             Видалити

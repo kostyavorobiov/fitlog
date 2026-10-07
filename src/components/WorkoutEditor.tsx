@@ -31,6 +31,7 @@ import {
   GripVertical,
   Award,
   ArrowLeft,
+  ArrowLeftRight,
   Link,
   Unlink,
   X,
@@ -232,6 +233,12 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeInputText, setActiveInputText] = useState<Record<string, string>>({});
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+  const [exerciseToReplaceId, setExerciseToReplaceId] = useState<string | null>(null);
+
+  const handleChangeExercise = (workoutExerciseId: string) => {
+    setExerciseToReplaceId(workoutExerciseId);
+    setIsSelectorOpen(true);
+  };
 
   const handleToggleExpand = (exerciseId: string) => {
     setExpandedExerciseId((prev) => (prev === exerciseId ? null : exerciseId));
@@ -383,11 +390,106 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     }, 60);
   };
 
-  // Add Exercise to Workout
+  // Add or Replace Exercise in Workout
   const handleSelectExercise = (exercise: Exercise) => {
     try {
       const currentWorkout = workoutRef.current || workout;
       if (!currentWorkout) return;
+
+      // Handle replacing existing exercise
+      if (exerciseToReplaceId) {
+        const currentExercises = Array.isArray(currentWorkout.exercises) ? currentWorkout.exercises : [];
+        const exIndex = currentExercises.findIndex((e) => e.id === exerciseToReplaceId);
+        if (exIndex === -1) {
+          setExerciseToReplaceId(null);
+          setIsSelectorOpen(false);
+          return;
+        }
+
+        const existingWe = currentExercises[exIndex];
+
+        let lastPerf: PastExercisePerformance | null = null;
+        try {
+          lastPerf = StorageService.getLastExercisePerformance(userId, exercise.id, currentWorkout.id);
+        } catch (e) {
+          console.warn('Error getting last exercise performance:', e);
+        }
+
+        const targetRange = (lastPerf?.sets?.[0]?.targetRepsRange || existingWe.targetRepsRange || '8-12') as string;
+        const hasCompletedSets = (existingWe.sets || []).some((s) => Boolean(s.completedAt));
+        let updatedSets = existingWe.sets || [];
+
+        if (!hasCompletedSets) {
+          if (lastPerf && Array.isArray(lastPerf.sets) && lastPerf.sets.length > 0) {
+            updatedSets = lastPerf.sets.map((ps, idx) => ({
+              id: (existingWe.sets && existingWe.sets[idx]) ? existingWe.sets[idx].id : generateId('set'),
+              workoutExerciseId: existingWe.id,
+              setNumber: idx + 1,
+              targetRepsRange: ps.targetRepsRange || targetRange,
+              weight: Number(ps.weight) || 20,
+              actualReps: ps.actualReps !== null && ps.actualReps !== undefined ? Number(ps.actualReps) : 10,
+              completedAt: null,
+            }));
+          } else {
+            updatedSets = updatedSets.map((s) => ({
+              ...s,
+              targetRepsRange: targetRange,
+            }));
+          }
+        }
+
+        // If coach is creating/adding exercise for trainee, automatically copy it into trainee's custom catalog
+        const effectiveTraineeId = currentWorkout.userId || userId;
+        const activeUserId = StorageService.getActiveUserId();
+        const isTraineeWorkout = Boolean(
+          currentWorkout.assignedByCoachId ||
+          (currentWorkout.userId && currentWorkout.userId !== activeUserId)
+        );
+
+        if (isTraineeWorkout && effectiveTraineeId && exercise.userId !== effectiveTraineeId) {
+          try {
+            const traineeExercises = StorageService.getExercises(effectiveTraineeId);
+            const exists = traineeExercises.some(
+              (e) => e.name.toLowerCase().trim() === exercise.name.toLowerCase().trim()
+            );
+            if (!exists) {
+              const cloned: Exercise = {
+                ...exercise,
+                id: generateId('custom_ex'),
+                userId: effectiveTraineeId,
+                isDefault: false,
+                createdAt: new Date().toISOString(),
+              };
+              StorageService.saveExercise(cloned);
+              CloudStorageService.saveExercise(cloned).catch((err) => {
+                console.warn('Failed to save exercise to trainee cloud:', err);
+              });
+            }
+          } catch (err) {
+            console.warn('Failed to add exercise to trainee library:', err);
+          }
+        }
+
+        const updatedExercise: WorkoutExercise = {
+          ...existingWe,
+          exerciseId: exercise.id,
+          targetRepsRange: targetRange,
+          sets: updatedSets,
+        };
+
+        const updatedExercises = [...currentExercises];
+        updatedExercises[exIndex] = updatedExercise;
+
+        const updatedWorkout: WorkoutPlan = {
+          ...currentWorkout,
+          exercises: updatedExercises,
+        };
+
+        setExerciseToReplaceId(null);
+        setIsSelectorOpen(false);
+        updateAndSave(updatedWorkout);
+        return;
+      }
 
       // Check if exercise has previous performance
       let lastPerf: PastExercisePerformance | null = null;
@@ -652,7 +754,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
           workoutExerciseId: weId,
           setNumber: e.sets.length + 1,
           targetRepsRange: e.targetRepsRange || lastSet?.targetRepsRange || '8-12',
-          weight: lastSet?.weight || 20,
+          weight: lastSet?.weight || 0,
           actualReps: lastSet?.actualReps || 10,
           completedAt: null,
         };
@@ -897,10 +999,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-52 sm:pb-28 animate-fade-in max-w-5xl mx-auto">
-      {autoSaveStatus !== 'idle' && (
-        <div role={autoSaveStatus === 'error' ? 'alert' : 'status'} className="text-xs text-zinc-600 dark:text-zinc-300">
-          {autoSaveStatus === 'saving' ? 'Збереження…' : autoSaveStatus === 'saved' ? 'Збережено' : 'Не вдалося зберегти зміни. Перевірте з’єднання.'}
-          {autoSaveStatus === 'error' && <button type="button" className="ml-2 underline" onClick={() => updateAndSave(workoutRef.current)}>Повторити</button>}
+      {autoSaveStatus === 'error' && (
+        <div role="alert" className="text-xs text-rose-600 dark:text-rose-400">
+          Не вдалося зберегти зміни. Перевірте з’єднання.
+          <button type="button" className="ml-2 underline cursor-pointer" onClick={() => updateAndSave(workoutRef.current)}>Повторити</button>
         </div>
       )}
       {/* Back button to return to workouts list */}
@@ -914,14 +1016,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             <ArrowLeft className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
             <span>До списку тренувань</span>
           </button>
-        </div>
-      )}
-
-      {/* Top Banner / Status Alert */}
-      {saveSuccessNotice && (
-        <div className="rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 p-3 flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>{saveNoticeMessage}</span>
         </div>
       )}
 
@@ -1048,6 +1142,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   <MobileSwipeableExerciseCard
                     exerciseId={weItem.id}
                     onDelete={() => handleRemoveExercise(weItem.id)}
+                    onChangeExercise={() => handleChangeExercise(weItem.id)}
                   >
 
                     {/* Mobile Exercise Header */}
@@ -1461,6 +1556,14 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     </button>
                     <button
                       type="button"
+                      onClick={() => handleChangeExercise(weItem.id)}
+                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 hover:border-amber-300 dark:hover:border-amber-800 transition-colors cursor-pointer"
+                      title="Змінити вправу"
+                    >
+                      <ArrowLeftRight className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleRemoveExercise(weItem.id)}
                       className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-rose-400 hover:text-rose-600 dark:text-rose-500 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-800 transition-colors cursor-pointer"
                       title="Видалити вправу"
@@ -1498,10 +1601,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       <div className="grid gap-2 px-5 py-2.5 bg-zinc-50/60 dark:bg-zinc-800/20 border-b border-zinc-100 dark:border-zinc-800"
                         style={{ gridTemplateColumns: '3rem 1fr 1fr 5rem 2.5rem' }}
                       >
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Сет</span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Вага (кг)</span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Повторення</span>
-                        <span />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Підхід</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Вага</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Повторення</span>
+                          <span />
                       </div>
 
                       {/* Table rows */}
@@ -1772,7 +1875,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       <ExerciseSelectorModal
         isOpen={isSelectorOpen}
         userId={workout.userId || userId}
-        onClose={() => setIsSelectorOpen(false)}
+        onClose={() => {
+          setIsSelectorOpen(false);
+          setExerciseToReplaceId(null);
+        }}
         onSelect={handleSelectExercise}
         onOpenCreateModal={(initialName) => {
           setCreateExerciseInitialName(initialName || '');
