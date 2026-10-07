@@ -234,8 +234,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [activeInputText, setActiveInputText] = useState<Record<string, string>>({});
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [exerciseToReplaceId, setExerciseToReplaceId] = useState<string | null>(null);
+  const exerciseToReplaceIdRef = useRef<string | null>(null);
 
   const handleChangeExercise = (workoutExerciseId: string) => {
+    exerciseToReplaceIdRef.current = workoutExerciseId;
     setExerciseToReplaceId(workoutExerciseId);
     setIsSelectorOpen(true);
   };
@@ -398,11 +400,14 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       const effectiveTraineeId = currentWorkout.userId || userId;
 
+      const replaceId = exerciseToReplaceIdRef.current || exerciseToReplaceId;
+
       // Handle replacing existing exercise
-      if (exerciseToReplaceId) {
+      if (replaceId) {
         const currentExercises = Array.isArray(currentWorkout.exercises) ? currentWorkout.exercises : [];
-        const exIndex = currentExercises.findIndex((e) => e.id === exerciseToReplaceId);
+        const exIndex = currentExercises.findIndex((e) => e.id === replaceId || (e.exerciseId && e.exerciseId === replaceId));
         if (exIndex === -1) {
+          exerciseToReplaceIdRef.current = null;
           setExerciseToReplaceId(null);
           setIsSelectorOpen(false);
           return;
@@ -474,7 +479,10 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         const updatedExercise: WorkoutExercise = {
           ...existingWe,
           exerciseId: exercise.id,
+          exerciseName: exercise.name,
+          muscleGroup: exercise.muscleGroup,
           targetRepsRange: targetRange,
+          setCount: updatedSets.length,
           sets: updatedSets,
         };
 
@@ -486,6 +494,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
           exercises: updatedExercises,
         };
 
+        exerciseToReplaceIdRef.current = null;
         setExerciseToReplaceId(null);
         setIsSelectorOpen(false);
         updateAndSave(updatedWorkout);
@@ -1879,10 +1888,12 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         onClose={() => {
           setIsSelectorOpen(false);
           setExerciseToReplaceId(null);
+          exerciseToReplaceIdRef.current = null;
         }}
         onSelect={handleSelectExercise}
         onOpenCreateModal={(initialName) => {
           setCreateExerciseInitialName(initialName || '');
+          setIsSelectorOpen(false);
           setIsCreateOpen(true);
         }}
       />
@@ -1894,6 +1905,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         onClose={() => {
           setIsCreateOpen(false);
           setCreateExerciseInitialName('');
+          setExerciseToReplaceId(null);
+          exerciseToReplaceIdRef.current = null;
         }}
         onCreated={(newEx) => {
           handleSelectExercise(newEx);

@@ -116,11 +116,13 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     onDelete();
   };
 
   const handleChange = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     isOpenRef.current = false;
     setOffsetX(0);
     onChangeExercise?.();
@@ -152,6 +154,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
         style={{
           width: `${Math.max(TOTAL_SWIPE_WIDTH, -offsetX)}px`,
           opacity: offsetX < -4 ? 1 : 0,
+          pointerEvents: offsetX < -4 ? 'auto' : 'none',
           transition: isDragging
             ? 'none'
             : 'width 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.15s ease',
@@ -161,7 +164,8 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
         <button
           type="button"
           onClick={handleChange}
-          className="w-[76px] h-full flex flex-col items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-zinc-950 font-bold text-xs transition-colors cursor-pointer select-none"
+          onPointerDown={(e) => e.stopPropagation()}
+          className="w-[76px] h-full flex flex-col items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-zinc-950 font-bold text-xs transition-colors cursor-pointer select-none touch-manipulation"
           title="Змінити вправу"
           aria-label="Змінити вправу"
         >
@@ -184,7 +188,8 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
         <button
           type="button"
           onClick={handleDelete}
-          className="w-[76px] h-full flex flex-col items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 dark:bg-rose-600 dark:hover:bg-rose-700 text-white font-bold text-xs transition-colors cursor-pointer select-none"
+          onPointerDown={(e) => e.stopPropagation()}
+          className="w-[76px] h-full flex flex-col items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 dark:bg-rose-600 dark:hover:bg-rose-700 text-white font-bold text-xs transition-colors cursor-pointer select-none touch-manipulation"
           title="Видалити вправу"
           aria-label="Видалити вправу"
         >

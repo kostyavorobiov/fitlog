@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { Search, X, Plus, Dumbbell, Sparkles } from 'lucide-react';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
-import { isCustomExercise } from './ExerciseCatalogView';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 
 interface ExerciseSelectorModalProps {
@@ -248,11 +247,6 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                       <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate">
                         {ex.name}
                       </span>
-                      {isCustomExercise(ex) && (
-                        <span className="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 text-[9px] font-medium text-amber-700 dark:text-amber-300">
-                          Власна
-                        </span>
-                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 text-xs">
                       <span className="inline-flex rounded px-2 py-0.5 text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
