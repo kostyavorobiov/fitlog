@@ -396,6 +396,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       const currentWorkout = workoutRef.current || workout;
       if (!currentWorkout) return;
 
+      const effectiveTraineeId = currentWorkout.userId || userId;
+
       // Handle replacing existing exercise
       if (exerciseToReplaceId) {
         const currentExercises = Array.isArray(currentWorkout.exercises) ? currentWorkout.exercises : [];
@@ -410,7 +412,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
         let lastPerf: PastExercisePerformance | null = null;
         try {
-          lastPerf = StorageService.getLastExercisePerformance(userId, exercise.id, currentWorkout.id);
+          lastPerf = StorageService.getLastExercisePerformance(effectiveTraineeId, exercise.id, currentWorkout.id);
         } catch (e) {
           console.warn('Error getting last exercise performance:', e);
         }
@@ -439,7 +441,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         }
 
         // If coach is creating/adding exercise for trainee, automatically copy it into trainee's custom catalog
-        const effectiveTraineeId = currentWorkout.userId || userId;
         const activeUserId = StorageService.getActiveUserId();
         const isTraineeWorkout = Boolean(
           currentWorkout.assignedByCoachId ||
@@ -494,7 +495,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       // Check if exercise has previous performance
       let lastPerf: PastExercisePerformance | null = null;
       try {
-        lastPerf = StorageService.getLastExercisePerformance(userId, exercise.id, currentWorkout.id);
+        lastPerf = StorageService.getLastExercisePerformance(effectiveTraineeId, exercise.id, currentWorkout.id);
       } catch (e) {
         console.warn('Error getting last exercise performance:', e);
       }
@@ -546,7 +547,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       }
 
       // If coach is creating/adding exercise for trainee, automatically copy it into trainee's custom catalog
-      const effectiveTraineeId = currentWorkout.userId || userId;
       const activeUserId = StorageService.getActiveUserId();
       const isTraineeWorkout = Boolean(
         currentWorkout.assignedByCoachId ||
@@ -1874,7 +1874,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       {/* Modals */}
       <ExerciseSelectorModal
         isOpen={isSelectorOpen}
-        userId={workout.userId || userId}
+        userId={StorageService.getActiveUserId() || userId}
+        traineeId={workout.userId && workout.userId !== (StorageService.getActiveUserId() || userId) ? workout.userId : undefined}
         onClose={() => {
           setIsSelectorOpen(false);
           setExerciseToReplaceId(null);
@@ -1888,7 +1889,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       <CreateExerciseModal
         isOpen={isCreateOpen}
-        userId={workout.userId || userId}
+        userId={StorageService.getActiveUserId() || userId}
         initialName={createExerciseInitialName}
         onClose={() => {
           setIsCreateOpen(false);

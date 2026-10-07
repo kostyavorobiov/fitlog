@@ -21,6 +21,7 @@ interface ExerciseSelectorModalProps {
   onClose: () => void;
   onSelectExercise: (exercise: Exercise) => void;
   userId?: string;
+  traineeId?: string;
 }
 
 const MUSCLE_FILTER_OPTIONS: { id: MuscleGroup | 'all'; label: string }[] = [
@@ -40,6 +41,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   onClose,
   onSelectExercise,
   userId,
+  traineeId,
 }) => {
   const isDark = useColorScheme() === 'dark';
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -54,12 +56,12 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
     if (visible) {
       loadExercises();
     }
-  }, [visible, userId]);
+  }, [visible, userId, traineeId]);
 
   const loadExercises = async () => {
     setIsLoading(true);
     try {
-      const list = await ExerciseService.getExercises(userId);
+      const list = await ExerciseService.getExercises(userId, traineeId);
       setExercises(list);
     } catch (err) {
       console.warn('[ExerciseSelectorModal] Failed to load exercises:', err);

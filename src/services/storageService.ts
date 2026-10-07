@@ -176,8 +176,9 @@ export class StorageService {
   /**
    * Returns exercises visible to the given user.
    * Post-migration: only returns user's own exercises (no global pool).
+   * When coach creates/edits a trainee's workout, includes both coach and trainee exercises.
    */
-  static getExercises(targetUserId?: string | null, _options?: GetExercisesOptions): Exercise[] {
+  static getExercises(targetUserId?: string | null, options?: GetExercisesOptions): Exercise[] {
     const all = this.initializeExercises();
     const activeId = this.getActiveUserId();
     const effectiveUserId = targetUserId !== undefined ? targetUserId : activeId;
@@ -187,7 +188,49 @@ export class StorageService {
       return [];
     }
 
-    return all.filter((ex) => ex.userId === effectiveUserId);
+    const coachId = options?.coachId || (activeId && activeId !== effectiveUserId ? activeId : null);
+    const traineeId = options?.traineeId;
+
+    const relevantUserIds = new Set<string>();
+    relevantUserIds.add(effectiveUserId);
+    if (coachId) relevantUserIds.add(coachId);
+    if (traineeId) relevantUserIds.add(traineeId);
+
+    if (relevantUserIds.size === 1) {
+      return all.filter((ex) => ex.userId === effectiveUserId);
+    }
+
+    const primaryUserId = coachId || effectiveUserId;
+
+    const primaryExercises: Exercise[] = [];
+    const secondaryExercises: Exercise[] = [];
+
+    all.forEach((ex) => {
+      if (ex.userId === primaryUserId) {
+        primaryExercises.push(ex);
+      } else if (relevantUserIds.has(ex.userId || '')) {
+        secondaryExercises.push(ex);
+      }
+    });
+
+    const seenNames = new Set<string>();
+    const result: Exercise[] = [];
+
+    primaryExercises.forEach((ex) => {
+      const norm = ex.name.toLowerCase().trim();
+      seenNames.add(norm);
+      result.push(ex);
+    });
+
+    secondaryExercises.forEach((ex) => {
+      const norm = ex.name.toLowerCase().trim();
+      if (!seenNames.has(norm)) {
+        seenNames.add(norm);
+        result.push(ex);
+      }
+    });
+
+    return result;
   }
 
   /**

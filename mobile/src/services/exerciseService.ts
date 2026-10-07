@@ -121,20 +121,25 @@ export class ExerciseService {
   }
 
   /**
-   * Fetch all exercises available for the user (only personal exercises post-migration)
+   * Fetch all exercises available for the user (only personal exercises post-migration).
+   * If traineeId is provided, also includes the trainee's exercises deduplicated with coach exercises.
    */
-  static async getExercises(userId?: string): Promise<Exercise[]> {
+  static async getExercises(userId?: string, traineeId?: string): Promise<Exercise[]> {
     if (!userId || userId === 'null') {
       return [];
     }
 
     if (isSupabaseConfigured() && supabase) {
       try {
-        // Query user's own exercises + global (for migration)
+        // Query user's own exercises + trainee exercises + global (for migration)
+        const filters = [`is_default.eq.true`, `user_id.is.null`];
+        if (userId) filters.push(`user_id.eq.${userId}`);
+        if (traineeId && traineeId !== userId) filters.push(`user_id.eq.${traineeId}`);
+
         const { data, error } = await supabase
           .from('exercises')
           .select('*')
-          .or(`user_id.eq.${userId},is_default.eq.true,user_id.is.null`)
+          .or(filters.join(','))
           .order('name', { ascending: true });
 
         if (!error && data) {
@@ -153,18 +158,46 @@ export class ExerciseService {
               };
             });
 
-          // Temporarily store in cache so migration can access global pool
-          await MobileStorage.setItem(EXERCISES_CACHE_KEY, mapped);
+          // Merge into cache safely without wiping other users' exercises
+          const existingCached = await MobileStorage.getItem<Exercise[]>(EXERCISES_CACHE_KEY, []);
+          const cacheMap = new Map<string, Exercise>();
+          existingCached.forEach((e) => cacheMap.set(e.id, e));
+          mapped.forEach((e) => cacheMap.set(e.id, e));
+          await MobileStorage.setItem(EXERCISES_CACHE_KEY, Array.from(cacheMap.values()));
 
           // Run migration to copy any used global exercises into user's personal library
           await this.migrateGlobalExercisesToUser(userId);
+          if (traineeId && traineeId !== userId) {
+            await this.migrateGlobalExercisesToUser(traineeId);
+          }
 
           // Re-fetch latest cached (which includes newly created custom exercises from migration)
           const latestCached = await MobileStorage.getItem<Exercise[]>(EXERCISES_CACHE_KEY, mapped);
-          const userOnly = latestCached.filter(
+          const coachExercises = latestCached.filter(
             (e) => e.userId === userId && !e.isDefault && !e.id.startsWith('global_ex') && !e.id.startsWith('def_ex')
           );
-          return userOnly;
+          const traineeExercises = traineeId && traineeId !== userId ? latestCached.filter(
+            (e) => e.userId === traineeId && !e.isDefault && !e.id.startsWith('global_ex') && !e.id.startsWith('def_ex')
+          ) : [];
+
+          const seenNames = new Set<string>();
+          const combined: Exercise[] = [];
+
+          coachExercises.forEach((e) => {
+            const norm = e.name.toLowerCase().trim();
+            seenNames.add(norm);
+            combined.push(e);
+          });
+
+          traineeExercises.forEach((e) => {
+            const norm = e.name.toLowerCase().trim();
+            if (!seenNames.has(norm)) {
+              seenNames.add(norm);
+              combined.push(e);
+            }
+          });
+
+          return combined;
         } else if (error) {
           console.warn('[ExerciseService.getExercises] Supabase error:', error.message);
         }
@@ -175,9 +208,31 @@ export class ExerciseService {
 
     // Offline / fallback cache
     const cached = await MobileStorage.getItem<Exercise[]>(EXERCISES_CACHE_KEY, []);
-    return cached.filter(
+    const coachExercises = cached.filter(
       (e) => e.userId === userId && !e.isDefault && !e.id.startsWith('global_ex') && !e.id.startsWith('def_ex')
     );
+    const traineeExercises = traineeId && traineeId !== userId ? cached.filter(
+      (e) => e.userId === traineeId && !e.isDefault && !e.id.startsWith('global_ex') && !e.id.startsWith('def_ex')
+    ) : [];
+
+    const seenNames = new Set<string>();
+    const combined: Exercise[] = [];
+
+    coachExercises.forEach((e) => {
+      const norm = e.name.toLowerCase().trim();
+      seenNames.add(norm);
+      combined.push(e);
+    });
+
+    traineeExercises.forEach((e) => {
+      const norm = e.name.toLowerCase().trim();
+      if (!seenNames.has(norm)) {
+        seenNames.add(norm);
+        combined.push(e);
+      }
+    });
+
+    return combined;
   }
 
   /**

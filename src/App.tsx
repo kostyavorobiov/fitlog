@@ -159,7 +159,7 @@ const MainContent: React.FC = () => {
             {workoutViewMode === 'editor' && activeWorkout ? (
               <WorkoutEditor
                 workout={activeWorkout}
-                userId={activeWorkout.userId || user.id}
+                userId={user.id}
                 traineeName={editingTrainee ? (editingTrainee.name || editingTrainee.email) : undefined}
                 onSave={(saved) => setActiveWorkout(saved)}
                 onDeleteWorkout={handleDeleteWorkout}

@@ -9,6 +9,7 @@ import { useSwipeGesture } from '../utils/useSwipeGesture';
 interface ExerciseSelectorModalProps {
   isOpen: boolean;
   userId: string;
+  traineeId?: string;
   onClose: () => void;
   onSelect: (exercise: Exercise) => void;
   onOpenCreateModal: (initialName?: string) => void;
@@ -17,6 +18,7 @@ interface ExerciseSelectorModalProps {
 export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   isOpen,
   userId,
+  traineeId,
   onClose,
   onSelect,
   onOpenCreateModal,
@@ -54,7 +56,11 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     setSearch('');
-    StorageService.syncExercises(userId).then(() => {
+    const syncPromises = [StorageService.syncExercises(userId)];
+    if (traineeId && traineeId !== userId) {
+      syncPromises.push(StorageService.syncExercises(traineeId));
+    }
+    Promise.all(syncPromises).then(() => {
       setRefreshKey((prev) => prev + 1);
     });
     const scrollY = window.scrollY;
@@ -64,11 +70,11 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
       document.body.style.overflow = originalOverflow;
       window.scrollTo(0, scrollY);
     };
-  }, [isOpen]);
+  }, [isOpen, userId, traineeId]);
 
   const exercises = useMemo(() => {
-    return StorageService.getExercises(userId);
-  }, [userId, isOpen, refreshKey]);
+    return StorageService.getExercises(userId, { traineeId });
+  }, [userId, traineeId, isOpen, refreshKey]);
 
   const filtered = useMemo(() => {
     return exercises.filter((ex) => {
@@ -87,18 +93,19 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
     const map = new Map<string, ReturnType<typeof StorageService.getLastExercisePerformance>>();
     if (!isOpen) return map;
     try {
-      const workouts = StorageService.getWorkouts(userId);
+      const historyUserId = traineeId || userId;
+      const workouts = StorageService.getWorkouts(historyUserId);
       workouts.forEach((w) => {
         (w.exercises || []).forEach((we) => {
           if (!map.has(we.exerciseId) && we.sets && we.sets.some((s) => s.completedAt || (s.actualReps && s.actualReps > 0))) {
-            const perf = StorageService.getLastExercisePerformance(userId, we.exerciseId);
+            const perf = StorageService.getLastExercisePerformance(historyUserId, we.exerciseId);
             if (perf) map.set(we.exerciseId, perf);
           }
         });
       });
     } catch { }
     return map;
-  }, [userId, isOpen]);
+  }, [userId, traineeId, isOpen]);
 
   if (!isOpen) return null;
 

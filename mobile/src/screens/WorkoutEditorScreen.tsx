@@ -1806,7 +1806,12 @@ export const WorkoutEditorScreen: React.FC = () => {
       {/* Exercise Selector Modal */}
       <ExerciseSelectorModal
         visible={isSelectorOpen}
-        userId={(workout?.userId || traineeId || user?.id)}
+        userId={user?.id || (workout?.userId || traineeId)}
+        traineeId={
+          workout?.userId && user?.id && workout.userId !== user.id
+            ? workout.userId
+            : (traineeId && user?.id && traineeId !== user.id ? traineeId : undefined)
+        }
         onClose={() => {
           setIsSelectorOpen(false);
           setExerciseToReplaceId(null);
