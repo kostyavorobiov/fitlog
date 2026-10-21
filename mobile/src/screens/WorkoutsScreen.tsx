@@ -315,35 +315,80 @@ export const WorkoutsScreen: React.FC = () => {
     return workouts.filter((w) => w.status === 'completed').length;
   }, [workouts]);
 
+  // Swipe gesture for cycling through filters
+  const filterOrder: WorkoutFilterStatus[] = ['all', 'in_progress', 'completed'];
+
+  const handleFilterSwipeLeft = useCallback(() => {
+    setFilterStatus((curr) => {
+      const idx = filterOrder.indexOf(curr);
+      if (idx < filterOrder.length - 1) return filterOrder[idx + 1];
+      return curr;
+    });
+  }, []);
+
+  const handleFilterSwipeRight = useCallback(() => {
+    setFilterStatus((curr) => {
+      const idx = filterOrder.indexOf(curr);
+      if (idx > 0) return filterOrder[idx - 1];
+      return curr;
+    });
+  }, []);
+
+  const emptySwipePanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return Math.abs(gestureState.dx) > 18 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2;
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dx < -30) {
+            handleFilterSwipeLeft();
+          } else if (gestureState.dx > 30) {
+            handleFilterSwipeRight();
+          }
+        },
+      }),
+    [handleFilterSwipeLeft, handleFilterSwipeRight]
+  );
+
+  const statusLabel =
+    filterStatus === 'in_progress'
+      ? 'У процесі'
+      : filterStatus === 'completed'
+      ? 'Завершено'
+      : 'Всі';
+
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      {/* Top Navbar & Section Header */}
-      <Header
-        title="Тренування"
-        rightAction={
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleOpenCreateModal}
+      {/* Top WebTopNavbar */}
+      <Header />
+
+      {/* Top Action & Filter Row (Matches user screenshot) */}
+      <View style={styles.topSection}>
+        {/* Full-width "+ Нове тренування" button */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={handleOpenCreateModal}
+          style={[
+            styles.bigNewWorkoutBtn,
+            isDark ? styles.bigNewWorkoutBtnDark : styles.bigNewWorkoutBtnLight,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Нове тренування"
+        >
+          <Ionicons name="add" size={18} color={isDark ? '#09090b' : '#ffffff'} />
+          <Text
             style={[
-              styles.newWorkoutBtn,
-              isDark ? styles.newWorkoutBtnDark : styles.newWorkoutBtnLight,
+              styles.bigNewWorkoutBtnText,
+              isDark ? styles.bigNewWorkoutTextDark : styles.bigNewWorkoutTextLight,
             ]}
           >
-            <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
-            <Text
-              style={[
-                styles.newWorkoutBtnText,
-                isDark ? styles.newWorkoutTextDark : styles.newWorkoutTextLight,
-              ]}
-            >
-              Нове тренування
-            </Text>
-          </TouchableOpacity>
-        }
-      />
+            Нове тренування
+          </Text>
+        </TouchableOpacity>
 
-      {/* Filter Tabs (Web Segmented Control Style) */}
-      <View style={styles.filterRow}>
+        {/* Full-width Modern Segmented Pill Bar */}
         <View style={[styles.filterContainer, isDark ? styles.filterDark : styles.filterLight]}>
           <TouchableOpacity
             activeOpacity={0.8}
@@ -358,7 +403,7 @@ export const WorkoutsScreen: React.FC = () => {
                 styles.filterBtnText,
                 filterStatus === 'all'
                   ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
-                  : (isDark ? styles.subDark : styles.subLight),
+                  : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
               ]}
             >
               Всі ({workouts.length})
@@ -378,7 +423,7 @@ export const WorkoutsScreen: React.FC = () => {
                 styles.filterBtnText,
                 filterStatus === 'in_progress'
                   ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
-                  : (isDark ? styles.subDark : styles.subLight),
+                  : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
               ]}
             >
               У процесі ({inProgressCount})
@@ -398,7 +443,7 @@ export const WorkoutsScreen: React.FC = () => {
                 styles.filterBtnText,
                 filterStatus === 'completed'
                   ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
-                  : (isDark ? styles.subDark : styles.subLight),
+                  : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
               ]}
             >
               Завершено ({completedCount})
@@ -428,25 +473,23 @@ export const WorkoutsScreen: React.FC = () => {
             </Text>
           </View>
         ) : filteredWorkouts.length === 0 ? (
-          <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
-            <View style={[styles.emptyIconCircle, isDark ? styles.logoDark : styles.logoLight]}>
-              <Ionicons name="barbell-outline" size={36} color={isDark ? '#38bdf8' : '#0284c7'} />
+          <View
+            {...emptySwipePanResponder.panHandlers}
+            style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}
+          >
+            <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
+              <Ionicons name="time-outline" size={26} color={isDark ? '#a1a1aa' : '#94a3b8'} />
             </View>
-            <Text style={[styles.emptyTitle, isDark ? styles.textDark : styles.textLight]}>
+            <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
               {workouts.length === 0
                 ? 'Тренувань ще немає'
-                : 'Немає тренувань за обраним фільтром'}
+                : `Немає тренувань зі статусом «${statusLabel}».`}
             </Text>
-            <Text style={[styles.emptySubtitle, isDark ? styles.subDark : styles.subLight]}>
+            <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
               {workouts.length === 0
                 ? 'Створіть своє перше тренування для відстеження підходів, ваги та прогресу.'
-                : 'Спробуйте вибрати інший фільтр або створіть нове тренування.'}
+                : 'Свайпніть вліво або вправо для перемикання фільтрів.'}
             </Text>
-            <Button
-              title="Створити перше тренування"
-              onPress={handleOpenCreateModal}
-              style={{ marginTop: 8 }}
-            />
           </View>
         ) : (
           <View style={styles.workoutsList}>
@@ -703,71 +746,97 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
   },
-  newWorkoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 12,
-  },
-  newWorkoutBtnLight: {
-    backgroundColor: '#18181b',
-  },
-  newWorkoutBtnDark: {
-    backgroundColor: '#f4f4f5',
-  },
-  newWorkoutBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  newWorkoutTextLight: {
-    color: '#ffffff',
-  },
-  newWorkoutTextDark: {
-    color: '#09090b',
-  },
-  filterRow: {
+  topSection: {
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
+    gap: 12,
+  },
+  bigNewWorkoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    width: '100%',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  bigNewWorkoutBtnLight: {
+    backgroundColor: '#0f172a',
+  },
+  bigNewWorkoutBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
+  bigNewWorkoutBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  bigNewWorkoutTextLight: {
+    color: '#ffffff',
+  },
+  bigNewWorkoutTextDark: {
+    color: '#09090b',
   },
   filterContainer: {
     flexDirection: 'row',
-    padding: 2,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
+    padding: 4,
+    borderRadius: 20,
+    gap: 4,
   },
   filterLight: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#eef2f6',
   },
   filterDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#27272a',
   },
   filterBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    flex: 1,
+    paddingVertical: 9,
+    paddingHorizontal: 4,
     alignItems: 'center',
-    borderRadius: 10,
+    justifyContent: 'center',
+    borderRadius: 14,
   },
   filterBtnActiveLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#ffffff',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
   },
   filterBtnActiveDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#18181b',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   filterBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
   },
   filterTextActiveLight: {
-    color: '#ffffff',
+    color: '#0f172a',
+    fontWeight: '700',
   },
   filterTextActiveDark: {
-    color: '#09090b',
+    color: '#fafafa',
+    fontWeight: '700',
+  },
+  filterTextInactiveLight: {
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  filterTextInactiveDark: {
+    color: '#a1a1aa',
+    fontWeight: '600',
   },
   content: {
     padding: 16,
@@ -783,46 +852,62 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   emptyContainer: {
-    padding: 32,
-    borderRadius: 18,
+    paddingVertical: 56,
+    paddingHorizontal: 20,
+    borderRadius: 28,
     alignItems: 'center',
-    textAlign: 'center',
-    gap: 8,
-    borderWidth: 1,
+    justifyContent: 'center',
+    borderWidth: 1.5,
     borderStyle: 'dashed',
-    marginTop: 12,
+    marginTop: 4,
   },
   emptyLight: {
     backgroundColor: '#ffffff',
     borderColor: '#e2e8f0',
   },
   emptyDark: {
-    backgroundColor: '#18181b50',
+    backgroundColor: '#18181b80',
     borderColor: '#27272a',
   },
-  emptyIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  emptyIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
   },
-  logoLight: {
-    backgroundColor: '#e0f2fe',
+  emptyIconBoxLight: {
+    backgroundColor: '#eef2f8',
   },
-  logoDark: {
-    backgroundColor: '#0c4a6e',
+  emptyIconBoxDark: {
+    backgroundColor: '#27272a',
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 20,
+    lineHeight: 22,
+    maxWidth: 280,
+  },
+  emptyTitleLight: {
+    color: '#0f172a',
+  },
+  emptyTitleDark: {
+    color: '#fafafa',
   },
   emptySubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     textAlign: 'center',
+    marginTop: 8,
     lineHeight: 18,
-    maxWidth: 280,
+    maxWidth: 260,
+  },
+  emptySubtitleLight: {
+    color: '#94a3b8',
+  },
+  emptySubtitleDark: {
+    color: '#71717a',
   },
   workoutsList: {
     gap: 12,

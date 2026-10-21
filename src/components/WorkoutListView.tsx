@@ -8,6 +8,7 @@ import {
   Plus,
   Calendar,
   Layers,
+  Clock,
 } from 'lucide-react';
 
 import { useSwipeGesture } from '../utils/useSwipeGesture';
@@ -91,95 +92,82 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
     onCreateWorkout('', today);
   };
 
+  const inProgressCount = workouts.filter(
+    (w) => w.status === 'in_progress' || w.status === 'planned'
+  ).length;
+  const completedCount = workouts.filter((w) => w.status === 'completed').length;
+
   const filteredWorkouts = workouts.filter((w) => {
     if (filterStatus === 'all') return true;
-    return w.status === filterStatus;
+    if (filterStatus === 'in_progress') return w.status === 'in_progress' || w.status === 'planned';
+    if (filterStatus === 'completed') return w.status === 'completed';
+    return true;
   });
 
   return (
     <div
       ref={swipeRef}
-      className="space-y-6 max-w-5xl mx-auto animate-fade-in pb-12 touch-pan-y"
+      className="space-y-3.5 max-w-xl mx-auto animate-fade-in pb-12 touch-pan-y"
     >
-      {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-            Тренування
-          </h1>
-        </div>
+      {/* Top Action Button: "+ Нове тренування" */}
+      <button
+        type="button"
+        onClick={handleCreateNewDirectly}
+        className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-[#0f172a] dark:bg-zinc-100 hover:bg-[#1e293b] dark:hover:bg-white active:scale-[0.99] text-white dark:text-zinc-950 font-bold text-sm sm:text-base shadow-sm transition-all cursor-pointer"
+      >
+        <Plus className="h-4 w-4 stroke-[3]" />
+        <span>Нове тренування</span>
+      </button>
 
+      {/* Filter Tabs - Full-width modern segmented pill bar */}
+      <div className="w-full bg-[#eef2f6] dark:bg-zinc-800/80 p-1 rounded-2xl flex items-center gap-1">
         <button
           type="button"
-          onClick={handleCreateNewDirectly}
-          className="inline-flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs sm:text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-white active:bg-zinc-700 transition-colors cursor-pointer shrink-0"
+          onClick={() => setFilterStatus('all')}
+          className={`flex-1 py-2 px-2 text-center text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${filterStatus === 'all'
+            ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-bold shadow-sm'
+            : 'text-slate-500 dark:text-zinc-400 font-medium hover:text-slate-900 dark:hover:text-zinc-200'
+            }`}
         >
-          <Plus className="h-4 w-4" />
-          <span>Нове тренування</span>
+          Всі ({workouts.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilterStatus('in_progress')}
+          className={`flex-1 py-2 px-2 text-center text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${filterStatus === 'in_progress'
+            ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-bold shadow-sm'
+            : 'text-slate-500 dark:text-zinc-400 font-medium hover:text-slate-900 dark:hover:text-zinc-200'
+            }`}
+        >
+          У процесі ({inProgressCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilterStatus('completed')}
+          className={`flex-1 py-2 px-2 text-center text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${filterStatus === 'completed'
+            ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-bold shadow-sm'
+            : 'text-slate-500 dark:text-zinc-400 font-medium hover:text-slate-900 dark:hover:text-zinc-200'
+            }`}
+        >
+          Завершено ({completedCount})
         </button>
       </div>
 
-      {/* Filter Tabs */}
-      {workouts.length > 0 && (
-        <div className="flex items-center justify-between gap-2">
-          <div className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-0.5">
-            <button
-              type="button"
-              onClick={() => setFilterStatus('all')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'all'
-                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-            >
-              Всі ({workouts.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterStatus('in_progress')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'in_progress'
-                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-            >
-              У процесі ({workouts.filter((w) => w.status === 'in_progress').length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterStatus('completed')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'completed'
-                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-            >
-              Завершено ({workouts.filter((w) => w.status === 'completed').length})
-            </button>
+      {/* Workouts List or Empty State */}
+      {filteredWorkouts.length === 0 ? (
+        <div className="w-full rounded-[28px] border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 py-16 px-6 flex flex-col items-center justify-center text-center shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+          <div className="w-14 h-14 rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 flex items-center justify-center">
+            <Clock className="w-6 h-6 text-slate-400 dark:text-zinc-400 stroke-[1.75]" />
           </div>
-        </div>
-      )}
-
-      {/* Workouts List */}
-      {workouts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-10 text-center space-y-3">
-          <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Тренувань не знайдено</h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
-            У вас ще немає збережених тренувань. Натисніть кнопку нижче, щоб відкрити форму створення та додати вправи.
-          </p>
-          <button
-            type="button"
-            onClick={handleCreateNewDirectly}
-            className="inline-flex items-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Створити перше тренування</span>
-          </button>
-        </div>
-      ) : filteredWorkouts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-8 text-center text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
-          <p className="font-semibold text-zinc-700 dark:text-zinc-300">
-            Немає тренувань зі статусом «{filterStatus === 'in_progress' ? 'У процесі' : 'Завершено'}».
-          </p>
-          <p className="text-[11px] text-zinc-400">
-            Свайпніть вліво або вправо для перемикання фільтрів.
+          <h3 className="mt-5 font-bold text-base sm:text-lg text-[#0f172a] dark:text-zinc-100 max-w-xs leading-snug">
+            {workouts.length === 0
+              ? 'Тренувань ще немає'
+              : `Немає тренувань зі статусом «${filterStatus === 'in_progress' ? 'У процесі' : filterStatus === 'completed' ? 'Завершено' : 'Всі'}».`}
+          </h3>
+          <p className="mt-2 text-xs sm:text-sm text-[#94a3b8] dark:text-zinc-400 max-w-xs leading-relaxed">
+            {workouts.length === 0
+              ? 'Створіть своє перше тренування для відстеження підходів, ваги та прогресу.'
+              : 'Свайпніть вліво або вправо для перемикання фільтрів.'}
           </p>
         </div>
       ) : (
