@@ -80,13 +80,13 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
         role="dialog"
         aria-modal="true"
         data-no-swipe="true"
-        className="relative w-full max-w-md my-auto rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl"
+        className="relative w-full max-w-md my-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center space-x-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
               <Dumbbell className="h-4 w-4" />
             </div>
             <div>
@@ -97,7 +97,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="rounded-full p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -119,7 +119,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                 if (error) setError('');
               }}
               placeholder="наприклад: Груди та Тріцепс"
-              className={`w-full h-9 rounded-lg border px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 bg-zinc-50 dark:bg-zinc-950 focus:outline-none transition-colors ${
+              className={`w-full h-9 rounded-xl border px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 bg-zinc-50 dark:bg-zinc-950 focus:outline-none transition-colors ${
                 error
                   ? 'border-rose-500'
                   : 'border-zinc-200 dark:border-zinc-800 focus:ring-1 focus:ring-zinc-400'
@@ -144,7 +144,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                   key={preset}
                   type="button"
                   onClick={() => handleSelectPreset(preset)}
-                  className={`rounded border px-2 py-0.5 text-[11px] transition-colors cursor-pointer ${
+                  className={`rounded-lg border px-2 py-0.5 text-[11px] transition-colors cursor-pointer ${
                     title === preset
                       ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 font-semibold'
                       : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -161,7 +161,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
             <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
               Дата тренування
             </label>
-            <div className="flex items-center space-x-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 h-9">
+            <div className="flex items-center space-x-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 h-9">
               <Calendar className="h-4 w-4 text-zinc-400 shrink-0" />
               <input
                 type="date"
@@ -177,13 +177,13 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+              className="flex-1 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
             >
               Скасувати
             </button>
             <button
               type="submit"
-              className="flex-1 h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+              className="flex-1 h-9 inline-flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>Створити</span>

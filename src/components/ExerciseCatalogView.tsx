@@ -99,7 +99,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         <button
           type="button"
           onClick={() => setIsCreateOpen(true)}
-          className="inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-2 text-xs sm:text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-white active:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-xs"
+          className="inline-flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-2 text-xs sm:text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-white active:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-xs"
         >
           <Plus className="h-4 w-4" />
           <span>Додати вправу</span>
@@ -107,7 +107,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
       </div>
 
       {/* Search and Filters Bar */}
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-4 space-y-3">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-4 space-y-3">
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
@@ -116,7 +116,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
               placeholder="Пошук вправи за назвою..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 pl-9 pr-16 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+              className="w-full h-9 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 pl-9 pr-16 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
             />
             {search && (
               <button
@@ -135,7 +135,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
           <button
             type="button"
             onClick={() => setSelectedMuscle('all')}
-            className={`rounded-md px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors border cursor-pointer ${selectedMuscle === 'all'
+            className={`rounded-xl px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors border cursor-pointer ${selectedMuscle === 'all'
               ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950'
               : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
@@ -151,7 +151,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                 key={groupKey}
                 type="button"
                 onClick={() => setSelectedMuscle(groupKey)}
-                className={`rounded-md px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors border cursor-pointer ${isSelected
+                className={`rounded-xl px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors border cursor-pointer ${isSelected
                   ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950'
                   : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
@@ -166,14 +166,14 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
       {/* Grid of exercises (Supports Swipe Left/Right to change muscle group) */}
       <div ref={catalogSwipeRef} className="grid grid-cols-1 md:grid-cols-2 gap-3 touch-pan-y">
         {filtered.length === 0 ? (
-          <div className="col-span-full rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 p-10 text-center space-y-2">
+          <div className="col-span-full rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 p-10 text-center space-y-2">
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
               {'Вправ не знайдено.'}
             </p>
             <button
               type="button"
               onClick={() => setIsCreateOpen(true)}
-              className="inline-flex items-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+              className="inline-flex items-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>{search.trim() ? `Створити «${search.trim()}»` : 'Додати власну вправу'}</span>
@@ -198,7 +198,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                     if (Date.now() < blockHistoryModalUntilRef.current) return;
                     setHistoryModalExercise(ex);
                   }}
-                  className="group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer flex flex-col justify-between h-full"
+                  className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer flex flex-col justify-between h-full"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -206,7 +206,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                         {ex.name}
                       </h3>
                       <div className="flex items-center space-x-1 shrink-0">
-                        <span className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                        <span className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
                           {muscleInfo.nameUk}
                         </span>
                         {canEdit && (
@@ -216,7 +216,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                               e.stopPropagation();
                               setExerciseToEdit(ex);
                             }}
-                            className="p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ml-0.5"
+                            className="p-1 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ml-0.5"
                             title="Редагувати вправу"
                             aria-label={`Редагувати вправу ${ex.name}`}
                           >
@@ -253,7 +253,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                         if (Date.now() < blockHistoryModalUntilRef.current) return;
                         setHistoryModalExercise(ex);
                       }}
-                      className="flex items-center space-x-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-colors"
+                      className="flex items-center space-x-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-colors"
                     >
                       <span>Історія та рекорди</span>
                       <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />

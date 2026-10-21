@@ -142,7 +142,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   return (
     <div
       data-no-swipe="true"
-      className={`no-swipe relative overflow-hidden rounded-xl transition-all duration-200 ${
+      className={`no-swipe relative overflow-hidden rounded-2xl transition-all duration-200 ${
         isDeleting
           ? 'max-h-0 opacity-0 -translate-x-full my-0 py-0 overflow-hidden'
           : 'max-h-[3000px]'

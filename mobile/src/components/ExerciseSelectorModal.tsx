@@ -363,6 +363,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     padding: 4,
+    borderRadius: 20,
   },
   searchContainer: {
     paddingHorizontal: 16,
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   searchBarLight: {
     backgroundColor: '#f4f4f5',
@@ -440,7 +441,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 14,
-    borderRadius: 12,
+    borderRadius: 18,
     borderWidth: 1,
   },
   exerciseItemLight: {
@@ -469,7 +470,7 @@ const styles = StyleSheet.create({
   muscleBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 8,
     borderWidth: 1,
   },
   muscleBadgeText: {
@@ -479,7 +480,7 @@ const styles = StyleSheet.create({
   ownerBadge: {
     paddingHorizontal: 6,
     paddingVertical: 1,
-    borderRadius: 4,
+    borderRadius: 8,
     borderWidth: 1,
   },
   ownerBadgeLight: {
@@ -529,7 +530,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 14,
     marginTop: 4,
   },
   addCustomBtnLight: {
@@ -572,7 +573,7 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 48,
-    borderRadius: 10,
+    borderRadius: 14,
     paddingHorizontal: 14,
     fontSize: 15,
     borderWidth: 1,
@@ -595,7 +596,7 @@ const styles = StyleSheet.create({
   muscleChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
   },
   muscleChipLight: {
@@ -626,7 +627,7 @@ const styles = StyleSheet.create({
   },
   saveCustomBtn: {
     height: 44,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,

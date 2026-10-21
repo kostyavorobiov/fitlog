@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e7ff20',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   coachText: {
     fontSize: 11,
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   notesLight: {
     backgroundColor: '#f8fafc',
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 8,
     marginTop: 3,
     borderWidth: 1,
   },

@@ -187,14 +187,14 @@ export const ProfileView: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-5 animate-fade-in pb-16">
       {/* Toast Alert */}
       {saveToast && (
-        <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-3 flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
+        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-3 flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
           <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>Профіль користувача успішно оновлено!</span>
         </div>
       )}
 
       {/* Main Profile Card - Minimal Functional Flat */}
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 space-y-4">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 space-y-4">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
           {/* Avatar with Role Badge */}
           <div className="relative shrink-0">
@@ -203,7 +203,7 @@ export const ProfileView: React.FC = () => {
               alt={user.name}
               size="xl"
             />
-            <div className={`absolute -bottom-1.5 -right-1.5 rounded border px-2 py-0.5 text-[10px] font-bold ${currentRoleInfo.bg} ${currentRoleInfo.border} ${currentRoleInfo.color}`}>
+            <div className={`absolute -bottom-1.5 -right-1.5 rounded-md border px-2 py-0.5 text-[10px] font-bold ${currentRoleInfo.bg} ${currentRoleInfo.border} ${currentRoleInfo.color}`}>
               {currentRoleInfo.title}
             </div>
           </div>
@@ -230,7 +230,7 @@ export const ProfileView: React.FC = () => {
                     setSelectedRole(user.role);
                     setIsEditing(true);
                   }}
-                  className="inline-flex items-center justify-center space-x-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer self-center sm:self-auto"
+                  className="inline-flex items-center justify-center space-x-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer self-center sm:self-auto"
                 >
                   <Edit2 className="h-3.5 w-3.5" />
                   <span>Редагувати профіль</span>
@@ -240,7 +240,7 @@ export const ProfileView: React.FC = () => {
 
             {/* Profile ID Card */}
             <div className="pt-2">
-              <div className="inline-flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs">
+              <div className="inline-flex flex-wrap items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs">
                 <span className="text-zinc-500 dark:text-zinc-400 font-medium">Унікальний ID профілю:</span>
                 <span className="font-mono text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 select-all">
                   {user.profileCode || user.id}
@@ -248,7 +248,7 @@ export const ProfileView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleCopyId}
-                  className="inline-flex items-center space-x-1 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 py-0.5 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                  className="inline-flex items-center space-x-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 py-0.5 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                   title="Скопіювати ID для прив'язки тренером"
                 >
                   {copied ? (
@@ -288,7 +288,7 @@ export const ProfileView: React.FC = () => {
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                  className="w-full h-9 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400"
                 />
               </div>
 
@@ -300,7 +300,7 @@ export const ProfileView: React.FC = () => {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                  className="w-full h-9 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400"
                 />
               </div>
             </div>
@@ -318,7 +318,7 @@ export const ProfileView: React.FC = () => {
                       key={r}
                       type="button"
                       onClick={() => setSelectedRole(r)}
-                      className={`rounded-lg p-2.5 text-xs font-semibold border transition-colors text-center cursor-pointer ${
+                      className={`rounded-xl p-2.5 text-xs font-semibold border transition-colors text-center cursor-pointer ${
                         isCurrent
                           ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
                           : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -335,13 +335,13 @@ export const ProfileView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="h-9 px-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="h-9 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 Скасувати
               </button>
               <button
                 type="submit"
-                className="h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+                className="h-9 inline-flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
               >
                 <Save className="h-4 w-4" />
                 <span>Зберегти зміни</span>
@@ -352,7 +352,7 @@ export const ProfileView: React.FC = () => {
       </div>
 
       {/* Theme Settings Card */}
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center space-x-2">
             {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -363,11 +363,11 @@ export const ProfileView: React.FC = () => {
           </p>
         </div>
 
-        <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-0.5 self-start sm:self-auto">
+        <div className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-0.5 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setTheme('light')}
-            className={`inline-flex items-center space-x-1.5 rounded px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`inline-flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
               !isDark
                 ? 'bg-white text-zinc-950 shadow-sm border border-zinc-200'
                 : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
@@ -379,7 +379,7 @@ export const ProfileView: React.FC = () => {
           <button
             type="button"
             onClick={() => setTheme('dark')}
-            className={`inline-flex items-center space-x-1.5 rounded px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`inline-flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
               isDark
                 ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
                 : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
@@ -395,7 +395,7 @@ export const ProfileView: React.FC = () => {
       {/* Role Privileges and Coach Connection Status */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Role Privileges Card */}
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5">
+        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5">
           <div className="flex items-center space-x-2 text-zinc-900 dark:text-zinc-100 font-bold text-xs uppercase tracking-wider">
             <Award className="h-4 w-4" />
             <span>Можливості ролі ({currentRoleInfo.title})</span>
@@ -425,7 +425,7 @@ export const ProfileView: React.FC = () => {
         </div>
 
         {/* Coach / Trainee Relationship Status */}
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5">
+        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5">
           <div className="flex items-center space-x-2 text-zinc-900 dark:text-zinc-100 font-bold text-xs uppercase tracking-wider">
             <Users className="h-4 w-4" />
             <span>Тренерський статус</span>
@@ -436,7 +436,7 @@ export const ProfileView: React.FC = () => {
               <p className="text-zinc-600 dark:text-zinc-400">
                 Ви зареєстровані як <strong>Тренер</strong>. Ви можете додавати спортсменів за їхнім ID.
               </p>
-              <div className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 flex items-center justify-between">
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 flex items-center justify-between">
                 <span className="text-zinc-500 dark:text-zinc-400">Прив'язаних підопічних:</span>
                 <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{traineesCount}</span>
               </div>
@@ -456,7 +456,7 @@ export const ProfileView: React.FC = () => {
                     {isLinkingCoach ? 'Відкріплення...' : 'Відкріпитися'}
                   </button>
                 </div>
-                <div className="flex items-center space-x-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5">
+                <div className="flex items-center space-x-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5">
                   <UserAvatar src={coach.image} alt={coach.name} size="sm" />
                   <div>
                     <div className="font-bold text-zinc-900 dark:text-zinc-100">{coach.name}</div>
@@ -477,7 +477,7 @@ export const ProfileView: React.FC = () => {
                     Відкріпитися
                   </button>
                 </div>
-                <div className="flex items-center space-x-2.5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 animate-pulse">
+                <div className="flex items-center space-x-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 animate-pulse">
                   <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800" />
                   <div className="space-y-1">
                     <div className="h-3 w-28 bg-zinc-200 dark:bg-zinc-800 rounded" />
@@ -511,13 +511,13 @@ export const ProfileView: React.FC = () => {
                       }
                     }}
                     disabled={isLinkingCoach}
-                    className="flex-1 h-8 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 disabled:opacity-50"
+                    className="flex-1 h-8 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={handleLinkCoach}
                     disabled={isLinkingCoach || !coachInputCode.trim()}
-                    className="h-8 px-3 rounded bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center space-x-1"
+                    className="h-8 px-3 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center space-x-1"
                   >
                     {isLinkingCoach ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                     <span>Прикріпитися</span>
@@ -544,7 +544,7 @@ export const ProfileView: React.FC = () => {
           <button
             type="button"
             onClick={logout}
-            className="w-full flex items-center justify-center space-x-2 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/20 px-4 py-2.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100/80 dark:hover:bg-red-900/40 hover:text-red-700 dark:hover:text-red-300 transition-colors cursor-pointer shadow-2xs"
+            className="w-full flex items-center justify-center space-x-2 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/20 px-4 py-2.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100/80 dark:hover:bg-red-900/40 hover:text-red-700 dark:hover:text-red-300 transition-colors cursor-pointer shadow-2xs"
           >
             <LogOut className="h-4 w-4" />
             <span>Вийти з акаунта</span>

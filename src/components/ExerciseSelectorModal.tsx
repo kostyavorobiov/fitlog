@@ -139,7 +139,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-xl max-h-[97dvh] sm:max-h-[85vh] flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
+        className="relative z-10 w-full max-w-xl max-h-[97dvh] sm:max-h-[85vh] flex flex-col rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -155,7 +155,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+            className="rounded-full p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
           >
             <X className="h-5 w-5" />
           </button>
@@ -186,7 +186,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           <div className="flex space-x-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
             <button
               onClick={() => setSelectedMuscle('all')}
-              className={`rounded-lg px-2.5 py-1 font-medium whitespace-nowrap transition ${selectedMuscle === 'all'
+              className={`rounded-xl px-2.5 py-1 font-medium whitespace-nowrap transition ${selectedMuscle === 'all'
                 ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold'
                 : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
@@ -201,7 +201,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 <button
                   key={groupKey}
                   onClick={() => setSelectedMuscle(groupKey)}
-                  className={`rounded-lg px-2.5 py-1 font-medium whitespace-nowrap transition border ${isSelected
+                  className={`rounded-xl px-2.5 py-1 font-medium whitespace-nowrap transition border ${isSelected
                     ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-semibold'
                     : 'border-transparent bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                     }`}
@@ -216,7 +216,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
         {/* List of exercises (Supports Swipe Left/Right to change muscle group) */}
         <div ref={modalSwipeRef} className="flex-1 overflow-y-auto p-4 space-y-2 touch-pan-y">
           {filtered.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-8 text-center">
+            <div className="rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 p-8 text-center">
               <p className="text-sm text-zinc-500 dark:text-zinc-400">Вправу не знайдено за вашим запитом.</p>
               <button
                 onClick={() => {
@@ -240,7 +240,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                   type="button"
                   key={ex.id}
                   onClick={(e) => handleSelect(e, ex)}
-                  className="w-full text-left rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/90 hover:border-zinc-300 dark:hover:border-zinc-700 p-3 transition flex items-center justify-between group touch-manipulation cursor-pointer active:scale-[0.99]"
+                  className="w-full text-left rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/90 hover:border-zinc-300 dark:hover:border-zinc-700 p-3 transition flex items-center justify-between group touch-manipulation cursor-pointer active:scale-[0.99]"
                 >
                   <div className="flex-1 min-w-0 pr-3">
                     <div className="flex items-center space-x-2 mb-1">
@@ -249,7 +249,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                      <span className="inline-flex rounded px-2 py-0.5 text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                      <span className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
                         {muscleInfo.nameUk}
                       </span>
                     </div>

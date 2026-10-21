@@ -1020,7 +1020,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center space-x-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="inline-flex items-center space-x-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
             <span>До списку тренувань</span>
@@ -1029,7 +1029,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       )}
 
       {/* Workout Metadata Card */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-xs">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-xs">
         {/* Title & Status Header */}
         <div className="flex flex-col gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3.5 mb-3.5">
           <div className="flex items-center justify-between gap-2">
@@ -1038,7 +1038,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 Програма тренування
               </span>
               <span
-                className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold border ${workout.status === 'completed'
+                className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[10px] font-semibold border ${workout.status === 'completed'
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                   : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700'
                   }`}
@@ -1048,7 +1048,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   : 'В процесі ⚡'}
               </span>
               {workout.assignedByCoachId && (
-                <span className="inline-flex items-center space-x-1 rounded-md px-2 py-0.5 text-[10px] font-semibold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                <span className="inline-flex items-center space-x-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                   <Award className="h-3 w-3" />
                   <span>Призначено тренером</span>
                 </span>
@@ -1070,7 +1070,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
           {/* Date Picker row */}
           <div className="flex items-center space-x-2 pt-1">
-            <div className="flex items-center space-x-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-2.5 py-1 text-xs text-zinc-700 dark:text-zinc-300">
+            <div className="flex items-center space-x-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-2.5 py-1 text-xs text-zinc-700 dark:text-zinc-300">
               <Calendar className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
               <input
                 type="date"
@@ -1092,7 +1092,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             placeholder="Загальні примітки до тренування..."
             value={workout.notes || ''}
             onChange={(e) => handleNotesChange(e.target.value)}
-            className="w-full text-xs text-zinc-900 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg px-3 py-2 border border-zinc-200 dark:border-zinc-800 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100"
+            className="w-full text-xs text-zinc-900 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl px-3 py-2 border border-zinc-200 dark:border-zinc-800 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100"
           />
         </div>
       </div>
@@ -1100,8 +1100,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       {/* Exercises List */}
       <div className="space-y-4">
         {currentExList.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-8 sm:p-12 text-center">
-            <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 mb-3">
+          <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-8 sm:p-12 text-center">
+            <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 mb-3">
               <Dumbbell className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
             <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">Тренування порожнє</h3>
@@ -1111,7 +1111,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             <button
               type="button"
               onClick={() => setIsSelectorOpen(true)}
-              className="inline-flex items-center space-x-2 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold transition-colors cursor-pointer active:scale-[0.98]"
+              className="inline-flex items-center space-x-2 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold transition-colors cursor-pointer active:scale-[0.98]"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>Додати першу вправу</span>
@@ -1139,7 +1139,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 onDragStart={() => handleDragStart(weIndex)}
                 onDragOver={(e) => handleDragOver(e, weIndex)}
                 onDragEnd={handleDragEnd}
-                className={`rounded-xl border bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-colors ${isDragged
+                className={`rounded-2xl border bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-colors ${isDragged
                   ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70'
                   : isSuperset && supersetPalette
                     ? `${supersetPalette.border} border-zinc-200 dark:border-zinc-800`
@@ -1205,7 +1205,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                             })()}
                             {isSuperset && (
                               <span
-                                className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
+                                className={`inline-flex items-center gap-0.5 rounded-lg px-1.5 py-0.5 text-[9px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
                               >
                                 <Link className="h-2.5 w-2.5" />
                                 <span>Суперсет</span>
@@ -1228,7 +1228,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <button
                             type="button"
                             onClick={() => handleToggleSuperset(weIndex)}
-                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${isSuperset && supersetPalette
+                            className={`p-1.5 rounded-xl border transition-colors cursor-pointer ${isSuperset && supersetPalette
                               ? supersetPalette.buttonActive
                               : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400'
                               }`}
@@ -1256,7 +1256,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                             <select
                               value={weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'}
                               onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
-                              className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
+                              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
                             >
                               {(['4-6', '6-8', '6-10', '8-10', '8-12', '10-15'] as const).map((range) => (
                                 <option key={range} value={range}>
@@ -1310,7 +1310,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                         });
                                         handleUpdateSet(weItem.id, setItem.id, 'weight', Math.max(0, (setItem.weight || 0) - 1));
                                       }}
-                                      className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                                      className="h-8 w-8 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                       title="−1 кг"
                                     >
                                       <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -1340,7 +1340,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                           return copy;
                                         });
                                       }}
-                                      className="w-10 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400"
+                                      className="w-10 h-8 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400"
                                     />
                                     <button
                                       type="button"
@@ -1352,7 +1352,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                         });
                                         handleUpdateSet(weItem.id, setItem.id, 'weight', (setItem.weight || 0) + 1);
                                       }}
-                                      className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                                      className="h-8 w-8 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                       title="+1 кг"
                                     >
                                       <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -1371,7 +1371,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                         });
                                         handleUpdateSet(weItem.id, setItem.id, 'actualReps', Math.max(0, (setItem.actualReps || 0) - 1));
                                       }}
-                                      className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                                      className="h-8 w-8 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                       title="−1"
                                     >
                                       <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -1401,7 +1401,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                           return copy;
                                         });
                                       }}
-                                      className="w-10 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400"
+                                      className="w-10 h-8 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400"
                                     />
                                     <button
                                       type="button"
@@ -1413,7 +1413,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                         });
                                         handleUpdateSet(weItem.id, setItem.id, 'actualReps', (setItem.actualReps || 0) + 1);
                                       }}
-                                      className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                                      className="h-8 w-8 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                       title="+1"
                                     >
                                       <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -1440,7 +1440,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => handleRemoveSet(weItem.id, setItem.id)}
-                                      className="text-zinc-300 dark:text-zinc-600 hover:text-rose-500 dark:hover:text-rose-400 p-1 rounded-lg transition-colors cursor-pointer"
+                                      className="text-zinc-300 dark:text-zinc-600 hover:text-rose-500 dark:hover:text-rose-400 p-1 rounded-xl transition-colors cursor-pointer"
                                       title="Видалити підхід"
                                     >
                                       <X className="h-3.5 w-3.5" />
@@ -1455,7 +1455,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <button
                             type="button"
                             onClick={() => handleAddSet(weItem.id)}
-                            className="flex w-full items-center justify-center gap-1.5 py-3 border-t border-dashed border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer rounded-b-xl"
+                            className="flex w-full items-center justify-center gap-1.5 py-3 border-t border-dashed border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer rounded-b-2xl"
                           >
                             <Plus className="h-3.5 w-3.5" />
                             <span>Додати підхід</span>
@@ -1508,7 +1508,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         })()}
                         {isSuperset && (
                           <span
-                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
+                            className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
                           >
                             <Link className="h-3 w-3" />
                             <span>Суперсет</span>
@@ -1531,7 +1531,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       <button
                         type="button"
                         onClick={() => handleToggleSuperset(weIndex)}
-                        className={`p-2 rounded-lg border transition-colors cursor-pointer ${isSuperset && supersetPalette
+                        className={`p-2 rounded-xl border transition-colors cursor-pointer ${isSuperset && supersetPalette
                           ? supersetPalette.buttonActive
                           : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400'
                           }`}
@@ -1549,7 +1549,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       type="button"
                       onClick={() => handleMoveExercise(weIndex, 'up')}
                       disabled={weIndex === 0}
-                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                       title="Вгору"
                     >
                       <ChevronUp className="h-4 w-4" />
@@ -1558,7 +1558,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       type="button"
                       onClick={() => handleMoveExercise(weIndex, 'down')}
                       disabled={weIndex === currentExList.length - 1}
-                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                       title="Вниз"
                     >
                       <ChevronDown className="h-4 w-4" />
@@ -1566,7 +1566,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     <button
                       type="button"
                       onClick={() => handleChangeExercise(weItem.id)}
-                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 hover:border-amber-300 dark:hover:border-amber-800 transition-colors cursor-pointer"
+                      className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 hover:border-amber-300 dark:hover:border-amber-800 transition-colors cursor-pointer"
                       title="Змінити вправу"
                     >
                       <ArrowLeftRight className="h-4 w-4" />
@@ -1574,7 +1574,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveExercise(weItem.id)}
-                      className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-rose-400 hover:text-rose-600 dark:text-rose-500 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-800 transition-colors cursor-pointer"
+                      className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-rose-400 hover:text-rose-600 dark:text-rose-500 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-800 transition-colors cursor-pointer"
                       title="Видалити вправу"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -1593,7 +1593,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         <select
                           value={weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'}
                           onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
-                          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
+                          className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
                         >
                           {(['4-6', '6-8', '8-10', '8-12', '10-15'] as const).map((range) => (
                             <option key={range} value={range}>
@@ -1645,7 +1645,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                     });
                                     handleUpdateSet(weItem.id, setItem.id, 'weight', Math.max(0, (setItem.weight || 0) - 1));
                                   }}
-                                  className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0 text-sm font-bold"
+                                  className="h-9 w-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0 text-sm font-bold"
                                   title="−1 кг"
                                 >
                                   <Minus className="h-4 w-4 stroke-[2.5]" />
@@ -1675,7 +1675,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                       return copy;
                                     });
                                   }}
-                                  className="w-14 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-sm font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
+                                  className="w-14 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-sm font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                                 />
                                 <button
                                   type="button"
@@ -1687,7 +1687,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                     });
                                     handleUpdateSet(weItem.id, setItem.id, 'weight', (setItem.weight || 0) + 1);
                                   }}
-                                  className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                                  className="h-9 w-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                   title="+1 кг"
                                 >
                                   <Plus className="h-4 w-4 stroke-[2.5]" />
@@ -1706,7 +1706,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                     });
                                     handleUpdateSet(weItem.id, setItem.id, 'actualReps', Math.max(0, (setItem.actualReps || 0) - 1));
                                   }}
-                                  className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                                  className="h-9 w-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                   title="−1 повторення"
                                 >
                                   <Minus className="h-4 w-4 stroke-[2.5]" />
@@ -1736,7 +1736,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                       return copy;
                                     });
                                   }}
-                                  className="w-14 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-sm font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
+                                  className="w-14 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-center font-mono text-sm font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                                 />
                                 <button
                                   type="button"
@@ -1748,7 +1748,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                     });
                                     handleUpdateSet(weItem.id, setItem.id, 'actualReps', (setItem.actualReps || 0) + 1);
                                   }}
-                                  className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
+                                  className="h-9 w-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0"
                                   title="+1 повторення"
                                 >
                                   <Plus className="h-4 w-4 stroke-[2.5]" />
@@ -1775,7 +1775,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveSet(weItem.id, setItem.id)}
-                                  className="text-zinc-300 dark:text-zinc-600 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 rounded-lg transition-colors cursor-pointer"
+                                  className="text-zinc-300 dark:text-zinc-600 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 rounded-xl transition-colors cursor-pointer"
                                   title="Видалити підхід"
                                 >
                                   <X className="h-4 w-4" />
@@ -1790,7 +1790,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       <button
                         type="button"
                         onClick={() => handleAddSet(weItem.id)}
-                        className="hidden sm:flex w-full items-center justify-center gap-2 py-3.5 border-t border-dashed border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer rounded-b-xl"
+                        className="hidden sm:flex w-full items-center justify-center gap-2 py-3.5 border-t border-dashed border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer rounded-b-2xl"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         <span>Додати підхід</span>
@@ -1810,7 +1810,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         <button
           type="button"
           onClick={() => setIsSelectorOpen(true)}
-          className="w-full flex items-center justify-center space-x-2 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-3 px-4 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 dark:hover:border-zinc-600 active:scale-[0.99] transition-all cursor-pointer shadow-2xs"
+          className="w-full flex items-center justify-center space-x-2 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-3 px-4 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 dark:hover:border-zinc-600 active:scale-[0.99] transition-all cursor-pointer shadow-2xs"
           title="Додати вправу до тренування"
         >
           <Plus className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
@@ -1821,7 +1821,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         <button
           type="button"
           onClick={() => setIsDeleteModalOpen(true)}
-          className="w-full flex items-center justify-center space-x-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 py-2.5 px-3 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-[0.99] transition-all cursor-pointer"
+          className="w-full flex items-center justify-center space-x-1.5 rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 py-2.5 px-3 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-[0.99] transition-all cursor-pointer"
           title="Видалити це тренування"
         >
           <Trash2 className="h-4 w-4" />
@@ -1830,7 +1830,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       </div>
 
       {/* Desktop Sticky Action Bar (hidden on mobile) */}
-      <div className="hidden sm:block sticky bottom-4 left-0 right-0 z-30 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 p-4 shadow-lg backdrop-blur-xs transition-colors">
+      <div className="hidden sm:block sticky bottom-4 left-0 right-0 z-30 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 p-4 shadow-lg backdrop-blur-xs transition-colors">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-2.5">
           {/* Workout quick stats */}
           <div className="flex items-center justify-start gap-4 text-xs">
@@ -1860,7 +1860,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             <button
               type="button"
               onClick={() => setIsSelectorOpen(true)}
-              className="flex items-center justify-center space-x-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+              className="flex items-center justify-center space-x-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
               title="Додати вправу до тренування"
             >
               <Plus className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
@@ -1870,7 +1870,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             <button
               type="button"
               onClick={() => setIsDeleteModalOpen(true)}
-              className="rounded-lg border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors shrink-0 cursor-pointer"
+              className="rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors shrink-0 cursor-pointer"
               title="Видалити це тренування"
               aria-label="Видалити тренування"
             >

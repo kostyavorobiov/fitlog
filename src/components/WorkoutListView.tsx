@@ -112,7 +112,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
         <button
           type="button"
           onClick={handleCreateNewDirectly}
-          className="inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs sm:text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-white active:bg-zinc-700 transition-colors cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs sm:text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-white active:bg-zinc-700 transition-colors cursor-pointer shrink-0"
         >
           <Plus className="h-4 w-4" />
           <span>Нове тренування</span>
@@ -122,11 +122,11 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
       {/* Filter Tabs */}
       {workouts.length > 0 && (
         <div className="flex items-center justify-between gap-2">
-          <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-0.5">
+          <div className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-0.5">
             <button
               type="button"
               onClick={() => setFilterStatus('all')}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'all'
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'all'
                 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
@@ -136,7 +136,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
             <button
               type="button"
               onClick={() => setFilterStatus('in_progress')}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'in_progress'
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'in_progress'
                 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
@@ -146,7 +146,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
             <button
               type="button"
               onClick={() => setFilterStatus('completed')}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'completed'
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${filterStatus === 'completed'
                 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
@@ -159,7 +159,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
 
       {/* Workouts List */}
       {workouts.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-10 text-center space-y-3">
+        <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-10 text-center space-y-3">
           <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Тренувань не знайдено</h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
             У вас ще немає збережених тренувань. Натисніть кнопку нижче, щоб відкрити форму створення та додати вправи.
@@ -167,14 +167,14 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
           <button
             type="button"
             onClick={handleCreateNewDirectly}
-            className="inline-flex items-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+            className="inline-flex items-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             <span>Створити перше тренування</span>
           </button>
         </div>
       ) : filteredWorkouts.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-8 text-center text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
+        <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-8 text-center text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
           <p className="font-semibold text-zinc-700 dark:text-zinc-300">
             Немає тренувань зі статусом «{filterStatus === 'in_progress' ? 'У процесі' : 'Завершено'}».
           </p>

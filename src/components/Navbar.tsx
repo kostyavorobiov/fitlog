@@ -144,7 +144,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor');
                 }}
                 onClick={() => handleNavSelect('editor')}
-                className={`relative flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'editor'
+                className={`relative flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'editor'
                   ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
                   }`}
@@ -163,7 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history');
                 }}
                 onClick={() => handleNavSelect('history')}
-                className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'history'
+                className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'history'
                   ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
                   }`}
@@ -179,7 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics');
                 }}
                 onClick={() => handleNavSelect('analytics')}
-                className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'analytics'
+                className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'analytics'
                   ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
                   }`}
@@ -195,7 +195,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog');
                 }}
                 onClick={() => handleNavSelect('catalog')}
-                className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'catalog'
+                className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'catalog'
                   ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
                   }`}
@@ -212,7 +212,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees');
                   }}
                   onClick={() => handleNavSelect('trainees')}
-                  className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'trainees'
+                  className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'trainees'
                     ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
                     }`}
@@ -319,7 +319,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       }
                       onOpenAuthModal();
                     }}
-                    className="rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+                    className="rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
                   >
                     Увійти
                   </button>

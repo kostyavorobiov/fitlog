@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
   periodContainer: {
     flexDirection: 'row',
     padding: 2,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
     alignSelf: 'flex-start',
   },
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 9,
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: 10,
   },
   periodBtnActiveLight: {
     backgroundColor: '#18181b',
@@ -668,7 +668,7 @@ const styles = StyleSheet.create({
   navArrowBtn: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
   todayBtn: {
     paddingHorizontal: 8,
     paddingVertical: 5,
-    borderRadius: 6,
+    borderRadius: 10,
     borderWidth: 1,
   },
   todayBtnLight: {
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ef4444',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 14,
     marginTop: 4,
   },
   retryBtnText: {
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
   kpiIconWrap: {
     width: 26,
     height: 26,
-    borderRadius: 6,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -823,7 +823,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0284c7',
     paddingHorizontal: 16,
     paddingVertical: 9,
-    borderRadius: 8,
+    borderRadius: 14,
     marginTop: 4,
   },
   emptyBtnText: {
@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   sectionTabLight: {
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(2, 132, 199, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   totalBadgeText: {
     color: '#0284c7',
@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 36,
     paddingHorizontal: 10,
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1,
     gap: 6,
   },
@@ -1008,7 +1008,7 @@ const styles = StyleSheet.create({
   muscleBadge: {
     paddingHorizontal: 5,
     paddingVertical: 1.5,
-    borderRadius: 4,
+    borderRadius: 8,
     borderWidth: 1,
   },
   muscleBadgeText: {

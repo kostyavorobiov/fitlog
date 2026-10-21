@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   themeToggleBtn: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: 18,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     borderColor: '#3f3f46',
   },
   loginBtn: {
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },

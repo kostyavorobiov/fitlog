@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 14,
     marginTop: 10,
   },
   cloudBadgeOnline: {
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#fecaca',
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 14,
   },
   errorText: {
     color: '#b91c1c',
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
   },
   googleLight: {
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
   toggleContainer: {
     flexDirection: 'row',
     padding: 4,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   toggleLight: {
     backgroundColor: '#f1f5f9',
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: 10,
   },
   toggleBtnActive: {
     backgroundColor: '#0284c7',
@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 15,
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   roleChipActive: {
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   demoBtnLight: {

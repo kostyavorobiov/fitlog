@@ -2001,7 +2001,7 @@ const styles = StyleSheet.create({
   presetChip: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   presetChipLight: {
@@ -2079,12 +2079,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   exerciseCardWrap: {
-    borderRadius: 12,
+    borderRadius: 18,
   },
   swipeContainer: {
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 12,
+    borderRadius: 18,
   },
   swipeActionsBg: {
     position: 'absolute',
@@ -2093,7 +2093,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 152,
     flexDirection: 'row',
-    borderRadius: 12,
+    borderRadius: 18,
     overflow: 'hidden',
     zIndex: 1,
   },
@@ -2124,7 +2124,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   swipeForeground: {
-    borderRadius: 12,
+    borderRadius: 18,
     zIndex: 2,
   },
   exerciseCard: {
@@ -2213,7 +2213,7 @@ const styles = StyleSheet.create({
   muscleTag: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 8,
     borderWidth: 1,
   },
   muscleTagText: {
@@ -2226,7 +2226,7 @@ const styles = StyleSheet.create({
     gap: 3,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 8,
     borderWidth: 1,
   },
   supersetBadgeText: {
@@ -2244,7 +2244,7 @@ const styles = StyleSheet.create({
     minHeight: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   actionBtnLight: {
@@ -2261,7 +2261,7 @@ const styles = StyleSheet.create({
     minHeight: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   pastPerfBanner: {
@@ -2270,7 +2270,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   pastPerfLight: {
     backgroundColor: 'rgba(2, 132, 199, 0.08)',
@@ -2298,13 +2298,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   quickSelectorsRowDark: {
     backgroundColor: '#18181b',
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   repsDropdownRow: {
     flexDirection: 'row',
@@ -2323,7 +2323,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   repsDropdownBtnLight: {
@@ -2348,7 +2348,7 @@ const styles = StyleSheet.create({
   repsModalContent: {
     width: '100%',
     maxWidth: 320,
-    borderRadius: 16,
+    borderRadius: 24,
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -2386,7 +2386,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   repsModalItemActiveLight: {
     backgroundColor: '#f1f5f9',
@@ -2482,7 +2482,7 @@ const styles = StyleSheet.create({
   stepBtn: {
     width: 28,
     height: 34,
-    borderRadius: 6,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2499,7 +2499,7 @@ const styles = StyleSheet.create({
   numberInput: {
     flex: 1,
     height: 34,
-    borderRadius: 6,
+    borderRadius: 10,
     textAlign: 'center',
     fontSize: 13,
     fontWeight: '600',
@@ -2532,7 +2532,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderStyle: 'dashed',
     marginTop: 4,
@@ -2547,7 +2547,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 18,
     borderWidth: 1.5,
     borderStyle: 'dashed',
     marginVertical: 4,
@@ -2566,7 +2566,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
     marginTop: 6,
     marginBottom: 16,

@@ -57,11 +57,11 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
         role="dialog"
         aria-modal="true"
         data-no-swipe="true"
-        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-6 shadow-2xl text-zinc-900 dark:text-zinc-100"
+        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-6 shadow-2xl text-zinc-900 dark:text-zinc-100"
       >
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
         >
           <X className="h-5 w-5" />
         </button>
@@ -117,7 +117,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
                 <div>
                   <div className="flex items-center space-x-1.5">
                     <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{user.name}</span>
-                    <span className="inline-flex items-center rounded px-1.5 py-0.2 text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                    <span className="inline-flex items-center rounded-md px-1.5 py-0.2 text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                       Активний
                     </span>
                   </div>
@@ -130,7 +130,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full flex items-center justify-center space-x-1.5 rounded-lg border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition cursor-pointer"
+              className="w-full flex items-center justify-center space-x-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span>Вийти з цього акаунта</span>

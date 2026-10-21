@@ -326,7 +326,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
         {/* Period Filter (Flat Segmented Control) */}
         <div
           ref={periodSwipeRef}
-          className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-0.5 shrink-0 self-start sm:self-auto touch-pan-y"
+          className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-0.5 shrink-0 self-start sm:self-auto touch-pan-y"
         >
           {(
             [
@@ -344,7 +344,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                   setSelectedPeriod(p.key);
                   setCurrentDate(new Date());
                 }}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${isActive
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${isActive
                     ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                   }`}
@@ -359,12 +359,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       {/* Date Navigation & KPI Metrics Section (Supports Swipe Left/Right to change date) */}
       <div ref={dateNavSwipeRef} className="space-y-3 touch-pan-y">
         {/* Date Navigation Bar (Allows switching days, weeks, months) */}
-        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2.5 shadow-2xs">
+        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 shadow-2xs">
           <div className="flex items-center space-x-1">
             <button
               type="button"
               onClick={handlePrevDate}
-              className="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
               title="Попередній період"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -372,7 +372,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
             <button
               type="button"
               onClick={handleNextDate}
-              className="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
               title="Наступний період"
             >
               <ChevronRight className="h-4 w-4" />
@@ -390,7 +390,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
             <button
               type="button"
               onClick={handleToday}
-              className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded cursor-pointer"
+              className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded-lg cursor-pointer"
             >
               Сьогодні
             </button>
@@ -402,7 +402,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
         {/* KPI Metrics Cards - Minimal Flat */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Completed Sets */}
-          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1.5">
               <CheckCircle2 className="h-4 w-4" />
               <span>Завершено підходів</span>
@@ -416,7 +416,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
           </div>
 
           {/* Workouts in Period */}
-          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1.5">
               <Calendar className="h-4 w-4" />
               <span>Активних тренувань</span>
@@ -430,7 +430,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
           </div>
 
           {/* Volume in Period */}
-          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1.5">
               <Flame className="h-4 w-4" />
               <span>Тоннаж періоду</span>
@@ -444,7 +444,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
           </div>
 
           {/* Exercises Tracked */}
-          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1.5">
               <Trophy className="h-4 w-4" />
               <span>Задіяних вправ</span>
@@ -460,7 +460,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       </div>
 
       {/* Muscle Group Distribution */}
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center space-x-2">
@@ -478,8 +478,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
         </div>
 
         {stats.periodCompletedSets === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center space-y-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 mx-auto">
+          <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center space-y-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 mx-auto">
               <Layers className="h-5 w-5" />
             </div>
             <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
@@ -535,7 +535,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       {/* Personal Records & Tracked Exercises (Supports Swipe Left/Right between Top and All) */}
       <div
         ref={recordsSwipeRef}
-        className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
+        className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <div className="flex items-center space-x-2">
@@ -547,11 +547,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
 
           <div className="flex flex-wrap items-center gap-2">
             {/* View Mode Switcher */}
-            <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-0.5 text-xs">
+            <div className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-0.5 text-xs">
               <button
                 type="button"
                 onClick={() => setViewMode('prs')}
-                className={`rounded px-2.5 py-1 font-semibold transition-colors cursor-pointer ${viewMode === 'prs' && !searchQuery
+                className={`rounded-lg px-2.5 py-1 font-semibold transition-colors cursor-pointer ${viewMode === 'prs' && !searchQuery
                   ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                   }`}
@@ -561,7 +561,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
               <button
                 type="button"
                 onClick={() => setViewMode('all')}
-                className={`rounded px-2.5 py-1 font-semibold transition-colors cursor-pointer ${viewMode === 'all' && !searchQuery
+                className={`rounded-lg px-2.5 py-1 font-semibold transition-colors cursor-pointer ${viewMode === 'all' && !searchQuery
                   ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                   }`}
@@ -578,14 +578,14 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Пошук вправи..."
-                className="w-36 sm:w-44 h-8 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 pl-8 pr-2.5 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                className="w-36 sm:w-44 h-8 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 pl-8 pr-2.5 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
               />
             </div>
           </div>
         </div>
 
         {displayedExercises.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center text-xs text-zinc-500">
+          <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center text-xs text-zinc-500">
             {searchQuery
               ? 'Вправ за цим запитом не знайдено.'
               : `У періоді «${periodInfo.titleUk}» ще немає зафіксованих підходів із вагою.`}
@@ -598,12 +598,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                 <div
                   key={pr.id || idx}
                   onClick={() => setSelectedExercise(pr.exercise)}
-                  className="group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 flex flex-col justify-between cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+                  className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 flex flex-col justify-between cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
                   title="Натисніть для перегляду динаміки та історії цієї вправи"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                      <span className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
                         {muscle.nameUk}
                       </span>
                       <span className="font-mono text-xs text-zinc-400">#{idx + 1}</span>

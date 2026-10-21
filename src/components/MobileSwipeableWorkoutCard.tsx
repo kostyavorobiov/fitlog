@@ -128,7 +128,7 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
   return (
     <div
       data-no-swipe="true"
-      className={`no-swipe relative overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700 ${
+      className={`no-swipe relative overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700 ${
         isDeleting
           ? 'max-h-0 opacity-0 -translate-x-full my-0 py-0 border-transparent overflow-hidden'
           : 'max-h-[3000px]'

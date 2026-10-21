@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
     right: -4,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   roleBadgeText: {
     fontSize: 10,
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 12,
     marginTop: 6,
   },
   editProfileBtnText: {
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
   },
   inputField: {
     height: 40,
-    borderRadius: 8,
+    borderRadius: 14,
     paddingHorizontal: 12,
     fontSize: 14,
   },
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   roleOptionBtn: {
     flex: 1,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     borderWidth: 1,
   },
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: 14,
   },
   cancelBtnText: {
     fontSize: 13,
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: 14,
     flexDirection: 'row',
     gap: 6,
   },
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
   },
   copyBtnLight: {
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
   },
   themeSegmentContainer: {
     flexDirection: 'row',
-    borderRadius: 10,
+    borderRadius: 14,
     padding: 4,
     gap: 4,
     borderWidth: 1,
@@ -854,7 +854,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     gap: 6,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   themeSegmentActiveLight: {
     backgroundColor: '#ffffff',
@@ -891,7 +891,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   traineesStatLabel: {
     fontSize: 13,
@@ -908,7 +908,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   goToTraineesBtnText: {
     color: '#ffffff',
@@ -933,7 +933,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   coachInfoText: {
     flex: 1,
@@ -953,13 +953,13 @@ const styles = StyleSheet.create({
   linkCoachInput: {
     flex: 1,
     height: 40,
-    borderRadius: 8,
+    borderRadius: 14,
     paddingHorizontal: 12,
     fontSize: 13,
   },
   linkCoachBtn: {
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(244, 63, 94, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(244, 63, 94, 0.3)',
-    borderRadius: 10,
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

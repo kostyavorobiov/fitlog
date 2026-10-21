@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
   codeIconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: 'rgba(2, 132, 199, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -695,7 +695,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 7,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
   },
   copyBtnLight: {
@@ -734,7 +734,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 12,
     height: 42,
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1,
   },
   inputLight: {
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 14,
     justifyContent: 'center',
   },
   addBtnLight: {
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
   },
   pillLight: {
@@ -911,7 +911,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   createWorkoutBtnLight: {
     backgroundColor: '#18181b',
@@ -935,7 +935,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1,
   },
   analyticsBtnLight: {
@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(2, 132, 199, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   countBadgeText: {
     color: '#0284c7',
@@ -989,7 +989,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1,
     gap: 8,
   },
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 8,
   },
   statusCompleted: {
     backgroundColor: 'rgba(16, 185, 129, 0.12)',
@@ -1129,7 +1129,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 14,
     marginTop: 12,
   },
   goToProfileBtnLight: {

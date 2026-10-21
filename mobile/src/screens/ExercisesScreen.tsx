@@ -828,7 +828,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     height: 42,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
   },
   searchBarLight: {
@@ -860,7 +860,7 @@ const styles = StyleSheet.create({
   tabChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   tabActiveLight: {
@@ -938,7 +938,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 8,
     borderWidth: 1,
   },
   muscleBadgeText: {
@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
   ownerBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 8,
     borderWidth: 1,
   },
   ownerBadgeLight: {
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
   globalBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 8,
     borderWidth: 1,
   },
   globalBadgeLight: {
@@ -990,7 +990,7 @@ const styles = StyleSheet.create({
   iconButton: {
     width: 32,
     height: 32,
-    borderRadius: 6,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1021,6 +1021,7 @@ const styles = StyleSheet.create({
   },
   modalCloseBtn: {
     padding: 4,
+    borderRadius: 20,
   },
   modalBody: {
     padding: 20,
@@ -1035,7 +1036,7 @@ const styles = StyleSheet.create({
   },
   modalInput: {
     height: 44,
-    borderRadius: 8,
+    borderRadius: 14,
     paddingHorizontal: 12,
     fontSize: 14,
     borderWidth: 1,
@@ -1049,7 +1050,7 @@ const styles = StyleSheet.create({
   formChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   formChipLight: {
@@ -1079,7 +1080,7 @@ const styles = StyleSheet.create({
   modalCancelBtn: {
     flex: 1,
     height: 44,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1093,7 +1094,7 @@ const styles = StyleSheet.create({
     gap: 6,
     height: 36,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   webAddBtnLight: {
     backgroundColor: '#18181b',
@@ -1121,7 +1122,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   customToggleActiveLight: {
@@ -1147,7 +1148,7 @@ const styles = StyleSheet.create({
   modalSaveBtn: {
     flex: 1.5,
     height: 44,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -1213,7 +1214,7 @@ const styles = StyleSheet.create({
   swipeContainer: {
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
   },
   swipeDeleteActionBg: {

@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   headerAddBtnLight: {
     backgroundColor: '#18181b',
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
   navArrowBtn: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   todayBtn: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   todayBtnLight: {
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: 12,
     marginVertical: 2,
   },
   dayCellSelectedLight: {
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
   miniArrowBtn: {
     width: 28,
     height: 28,
-    borderRadius: 6,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 7,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   addForDateBtnLight: {
     backgroundColor: '#18181b',
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0284c7',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 14,
     marginTop: 6,
   },
   emptyCreateBtnText: {
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
   },
   workoutItemLight: {
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 8,
     marginLeft: 8,
   },
   badgeCompleted: {

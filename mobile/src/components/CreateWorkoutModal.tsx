@@ -233,8 +233,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
     paddingBottom: Platform.OS === 'ios' ? 36 : 24,
     gap: 16,
@@ -260,6 +260,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     padding: 4,
+    borderRadius: 20,
   },
   inputGroup: {
     gap: 6,
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
   input: {
     height: 44,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 14,
     paddingHorizontal: 12,
     fontSize: 14,
   },
@@ -298,7 +299,7 @@ const styles = StyleSheet.create({
   presetChip: {
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   presetChipActive: {
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
   quickChip: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 10,
     borderWidth: 1,
   },
   quickChipText: {

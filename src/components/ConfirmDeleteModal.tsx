@@ -49,19 +49,19 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
         role="dialog"
         aria-modal="true"
         data-no-swipe="true"
-        className="relative w-full max-w-md my-auto rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl"
+        className="relative w-full max-w-md my-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute right-3.5 top-3.5 rounded-lg p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+          className="absolute right-3.5 top-3.5 rounded-full p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           aria-label="Закрити"
         >
           <X className="h-4 w-4" />
         </button>
 
         <div className="flex items-start space-x-3 mb-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400">
             <Trash2 className="h-5 w-5" />
           </div>
           <div className="pr-4">
@@ -72,13 +72,13 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
         {/* Workout preview card */}
         {(workoutTitle || workoutDate) && (
-          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 mb-4">
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 mb-4">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-zinc-800 dark:text-zinc-200 truncate max-w-[200px] sm:max-w-[260px]">
                 {workoutTitle || 'Тренування'}
               </span>
               {isCompleted && (
-                <span className="rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                <span className="rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
                   Завершене
                 </span>
               )}
@@ -95,7 +95,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+            className="flex-1 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
           >
             {cancelLabel}
           </button>
@@ -105,7 +105,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
               onConfirm();
               onClose();
             }}
-            className="flex-1 h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+            className="flex-1 h-9 inline-flex items-center justify-center space-x-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors cursor-pointer"
           >
             <Trash2 className="h-4 w-4" />
             <span>{confirmLabel}</span>

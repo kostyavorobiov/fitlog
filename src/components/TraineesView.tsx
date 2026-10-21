@@ -236,7 +236,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
       {/* Toast Alert */}
       {toastMessage && (
         <div
-          className={`rounded-lg border p-3 flex items-center space-x-2 text-xs font-semibold animate-fade-in ${
+          className={`rounded-xl border p-3 flex items-center space-x-2 text-xs font-semibold animate-fade-in ${
             toastMessage.type === 'success'
               ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
               : 'border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300'
@@ -258,7 +258,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
         </div>
 
         {/* Coach ID Share Box */}
-        <div className="flex items-center space-x-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 text-xs self-start sm:self-auto">
+        <div className="flex items-center space-x-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 text-xs self-start sm:self-auto">
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Мій код тренера:</div>
           <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100 select-all">
             {coach.profileCode || coach.id}
@@ -266,7 +266,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
           <button
             type="button"
             onClick={handleCopyCoachCode}
-            className="p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
             title="Скопіювати код"
           >
             {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
@@ -275,7 +275,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
       </div>
 
       {/* Add Trainee Bar */}
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
         <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
           Прикріпити нового підопічного
         </label>
@@ -291,13 +291,13 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
               }
             }}
             disabled={isAdding}
-            className="flex-1 h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 disabled:opacity-50"
+            className="flex-1 h-9 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 disabled:opacity-50"
           />
           <button
             type="button"
             onClick={() => handleAddTrainee()}
             disabled={isAdding}
-            className="h-9 inline-flex items-center justify-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+            className="h-9 inline-flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50"
           >
             {isAdding ? (
               <>
@@ -316,7 +316,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
 
       {/* Trainees List & Details Split */}
       {trainees.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-10 text-center space-y-2">
+        <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-10 text-center space-y-2">
           <Users className="h-8 w-8 text-zinc-400 mx-auto" />
           <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
             У вас ще немає підопічних
@@ -341,7 +341,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                   <div
                     key={t.id}
                     onClick={() => selectTrainee(t)}
-                    className={`rounded-lg border p-3 cursor-pointer transition-colors flex items-center justify-between gap-3 ${
+                    className={`rounded-xl border p-3 cursor-pointer transition-colors flex items-center justify-between gap-3 ${
                       isSelected
                         ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900 dark:ring-zinc-100'
                         : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
@@ -369,7 +369,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
           {selectedTrainee && (
             <div
               ref={traineeSwipeRef}
-              className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
+              className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
             >
               {/* Trainee Subheader */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
@@ -380,7 +380,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                       <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
                         {selectedTrainee.firstName || selectedTrainee.name} {selectedTrainee.lastName || ''}
                       </h2>
-                      <span className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-600 dark:text-zinc-400">
+                      <span className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-600 dark:text-zinc-400">
                         Атлет
                       </span>
                     </div>
@@ -394,7 +394,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setTraineeToRemove(selectedTrainee)}
-                    className="h-8 px-2.5 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-medium hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
+                    className="h-8 px-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-medium hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
                   >
                     Відкріпити
                   </button>
@@ -403,7 +403,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                   <button
                     type="button"
                     onClick={handleCreatePlanForTrainee}
-                    className="h-8 inline-flex items-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+                    className="h-8 inline-flex items-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>Створити план тренування</span>
@@ -420,7 +420,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                 </div>
 
                 {traineeWorkouts.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center space-y-2">
+                  <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center space-y-2">
                     <Dumbbell className="h-6 w-6 text-zinc-400 mx-auto" />
                     <p className="text-xs text-zinc-600 dark:text-zinc-400">
                       У цього підопічного ще немає запланованих тренувань.
@@ -428,7 +428,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                     <button
                       type="button"
                       onClick={handleCreatePlanForTrainee}
-                      className="inline-flex items-center space-x-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+                      className="inline-flex items-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>Скласти перше тренування</span>
@@ -447,7 +447,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                       return (
                         <div
                           key={w.id}
-                          className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                          className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                         >
                           <div className="space-y-1 min-w-0 flex-1">
                             <div className="flex items-center space-x-2 text-xs">
@@ -494,7 +494,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                   return (
                                     <span
                                       key={idx}
-                                      className="rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 text-[11px] text-zinc-700 dark:text-zinc-300 font-medium"
+                                      className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 text-[11px] text-zinc-700 dark:text-zinc-300 font-medium"
                                     >
                                       {exName} ({we.sets?.length || 0})
                                     </span>
@@ -508,7 +508,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                             <button
                               type="button"
                               onClick={() => setWorkoutToDelete(w)}
-                              className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-xl text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                               title="Видалити тренування"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -518,7 +518,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                             <button
                               type="button"
                               onClick={() => onOpenWorkoutEditor(w, selectedTrainee)}
-                              className="inline-flex items-center space-x-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                              className="inline-flex items-center space-x-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                               <span>Редагувати план</span>

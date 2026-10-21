@@ -111,7 +111,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
         role="dialog"
         aria-modal="true"
         data-no-swipe="true"
-        className="relative w-full max-w-2xl max-h-[90vh] my-auto flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
+        className="relative w-full max-w-2xl max-h-[90vh] my-auto flex flex-col rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -129,7 +129,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
                     {exercise.name}
                   </h3>
                   <span
-                    className="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
+                    className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
                   >
                     {muscleInfo.nameUk}
                   </span>
@@ -142,7 +142,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition shrink-0 cursor-pointer"
+              className="rounded-full p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition shrink-0 cursor-pointer"
               aria-label="Закрити"
             >
               <X className="h-5 w-5" />
@@ -223,7 +223,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
             </div>
 
             {history.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/20 p-8 text-center space-y-3">
+              <div className="rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/20 p-8 text-center space-y-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 mx-auto">
                   <Trophy className="h-5 w-5" />
                 </div>
@@ -247,7 +247,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
                     return (
                       <div
                         key={pIdx}
-                        className={`rounded-xl border p-3.5 sm:p-4 transition ${
+                        className={`rounded-2xl border p-3.5 sm:p-4 transition ${
                           isBestSession
                             ? 'border-amber-300 dark:border-amber-800/80 bg-amber-50/30 dark:bg-amber-950/20'
                             : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/30'
@@ -259,7 +259,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
                               {perf.date}
                             </span>
                             {isBestSession && (
-                              <span className="inline-flex items-center space-x-1 rounded px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                              <span className="inline-flex items-center space-x-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
                                 <Award className="h-3 w-3" />
                                 <span>PR Сесія</span>
                               </span>
@@ -283,7 +283,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
                             return (
                               <div
                                 key={sIdx}
-                                className={`rounded-lg border px-2 py-1.5 text-center font-mono ${
+                                className={`rounded-xl border px-2 py-1.5 text-center font-mono ${
                                   isPrSet
                                     ? 'border-amber-300 dark:border-amber-700 bg-amber-100/60 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200'
                                     : 'border-zinc-200 dark:border-zinc-700/60 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-800 dark:text-zinc-200'

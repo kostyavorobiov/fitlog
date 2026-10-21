@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   newWorkoutBtnLight: {
     backgroundColor: '#18181b',
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     padding: 2,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
     alignSelf: 'flex-start',
   },
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: 10,
   },
   filterBtnActiveLight: {
     backgroundColor: '#18181b',
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     padding: 32,
-    borderRadius: 12,
+    borderRadius: 18,
     alignItems: 'center',
     textAlign: 'center',
     gap: 8,
@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   statusCompleted: {
     backgroundColor: '#ecfdf5',
@@ -932,8 +932,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
     gap: 16,
   },
@@ -954,6 +954,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     padding: 4,
+    borderRadius: 20,
   },
   inputGroup: {
     gap: 6,
@@ -964,7 +965,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 15,
@@ -991,7 +992,7 @@ const styles = StyleSheet.create({
   quickChip: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 10,
     borderWidth: 1,
   },
   chipLight: {
@@ -1032,7 +1033,7 @@ const styles = StyleSheet.create({
   swipeContainer: {
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 12,
+    borderRadius: 18,
     borderWidth: 1,
   },
   swipeDeleteActionBg: {
