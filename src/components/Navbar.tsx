@@ -353,75 +353,75 @@ export const Navbar: React.FC<NavbarProps> = ({
             : 'text-zinc-500 dark:text-zinc-400'
             }`}
         >
-          <Dumbbell className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Тренування</span>
-          {hasActiveWorkout && currentTab !== 'editor' && (
-            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
-          )}
-        </button>
-
-        {/* Календар */}
-        <button
-          type="button"
-          onTouchStart={() => handleNavSelect('history')}
-          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history'); }}
-          onClick={() => handleNavSelect('history')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'history'
-            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-            : 'text-zinc-500 dark:text-zinc-400'
-            }`}
-        >
-          <Calendar className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Календар</span>
-        </button>
-
-        {/* Аналітика */}
-        <button
-          type="button"
-          onTouchStart={() => handleNavSelect('analytics')}
-          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics'); }}
-          onClick={() => handleNavSelect('analytics')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'analytics'
-            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-            : 'text-zinc-500 dark:text-zinc-400'
-            }`}
-        >
-          <BarChart2 className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Аналітика</span>
-        </button>
-
-        {/* Вправи */}
-        <button
-          type="button"
-          onTouchStart={() => handleNavSelect('catalog')}
-          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog'); }}
-          onClick={() => handleNavSelect('catalog')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'catalog'
-            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-            : 'text-zinc-500 dark:text-zinc-400'
-            }`}
-        >
-          <BookOpen className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Вправи</span>
-        </button>
-
-        {/* Підопічні (тільки для тренерів/адмінів) */}
-        {(user?.role === 'coach' || isAdmin) && (
-          <button
-            type="button"
-            onTouchStart={() => handleNavSelect('trainees')}
-            onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees'); }}
-            onClick={() => handleNavSelect('trainees')}
-            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'trainees'
-              ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-              : 'text-zinc-500 dark:text-zinc-400'
-              }`}
-          >
-            <Users className="h-[18px] w-[18px] shrink-0" />
-            <span className="text-[9px] font-semibold leading-none">Підопічні</span>
-          </button>
+        <Dumbbell className="h-[18px] w-[18px] shrink-0" />
+        <span className="text-[9px] font-semibold leading-none">Тренування</span>
+        {hasActiveWorkout && currentTab !== 'editor' && (
+          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
         )}
-      </nav>
+      </button>
+
+      {/* Календар */}
+      <button
+        type="button"
+        onTouchStart={() => handleNavSelect('history')}
+        onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history'); }}
+        onClick={() => handleNavSelect('history')}
+        className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'history'
+          ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+          : 'text-zinc-500 dark:text-zinc-400'
+          }`}
+      >
+        <Calendar className="h-[18px] w-[18px] shrink-0" />
+        <span className="text-[9px] font-semibold leading-none">Календар</span>
+      </button>
+
+      {/* Аналітика */}
+      <button
+        type="button"
+        onTouchStart={() => handleNavSelect('analytics')}
+        onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics'); }}
+        onClick={() => handleNavSelect('analytics')}
+        className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'analytics'
+          ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+          : 'text-zinc-500 dark:text-zinc-400'
+          }`}
+      >
+        <BarChart2 className="h-[18px] w-[18px] shrink-0" />
+        <span className="text-[9px] font-semibold leading-none">Аналітика</span>
+      </button>
+
+      {/* Вправи */}
+      <button
+        type="button"
+        onTouchStart={() => handleNavSelect('catalog')}
+        onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog'); }}
+        onClick={() => handleNavSelect('catalog')}
+        className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'catalog'
+          ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+          : 'text-zinc-500 dark:text-zinc-400'
+          }`}
+      >
+        <BookOpen className="h-[18px] w-[18px] shrink-0" />
+        <span className="text-[9px] font-semibold leading-none">Вправи</span>
+      </button>
+
+      {/* Підопічні (тільки для тренерів/адмінів) */}
+      {(user?.role === 'coach' || isAdmin) && (
+        <button
+          type="button"
+          onTouchStart={() => handleNavSelect('trainees')}
+          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees'); }}
+          onClick={() => handleNavSelect('trainees')}
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'trainees'
+            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
+            : 'text-zinc-500 dark:text-zinc-400'
+            }`}
+        >
+          <Users className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Підопічні</span>
+        </button>
+      )}
+    </nav >
     </>
   );
 };

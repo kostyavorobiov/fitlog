@@ -14,6 +14,8 @@ import {
   Platform,
   PanResponder,
   Animated,
+  LayoutAnimation,
+  UIManager,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,7 +29,11 @@ import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutPlan } from '../types/workout';
 
-export type WorkoutFilterStatus = 'all' | 'in_progress' | 'completed';
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+export type WorkoutFilterStatus = 'all' | 'completed' | 'in_progress';
 
 export function formatDateDDMMYY(dateStr?: string): string {
   if (!dateStr) return '';
@@ -39,6 +45,66 @@ export function formatDateDDMMYY(dateStr?: string): string {
     return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${shortYear}`;
   }
   return dateStr;
+}
+
+const UKRAINIAN_MONTHS = [
+  'Січень',
+  'Лютий',
+  'Березень',
+  'Квітень',
+  'Травень',
+  'Червень',
+  'Липень',
+  'Серпень',
+  'Вересень',
+  'Жовтень',
+  'Листопад',
+  'Грудень',
+];
+
+export function getMonthKeyAndLabel(dateStr?: string): { key: string; label: string } {
+  if (!dateStr) {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    return {
+      key: `${y}-${m}`,
+      label: `${UKRAINIAN_MONTHS[now.getMonth()]} ${y}`,
+    };
+  }
+
+  const dateOnly = dateStr.split('T')[0];
+  const parts = dateOnly.split('-');
+  if (parts.length >= 2) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
+      const key = `${year}-${String(month).padStart(2, '0')}`;
+      const label = `${UKRAINIAN_MONTHS[month - 1]} ${year}`;
+      return { key, label };
+    }
+  }
+
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const key = `${year}-${String(month).padStart(2, '0')}`;
+    const label = `${UKRAINIAN_MONTHS[d.getMonth()]} ${year}`;
+    return { key, label };
+  }
+
+  const now = new Date();
+  return {
+    key: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+    label: `${UKRAINIAN_MONTHS[now.getMonth()]} ${now.getFullYear()}`,
+  };
+}
+
+export interface MonthGroup {
+  key: string;
+  label: string;
+  workouts: WorkoutPlan[];
 }
 
 interface SwipeableWorkoutCardProps {
@@ -297,26 +363,87 @@ export const WorkoutsScreen: React.FC = () => {
     );
   };
 
-  // Filtered workouts
+  // Filtered workouts: only 'all' and 'completed'
   const filteredWorkouts = useMemo(() => {
     return workouts.filter((w) => {
       if (filterStatus === 'all') return true;
-      if (filterStatus === 'in_progress') return w.status === 'in_progress' || w.status === 'planned';
       if (filterStatus === 'completed') return w.status === 'completed';
       return true;
     });
   }, [workouts, filterStatus]);
 
-  const inProgressCount = useMemo(() => {
-    return workouts.filter((w) => w.status === 'in_progress' || w.status === 'planned').length;
-  }, [workouts]);
-
   const completedCount = useMemo(() => {
     return workouts.filter((w) => w.status === 'completed').length;
   }, [workouts]);
 
-  // Swipe gesture for cycling through filters
-  const filterOrder: WorkoutFilterStatus[] = ['all', 'in_progress', 'completed'];
+  // Sort workouts within each month from newest to oldest
+  const sortedFilteredWorkouts = useMemo(() => {
+    return [...filteredWorkouts].sort((a, b) => {
+      const dateA = a.scheduledDate || a.createdAt || '';
+      const dateB = b.scheduledDate || b.createdAt || '';
+      return dateB.localeCompare(dateA);
+    });
+  }, [filteredWorkouts]);
+
+  // Group workouts by calendar month (YYYY-MM), sorted newest to oldest
+  const monthGroups = useMemo<MonthGroup[]>(() => {
+    const map = new Map<string, { label: string; workouts: WorkoutPlan[] }>();
+    for (const w of sortedFilteredWorkouts) {
+      const { key, label } = getMonthKeyAndLabel(w.scheduledDate);
+      if (!map.has(key)) {
+        map.set(key, { label, workouts: [] });
+      }
+      map.get(key)!.workouts.push(w);
+    }
+    const keys = Array.from(map.keys()).sort((a, b) => b.localeCompare(a));
+    return keys.map((key) => ({
+      key,
+      label: map.get(key)!.label,
+      workouts: map.get(key)!.workouts,
+    }));
+  }, [sortedFilteredWorkouts]);
+
+  // Current calendar month key (e.g. "2026-10")
+  const currentMonthKey = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
+
+  // Determine default open month: current month if present, otherwise newest month with workouts
+  const defaultOpenKey = useMemo(() => {
+    if (monthGroups.length === 0) return null;
+    const hasCurrent = monthGroups.some((g) => g.key === currentMonthKey);
+    return hasCurrent ? currentMonthKey : monthGroups[0].key;
+  }, [monthGroups, currentMonthKey]);
+
+  const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
+  const prevFilterRef = useRef<WorkoutFilterStatus>(filterStatus);
+
+  useEffect(() => {
+    if (prevFilterRef.current !== filterStatus) {
+      prevFilterRef.current = filterStatus;
+      if (defaultOpenKey) {
+        setOpenMonths({ [defaultOpenKey]: true });
+      }
+      return;
+    }
+    if (defaultOpenKey && Object.keys(openMonths).length === 0) {
+      setOpenMonths({ [defaultOpenKey]: true });
+    }
+  }, [filterStatus, defaultOpenKey, openMonths]);
+
+  const toggleMonth = (key: string) => {
+    if (Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+    setOpenMonths((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Swipe gesture for cycling through filters (only 'all' and 'completed')
+  const filterOrder: WorkoutFilterStatus[] = ['all', 'completed'];
 
   const handleFilterSwipeLeft = useCallback(() => {
     setFilterStatus((curr) => {
@@ -352,13 +479,6 @@ export const WorkoutsScreen: React.FC = () => {
     [handleFilterSwipeLeft, handleFilterSwipeRight]
   );
 
-  const statusLabel =
-    filterStatus === 'in_progress'
-      ? 'У процесі'
-      : filterStatus === 'completed'
-      ? 'Завершено'
-      : 'Всі';
-
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Top WebTopNavbar */}
@@ -388,7 +508,7 @@ export const WorkoutsScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Full-width Modern Segmented Pill Bar */}
+        {/* Full-width Modern Segmented Pill Bar with 2 tabs: Всі and Завершені */}
         <View style={[styles.filterContainer, isDark ? styles.filterDark : styles.filterLight]}>
           <TouchableOpacity
             activeOpacity={0.8}
@@ -412,26 +532,6 @@ export const WorkoutsScreen: React.FC = () => {
 
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => setFilterStatus('in_progress')}
-            style={[
-              styles.filterBtn,
-              filterStatus === 'in_progress' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterBtnText,
-                filterStatus === 'in_progress'
-                  ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
-                  : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
-              ]}
-            >
-              У процесі ({inProgressCount})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
             onPress={() => setFilterStatus('completed')}
             style={[
               styles.filterBtn,
@@ -446,7 +546,7 @@ export const WorkoutsScreen: React.FC = () => {
                   : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
               ]}
             >
-              Завершено ({completedCount})
+              Завершені ({completedCount})
             </Text>
           </TouchableOpacity>
         </View>
@@ -483,7 +583,7 @@ export const WorkoutsScreen: React.FC = () => {
             <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
               {workouts.length === 0
                 ? 'Тренувань ще немає'
-                : `Немає тренувань зі статусом «${statusLabel}».`}
+                : 'Немає тренувань зі статусом «Завершені».'}
             </Text>
             <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
               {workouts.length === 0
@@ -492,114 +592,155 @@ export const WorkoutsScreen: React.FC = () => {
             </Text>
           </View>
         ) : (
-          <View style={styles.workoutsList}>
-            {filteredWorkouts.map((w) => {
-              const isCompleted = w.status === 'completed';
-              const isInProgress = w.status === 'in_progress';
-              const exercises = w.exercises || [];
-              const totalSets = exercises.reduce((acc, ex) => acc + (ex.sets ? ex.sets.length : 0), 0);
+          <View style={styles.accordionContainer}>
+            {monthGroups.map((group) => {
+              const isOpen = Boolean(openMonths[group.key]);
 
               return (
-                <SwipeableWorkoutCard
-                  key={w.id}
-                  isDark={isDark}
-                  onDelete={() => handleDeleteWorkout(w)}
-                >
+                <View key={group.key} style={styles.monthSection}>
+                  {/* Month Accordion Header */}
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
+                    onPress={() => toggleMonth(group.key)}
+                    style={[
+                      styles.monthHeader,
+                      isDark ? styles.monthHeaderDark : styles.monthHeaderLight,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${group.label}, ${group.workouts.length} тренувань`}
                   >
-                    <View style={styles.workoutCard}>
-                      {/* Top Row: Status, Coach */}
-                      <View style={styles.cardTopRow}>
-                        <View style={styles.cardBadgesRow}>
-                          <Text
-                            style={[
-                              styles.statusText,
-                              {
-                                color: isCompleted
-                                  ? (isDark ? '#34d399' : '#059669')
-                                  : isInProgress
-                                    ? (isDark ? '#fbbf24' : '#d97706')
-                                    : (isDark ? '#a1a1aa' : '#71717a'),
-                              },
-                            ]}
-                          >
-                            {isCompleted ? 'Завершено' : isInProgress ? 'У процесі' : 'Заплановано'}
-                          </Text>
-
-                          {w.assignedByCoachId && (
-                            <>
-                              <Text style={[styles.dotSep, isDark ? styles.dotDark : styles.dotLight]}>·</Text>
-                              <Text style={[styles.coachText, isDark ? styles.coachDark : styles.coachLight]}>
-                                Від тренера
-                              </Text>
-                            </>
-                          )}
-                        </View>
-                      </View>
-
-                      {/* Workout Title */}
-                      <Text
-                        numberOfLines={1}
-                        style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
-                      >
-                        {w.title || 'Тренування без назви'}
+                    <View style={styles.monthHeaderLeft}>
+                      <Text style={[styles.monthTitle, isDark ? styles.textDark : styles.textLight]}>
+                        {group.label}
                       </Text>
-
-                      {/* Metrics Row: Date first, then exercises count, then sets count (no kg sum) */}
-                      <View style={styles.cardMetricsRow}>
-                        <View style={styles.metricItem}>
-                          <Ionicons
-                            name="calendar-outline"
-                            size={13}
-                            color={isDark ? '#71717a' : '#94a3b8'}
-                          />
-                          <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
-                            {formatDateDDMMYY(w.scheduledDate)}
-                          </Text>
-                        </View>
-
-                        <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
-
-                        <View style={styles.metricItem}>
-                          <Ionicons
-                            name="layers-outline"
-                            size={14}
-                            color={isDark ? '#71717a' : '#94a3b8'}
-                          />
-                          <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
-                            <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
-                              {exercises.length}
-                            </Text>{' '}
-                            вправ
-                          </Text>
-                        </View>
-
-                        <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
-
-                        <View style={styles.metricItem}>
-                          <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
-                            <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
-                              {totalSets}
-                            </Text>{' '}
-                            підходів
-                          </Text>
-                        </View>
-                      </View>
-
-                      {/* Notes snippet */}
-                      {w.notes ? (
-                        <Text
-                          numberOfLines={1}
-                          style={[styles.notesSnippet, isDark ? styles.subDark : styles.subLight]}
-                        >
-                          {w.notes}
+                      <View style={[styles.monthCountBadge, isDark ? styles.monthCountBadgeDark : styles.monthCountBadgeLight]}>
+                        <Text style={[styles.monthCountText, isDark ? styles.monthCountTextDark : styles.monthCountTextLight]}>
+                          {group.workouts.length}
                         </Text>
-                      ) : null}
+                      </View>
                     </View>
+                    <Ionicons
+                      name={isOpen ? 'chevron-up' : 'chevron-down'}
+                      size={18}
+                      color={isDark ? '#a1a1aa' : '#64748b'}
+                    />
                   </TouchableOpacity>
-                </SwipeableWorkoutCard>
+
+                  {/* Month Workouts List */}
+                  {isOpen && (
+                    <View style={styles.monthWorkoutsList}>
+                      {group.workouts.map((w) => {
+                        const isCompleted = w.status === 'completed';
+                        const isInProgress = w.status === 'in_progress';
+                        const exercises = w.exercises || [];
+                        const totalSets = exercises.reduce((acc, ex) => acc + (ex.sets ? ex.sets.length : 0), 0);
+
+                        return (
+                          <SwipeableWorkoutCard
+                            key={w.id}
+                            isDark={isDark}
+                            onDelete={() => handleDeleteWorkout(w)}
+                          >
+                            <TouchableOpacity
+                              activeOpacity={0.7}
+                              onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
+                            >
+                              <View style={styles.workoutCard}>
+                                {/* Top Row: Status, Coach */}
+                                <View style={styles.cardTopRow}>
+                                  <View style={styles.cardBadgesRow}>
+                                    <Text
+                                      style={[
+                                        styles.statusText,
+                                        {
+                                          color: isCompleted
+                                            ? (isDark ? '#34d399' : '#059669')
+                                            : isInProgress
+                                              ? (isDark ? '#fbbf24' : '#d97706')
+                                              : (isDark ? '#a1a1aa' : '#71717a'),
+                                        },
+                                      ]}
+                                    >
+                                      {isCompleted ? 'Завершено' : isInProgress ? 'У процесі' : 'Заплановано'}
+                                    </Text>
+
+                                    {w.assignedByCoachId && (
+                                      <>
+                                        <Text style={[styles.dotSep, isDark ? styles.dotDark : styles.dotLight]}>·</Text>
+                                        <Text style={[styles.coachText, isDark ? styles.coachDark : styles.coachLight]}>
+                                          Від тренера
+                                        </Text>
+                                      </>
+                                    )}
+                                  </View>
+                                </View>
+
+                                {/* Workout Title */}
+                                <Text
+                                  numberOfLines={1}
+                                  style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
+                                >
+                                  {w.title || 'Тренування без назви'}
+                                </Text>
+
+                                {/* Metrics Row: Date first, then exercises count, then sets count (no kg sum) */}
+                                <View style={styles.cardMetricsRow}>
+                                  <View style={styles.metricItem}>
+                                    <Ionicons
+                                      name="calendar-outline"
+                                      size={13}
+                                      color={isDark ? '#71717a' : '#94a3b8'}
+                                    />
+                                    <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                                      {formatDateDDMMYY(w.scheduledDate)}
+                                    </Text>
+                                  </View>
+
+                                  <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+
+                                  <View style={styles.metricItem}>
+                                    <Ionicons
+                                      name="layers-outline"
+                                      size={14}
+                                      color={isDark ? '#71717a' : '#94a3b8'}
+                                    />
+                                    <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                                      <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                                        {exercises.length}
+                                      </Text>{' '}
+                                      вправ
+                                    </Text>
+                                  </View>
+
+                                  <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+
+                                  <View style={styles.metricItem}>
+                                    <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                                      <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                                        {totalSets}
+                                      </Text>{' '}
+                                      підходів
+                                    </Text>
+                                  </View>
+                                </View>
+
+                                {/* Notes snippet */}
+                                {w.notes ? (
+                                  <Text
+                                    numberOfLines={1}
+                                    style={[styles.notesSnippet, isDark ? styles.subDark : styles.subLight]}
+                                  >
+                                    {w.notes}
+                                  </Text>
+                                ) : null}
+                              </View>
+                            </TouchableOpacity>
+                          </SwipeableWorkoutCard>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
               );
             })}
           </View>
@@ -908,6 +1049,59 @@ const styles = StyleSheet.create({
   },
   emptySubtitleDark: {
     color: '#71717a',
+  },
+  accordionContainer: {
+    gap: 14,
+  },
+  monthSection: {
+    gap: 8,
+  },
+  monthHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+  },
+  monthHeaderLight: {
+    backgroundColor: '#f1f5f9',
+  },
+  monthHeaderDark: {
+    backgroundColor: '#27272a80',
+  },
+  monthHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  monthTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  monthCountBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  monthCountBadgeLight: {
+    backgroundColor: '#ffffff',
+  },
+  monthCountBadgeDark: {
+    backgroundColor: '#3f3f46',
+  },
+  monthCountText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  monthCountTextLight: {
+    color: '#64748b',
+  },
+  monthCountTextDark: {
+    color: '#d4d4d8',
+  },
+  monthWorkoutsList: {
+    gap: 10,
   },
   workoutsList: {
     gap: 12,
