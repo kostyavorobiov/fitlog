@@ -660,9 +660,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
     marginTop: 6,
   },
   editProfileBtnText: {
@@ -686,10 +686,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   inputField: {
-    height: 40,
+    height: 42,
     borderRadius: 14,
     paddingHorizontal: 12,
     fontSize: 14,
+    borderWidth: 1,
   },
   rolePickerRow: {
     flexDirection: 'row',
@@ -697,7 +698,7 @@ const styles = StyleSheet.create({
   },
   roleOptionBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: 14,
     alignItems: 'center',
     borderWidth: 1,
@@ -714,8 +715,8 @@ const styles = StyleSheet.create({
     borderColor: '#27272a',
   },
   roleOptionActiveLight: {
-    borderColor: '#09090b',
-    backgroundColor: '#e4e4e7',
+    borderColor: '#0f172a',
+    backgroundColor: '#eef2f6',
   },
   roleOptionActiveDark: {
     borderColor: '#fafafa',
@@ -728,10 +729,10 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     flex: 1,
-    height: 40,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14,
+    borderRadius: 16,
   },
   cancelBtnText: {
     fontSize: 13,
@@ -739,22 +740,22 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     flex: 1.5,
-    height: 40,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14,
+    borderRadius: 16,
     flexDirection: 'row',
     gap: 6,
   },
   saveBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   saveBtnDark: {
     backgroundColor: '#f4f4f5',
   },
   saveBtnText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   saveBtnTextLight: {
     color: '#ffffff',
@@ -788,13 +789,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingVertical: 7,
+    borderRadius: 12,
     borderWidth: 1,
   },
   copyBtnLight: {
-    borderColor: '#e4e4e7',
-    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    backgroundColor: '#eef2f6',
   },
   copyBtnDark: {
     borderColor: '#27272a',
@@ -810,6 +811,7 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     padding: 16,
+    borderRadius: 18,
     gap: 12,
   },
   sectionHeaderRow: {
@@ -834,50 +836,56 @@ const styles = StyleSheet.create({
   },
   themeSegmentContainer: {
     flexDirection: 'row',
-    borderRadius: 14,
+    borderRadius: 20,
     padding: 4,
     gap: 4,
-    borderWidth: 1,
   },
   themeSegmentLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#eef2f6',
   },
   themeSegmentDark: {
-    backgroundColor: '#09090b',
-    borderColor: '#27272a',
+    backgroundColor: '#27272a',
   },
   themeSegmentBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 9,
+    paddingHorizontal: 4,
     gap: 6,
-    borderRadius: 10,
+    borderRadius: 14,
   },
   themeSegmentActiveLight: {
     backgroundColor: '#ffffff',
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
     elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
   },
   themeSegmentActiveDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#18181b',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   themeSegmentBtnText: {
     fontSize: 13,
-    fontWeight: '600',
   },
   themeSegmentTextActiveLight: {
-    color: '#09090b',
+    color: '#0f172a',
+    fontWeight: '700',
   },
   themeSegmentTextActiveDark: {
-    color: '#ffffff',
+    color: '#fafafa',
+    fontWeight: '700',
   },
   themeSegmentTextInactive: {
-    color: '#71717a',
+    color: '#64748b',
+    fontWeight: '600',
   },
   coachStatusContent: {
     gap: 10,
@@ -890,8 +898,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 14,
   },
   traineesStatLabel: {
     fontSize: 13,
@@ -902,18 +910,18 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   goToTraineesBtn: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#0f172a',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 10,
-    borderRadius: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
   },
   goToTraineesBtnText: {
     color: '#ffffff',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   coachHeaderRow: {
     flexDirection: 'row',
@@ -932,8 +940,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 10,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 16,
   },
   coachInfoText: {
     flex: 1,
@@ -952,26 +960,28 @@ const styles = StyleSheet.create({
   },
   linkCoachInput: {
     flex: 1,
-    height: 40,
-    borderRadius: 14,
+    height: 44,
+    borderRadius: 16,
     paddingHorizontal: 12,
     fontSize: 13,
+    borderWidth: 1,
   },
   linkCoachBtn: {
+    height: 44,
     paddingHorizontal: 16,
-    borderRadius: 14,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   linkCoachBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   linkCoachBtnDark: {
     backgroundColor: '#f4f4f5',
   },
   linkCoachBtnText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   linkCoachBtnTextLight: {
     color: '#ffffff',
@@ -979,12 +989,11 @@ const styles = StyleSheet.create({
   linkCoachBtnTextDark: {
     color: '#09090b',
   },
-
   logoutBtn: {
     backgroundColor: 'rgba(244, 63, 94, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(244, 63, 94, 0.3)',
-    borderRadius: 14,
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1016,15 +1025,17 @@ const styles = StyleSheet.create({
     borderTopColor: '#27272a',
   },
   inputLight: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#ffffff',
+    borderColor: '#e4e4e7',
     color: '#09090b',
   },
   inputDark: {
     backgroundColor: '#18181b',
+    borderColor: '#27272a',
     color: '#fafafa',
   },
   bgLight: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fafafa',
   },
   bgDark: {
     backgroundColor: '#09090b',

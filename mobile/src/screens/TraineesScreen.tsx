@@ -393,15 +393,17 @@ export const TraineesScreen: React.FC = () => {
           </View>
         ) : trainees.length === 0 ? (
           /* Empty Trainees State */
-          <Card style={styles.emptyCard}>
-            <Ionicons name="people-outline" size={48} color={isDark ? '#52525b' : '#d4d4d8'} />
-            <Text style={[styles.emptyTitle, isDark ? styles.textDark : styles.textLight]}>
+          <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
+            <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
+              <Ionicons name="people-outline" size={26} color={isDark ? '#71717a' : '#94a3b8'} />
+            </View>
+            <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
               У вас ще немає підопічних
             </Text>
-            <Text style={[styles.emptySub, isDark ? styles.subDark : styles.subLight]}>
+            <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
               Поділіться кодом тренера ({coachCode}) зі своїм атлетом або введіть його код вище, щоб розпочати співпрацю.
             </Text>
-          </Card>
+          </View>
         ) : (
           <>
             {/* Trainee Horizontal Switcher */}
@@ -534,9 +536,11 @@ export const TraineesScreen: React.FC = () => {
                     <ActivityIndicator size="small" color="#0284c7" />
                   </View>
                 ) : traineeWorkouts.length === 0 ? (
-                  <View style={styles.noWorkoutsWrap}>
-                    <Ionicons name="barbell-outline" size={32} color={isDark ? '#52525b' : '#d4d4d8'} />
-                    <Text style={[styles.noWorkoutsText, isDark ? styles.subDark : styles.subLight]}>
+                  <View style={[styles.noWorkoutsWrap, isDark ? styles.noWorkoutsDark : styles.noWorkoutsLight]}>
+                    <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
+                      <Ionicons name="barbell-outline" size={24} color={isDark ? '#71717a' : '#94a3b8'} />
+                    </View>
+                    <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
                       У підопічного немає запланованих тренувань. Натисніть «Додати тренування», щоб скласти перший план.
                     </Text>
                   </View>
@@ -647,7 +651,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fafafa',
   },
   bgDark: {
     backgroundColor: '#09090b',
@@ -659,6 +663,7 @@ const styles = StyleSheet.create({
   },
   coachCodeCard: {
     padding: 14,
+    borderRadius: 18,
   },
   coachCodeRow: {
     flexDirection: 'row',
@@ -693,13 +698,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
   },
   copyBtnLight: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#eef2f6',
     borderColor: '#e2e8f0',
   },
   copyBtnDark: {
@@ -712,6 +717,7 @@ const styles = StyleSheet.create({
   },
   addTraineeCard: {
     padding: 16,
+    borderRadius: 18,
     gap: 8,
   },
   sectionTitle: {
@@ -733,13 +739,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     paddingHorizontal: 12,
-    height: 42,
-    borderRadius: 14,
+    height: 44,
+    borderRadius: 16,
     borderWidth: 1,
   },
   inputLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#e4e4e7',
   },
   inputDark: {
     backgroundColor: '#09090b',
@@ -754,12 +760,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 14,
-    borderRadius: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
     justifyContent: 'center',
   },
   addBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   addBtnDark: {
     backgroundColor: '#f4f4f5',
@@ -769,7 +775,7 @@ const styles = StyleSheet.create({
   },
   addBtnText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   addBtnTextLight: {
     color: '#ffffff',
@@ -796,7 +802,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
   pillLight: {
@@ -809,7 +815,7 @@ const styles = StyleSheet.create({
   },
   traineePillActiveLight: {
     backgroundColor: '#f4f4f5',
-    borderColor: '#18181b',
+    borderColor: '#0f172a',
   },
   traineePillActiveDark: {
     backgroundColor: '#27272a',
@@ -910,18 +916,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
-    borderRadius: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
   },
   createWorkoutBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   createWorkoutBtnDark: {
     backgroundColor: '#f4f4f5',
   },
   createWorkoutBtnText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   createWorkoutBtnTextLight: {
     color: '#ffffff',
@@ -933,9 +939,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
     borderWidth: 1,
   },
   analyticsBtnLight: {
@@ -972,9 +978,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   noWorkoutsWrap: {
-    padding: 24,
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+    borderRadius: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
     gap: 8,
+  },
+  noWorkoutsLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  noWorkoutsDark: {
+    backgroundColor: '#18181b80',
+    borderColor: '#27272a',
   },
   noWorkoutsText: {
     fontSize: 12,
@@ -988,17 +1007,17 @@ const styles = StyleSheet.create({
   workoutItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 14,
+    padding: 14,
+    borderRadius: 18,
     borderWidth: 1,
-    gap: 8,
+    gap: 10,
   },
   workoutItemLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#e4e4e7',
   },
   workoutItemDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#18181b',
     borderColor: '#27272a',
   },
   workoutItemMain: {
@@ -1067,16 +1086,69 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 12,
   },
+  emptyContainer: {
+    paddingVertical: 48,
+    paddingHorizontal: 20,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    marginTop: 4,
+  },
+  emptyLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  emptyDark: {
+    backgroundColor: '#18181b80',
+    borderColor: '#27272a',
+  },
+  emptyIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIconBoxLight: {
+    backgroundColor: '#eef2f8',
+  },
+  emptyIconBoxDark: {
+    backgroundColor: '#27272a',
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 16,
+    lineHeight: 22,
+    maxWidth: 280,
+  },
+  emptyTitleLight: {
+    color: '#0f172a',
+  },
+  emptyTitleDark: {
+    color: '#fafafa',
+  },
+  emptySubtitle: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 18,
+    maxWidth: 280,
+  },
+  emptySubtitleLight: {
+    color: '#94a3b8',
+  },
+  emptySubtitleDark: {
+    color: '#71717a',
+  },
   emptyCard: {
     padding: 32,
     alignItems: 'center',
     gap: 10,
     borderStyle: 'dashed',
-  },
-  emptyTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    textAlign: 'center',
   },
   emptySub: {
     fontSize: 12,
@@ -1127,20 +1199,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 14,
+    paddingHorizontal: 22,
+    paddingVertical: 14,
+    borderRadius: 16,
     marginTop: 12,
   },
   goToProfileBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   goToProfileBtnDark: {
     backgroundColor: '#f4f4f5',
   },
   goToProfileBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   goToProfileBtnTextLight: {
     color: '#ffffff',

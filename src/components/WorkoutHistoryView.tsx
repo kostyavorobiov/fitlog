@@ -235,7 +235,7 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
       {/* CALENDAR CARD - Minimal Flat */}
       <div
         ref={swipeRef}
-        className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
+        className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 shadow-xs touch-pan-y"
       >
         {/* Month & Year Navigation */}
         <div className="flex items-center justify-between">
@@ -243,19 +243,19 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
               title="Попередній місяць"
               aria-label="Попередній місяць"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 min-w-[150px] text-center select-none">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 min-w-[150px] text-center select-none">
               {ukrainianMonths[month]} {year}
             </h3>
             <button
               type="button"
               onClick={handleNextMonth}
-              className="p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
               title="Наступний місяць"
               aria-label="Наступний місяць"
             >
@@ -266,21 +266,21 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
           <button
             type="button"
             onClick={handleToday}
-            className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+            className="rounded-xl border border-slate-200/80 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
           >
             Сьогодні
           </button>
         </div>
 
         {/* Weekdays header */}
-        <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] sm:text-xs text-zinc-400 dark:text-zinc-500 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+        <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] sm:text-xs text-slate-400 dark:text-zinc-500 pb-2 border-b border-slate-100 dark:border-zinc-800">
           <div>Пн</div>
           <div>Вт</div>
           <div>Ср</div>
           <div>Чт</div>
           <div>Пт</div>
-          <div className="text-zinc-600 dark:text-zinc-400">Сб</div>
-          <div className="text-zinc-600 dark:text-zinc-400">Нд</div>
+          <div className="text-slate-600 dark:text-zinc-400">Сб</div>
+          <div className="text-slate-600 dark:text-zinc-400">Нд</div>
         </div>
 
         {/* Calendar Days Grid */}
@@ -307,12 +307,12 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 key={`day-${dayNum}`}
                 onClick={() => setSelectedCalendarDateStr(dateStr)}
                 className={`h-14 sm:h-20 rounded-xl border p-1 sm:p-1.5 cursor-pointer transition-colors flex flex-col justify-between ${isSelected
-                  ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900 dark:ring-zinc-100'
+                  ? 'border-slate-900 dark:border-zinc-100 bg-slate-100/90 dark:bg-zinc-800 ring-1 ring-slate-900 dark:ring-zinc-100'
                   : isToday
-                    ? 'border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900'
+                    ? 'border-slate-300 dark:border-zinc-700 bg-slate-50/80 dark:bg-zinc-900'
                     : dayWorkouts.length > 0
-                      ? 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
-                      : 'border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                      ? 'border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-slate-300 dark:hover:border-zinc-700'
+                      : 'border-slate-100 dark:border-zinc-800/60 bg-slate-50/50 dark:bg-zinc-900/40 hover:bg-slate-100 dark:hover:bg-zinc-800/50'
                   }`}
               >
                 <div className="flex items-center justify-between">
@@ -371,28 +371,28 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
       {/* SELECTED DATE DETAILS & WORKOUTS */}
       <div
         ref={daySwipeRef}
-        className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-3 touch-pan-y"
+        className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-3 shadow-xs touch-pan-y"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800 pb-3">
           <div>
             <div className="flex items-center space-x-1.5">
-              <CalendarIcon className="h-4 w-4 text-zinc-500 shrink-0" />
+              <CalendarIcon className="h-4 w-4 text-slate-500 shrink-0" />
               <button
                 type="button"
                 onClick={handlePrevDay}
-                className="p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Попередній день"
                 aria-label="Попередній день"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </button>
-              <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 select-none">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 select-none">
                 {formatUkDate(selectedCalendarDateStr)}
               </h3>
               <button
                 type="button"
                 onClick={handleNextDay}
-                className="p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Наступний день"
                 aria-label="Наступний день"
               >
@@ -410,7 +410,7 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 setIsCreateModalOpen(true);
               }
             }}
-            className="inline-flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0"
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs font-bold hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer shrink-0 shadow-sm"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Додати тренування на цей день</span>
@@ -418,11 +418,14 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
         </div>
 
         {selectedDateWorkouts.length === 0 ? (
-          <div className="py-8 text-center text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
-            <p className="font-semibold text-zinc-700 dark:text-zinc-300">
-              На обрану дату немає тренувань.
-            </p>
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 max-w-sm mx-auto">
+          <div className="w-full rounded-[24px] border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 py-10 px-4 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 flex items-center justify-center">
+              <CalendarIcon className="w-5 h-5 text-slate-400 dark:text-zinc-400 stroke-[1.75]" />
+            </div>
+            <h4 className="mt-3 font-bold text-sm sm:text-base text-[#0f172a] dark:text-zinc-100">
+              На обрану дату немає тренувань
+            </h4>
+            <p className="mt-1 text-xs text-[#94a3b8] dark:text-zinc-400 max-w-xs">
               Натисніть кнопку вище, щоб одразу скласти нову програму занять.
             </p>
           </div>

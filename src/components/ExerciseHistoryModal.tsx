@@ -115,26 +115,26 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="border-b border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 bg-white dark:bg-zinc-900 shrink-0">
+        <div className="border-b border-slate-200 dark:border-zinc-800 p-4 sm:p-5 bg-white dark:bg-zinc-900 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               <div
-                className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 shrink-0 border border-zinc-200 dark:border-zinc-700"
+                className="h-11 w-11 flex items-center justify-center rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 shrink-0 border border-slate-200/80 dark:border-zinc-700"
               >
                 <Dumbbell className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                  <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-100 break-words leading-tight">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 break-words leading-tight">
                     {exercise.name}
                   </h3>
                   <span
-                    className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
+                    className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700"
                   >
                     {muscleInfo.nameUk}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                   Результати, рекорди та історія підходів
                 </p>
               </div>
@@ -142,7 +142,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition shrink-0 cursor-pointer"
+              className="rounded-full p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition shrink-0 cursor-pointer"
               aria-label="Закрити"
             >
               <X className="h-5 w-5" />
@@ -150,59 +150,59 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
           </div>
 
           {/* Quick Metrics Strip */}
-          <div className="mt-3.5 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* PR Weight */}
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 text-center">
-              <div className="flex items-center justify-center space-x-1 text-amber-600 dark:text-amber-400 text-[10px] font-medium">
+            <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-2.5 sm:p-3 text-center shadow-xs">
+              <div className="flex items-center justify-center space-x-1 text-amber-600 dark:text-amber-400 text-[10px] font-semibold">
                 <Trophy className="h-3 w-3" />
                 <span>Рекорд (PR)</span>
               </div>
-              <div className="font-mono text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
+              <div className="font-mono text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-0.5">
                 {stats.prWeight > 0 ? `${stats.prWeight} кг` : '—'}
               </div>
               {stats.bestRepsAtPR > 0 && (
-                <div className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
+                <div className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">
                   на {stats.bestRepsAtPR} повт.
                 </div>
               )}
             </div>
 
             {/* Est. 1RM */}
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 text-center">
-              <div className="flex items-center justify-center space-x-1 text-zinc-600 dark:text-zinc-400 text-[10px] font-medium">
+            <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-2.5 sm:p-3 text-center shadow-xs">
+              <div className="flex items-center justify-center space-x-1 text-slate-600 dark:text-zinc-400 text-[10px] font-semibold">
                 <TrendingUp className="h-3 w-3" />
                 <span>Розрахунковий 1RM</span>
               </div>
-              <div className="font-mono text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
+              <div className="font-mono text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-0.5">
                 {stats.best1RM > 0 ? `${stats.best1RM} кг` : '—'}
               </div>
-              <div className="text-[10px] text-zinc-400">макс. на 1 повт.</div>
+              <div className="text-[10px] text-slate-400">макс. на 1 повт.</div>
             </div>
 
             {/* Last Performance */}
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 text-center">
-              <div className="flex items-center justify-center space-x-1 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium">
+            <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-2.5 sm:p-3 text-center shadow-xs">
+              <div className="flex items-center justify-center space-x-1 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
                 <Clock className="h-3 w-3" />
                 <span>Останній раз</span>
               </div>
               <div className="font-mono text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">
                 {lastPerformance ? `${lastPerformance.maxWeight} кг` : '—'}
               </div>
-              <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+              <div className="text-[10px] text-slate-500 dark:text-zinc-400 truncate">
                 {lastPerformance ? lastPerformance.date : 'Немає записів'}
               </div>
             </div>
 
             {/* Completed Sets / Sessions */}
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 text-center">
-              <div className="flex items-center justify-center space-x-1 text-zinc-600 dark:text-zinc-400 text-[10px] font-medium">
+            <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-2.5 sm:p-3 text-center shadow-xs">
+              <div className="flex items-center justify-center space-x-1 text-slate-600 dark:text-zinc-400 text-[10px] font-semibold">
                 <Layers className="h-3 w-3" />
                 <span>Підходів / Занять</span>
               </div>
-              <div className="font-mono text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
+              <div className="font-mono text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-0.5">
                 {stats.totalCompletedSets} / {stats.totalSessions}
               </div>
-              <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
+              <div className="text-[10px] text-slate-500 dark:text-zinc-400">
                 {stats.totalRepsAllTime} повторень
               </div>
             </div>
@@ -306,14 +306,14 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="border-t border-zinc-200 dark:border-zinc-800 p-3.5 bg-zinc-50/70 dark:bg-zinc-900 flex items-center justify-between shrink-0">
-          <div className="text-xs text-zinc-400">
+        <div className="border-t border-slate-200 dark:border-zinc-800 p-4 bg-slate-50/70 dark:bg-zinc-900 flex items-center justify-between shrink-0">
+          <div className="text-xs text-slate-400">
             Хронологія робочих підходів
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-1.5 text-xs font-semibold transition cursor-pointer"
+            className="rounded-2xl bg-[#0f172a] dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-[#1e293b] dark:hover:bg-white px-5 py-2 text-xs font-bold shadow-sm transition cursor-pointer"
           >
             Закрити
           </button>

@@ -143,39 +143,39 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 p-4 sm:p-5 bg-white dark:bg-zinc-900">
           <div className="flex items-center space-x-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
-              <Dumbbell className="h-4 w-4" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
+              <Dumbbell className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Вибір вправи</h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">Оберіть зі списку або додайте власну</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100">Вибір вправи</h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Оберіть зі списку або додайте власну</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+            className="rounded-full p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Search & Muscle Filters */}
-        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 space-y-3 bg-zinc-50/50 dark:bg-zinc-900/40">
+        <div className="p-4 border-b border-slate-200 dark:border-zinc-800 space-y-3 bg-slate-50/60 dark:bg-zinc-900/40">
           <div className="relative">
-            <Search className="absolute left-3.5 top-3 h-4 w-4 text-zinc-400" />
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder="Пошук вправи за назвою..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-10 pr-16 py-2.5 text-base sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:border-zinc-400 dark:focus:border-zinc-500 focus:outline-none"
+              className="w-full h-11 rounded-2xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-10 pr-16 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700"
             />
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="absolute right-3 top-2.5 text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 py-0.5 px-1.5"
+                className="absolute right-3 top-3 text-xs text-slate-400 hover:text-slate-900 dark:hover:text-white py-0.5 px-2 font-medium"
               >
                 Очистити
               </button>
@@ -186,9 +186,9 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           <div className="flex space-x-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
             <button
               onClick={() => setSelectedMuscle('all')}
-              className={`rounded-xl px-2.5 py-1 font-medium whitespace-nowrap transition ${selectedMuscle === 'all'
-                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+              className={`rounded-xl px-3 py-1.5 font-medium whitespace-nowrap transition cursor-pointer ${selectedMuscle === 'all'
+                ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
+                : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-700'
                 }`}
             >
               Всі ({exercises.length})
@@ -201,9 +201,9 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 <button
                   key={groupKey}
                   onClick={() => setSelectedMuscle(groupKey)}
-                  className={`rounded-xl px-2.5 py-1 font-medium whitespace-nowrap transition border ${isSelected
-                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-semibold'
-                    : 'border-transparent bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                  className={`rounded-xl px-3 py-1.5 font-medium whitespace-nowrap transition border cursor-pointer ${isSelected
+                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-slate-900 dark:border-zinc-100 font-bold shadow-xs'
+                    : 'border-transparent bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-700'
                     }`}
                 >
                   {info.nameUk} ({count})
@@ -216,15 +216,15 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
         {/* List of exercises (Supports Swipe Left/Right to change muscle group) */}
         <div ref={modalSwipeRef} className="flex-1 overflow-y-auto p-4 space-y-2 touch-pan-y">
           {filtered.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 p-8 text-center">
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">Вправу не знайдено за вашим запитом.</p>
+            <div className="rounded-[24px] border border-dashed border-slate-200 dark:border-zinc-800 p-8 text-center flex flex-col items-center justify-center">
+              <p className="text-sm text-slate-500 dark:text-zinc-400">Вправу не знайдено за вашим запитом.</p>
               <button
                 onClick={() => {
                   const query = search.trim();
                   onClose();
                   onOpenCreateModal(query);
                 }}
-                className="mt-3 inline-flex items-center space-x-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition"
+                className="mt-3.5 inline-flex items-center space-x-2 rounded-2xl bg-[#0f172a] dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Створити «{search || 'цю вправу'}»</span>
@@ -240,23 +240,23 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                   type="button"
                   key={ex.id}
                   onClick={(e) => handleSelect(e, ex)}
-                  className="w-full text-left rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/90 hover:border-zinc-300 dark:hover:border-zinc-700 p-3 transition flex items-center justify-between group touch-manipulation cursor-pointer active:scale-[0.99]"
+                  className="w-full text-left rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 hover:bg-slate-50 dark:hover:bg-zinc-800/90 hover:border-slate-300 dark:hover:border-zinc-700 p-3.5 transition flex items-center justify-between group touch-manipulation cursor-pointer active:scale-[0.99] shadow-xs"
                 >
                   <div className="flex-1 min-w-0 pr-3">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate">
+                      <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate">
                         {ex.name}
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                      <span className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                      <span className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-semibold bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700">
                         {muscleInfo.nameUk}
                       </span>
                     </div>
 
                     {/* Past history hint if available */}
                     {lastPerf && (
-                      <div className="mt-1.5 flex items-center space-x-1.5 text-[11px] text-amber-600 dark:text-amber-400 font-mono">
+                      <div className="mt-1.5 flex items-center space-x-1.5 text-[11px] text-amber-600 dark:text-amber-400 font-mono font-medium">
                         <Sparkles className="h-3 w-3 shrink-0" />
                         <span className="truncate">
                           Минулий рез.: {lastPerf.maxWeight} кг ({lastPerf.sets.length} підх.) від {lastPerf.date}
@@ -265,7 +265,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                     )}
                   </div>
 
-                  <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 opacity-0 group-hover:opacity-100 transition whitespace-nowrap pl-2">
+                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 opacity-0 group-hover:opacity-100 transition whitespace-nowrap pl-2">
                     Обрати +
                   </span>
                 </button>
@@ -275,15 +275,15 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
         </div>
 
         {/* Footer with create custom trigger */}
-        <div className="border-t border-zinc-200 dark:border-zinc-800 p-3.5 bg-zinc-50/70 dark:bg-zinc-900 flex items-center justify-between">
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">Немає потрібної вправи?</span>
+        <div className="border-t border-slate-200 dark:border-zinc-800 p-4 bg-slate-50/70 dark:bg-zinc-900 flex items-center justify-between">
+          <span className="text-xs text-slate-500 dark:text-zinc-400">Немає потрібної вправи?</span>
           <button
             onClick={() => {
               const query = search.trim();
               onClose();
               onOpenCreateModal(query);
             }}
-            className="flex items-center space-x-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+            className="flex items-center space-x-1.5 rounded-2xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-700 transition shadow-2xs cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5 text-amber-500" />
             <span>Створити нову вправу</span>

@@ -503,23 +503,29 @@ export const ExercisesScreen: React.FC = () => {
             </Text>
           </View>
         ) : filteredExercises.length === 0 ? (
-          <Card style={styles.emptyCard}>
-            <Ionicons name="barbell-outline" size={36} color={isDark ? '#52525b' : '#d4d4d8'} />
-            <Text style={[styles.emptyTitle, isDark ? styles.textDark : styles.textLight]}>
+          <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
+            <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
+              <Ionicons name="barbell-outline" size={26} color={isDark ? '#71717a' : '#94a3b8'} />
+            </View>
+            <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
               Вправ не знайдено
             </Text>
-            <Text style={[styles.emptyDesc, isDark ? styles.subDark : styles.subLight]}>
+            <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
               {searchQuery
                 ? `Вправ із назвою «${searchQuery}» не знайдено.`
                 : 'У цій категорії поки що немає вправ.'}
             </Text>
-            <Button
-              title="+ Створити власну вправу"
-              variant="primary"
+            <TouchableOpacity
+              style={[styles.emptyBtn, isDark ? styles.emptyBtnDark : styles.emptyBtnLight]}
+              activeOpacity={0.8}
               onPress={handleOpenCreateModal}
-              style={{ marginTop: 14 }}
-            />
-          </Card>
+            >
+              <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
+              <Text style={[styles.emptyBtnText, isDark ? styles.emptyBtnTextDark : styles.emptyBtnTextLight]}>
+                Створити власну вправу
+              </Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.grid}>
             {filteredExercises.map((ex) => {
@@ -828,7 +834,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     height: 42,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
   searchBarLight: {
@@ -854,30 +860,30 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   tabsContainer: {
-    gap: 8,
+    gap: 6,
     paddingVertical: 2,
   },
   tabChip: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
     borderWidth: 1,
   },
   tabActiveLight: {
-    backgroundColor: '#18181b',
-    borderColor: '#18181b',
+    backgroundColor: '#0f172a',
+    borderColor: '#0f172a',
   },
   tabActiveDark: {
     backgroundColor: '#f4f4f5',
     borderColor: '#f4f4f5',
   },
   tabInactiveLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#eef2f6',
+    borderColor: 'transparent',
   },
   tabInactiveDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#27272a',
+    borderColor: 'transparent',
   },
   tabText: {
     fontSize: 12,
@@ -897,20 +903,88 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 13,
   },
-  emptyCard: {
-    padding: 28,
+  emptyContainer: {
+    paddingVertical: 48,
+    paddingHorizontal: 20,
+    borderRadius: 28,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    marginTop: 4,
+  },
+  emptyLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  emptyDark: {
+    backgroundColor: '#18181b80',
+    borderColor: '#27272a',
+  },
+  emptyIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIconBoxLight: {
+    backgroundColor: '#eef2f8',
+  },
+  emptyIconBoxDark: {
+    backgroundColor: '#27272a',
   },
   emptyTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
-    marginTop: 6,
+    textAlign: 'center',
+    marginTop: 16,
+    lineHeight: 22,
+    maxWidth: 280,
   },
-  emptyDesc: {
+  emptyTitleLight: {
+    color: '#0f172a',
+  },
+  emptyTitleDark: {
+    color: '#fafafa',
+  },
+  emptySubtitle: {
     fontSize: 12,
     textAlign: 'center',
+    marginTop: 8,
     lineHeight: 18,
+    maxWidth: 280,
+  },
+  emptySubtitleLight: {
+    color: '#94a3b8',
+  },
+  emptySubtitleDark: {
+    color: '#71717a',
+  },
+  emptyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 16,
+    marginTop: 16,
+  },
+  emptyBtnLight: {
+    backgroundColor: '#0f172a',
+  },
+  emptyBtnDark: {
+    backgroundColor: '#f4f4f5',
+  },
+  emptyBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  emptyBtnTextLight: {
+    color: '#ffffff',
+  },
+  emptyBtnTextDark: {
+    color: '#09090b',
   },
   grid: {
     gap: 10,
@@ -1079,8 +1153,8 @@ const styles = StyleSheet.create({
   },
   modalCancelBtn: {
     flex: 1,
-    height: 44,
-    borderRadius: 14,
+    height: 46,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1092,19 +1166,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    height: 36,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    height: 38,
+    paddingHorizontal: 14,
+    borderRadius: 14,
   },
   webAddBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   webAddBtnDark: {
     backgroundColor: '#f4f4f5',
   },
   webAddBtnText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   webAddBtnTextLight: {
     color: '#ffffff',
@@ -1147,15 +1221,15 @@ const styles = StyleSheet.create({
   },
   modalSaveBtn: {
     flex: 1.5,
-    height: 44,
-    borderRadius: 14,
+    height: 46,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 6,
   },
   modalSaveBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   modalSaveBtnDark: {
     backgroundColor: '#f4f4f5',
@@ -1163,12 +1237,12 @@ const styles = StyleSheet.create({
   modalSaveTextLight: {
     color: '#ffffff',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   modalSaveTextDark: {
     color: '#09090b',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   btnDisabled: {
     opacity: 0.6,

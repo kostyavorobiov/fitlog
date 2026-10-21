@@ -57,40 +57,40 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
         role="dialog"
         aria-modal="true"
         data-no-swipe="true"
-        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-6 shadow-2xl text-zinc-900 dark:text-zinc-100"
+        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl text-slate-900 dark:text-zinc-100"
       >
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer"
         >
           <X className="h-5 w-5" />
         </button>
 
         <div className="flex items-center space-x-3 mb-5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700">
             <LogIn className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Вхід в акаунт</h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Синхронізація тренувань та бази</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100">Вхід в акаунт</h3>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">Синхронізація тренувань та бази</p>
           </div>
         </div>
 
         {/* Database Connection Status Badge */}
         <div className="mb-4">
           {isCloudConnected ? (
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs">
+            <div className="flex items-center space-x-2 px-3.5 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs">
               <Cloud className="h-4 w-4 shrink-0" />
               <div>
-                <span className="font-semibold">Хмарна база: Supabase активна</span>
+                <span className="font-bold">Хмарна база: Supabase активна</span>
                 <span className="block text-[11px] opacity-80">Авторизація через офіційний Google OAuth</span>
               </div>
             </div>
           ) : (
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs">
+            <div className="flex items-center space-x-2 px-3.5 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs">
               <HardDrive className="h-4 w-4 shrink-0" />
               <div>
-                <span className="font-semibold">Локальний режим (LocalStorage)</span>
+                <span className="font-bold">Локальний режим (LocalStorage)</span>
                 <span className="block text-[11px] opacity-80">Для хмари додайте ключі Supabase у Vercel / .env</span>
               </div>
             </div>
@@ -98,7 +98,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
         </div>
 
         {errorMsg && (
-          <div className="mb-4 flex items-center space-x-2 rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 text-xs text-rose-600 dark:text-rose-400">
+          <div className="mb-4 flex items-center space-x-2 rounded-2xl bg-rose-500/10 border border-rose-500/20 p-3 text-xs text-rose-600 dark:text-rose-400">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -106,7 +106,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
 
         {/* Current logged in user info */}
         {user && (
-          <div className="mb-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 p-3.5 space-y-3">
+          <div className="mb-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-4 space-y-3 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <UserAvatar
@@ -116,12 +116,12 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
                 />
                 <div>
                   <div className="flex items-center space-x-1.5">
-                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{user.name}</span>
-                    <span className="inline-flex items-center rounded-md px-1.5 py-0.2 text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                    <span className="text-sm font-bold text-slate-900 dark:text-zinc-100">{user.name}</span>
+                    <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                       Активний
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">{user.email}</p>
                 </div>
               </div>
               <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -130,7 +130,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full flex items-center justify-center space-x-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition cursor-pointer"
+              className="w-full flex items-center justify-center space-x-1.5 rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 px-3 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span>Вийти з цього акаунта</span>
@@ -143,7 +143,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
           <button
             onClick={handleGoogleLogin}
             disabled={isSubmitting}
-            className="w-full flex items-center justify-center space-x-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-750 hover:border-zinc-400 dark:hover:border-zinc-600 transition shadow-sm font-medium text-sm text-zinc-800 dark:text-zinc-100 cursor-pointer"
+            className="w-full flex items-center justify-center space-x-3 rounded-2xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-3.5 hover:bg-slate-50 dark:hover:bg-zinc-750 hover:border-slate-300 dark:hover:border-zinc-600 transition shadow-sm font-bold text-sm text-slate-900 dark:text-zinc-100 cursor-pointer"
           >
             <div className="flex h-5 w-5 items-center justify-center shrink-0">
               <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -171,11 +171,11 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
 
         {/* Custom email entry for fallback */}
         {!isCloudConnected && (
-          <div className="mt-5 border-t border-zinc-200 dark:border-zinc-800 pt-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2.5">
+          <div className="mt-5 border-t border-slate-200 dark:border-zinc-800 pt-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-2.5">
               Або вхід за Email (локальний режим)
             </p>
-            <form onSubmit={handleCustomSubmit} className="space-y-2.5">
+            <form onSubmit={handleCustomSubmit} className="space-y-3">
               <div>
                 <input
                   type="email"
@@ -183,7 +183,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
                   placeholder="ваш_email@gmail.com"
                   value={customEmail}
                   onChange={(e) => setCustomEmail(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-base sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:border-zinc-400 dark:focus:border-zinc-500 focus:outline-none"
+                  className="w-full h-11 rounded-2xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700"
                 />
               </div>
               <div>
@@ -192,13 +192,13 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
                   placeholder="Ваше ім'я (необов'язково)"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-base sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:border-zinc-400 dark:focus:border-zinc-500 focus:outline-none"
+                  className="w-full h-11 rounded-2xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 py-2.5 text-sm font-semibold transition cursor-pointer"
+                className="w-full h-11 rounded-2xl bg-[#0f172a] dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-[#1e293b] dark:hover:bg-white text-xs font-bold shadow-sm transition cursor-pointer"
               >
                 {isSubmitting ? 'Авторизація...' : 'Увійти в щоденник'}
               </button>
@@ -206,7 +206,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ isOpen, onClos
           </div>
         )}
 
-        <div className="mt-4 flex items-center justify-center space-x-1.5 text-xs text-zinc-400">
+        <div className="mt-4 flex items-center justify-center space-x-1.5 text-xs text-slate-400">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
           <span>Синхронізація тренувань та безпека даних</span>
         </div>

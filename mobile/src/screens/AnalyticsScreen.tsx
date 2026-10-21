@@ -363,45 +363,45 @@ export const AnalyticsScreen: React.FC = () => {
 
             {/* Empty State when 0 completed sets */}
             {analyticsData.periodCompletedSets === 0 ? (
-              <Card style={styles.emptyCard}>
-                <Ionicons name="layers-outline" size={44} color={isDark ? '#52525b' : '#d4d4d8'} />
-                <Text style={[styles.emptyTitle, isDark ? styles.textDark : styles.textLight]}>
+              <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
+                <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
+                  <Ionicons name="layers-outline" size={26} color={isDark ? '#71717a' : '#94a3b8'} />
+                </View>
+                <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
                   За обраний період немає завершених підходів
                 </Text>
-                <Text style={[styles.emptyDesc, isDark ? styles.subDark : styles.subLight]}>
+                <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
                   Враховуються лише успішно виконані підходи (відмічені галочкою ✓) у запланованих тренуваннях за цей календарний період.
                 </Text>
                 <TouchableOpacity
-                  style={styles.emptyBtn}
+                  style={[styles.emptyBtn, isDark ? styles.emptyBtnDark : styles.emptyBtnLight]}
                   activeOpacity={0.8}
                   onPress={() => router.push('/(tabs)')}
                 >
-                  <Ionicons name="arrow-back" size={16} color="#ffffff" />
-                  <Text style={styles.emptyBtnText}>До списку тренувань</Text>
+                  <Ionicons name="arrow-back" size={16} color={isDark ? '#09090b' : '#ffffff'} />
+                  <Text style={[styles.emptyBtnText, isDark ? styles.emptyBtnTextDark : styles.emptyBtnTextLight]}>
+                    До списку тренувань
+                  </Text>
                 </TouchableOpacity>
-              </Card>
+              </View>
             ) : (
               <>
                 {/* Section View Switcher (М'язові групи | Вправи) */}
-                <View style={styles.sectionTabRow}>
+                <View style={[styles.filterContainer, isDark ? styles.filterDark : styles.filterLight]}>
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setViewTab('muscles')}
                     style={[
-                      styles.sectionTabBtn,
-                      viewTab === 'muscles' && styles.sectionTabBtnActive,
-                      isDark ? styles.sectionTabDark : styles.sectionTabLight,
+                      styles.filterBtn,
+                      viewTab === 'muscles' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
                     ]}
                   >
-                    <Ionicons
-                      name="pie-chart-outline"
-                      size={15}
-                      color={viewTab === 'muscles' ? '#ffffff' : (isDark ? '#a1a1aa' : '#71717a')}
-                    />
                     <Text
                       style={[
-                        styles.sectionTabText,
-                        viewTab === 'muscles' ? styles.sectionTabTextActive : (isDark ? styles.subDark : styles.subLight),
+                        styles.filterBtnText,
+                        viewTab === 'muscles'
+                          ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
+                          : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
                       ]}
                     >
                       Групи м'язів ({analyticsData.muscleList.length})
@@ -412,20 +412,16 @@ export const AnalyticsScreen: React.FC = () => {
                     activeOpacity={0.7}
                     onPress={() => setViewTab('exercises')}
                     style={[
-                      styles.sectionTabBtn,
-                      viewTab === 'exercises' && styles.sectionTabBtnActive,
-                      isDark ? styles.sectionTabDark : styles.sectionTabLight,
+                      styles.filterBtn,
+                      viewTab === 'exercises' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
                     ]}
                   >
-                    <Ionicons
-                      name="list-outline"
-                      size={15}
-                      color={viewTab === 'exercises' ? '#ffffff' : (isDark ? '#a1a1aa' : '#71717a')}
-                    />
                     <Text
                       style={[
-                        styles.sectionTabText,
-                        viewTab === 'exercises' ? styles.sectionTabTextActive : (isDark ? styles.subDark : styles.subLight),
+                        styles.filterBtnText,
+                        viewTab === 'exercises'
+                          ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
+                          : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
                       ]}
                     >
                       Вправи ({analyticsData.exercisesList.length})
@@ -605,7 +601,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fafafa',
   },
   bgDark: {
     backgroundColor: '#09090b',
@@ -616,40 +612,49 @@ const styles = StyleSheet.create({
   },
   periodContainer: {
     flexDirection: 'row',
-    padding: 2,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
+    padding: 3,
+    borderRadius: 16,
+    gap: 3,
   },
   periodLight: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#eef2f6',
   },
   periodDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#27272a',
   },
   periodBtn: {
-    paddingVertical: 5,
-    paddingHorizontal: 9,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: 12,
   },
   periodBtnActiveLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#ffffff',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
   },
   periodBtnActiveDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#18181b',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   periodBtnText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   periodTextActiveLight: {
-    color: '#ffffff',
+    color: '#0f172a',
+    fontWeight: '700',
   },
   periodTextActiveDark: {
-    color: '#09090b',
+    color: '#fafafa',
+    fontWeight: '700',
   },
   scrollContent: {
     padding: 16,
@@ -658,6 +663,7 @@ const styles = StyleSheet.create({
   },
   dateNavCard: {
     padding: 12,
+    borderRadius: 18,
   },
   dateNavRow: {
     flexDirection: 'row',
@@ -707,11 +713,11 @@ const styles = StyleSheet.create({
   todayBtn: {
     paddingHorizontal: 8,
     paddingVertical: 5,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
   },
   todayBtnLight: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#eef2f6',
     borderColor: '#e2e8f0',
   },
   todayBtnDark: {
@@ -735,6 +741,7 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     gap: 10,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: '#ef444430',
   },
@@ -770,6 +777,7 @@ const styles = StyleSheet.create({
   kpiCard: {
     width: '48.5%',
     padding: 12,
+    borderRadius: 18,
     gap: 4,
   },
   kpiHeaderRow: {
@@ -798,71 +806,143 @@ const styles = StyleSheet.create({
   kpiDesc: {
     fontSize: 10,
   },
-  emptyCard: {
-    padding: 28,
+  emptyContainer: {
+    paddingVertical: 48,
+    paddingHorizontal: 20,
+    borderRadius: 28,
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
+    borderWidth: 1.5,
     borderStyle: 'dashed',
-  },
-  emptyTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    textAlign: 'center',
     marginTop: 4,
   },
-  emptyDesc: {
+  emptyLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  emptyDark: {
+    backgroundColor: '#18181b80',
+    borderColor: '#27272a',
+  },
+  emptyIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIconBoxLight: {
+    backgroundColor: '#eef2f8',
+  },
+  emptyIconBoxDark: {
+    backgroundColor: '#27272a',
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 16,
+    lineHeight: 22,
+    maxWidth: 280,
+  },
+  emptyTitleLight: {
+    color: '#0f172a',
+  },
+  emptyTitleDark: {
+    color: '#fafafa',
+  },
+  emptySubtitle: {
     fontSize: 12,
     textAlign: 'center',
+    marginTop: 8,
     lineHeight: 18,
-    maxWidth: 290,
+    maxWidth: 280,
+  },
+  emptySubtitleLight: {
+    color: '#94a3b8',
+  },
+  emptySubtitleDark: {
+    color: '#71717a',
   },
   emptyBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#0284c7',
     paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 14,
-    marginTop: 4,
+    paddingVertical: 10,
+    borderRadius: 16,
+    marginTop: 16,
+  },
+  emptyBtnLight: {
+    backgroundColor: '#0f172a',
+  },
+  emptyBtnDark: {
+    backgroundColor: '#f4f4f5',
   },
   emptyBtnText: {
-    color: '#ffffff',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  sectionTabRow: {
+  emptyBtnTextLight: {
+    color: '#ffffff',
+  },
+  emptyBtnTextDark: {
+    color: '#09090b',
+  },
+  filterContainer: {
     flexDirection: 'row',
-    gap: 8,
+    padding: 4,
+    borderRadius: 20,
+    gap: 4,
   },
-  sectionTabBtn: {
+  filterLight: {
+    backgroundColor: '#eef2f6',
+  },
+  filterDark: {
+    backgroundColor: '#27272a',
+  },
+  filterBtn: {
     flex: 1,
-    flexDirection: 'row',
+    paddingVertical: 9,
+    paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 14,
   },
-  sectionTabLight: {
+  filterBtnActiveLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
   },
-  sectionTabDark: {
+  filterBtnActiveDark: {
     backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
-  sectionTabBtnActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+  filterBtnText: {
+    fontSize: 13,
   },
-  sectionTabText: {
-    fontSize: 12,
+  filterTextActiveLight: {
+    color: '#0f172a',
+    fontWeight: '700',
+  },
+  filterTextActiveDark: {
+    color: '#fafafa',
+    fontWeight: '700',
+  },
+  filterTextInactiveLight: {
+    color: '#64748b',
     fontWeight: '600',
   },
-  sectionTabTextActive: {
-    color: '#ffffff',
+  filterTextInactiveDark: {
+    color: '#a1a1aa',
+    fontWeight: '600',
   },
   breakdownCard: {
     padding: 14,
@@ -954,23 +1034,23 @@ const styles = StyleSheet.create({
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 36,
-    paddingHorizontal: 10,
-    borderRadius: 14,
+    height: 40,
+    paddingHorizontal: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    gap: 6,
+    gap: 8,
   },
   searchLight: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    borderColor: '#e4e4e7',
   },
   searchDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#18181b',
     borderColor: '#27272a',
   },
   searchInput: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 13,
     paddingVertical: 0,
   },
   exercisesList: {

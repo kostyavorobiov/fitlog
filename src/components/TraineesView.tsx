@@ -247,26 +247,26 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-zinc-800 pb-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">
             Підопічні (Тренер)
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Управління підопічними, складання тренувальних планів та контроль прогресу
           </p>
         </div>
 
         {/* Coach ID Share Box */}
-        <div className="flex items-center space-x-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 text-xs self-start sm:self-auto">
-          <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Мій код тренера:</div>
-          <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100 select-all">
+        <div className="flex items-center space-x-2 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 text-xs shadow-xs self-start sm:self-auto">
+          <div className="text-[11px] text-slate-500 dark:text-zinc-400">Мій код тренера:</div>
+          <span className="font-mono font-bold text-slate-900 dark:text-zinc-100 select-all">
             {coach.profileCode || coach.id}
           </span>
           <button
             type="button"
             onClick={handleCopyCoachCode}
-            className="p-1 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             title="Скопіювати код"
           >
             {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
@@ -275,8 +275,8 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
       </div>
 
       {/* Add Trainee Bar */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
-        <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-xs">
+        <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-2">
           Прикріпити нового підопічного
         </label>
         <div className="flex flex-col sm:flex-row gap-2">
@@ -291,13 +291,13 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
               }
             }}
             disabled={isAdding}
-            className="flex-1 h-9 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 disabled:opacity-50"
+            className="flex-1 h-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700 disabled:opacity-50"
           />
           <button
             type="button"
             onClick={() => handleAddTrainee()}
             disabled={isAdding}
-            className="h-9 inline-flex items-center justify-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+            className="h-11 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 px-5 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer shrink-0 disabled:opacity-50"
           >
             {isAdding ? (
               <>
@@ -316,12 +316,14 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
 
       {/* Trainees List & Details Split */}
       {trainees.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-10 text-center space-y-2">
-          <Users className="h-8 w-8 text-zinc-400 mx-auto" />
-          <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+        <div className="rounded-[28px] border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 py-12 px-6 flex flex-col items-center justify-center text-center shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 flex items-center justify-center mb-3 text-slate-400 dark:text-zinc-500">
+            <Users className="h-7 w-7" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100">
             У вас ще немає підопічних
           </h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-sm mx-auto mt-1">
             Поділіться своїм кодом тренера або введіть код спортсмена вище, щоб додати його до списку.
           </p>
         </div>
@@ -329,7 +331,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
         <div className="space-y-4">
           {/* Trainees Selector Row */}
           <div>
-            <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+            <div className="text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
               Ваші підопічні ({trainees.length})
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -341,24 +343,24 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                   <div
                     key={t.id}
                     onClick={() => selectTrainee(t)}
-                    className={`rounded-xl border p-3 cursor-pointer transition-colors flex items-center justify-between gap-3 ${
+                    className={`rounded-2xl border p-3.5 cursor-pointer transition-all flex items-center justify-between gap-3 shadow-xs ${
                       isSelected
-                        ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900 dark:ring-zinc-100'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
+                        ? 'border-slate-900 dark:border-zinc-100 bg-slate-50 dark:bg-zinc-800/80 ring-1 ring-slate-900 dark:ring-zinc-100'
+                        : 'border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-slate-300 dark:hover:border-zinc-700'
                     }`}
                   >
                     <div className="flex items-center space-x-2.5 min-w-0">
                       <UserAvatar src={t.image} alt={t.name} size="sm" />
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                        <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
                           {t.firstName || t.name} {t.lastName || ''}
                         </div>
-                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                        <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                           {traineeWorkoutCount} тренувань
                         </div>
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-zinc-400 shrink-0" />
+                    <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
                   </div>
                 );
               })}
@@ -369,22 +371,22 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
           {selectedTrainee && (
             <div
               ref={traineeSwipeRef}
-              className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
+              className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-6 space-y-5 shadow-xs touch-pan-y"
             >
               {/* Trainee Subheader */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
                 <div className="flex items-center space-x-3">
                   <UserAvatar src={selectedTrainee.image} alt={selectedTrainee.name} size="md" />
                   <div>
                     <div className="flex items-center space-x-2">
-                      <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                      <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
                         {selectedTrainee.firstName || selectedTrainee.name} {selectedTrainee.lastName || ''}
                       </h2>
-                      <span className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-600 dark:text-zinc-400">
+                      <span className="rounded-md border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-zinc-400">
                         Атлет
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                       {selectedTrainee.email} · ID: {selectedTrainee.profileCode || selectedTrainee.id}
                     </p>
                   </div>
@@ -394,7 +396,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setTraineeToRemove(selectedTrainee)}
-                    className="h-8 px-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-medium hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
+                    className="h-9 px-3 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
                   >
                     Відкріпити
                   </button>
@@ -403,7 +405,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                   <button
                     type="button"
                     onClick={handleCreatePlanForTrainee}
-                    className="h-8 inline-flex items-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+                    className="h-9 inline-flex items-center space-x-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>Створити план тренування</span>
@@ -414,28 +416,30 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
               {/* Trainee Workouts List */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                  <span className="font-semibold text-slate-700 dark:text-zinc-300">
                     Тренування підопічного ({traineeWorkouts.length})
                   </span>
                 </div>
 
                 {traineeWorkouts.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center space-y-2">
-                    <Dumbbell className="h-6 w-6 text-zinc-400 mx-auto" />
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  <div className="rounded-[24px] border border-dashed border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/30 py-8 px-6 text-center space-y-3 flex flex-col items-center justify-center">
+                    <div className="w-12 h-12 rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 flex items-center justify-center text-slate-400 dark:text-zinc-500">
+                      <Dumbbell className="h-6 w-6" />
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-zinc-400">
                       У цього підопічного ще немає запланованих тренувань.
                     </p>
                     <button
                       type="button"
                       onClick={handleCreatePlanForTrainee}
-                      className="inline-flex items-center space-x-1.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+                      className="inline-flex items-center space-x-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>Скласти перше тренування</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {traineeWorkouts.map((w) => {
                       const isCompleted = w.status === 'completed';
                       const exercisesCount = w.exercises?.length || 0;
@@ -447,7 +451,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                       return (
                         <div
                           key={w.id}
-                          className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                          className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-950/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
                         >
                           <div className="space-y-1 min-w-0 flex-1">
                             <div className="flex items-center space-x-2 text-xs">
@@ -457,7 +461,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                     ? 'text-emerald-600 dark:text-emerald-400'
                                     : w.status === 'in_progress'
                                     ? 'text-amber-600 dark:text-amber-400'
-                                    : 'text-zinc-500 dark:text-zinc-400'
+                                    : 'text-slate-500 dark:text-zinc-400'
                                 }`}
                               >
                                 {isCompleted
@@ -466,20 +470,20 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                   ? 'У процесі'
                                   : 'Заплановано'}
                               </span>
-                              <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                              <span className="flex items-center space-x-1 text-zinc-500 dark:text-zinc-400 font-mono text-xs">
+                              <span className="text-slate-300 dark:text-zinc-700">·</span>
+                              <span className="flex items-center space-x-1 text-slate-500 dark:text-zinc-400 font-mono text-xs">
                                 <Calendar className="h-3 w-3" />
                                 <span>{w.scheduledDate}</span>
                               </span>
                             </div>
 
-                            <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-zinc-100 truncate">
                               {w.title || 'Тренування без назви'}
                             </h4>
 
-                            <div className="flex items-center space-x-2 text-xs text-zinc-500 dark:text-zinc-400">
+                            <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-zinc-400">
                               <span>{exercisesCount} вправ</span>
-                              <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                              <span className="text-slate-300 dark:text-zinc-700">·</span>
                               <span>{setsCount} підходів</span>
                             </div>
 
@@ -494,7 +498,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                   return (
                                     <span
                                       key={idx}
-                                      className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 text-[11px] text-zinc-700 dark:text-zinc-300 font-medium"
+                                      className="rounded-md border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-800/80 px-2 py-0.5 text-[11px] text-slate-700 dark:text-zinc-300 font-medium"
                                     >
                                       {exName} ({we.sets?.length || 0})
                                     </span>
@@ -508,7 +512,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                             <button
                               type="button"
                               onClick={() => setWorkoutToDelete(w)}
-                              className="p-1.5 rounded-xl text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                              className="p-2 rounded-2xl text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                               title="Видалити тренування"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -518,7 +522,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                             <button
                               type="button"
                               onClick={() => onOpenWorkoutEditor(w, selectedTrainee)}
-                              className="inline-flex items-center space-x-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                              className="inline-flex items-center space-x-1.5 rounded-xl bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-200/80 dark:border-zinc-700/60 px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-zinc-200 transition-colors shadow-xs cursor-pointer"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                               <span>Редагувати план</span>

@@ -392,8 +392,10 @@ export const CalendarScreen: React.FC = () => {
               </Text>
             </View>
           ) : selectedDateWorkouts.length === 0 ? (
-            <View style={styles.emptyDayContainer}>
-              <Ionicons name="calendar-clear-outline" size={38} color={isDark ? '#52525b' : '#d4d4d8'} />
+            <View style={[styles.emptyDayContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
+              <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
+                <Ionicons name="calendar-clear-outline" size={26} color={isDark ? '#71717a' : '#94a3b8'} />
+              </View>
               <Text style={[styles.emptyDayTitle, isDark ? styles.textDark : styles.textLight]}>
                 Тренувань на обрану дату немає
               </Text>
@@ -511,7 +513,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fafafa',
   },
   bgDark: {
     backgroundColor: '#09090b',
@@ -521,18 +523,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
   },
   headerAddBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   headerAddBtnDark: {
     backgroundColor: '#f4f4f5',
   },
   headerAddBtnText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   headerAddTextLight: {
     color: '#ffffff',
@@ -631,7 +633,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   dayCellSelectedLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   dayCellSelectedDark: {
     backgroundColor: '#f4f4f5',
@@ -736,20 +738,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 16,
   },
   addForDateBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#0f172a',
   },
   addForDateBtnDark: {
     backgroundColor: '#f4f4f5',
   },
   addForDateText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   addForDateTextLight: {
     color: '#ffffff',
@@ -767,9 +769,34 @@ const styles = StyleSheet.create({
   },
   emptyDayContainer: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 36,
     paddingHorizontal: 16,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
     gap: 8,
+  },
+  emptyLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  emptyDark: {
+    backgroundColor: '#18181b80',
+    borderColor: '#27272a',
+  },
+  emptyIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  emptyIconBoxLight: {
+    backgroundColor: '#eef2f8',
+  },
+  emptyIconBoxDark: {
+    backgroundColor: '#27272a',
   },
   emptyDayTitle: {
     fontSize: 15,
@@ -804,13 +831,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 14,
+    padding: 14,
+    borderRadius: 18,
     borderWidth: 1,
   },
   workoutItemLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#e4e4e7',
   },
   workoutItemDark: {
     backgroundColor: '#18181b',

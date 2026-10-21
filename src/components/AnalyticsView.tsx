@@ -326,7 +326,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
         {/* Period Filter (Flat Segmented Control) */}
         <div
           ref={periodSwipeRef}
-          className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-0.5 shrink-0 self-start sm:self-auto touch-pan-y"
+          className="w-full sm:w-auto bg-[#eef2f6] dark:bg-zinc-800/80 p-1 rounded-2xl flex items-center gap-1 shrink-0 self-start sm:self-auto touch-pan-y"
         >
           {(
             [
@@ -344,9 +344,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                   setSelectedPeriod(p.key);
                   setCurrentDate(new Date());
                 }}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${isActive
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                className={`flex-1 sm:flex-initial py-2 px-3 text-center text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${isActive
+                  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-bold shadow-sm'
+                  : 'text-slate-500 dark:text-zinc-400 font-medium hover:text-slate-900 dark:hover:text-zinc-200'
                   }`}
               >
                 {p.label}
@@ -359,12 +359,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       {/* Date Navigation & KPI Metrics Section (Supports Swipe Left/Right to change date) */}
       <div ref={dateNavSwipeRef} className="space-y-3 touch-pan-y">
         {/* Date Navigation Bar (Allows switching days, weeks, months) */}
-        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 shadow-2xs">
-          <div className="flex items-center space-x-1">
+        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-2.5 sm:p-3 shadow-xs">
+          <div className="flex items-center space-x-1.5">
             <button
               type="button"
               onClick={handlePrevDate}
-              className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
               title="Попередній період"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -372,7 +372,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
             <button
               type="button"
               onClick={handleNextDate}
-              className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
               title="Наступний період"
             >
               <ChevronRight className="h-4 w-4" />
@@ -380,8 +380,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-zinc-400" />
-            <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 select-none">
+            <Calendar className="h-4 w-4 text-slate-400 dark:text-zinc-400" />
+            <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 select-none">
               {periodInfo.titleUk}
             </span>
           </div>
@@ -390,7 +390,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
             <button
               type="button"
               onClick={handleToday}
-              className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded-lg cursor-pointer"
+              className="text-xs font-bold text-slate-900 dark:text-zinc-100 bg-[#eef2f6] dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
             >
               Сьогодні
             </button>
@@ -402,57 +402,57 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
         {/* KPI Metrics Cards - Minimal Flat */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Completed Sets */}
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1.5">
               <CheckCircle2 className="h-4 w-4" />
               <span>Завершено підходів</span>
             </div>
-            <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            <div className="font-mono text-2xl font-bold text-slate-900 dark:text-zinc-100">
               {stats.periodCompletedSets}
             </div>
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+            <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">
               за {periodInfo.titleUk}
             </div>
           </div>
 
           {/* Workouts in Period */}
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1.5">
               <Calendar className="h-4 w-4" />
               <span>Активних тренувань</span>
             </div>
-            <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            <div className="font-mono text-2xl font-bold text-slate-900 dark:text-zinc-100">
               {stats.periodWorkoutsCount}
             </div>
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+            <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">
               у поточному періоді
             </div>
           </div>
 
           {/* Volume in Period */}
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1.5">
               <Flame className="h-4 w-4" />
               <span>Тоннаж періоду</span>
             </div>
-            <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            <div className="font-mono text-2xl font-bold text-slate-900 dark:text-zinc-100">
               {stats.periodTons > 0 ? `${stats.periodTons} т` : `${stats.periodVolumeKg} кг`}
             </div>
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono">
+            <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1 font-mono">
               {stats.periodVolumeKg.toLocaleString()} кг піднято
             </div>
           </div>
 
           {/* Exercises Tracked */}
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1.5">
               <Trophy className="h-4 w-4" />
               <span>Задіяних вправ</span>
             </div>
-            <div className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            <div className="font-mono text-2xl font-bold text-slate-900 dark:text-zinc-100">
               {stats.allTrackedExercises.length}
             </div>
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+            <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">
               з результатами у вибірці
             </div>
           </div>
@@ -460,32 +460,32 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       </div>
 
       {/* Muscle Group Distribution */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-zinc-800 pb-3">
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center space-x-2">
-              <TrendingUp className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center space-x-2">
+              <TrendingUp className="h-4 w-4 text-slate-600 dark:text-zinc-400" />
               <span>Кількість завершених підходів на м'язову групу</span>
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               Враховуються лише успішно виконані підходи за обраний період ({periodInfo.titleUk})
             </p>
           </div>
 
-          <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 font-mono">
-            Всього: <strong className="text-zinc-900 dark:text-zinc-100">{stats.periodCompletedSets}</strong> підх.
+          <div className="text-xs font-semibold text-slate-600 dark:text-zinc-400 font-mono">
+            Всього: <strong className="text-slate-900 dark:text-zinc-100">{stats.periodCompletedSets}</strong> підх.
           </div>
         </div>
 
         {stats.periodCompletedSets === 0 ? (
-          <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center space-y-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 mx-auto">
-              <Layers className="h-5 w-5" />
+          <div className="w-full rounded-[24px] border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 py-12 px-6 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 flex items-center justify-center">
+              <Layers className="w-5 h-5 text-slate-400 dark:text-zinc-400 stroke-[1.75]" />
             </div>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-              За обраний період ({periodInfo.titleUk}) немає зафіксованих підходів.
-            </p>
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 max-w-md mx-auto">
+            <h4 className="mt-3 font-bold text-sm sm:text-base text-[#0f172a] dark:text-zinc-100">
+              За обраний період немає зафіксованих підходів
+            </h4>
+            <p className="mt-1 text-xs text-[#94a3b8] dark:text-zinc-400 max-w-sm">
               Завершуйте підходи у тренуваннях натисканням галочки ✓, і дані про навантаження відобразяться тут.
             </p>
           </div>
@@ -505,10 +505,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                 <div key={groupKey} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-zinc-800 dark:text-zinc-200">{info.nameUk}</span>
+                      <span className="font-semibold text-slate-800 dark:text-zinc-200">{info.nameUk}</span>
                     </div>
                     <div className="font-mono text-xs flex items-center space-x-2">
-                      <span className="text-zinc-700 dark:text-zinc-300 font-bold">
+                      <span className="text-slate-700 dark:text-zinc-300 font-bold">
                         {setsCount}{' '}
                         {setsCount === 1
                           ? 'підхід'
@@ -516,12 +516,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                             ? 'підходи'
                             : 'підходів'}
                       </span>
-                      <span className="text-zinc-500 dark:text-zinc-400">({Math.round(percent)}%)</span>
+                      <span className="text-slate-500 dark:text-zinc-400">({Math.round(percent)}%)</span>
                     </div>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800">
                     <div
-                      className="h-full rounded-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-300"
+                      className="h-full rounded-full bg-[#0f172a] dark:bg-zinc-100 transition-all duration-300"
                       style={{ width: `${Math.max(3, percent)}%` }}
                     />
                   </div>
@@ -535,25 +535,25 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
       {/* Personal Records & Tracked Exercises (Supports Swipe Left/Right between Top and All) */}
       <div
         ref={recordsSwipeRef}
-        className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 touch-pan-y"
+        className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 shadow-xs touch-pan-y"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800 pb-3">
           <div className="flex items-center space-x-2">
-            <Trophy className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
-            <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+            <Trophy className="h-4 w-4 text-slate-600 dark:text-zinc-400" />
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100">
               Вправи періоду та рекорди
             </h3>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {/* View Mode Switcher */}
-            <div className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-0.5 text-xs">
+            <div className="bg-[#eef2f6] dark:bg-zinc-800/80 p-1 rounded-2xl flex items-center gap-1 text-xs">
               <button
                 type="button"
                 onClick={() => setViewMode('prs')}
-                className={`rounded-lg px-2.5 py-1 font-semibold transition-colors cursor-pointer ${viewMode === 'prs' && !searchQuery
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                className={`rounded-xl px-3 py-1.5 font-semibold transition-all cursor-pointer ${viewMode === 'prs' && !searchQuery
+                  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-bold shadow-sm'
+                  : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
                   }`}
               >
                 Топ ({stats.topPRs.length})
@@ -561,9 +561,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
               <button
                 type="button"
                 onClick={() => setViewMode('all')}
-                className={`rounded-lg px-2.5 py-1 font-semibold transition-colors cursor-pointer ${viewMode === 'all' && !searchQuery
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                className={`rounded-xl px-3 py-1.5 font-semibold transition-all cursor-pointer ${viewMode === 'all' && !searchQuery
+                  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-bold shadow-sm'
+                  : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
                   }`}
               >
                 Всі ({stats.allTrackedExercises.length})
@@ -572,20 +572,20 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
 
             {/* Search Input */}
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-zinc-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Пошук вправи..."
-                className="w-36 sm:w-44 h-8 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 pl-8 pr-2.5 text-base sm:text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                className="w-36 sm:w-44 h-8 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 pl-8 pr-2.5 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-slate-400"
               />
             </div>
           </div>
         </div>
 
         {displayedExercises.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center text-xs text-zinc-500">
+          <div className="rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800 p-8 text-center text-xs text-slate-500 dark:text-zinc-400">
             {searchQuery
               ? 'Вправ за цим запитом не знайдено.'
               : `У періоді «${periodInfo.titleUk}» ще немає зафіксованих підходів із вагою.`}
@@ -598,29 +598,29 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
                 <div
                   key={pr.id || idx}
                   onClick={() => setSelectedExercise(pr.exercise)}
-                  className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 flex flex-col justify-between cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+                  className="group rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40 p-3.5 flex flex-col justify-between cursor-pointer hover:border-slate-300 dark:hover:border-zinc-700 transition-colors shadow-2xs"
                   title="Натисніть для перегляду динаміки та історії цієї вправи"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                      <span className="rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:text-zinc-400">
                         {muscle.nameUk}
                       </span>
-                      <span className="font-mono text-xs text-zinc-400">#{idx + 1}</span>
+                      <span className="font-mono text-xs text-slate-400 dark:text-zinc-500">#{idx + 1}</span>
                     </div>
-                    <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white line-clamp-1 mb-2 transition-colors">
+                    <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white line-clamp-1 mb-2 transition-colors">
                       {pr.name}
                     </div>
                   </div>
 
                   <div>
-                    <div className="border-t border-zinc-200 dark:border-zinc-800/80 pt-2 flex items-baseline justify-between font-mono">
-                      <span className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                    <div className="border-t border-slate-200 dark:border-zinc-800/80 pt-2 flex items-baseline justify-between font-mono">
+                      <span className="text-base font-bold text-slate-900 dark:text-zinc-100">
                         {pr.maxWeight} кг
                       </span>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">× {pr.reps} повт</span>
+                      <span className="text-xs text-slate-500 dark:text-zinc-400">× {pr.reps} повт</span>
                     </div>
-                    <div className="mt-1.5 flex items-center justify-end text-[10px] font-medium text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors">
+                    <div className="mt-1.5 flex items-center justify-end text-[10px] font-medium text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200 transition-colors">
                       <span>Історія</span>
                       <ChevronRight className="h-3 w-3 ml-0.5" />
                     </div>
