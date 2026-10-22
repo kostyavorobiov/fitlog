@@ -6,6 +6,7 @@ interface MobileSwipeableExerciseCardProps {
   onDelete: () => void;
   onChangeExercise?: () => void;
   disabled?: boolean;
+  stripeColor?: string;
   children: React.ReactNode;
 }
 
@@ -17,6 +18,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   onDelete,
   onChangeExercise,
   disabled = false,
+  stripeColor,
   children,
 }) => {
   const [offsetX, setOffsetX] = useState(0);
@@ -224,12 +226,18 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
         onClickCapture={handleCardClick}
-        className={`relative z-10 bg-white dark:bg-[#1D2939] rounded-2xl border border-slate-200 dark:border-slate-800 ${
+        className={`relative z-10 bg-white dark:bg-[#1D2939] rounded-2xl border border-zinc-200 dark:border-[#334155] overflow-hidden ${
           offsetX < 0
             ? 'shadow-[-3px_0_10px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_12px_rgba(0,0,0,0.4)]'
             : ''
         }`}
       >
+        {stripeColor && (
+          <div
+            className="absolute left-0 top-0 bottom-0 w-2 z-20 pointer-events-none rounded-l-2xl"
+            style={{ backgroundColor: stripeColor }}
+          />
+        )}
         {children}
       </div>
     </div>

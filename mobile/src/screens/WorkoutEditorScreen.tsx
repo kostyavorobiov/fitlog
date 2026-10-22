@@ -2497,11 +2497,11 @@ const styles = StyleSheet.create({
   },
   supersetToggleBtn: {
     padding: 7,
-    minWidth: 32,
-    minHeight: 32,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
   },
   pastPerfBanner: {

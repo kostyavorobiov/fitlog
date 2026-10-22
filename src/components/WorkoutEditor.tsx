@@ -1229,15 +1229,15 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 onDragStart={() => handleDragStart(weIndex)}
                 onDragOver={(e) => handleDragOver(e, weIndex)}
                 onDragEnd={handleDragEnd}
-                className={`relative rounded-2xl border bg-white dark:bg-[#1D2939] shadow-xs overflow-hidden transition-colors ${isDragged
-                  ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70'
-                  : 'border-zinc-200 dark:border-[#334155]'
+                className={`relative transition-colors ${isDragged
+                  ? 'border border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70 rounded-2xl'
+                  : 'sm:border sm:rounded-2xl sm:bg-white sm:dark:bg-[#1D2939] sm:shadow-xs sm:overflow-hidden sm:border-zinc-200 sm:dark:border-[#334155]'
                   }`}
               >
-                {/* Superset stripe across full height of card on the left */}
+                {/* Superset stripe across full height of card on the left (Desktop) */}
                 {isSuperset && (
                   <div
-                    className="absolute left-0 top-0 bottom-0 w-2 z-10 pointer-events-none"
+                    className="hidden sm:block absolute left-0 top-0 bottom-0 w-2 z-10 pointer-events-none rounded-l-2xl"
                     style={{
                       backgroundColor: supersetPalette ? supersetPalette.hex : '#10b981',
                     }}
@@ -1248,13 +1248,14 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 <div className="block sm:hidden">
                   <MobileSwipeableExerciseCard
                     exerciseId={weItem.id}
+                    stripeColor={isSuperset ? (supersetPalette ? supersetPalette.hex : '#10b981') : undefined}
                     onDelete={() => setExerciseToRemove({ id: weItem.id, name: exerciseName })}
                     onChangeExercise={() => handleChangeExercise(weItem.id)}
                   >
 
                     {/* Mobile Exercise Header */}
                     <div
-                      className={`flex items-center justify-between gap-2.5 px-3.5 py-3 ${isExpanded ? 'border-b border-zinc-100 dark:border-[#334155]' : ''
+                      className={`flex items-center justify-between gap-2.5 ${isSuperset ? 'pl-5 pr-3.5' : 'px-3.5'} py-3 ${isExpanded ? 'border-b border-zinc-100 dark:border-[#334155]' : ''
                         }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1 select-none">
@@ -1332,7 +1333,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <button
                             type="button"
                             onClick={() => handleToggleSuperset(weIndex)}
-                            className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-colors cursor-pointer ${isSuperset && supersetPalette
+                            className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${isSuperset && supersetPalette
                               ? supersetPalette.buttonActive
                               : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
                               }`}
@@ -1352,7 +1353,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     {isExpanded && (
                       <>
                         {/* Mobile Config Row: Reps Dropdown */}
-                        <div className="px-3 py-2 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                        <div className={`px-3 py-2 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between ${isSuperset ? 'pl-5' : ''}`}>
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
                               Діапазон повторень:
@@ -1378,7 +1379,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         <div>
                           {/* Column headers */}
                           <div
-                            className="grid items-center gap-1 px-3 py-2 bg-zinc-50/60 dark:bg-zinc-800/20 border-b border-zinc-100 dark:border-zinc-800"
+                            className={`grid items-center gap-1 px-3 py-2 bg-zinc-50/60 dark:bg-zinc-800/20 border-b border-zinc-100 dark:border-zinc-800 ${isSuperset ? 'pl-5' : ''}`}
                             style={{ gridTemplateColumns: '1.75rem 1fr 1fr 2.25rem 1.75rem' }}
                           >
                             <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center">Сет</span>
@@ -1395,7 +1396,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                               return (
                                 <div
                                   key={setItem.id}
-                                  className={`grid items-center gap-1 px-3 py-2 transition-colors ${isDone ? 'bg-[#22c55e]/10 dark:bg-[#22c55e]/15' : ''}`}
+                                  className={`grid items-center gap-1 px-3 py-2 transition-colors ${isDone ? 'bg-[#22c55e]/10 dark:bg-[#22c55e]/15' : ''} ${isSuperset ? 'pl-5' : ''}`}
                                   style={{ gridTemplateColumns: '1.75rem 1fr 1fr 2.25rem 1.75rem' }}
                                 >
                                   {/* Set number */}
@@ -1562,7 +1563,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <button
                             type="button"
                             onClick={() => handleAddSet(weItem.id)}
-                            className="flex w-full items-center justify-center gap-1.5 py-3 border-t border-dashed border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer rounded-b-2xl"
+                            className={`flex w-full items-center justify-center gap-1.5 py-3 border-t border-dashed border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer rounded-b-2xl ${isSuperset ? 'pl-2' : ''}`}
                           >
                             <Plus className="h-3.5 w-3.5" />
                             <span>Додати підхід</span>
@@ -1577,7 +1578,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
                 {/* Desktop Exercise Header */}
                 <div
-                  className={`hidden sm:flex items-center justify-between gap-3 px-5 py-4 ${isExpanded ? 'border-b border-zinc-100 dark:border-zinc-800' : ''
+                  className={`hidden sm:flex items-center justify-between gap-3 ${isSuperset ? 'pl-6 pr-5' : 'px-5'} py-4 ${isExpanded ? 'border-b border-zinc-100 dark:border-zinc-800' : ''
                     }`}
                 >
                   <div
@@ -1615,7 +1616,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         })()}
                         {isSuperset && (
                           <span
-                            className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${supersetPalette ? supersetPalette.badge : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'}`}
                           >
                             <Link className="h-3 w-3" />
                             <span>Суперсет</span>
@@ -1635,18 +1636,18 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                     {currentExList.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleToggleSuperset(weIndex)}
-                        className={`p-2 rounded-xl border transition-colors cursor-pointer ${isSuperset && supersetPalette
+                        className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${isSuperset && supersetPalette
                           ? supersetPalette.buttonActive
-                          : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+                          : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
                           }`}
                         title={isSuperset ? "Роз'єднати суперсет" : weIndex === currentExList.length - 1 ? 'Обʼєднати з попередньою вправою в суперсет' : 'Обʼєднати в суперсет'}
                       >
-                        {isSuperset ? <Unlink className="h-4 w-4" /> : <Link className="h-4 w-4" />}
+                        <Link className="h-3.5 w-3.5" />
                       </button>
                     )}
                     <ExerciseProgressRing
