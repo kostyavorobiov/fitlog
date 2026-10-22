@@ -52,15 +52,6 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
 
   if (!isOpen) return null;
 
-  const titlePresets = [
-    'Груди та Тріцепс',
-    'Спина та Біцепс',
-    'День ніг',
-    'Плечі та Прес',
-    'Full Body',
-    'Тяга / Жим / Ноги',
-  ];
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -90,11 +81,6 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
     setTitle('');
     setError('');
     onClose();
-  };
-
-  const handleSelectPreset = (preset: string) => {
-    setTitle(preset);
-    setError('');
   };
 
   const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -263,28 +249,6 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     : 'border-slate-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]'
                     }`}
                 />
-              </div>
-
-              {/* Quick presets */}
-              <div>
-                <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1.5">
-                  Швидкі шаблони назв:
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {titlePresets.map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => handleSelectPreset(preset)}
-                      className={`rounded-xl border px-2.5 py-1 text-[11px] transition-all cursor-pointer ${title === preset
-                        ? 'border-[#2563EB] bg-[#2563EB] text-white font-bold shadow-xs'
-                        : 'border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-                        }`}
-                    >
-                      {preset}
-                    </button>
-                  ))}
-                </div>
               </div>
             </>
           )}

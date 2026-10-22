@@ -85,14 +85,16 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
     <div className="space-y-5 max-w-5xl mx-auto animate-fade-in pb-12">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
-
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
+          База вправ
+        </h2>
         <button
           type="button"
           onClick={() => setIsCreateOpen(true)}
           className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-[#2563eb] text-white hover:bg-[#1d4ed8] px-4 py-2 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 shadow-sm"
         >
           <Plus className="h-4 w-4" />
-          <span>Додати вправу</span>
+          <span>Додати</span>
         </button>
       </div>
 

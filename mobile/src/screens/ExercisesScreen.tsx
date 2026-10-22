@@ -275,7 +275,6 @@ export const ExercisesScreen: React.FC = () => {
     >
       <Header
         title="База вправ"
-        subtitle={`Каталог (${exercises.length} вправ)`}
         rightAction={
           <TouchableOpacity
             activeOpacity={0.8}
@@ -284,7 +283,7 @@ export const ExercisesScreen: React.FC = () => {
           >
             <Ionicons name="add" size={16} color="#ffffff" />
             <Text style={styles.webAddBtnText}>
-              Додати вправу
+              Додати
             </Text>
           </TouchableOpacity>
         }
@@ -944,10 +943,10 @@ const styles = StyleSheet.create({
   webAddBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    height: 38,
+    gap: 4,
+    height: 36,
     paddingHorizontal: 14,
-    borderRadius: 14,
+    borderRadius: 18,
     backgroundColor: '#2563eb',
   },
   webAddBtnText: {

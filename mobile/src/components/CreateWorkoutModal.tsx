@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -11,10 +11,10 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
-import { Button } from './Button';
 import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { useAuth } from '../context/AuthContext';
 import { formatLocalDate, formatDateDDMMYYYY } from '../utils/date';
@@ -30,15 +30,6 @@ interface CreateWorkoutModalProps {
   isLoading?: boolean;
 }
 
-const TITLE_PRESETS = [
-  'Груди та Тріцепс',
-  'Спина та Біцепс',
-  'День ніг',
-  'Плечі та Прес',
-  'Full Body',
-  'Кардіо + Кор',
-];
-
 export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   visible,
   initialDate,
@@ -52,7 +43,6 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   const [mode, setMode] = useState<'empty' | 'template'>('empty');
   const [title, setTitle] = useState<string>('');
   const [date, setDate] = useState<string>(initialDate || formatLocalDate());
-  const [notes, setNotes] = useState<string>('');
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
@@ -63,7 +53,6 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
     if (visible) {
       setTitle('');
       setDate(initialDate || formatLocalDate());
-      setNotes('');
       setMode('empty');
       setSelectedTemplate(null);
 
@@ -83,7 +72,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
     }
   }, [visible, initialDate, user?.id]);
 
-  const isSubmittingRef = React.useRef(false);
+  const isSubmittingRef = useRef(false);
 
   const handleSubmit = async () => {
     if (isLoading || isSubmittingRef.current) return;
@@ -99,7 +88,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
         await onSubmit(
           title.trim() || selectedTemplate.title,
           cleanDate,
-          notes.trim() || selectedTemplate.notes || '',
+          selectedTemplate.notes || '',
           selectedTemplate
         );
       } finally {
@@ -117,302 +106,264 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
     isSubmittingRef.current = true;
     try {
       const cleanDate = date.trim() || formatLocalDate();
-      await onSubmit(cleanTitle, cleanDate, notes.trim());
+      await onSubmit(cleanTitle, cleanDate, '');
     } finally {
       isSubmittingRef.current = false;
     }
   };
 
-  const setOffsetDate = (offsetDays: number) => {
-    const dt = new Date();
-    dt.setDate(dt.getDate() + offsetDays);
-    setDate(formatLocalDate(dt));
-  };
-
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalOverlay}
-      >
-        <View style={[styles.modalContent, isDark ? styles.modalDark : styles.modalLight]}>
-          {/* Header */}
-          <View style={styles.modalHeader}>
-            <View>
-              <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
-                Нове тренування
-              </Text>
-              <Text style={[styles.modalSub, isDark ? styles.subDark : styles.subLight]}>
-                Створіть порожнє тренування або з шаблону
-              </Text>
-            </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close" size={22} color={isDark ? '#94a3b8' : '#64748b'} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Segmented Mode Selector */}
-          <View style={[styles.segmentContainer, isDark ? styles.segmentDark : styles.segmentLight]}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => setMode('empty')}
-              style={[
-                styles.segmentBtn,
-                mode === 'empty' && styles.segmentBtnActive,
-              ]}
-            >
-              <Ionicons
-                name="barbell-outline"
-                size={14}
-                color={mode === 'empty' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B')}
-              />
-              <Text
-                style={[
-                  styles.segmentBtnText,
-                  mode === 'empty' ? styles.segmentBtnTextActive : (isDark ? styles.subDark : styles.subLight),
-                ]}
-              >
-                Порожнє
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => setMode('template')}
-              style={[
-                styles.segmentBtn,
-                mode === 'template' && styles.segmentBtnActive,
-              ]}
-            >
-              <Ionicons
-                name="bookmark-outline"
-                size={14}
-                color={mode === 'template' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B')}
-              />
-              <Text
-                style={[
-                  styles.segmentBtnText,
-                  mode === 'template' ? styles.segmentBtnTextActive : (isDark ? styles.subDark : styles.subLight),
-                ]}
-              >
-                З шаблону {templates.length > 0 ? `(${templates.length})` : ''}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {mode === 'template' ? (
-            <View style={styles.templateSection}>
-              {isLoadingTemplates ? (
-                <View style={styles.loadingBox}>
-                  <ActivityIndicator size="small" color="#2563EB" />
-                  <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
-                    Завантаження шаблонів...
-                  </Text>
-                </View>
-              ) : templates.length === 0 ? (
-                <View style={[styles.emptyTemplatesBox, isDark ? styles.cardDark : styles.cardLight]}>
-                  <Ionicons name="bookmark-outline" size={32} color={isDark ? '#64748b' : '#94a3b8'} />
-                  <Text style={[styles.emptyTemplatesTitle, isDark ? styles.textDark : styles.textLight]}>
-                    Немає збережених шаблонів
-                  </Text>
-                  <Text style={[styles.emptyTemplatesSub, isDark ? styles.subDark : styles.subLight]}>
-                    Ви можете зберегти будь-яке тренування як шаблон, натиснувши «Шаблон» у верхньому меню редактора.
-                  </Text>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardWrap}
+          >
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View style={[styles.modalCard, isDark ? styles.cardDark : styles.cardLight]}>
+                {/* Header */}
+                <View style={styles.headerRow}>
+                  <View style={styles.headerLeft}>
+                    <View style={[styles.iconBadge, isDark ? styles.iconBadgeDark : styles.iconBadgeLight]}>
+                      <Ionicons
+                        name="barbell"
+                        size={22}
+                        color={isDark ? '#60A5FA' : '#2563EB'}
+                      />
+                    </View>
+                    <View style={styles.headerTextWrap}>
+                      <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
+                        Нове тренування
+                      </Text>
+                      <Text style={[styles.modalSub, isDark ? styles.subDark : styles.subLight]}>
+                        Створіть порожнє або з збереженого шаблону
+                      </Text>
+                    </View>
+                  </View>
                   <TouchableOpacity
-                    onPress={() => setMode('empty')}
-                    style={styles.switchModeBtn}
+                    onPress={onClose}
+                    style={styles.closeBtn}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Закрити"
                   >
-                    <Text style={styles.switchModeBtnText}>Створити порожнє тренування</Text>
+                    <Ionicons name="close" size={20} color={isDark ? '#94A3B8' : '#64748B'} />
                   </TouchableOpacity>
                 </View>
-              ) : (
-                <View style={styles.templateListWrap}>
-                  <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
-                    Оберіть шаблон:
-                  </Text>
-                  <ScrollView style={{ maxHeight: 160 }} showsVerticalScrollIndicator={false}>
-                    {templates.map((tpl) => {
-                      const isSelected = selectedTemplate?.id === tpl.id;
-                      return (
-                        <TouchableOpacity
-                          key={tpl.id}
-                          activeOpacity={0.7}
-                          onPress={() => {
-                            setSelectedTemplate(tpl);
-                            setTitle(tpl.title);
-                          }}
-                          style={[
-                            styles.templateCard,
-                            isDark ? styles.cardDark : styles.cardLight,
-                            isSelected && styles.templateCardSelected,
-                          ]}
-                        >
-                          <View style={{ flex: 1 }}>
-                            <Text style={[styles.templateCardTitle, isDark ? styles.textDark : styles.textLight]}>
-                              {tpl.title}
-                            </Text>
-                            <Text style={[styles.templateCardSub, isDark ? styles.subDark : styles.subLight]}>
-                              {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
-                            </Text>
-                          </View>
-                          <Ionicons
-                            name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
-                            size={20}
-                            color={isSelected ? '#2563EB' : (isDark ? '#64748b' : '#cbd5e1')}
-                          />
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </ScrollView>
+
+                {/* Mode Selector Segment */}
+                <View style={[styles.segmentContainer, isDark ? styles.segmentDark : styles.segmentLight]}>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setMode('empty')}
+                    style={[
+                      styles.segmentBtn,
+                      mode === 'empty' && (isDark ? styles.segmentBtnActiveDark : styles.segmentBtnActiveLight),
+                    ]}
+                  >
+                    <Ionicons
+                      name="barbell-outline"
+                      size={15}
+                      color={mode === 'empty' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#64748B')}
+                    />
+                    <Text
+                      style={[
+                        styles.segmentBtnText,
+                        mode === 'empty'
+                          ? (isDark ? styles.segmentTextActiveDark : styles.segmentTextActiveLight)
+                          : (isDark ? styles.subDark : styles.subLight),
+                      ]}
+                    >
+                      Нове тренування
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setMode('template')}
+                    style={[
+                      styles.segmentBtn,
+                      mode === 'template' && (isDark ? styles.segmentBtnActiveDark : styles.segmentBtnActiveLight),
+                    ]}
+                  >
+                    <Ionicons
+                      name="bookmark-outline"
+                      size={15}
+                      color={mode === 'template' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#64748B')}
+                    />
+                    <Text
+                      style={[
+                        styles.segmentBtnText,
+                        mode === 'template'
+                          ? (isDark ? styles.segmentTextActiveDark : styles.segmentTextActiveLight)
+                          : (isDark ? styles.subDark : styles.subLight),
+                      ]}
+                    >
+                      З шаблону {templates.length > 0 ? `(${templates.length})` : ''}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              )}
-            </View>
-          ) : (
-            <>
-              {/* Title Input */}
-              <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
-                  Назва тренування
-                </Text>
-                <TextInput
-                  style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
-                  placeholder="Наприклад: Груди та Тріцепс"
-                  placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
-                  value={title}
-                  onChangeText={setTitle}
-                  autoFocus
-                />
 
-                {/* Presets */}
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.presetsRow}
-                >
-                  {TITLE_PRESETS.map((preset) => {
-                    const isSelected = title === preset;
-                    return (
-                      <TouchableOpacity
-                        key={preset}
-                        activeOpacity={0.7}
-                        onPress={() => setTitle(preset)}
-                        style={[
-                          styles.presetChip,
-                          isSelected ? styles.presetChipActive : (isDark ? styles.chipDark : styles.chipLight),
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.presetChipText,
-                            isSelected ? styles.presetChipTextActive : (isDark ? styles.subDark : styles.subLight),
-                          ]}
-                        >
-                          {preset}
+                {mode === 'template' ? (
+                  <View style={styles.templateSection}>
+                    {isLoadingTemplates ? (
+                      <View style={styles.loadingBox}>
+                        <ActivityIndicator size="small" color="#2563EB" />
+                        <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+                          Завантаження шаблонів...
                         </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+                      </View>
+                    ) : templates.length === 0 ? (
+                      <View style={[styles.emptyTemplatesBox, isDark ? styles.innerBoxDark : styles.innerBoxLight]}>
+                        <Ionicons name="bookmark-outline" size={28} color={isDark ? '#64748b' : '#94a3b8'} />
+                        <Text style={[styles.emptyTemplatesTitle, isDark ? styles.textDark : styles.textLight]}>
+                          Немає збережених шаблонів
+                        </Text>
+                        <Text style={[styles.emptyTemplatesSub, isDark ? styles.subDark : styles.subLight]}>
+                          Збережіть будь-яке тренування як шаблон у верхньому меню редактора.
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => setMode('empty')}
+                          style={styles.switchModeBtn}
+                        >
+                          <Text style={styles.switchModeBtnText}>Створити порожнє тренування</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={styles.templateListWrap}>
+                        <Text style={[styles.inputLabel, isDark ? styles.labelDark : styles.labelLight]}>
+                          Оберіть шаблон *
+                        </Text>
+                        <ScrollView style={{ maxHeight: 160 }} showsVerticalScrollIndicator={false}>
+                          {templates.map((tpl) => {
+                            const isSelected = selectedTemplate?.id === tpl.id;
+                            return (
+                              <TouchableOpacity
+                                key={tpl.id}
+                                activeOpacity={0.7}
+                                onPress={() => {
+                                  setSelectedTemplate(tpl);
+                                  setTitle(tpl.title);
+                                }}
+                                style={[
+                                  styles.templateCard,
+                                  isDark ? styles.templateCardDark : styles.templateCardLight,
+                                  isSelected && styles.templateCardSelected,
+                                ]}
+                              >
+                                <View style={{ flex: 1, paddingRight: 8 }}>
+                                  <Text style={[styles.templateCardTitle, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
+                                    {tpl.title}
+                                  </Text>
+                                  <Text style={[styles.templateCardSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
+                                    {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
+                                  </Text>
+                                </View>
+                                <Ionicons
+                                  name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
+                                  size={20}
+                                  color={isSelected ? '#2563EB' : (isDark ? '#64748b' : '#cbd5e1')}
+                                />
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </ScrollView>
+                      </View>
+                    )}
+                  </View>
+                ) : (
+                  /* Title Field (without quick presets) */
+                  <View style={styles.fieldGroup}>
+                    <Text style={[styles.inputLabel, isDark ? styles.labelDark : styles.labelLight]}>
+                      Назва тренування *
+                    </Text>
+                    <TextInput
+                      style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
+                      placeholder="наприклад: Груди та Тріцепс"
+                      placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
+                      value={title}
+                      onChangeText={setTitle}
+                      autoFocus
+                    />
+                  </View>
+                )}
+
+                {/* Date Field */}
+                <View style={styles.fieldGroup}>
+                  <Text style={[styles.inputLabel, isDark ? styles.labelDark : styles.labelLight]}>
+                    Дата тренування
+                  </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setIsDatePickerOpen(true)}
+                    style={[styles.input, styles.datePickerBtn, isDark ? styles.inputDark : styles.inputLight]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Оберіть дату тренування"
+                  >
+                    <Ionicons
+                      name="calendar-outline"
+                      size={18}
+                      color={isDark ? '#60A5FA' : '#2563EB'}
+                      style={{ marginRight: 10 }}
+                    />
+                    <Text style={[styles.dateText, isDark ? styles.textDark : styles.textLight]}>
+                      {formatDateDDMMYYYY(date)}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Actions: Cancel and Create */}
+                <View style={styles.actionsRow}>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={onClose}
+                    disabled={isLoading}
+                    style={[styles.actionBtn, isDark ? styles.cancelBtnDark : styles.cancelBtnLight]}
+                  >
+                    <Text style={[styles.cancelBtnText, isDark ? styles.cancelTextDark : styles.cancelTextLight]}>
+                      Скасувати
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={handleSubmit}
+                    disabled={isLoading}
+                    style={[styles.actionBtn, styles.createBtn]}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <>
+                        <Ionicons name="add" size={19} color="#ffffff" />
+                        <Text style={styles.createBtnText}>
+                          {mode === 'template' ? 'Створити' : 'Створити'}
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
-            </>
-          )}
-
-          {/* Date Input with Interactive Calendar Picker */}
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
-              Дата (ДД/ММ/РРРР)
-            </Text>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setIsDatePickerOpen(true)}
-              style={[styles.input, styles.datePickerBtn, isDark ? styles.inputDark : styles.inputLight]}
-              accessibilityRole="button"
-              accessibilityLabel="Оберіть дату тренування"
-            >
-              <Ionicons name="calendar-outline" size={18} color="#2563EB" style={{ marginRight: 8 }} />
-              <Text style={[styles.dateText, isDark ? styles.textDark : styles.textLight]}>
-                {formatDateDDMMYYYY(date)}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.quickDateRow}>
-              <TouchableOpacity
-                onPress={() => setOffsetDate(0)}
-                style={[styles.quickChip, isDark ? styles.chipDark : styles.chipLight]}
-              >
-                <Text style={[styles.quickChipText, isDark ? styles.textDark : styles.textLight]}>
-                  Сьогодні
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setOffsetDate(1)}
-                style={[styles.quickChip, isDark ? styles.chipDark : styles.chipLight]}
-              >
-                <Text style={[styles.quickChipText, isDark ? styles.textDark : styles.textLight]}>
-                  Завтра
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setOffsetDate(-1)}
-                style={[styles.quickChip, isDark ? styles.chipDark : styles.chipLight]}
-              >
-                <Text style={[styles.quickChipText, isDark ? styles.textDark : styles.textLight]}>
-                  Вчора
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <DatePickerModal
-              visible={isDatePickerOpen}
-              selectedDate={date}
-              onClose={() => setIsDatePickerOpen(false)}
-              onSelectDate={(newIso: string) => {
-                setDate(newIso);
-                setIsDatePickerOpen(false);
-              }}
-            />
-          </View>
-
-          {/* Notes Input */}
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
-              Примітки (необов’язково)
-            </Text>
-            <TextInput
-              style={[styles.input, styles.textArea, isDark ? styles.inputDark : styles.inputLight]}
-              placeholder="Цілі, самопочуття або план на тренування..."
-              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
-              multiline
-              numberOfLines={2}
-              value={notes}
-              onChangeText={setNotes}
-            />
-          </View>
-
-          {/* Actions */}
-          <View style={styles.modalActionsRow}>
-            <Button
-              title="Скасувати"
-              variant="outline"
-              onPress={onClose}
-              style={{ flex: 1 }}
-              disabled={isLoading}
-            />
-            <Button
-              title={mode === 'template' ? 'Створити з шаблону' : 'Створити'}
-              variant="primary"
-              loading={isLoading}
-              onPress={handleSubmit}
-              style={{ flex: 1 }}
-            />
-          </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
         </View>
-      </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+
+      <DatePickerModal
+        visible={isDatePickerOpen}
+        selectedDate={date}
+        onClose={() => setIsDatePickerOpen(false)}
+        onSelectDate={(newIso: string) => {
+          setDate(newIso);
+          setIsDatePickerOpen(false);
+        }}
+      />
     </Modal>
   );
 };
@@ -420,52 +371,113 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
   },
-  modalContent: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    padding: 20,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
-    gap: 14,
+  keyboardWrap: {
+    width: '100%',
+    maxWidth: 420,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  modalLight: {
+  modalCard: {
+    width: '100%',
+    borderRadius: 28,
+    borderWidth: 1,
+    padding: 22,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  cardLight: {
     backgroundColor: '#ffffff',
+    borderColor: '#E2E8F0',
   },
-  modalDark: {
-    backgroundColor: '#1d2939',
+  cardDark: {
+    backgroundColor: '#1E293B',
+    borderColor: '#334155',
   },
-  modalHeader: {
+  headerRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(148, 163, 184, 0.15)',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 10,
+    gap: 12,
+  },
+  iconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconBadgeLight: {
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+  },
+  iconBadgeDark: {
+    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+  },
+  headerTextWrap: {
+    flex: 1,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
+    letterSpacing: -0.2,
   },
   modalSub: {
     fontSize: 12,
     marginTop: 2,
+    lineHeight: 16,
   },
   closeBtn: {
-    padding: 4,
+    padding: 6,
     borderRadius: 20,
+  },
+  textLight: {
+    color: '#0F172A',
+  },
+  textDark: {
+    color: '#F8FAFC',
+  },
+  subLight: {
+    color: '#64748B',
+  },
+  subDark: {
+    color: '#94A3B8',
+  },
+  labelLight: {
+    color: '#334155',
+  },
+  labelDark: {
+    color: '#E2E8F0',
   },
   segmentContainer: {
     flexDirection: 'row',
-    borderRadius: 14,
-    padding: 3,
+    borderRadius: 16,
+    padding: 4,
     borderWidth: 1,
+    marginTop: 16,
   },
   segmentLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
   },
   segmentDark: {
-    backgroundColor: '#0b1220',
-    borderColor: '#334155',
+    backgroundColor: '#0F172A',
+    borderColor: '#243247',
   },
   segmentBtn: {
     flex: 1,
@@ -473,34 +485,92 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 7,
-    borderRadius: 11,
+    paddingVertical: 9,
+    borderRadius: 12,
   },
-  segmentBtnActive: {
-    backgroundColor: '#2563EB',
-    shadowColor: '#2563EB',
+  segmentBtnActiveLight: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  segmentBtnActiveDark: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
     elevation: 3,
   },
   segmentBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
-  segmentBtnTextActive: {
-    color: '#ffffff',
+  segmentTextActiveLight: {
+    color: '#2563EB',
+    fontWeight: '700',
+  },
+  segmentTextActiveDark: {
+    color: '#60A5FA',
+    fontWeight: '700',
+  },
+  fieldGroup: {
+    marginTop: 16,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  input: {
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    fontSize: 14,
+  },
+  inputLight: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+    color: '#0F172A',
+  },
+  inputDark: {
+    backgroundColor: '#0F172A',
+    borderColor: '#243247',
+    color: '#F8FAFC',
+  },
+  datePickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   templateSection: {
-    gap: 8,
+    marginTop: 14,
   },
   loadingBox: {
-    padding: 20,
+    padding: 24,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   loadingText: {
     fontSize: 12,
+  },
+  innerBoxLight: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+  },
+  innerBoxDark: {
+    backgroundColor: '#0F172A',
+    borderColor: '#243247',
   },
   emptyTemplatesBox: {
     padding: 16,
@@ -509,9 +579,10 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     alignItems: 'center',
     gap: 6,
+    textAlign: 'center',
   },
   emptyTemplatesTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     marginTop: 2,
   },
@@ -521,147 +592,95 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   switchModeBtn: {
-    marginTop: 4,
-    paddingHorizontal: 12,
+    marginTop: 6,
     paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 10,
     backgroundColor: 'rgba(37, 99, 235, 0.1)',
   },
   switchModeBtnText: {
-    color: '#2563EB',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
+    color: '#2563EB',
   },
   templateListWrap: {
-    gap: 6,
+    gap: 8,
   },
   templateCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 12,
     borderRadius: 14,
     borderWidth: 1,
-    marginBottom: 6,
-    gap: 10,
+    marginBottom: 8,
+  },
+  templateCardLight: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+  },
+  templateCardDark: {
+    backgroundColor: '#0F172A',
+    borderColor: '#243247',
   },
   templateCardSelected: {
     borderColor: '#2563EB',
-    borderWidth: 2,
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
   },
   templateCardTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   templateCardSub: {
     fontSize: 11,
     marginTop: 2,
   },
-  cardLight: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
-  },
-  cardDark: {
-    backgroundColor: '#0b1220',
-    borderColor: '#334155',
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  input: {
-    height: 44,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    fontSize: 14,
-  },
-  inputLight: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
-    color: '#0f172a',
-  },
-  inputDark: {
-    backgroundColor: '#0b1220',
-    borderColor: '#334155',
-    color: '#f8fafc',
-  },
-  textArea: {
-    height: 56,
-    paddingTop: 8,
-    textAlignVertical: 'top',
-  },
-  datePickerBtn: {
+  actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    gap: 12,
+    marginTop: 22,
   },
-  dateText: {
-    fontSize: 14,
-    fontWeight: '500',
+  actionBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  presetsRow: {
-    gap: 6,
-    paddingVertical: 4,
-  },
-  presetChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+  cancelBtnLight: {
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  presetChipActive: {
-    backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
-  },
-  presetChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  presetChipTextActive: {
-    color: '#ffffff',
-  },
-  quickDateRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 2,
-  },
-  quickChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+  cancelBtnDark: {
+    backgroundColor: '#243247',
     borderWidth: 1,
-  },
-  quickChipText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  chipLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
-  },
-  chipDark: {
-    backgroundColor: '#263140',
     borderColor: '#334155',
   },
-  modalActionsRow: {
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  cancelTextLight: {
+    color: '#334155',
+  },
+  cancelTextDark: {
+    color: '#F1F5F9',
+  },
+  createBtn: {
+    backgroundColor: '#2563EB',
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
+    gap: 6,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  textLight: {
-    color: '#0f172a',
-  },
-  textDark: {
-    color: '#f8fafc',
-  },
-  subLight: {
-    color: '#64748b',
-  },
-  subDark: {
-    color: '#94a3b8',
+  createBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
