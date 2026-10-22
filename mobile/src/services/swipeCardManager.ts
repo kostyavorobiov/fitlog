@@ -1,3 +1,11 @@
+/**
+ * SwipeCardManager
+ * Tracks the currently active/open swipe card across lists in pure JavaScript state.
+ * 
+ * IMPORTANT: This manager and its methods run strictly on the JavaScript thread.
+ * NEVER capture or invoke swipeCardManager directly inside Reanimated/Gesture Handler worklets.
+ * Instead, invoke from JS callbacks (e.g. via runOnJS or React effects).
+ */
 type SwipeListener = (activeId: string | null) => void;
 
 class SwipeCardManager {

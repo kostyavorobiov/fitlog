@@ -31,6 +31,10 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
 
   const handleBackNavigation = useCallback(() => {
     if (!enableBackSwipe) return;
+    if (swipeCardManager.hasActiveCard()) {
+      swipeCardManager.closeAll();
+      return;
+    }
     if (isNavigatingRef.current) return;
     if (!router.canGoBack()) return;
 
@@ -47,7 +51,10 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
 
   const handleNextTab = useCallback(() => {
     if (!enableTabSwipe) return;
-    if (swipeCardManager.hasActiveCard()) return;
+    if (swipeCardManager.hasActiveCard()) {
+      swipeCardManager.closeAll();
+      return;
+    }
     if (isNavigatingRef.current) return;
 
     const currentIndex = tabOrder.indexOf(currentTab || 'index');
@@ -72,7 +79,10 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
 
   const handlePrevTab = useCallback(() => {
     if (!enableTabSwipe) return;
-    if (swipeCardManager.hasActiveCard()) return;
+    if (swipeCardManager.hasActiveCard()) {
+      swipeCardManager.closeAll();
+      return;
+    }
     if (isNavigatingRef.current) return;
 
     const currentIndex = tabOrder.indexOf(currentTab || 'index');
@@ -95,6 +105,8 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
     }, 380);
   }, [enableTabSwipe, currentTab, tabOrder, onTabChange, router]);
 
+  const isIOS = Platform.OS === 'ios';
+
   const panGesture = useMemo(() => {
     return Gesture.Pan()
       .activeOffsetX([-18, 18])
@@ -106,11 +118,6 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
           startX.value = touch.absoluteX;
           // Right 20%: strictly fail so cards have 100% exclusive control
           if (touch.absoluteX > screenWidth * 0.8) {
-            stateManager.fail();
-            return;
-          }
-          // If any card is swiped open, do not switch tabs
-          if (swipeCardManager.hasActiveCard()) {
             stateManager.fail();
             return;
           }
@@ -135,7 +142,7 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
         if (sX < screenWidth * 0.2) {
           if (dx > 35) {
             // On iOS, system edge swipe handles extreme edge (0-24pt)
-            if (Platform.OS === 'ios' && sX < 24) {
+            if (isIOS && sX < 24) {
               return;
             }
             runOnJS(handleBackNavigation)();
@@ -155,7 +162,7 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
           }
         }
       });
-  }, [screenWidth, handleBackNavigation, handleNextTab, handlePrevTab, startX]);
+  }, [screenWidth, isIOS, handleBackNavigation, handleNextTab, handlePrevTab, startX]);
 
   return (
     <GestureDetector gesture={panGesture}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -64,9 +64,9 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
     }
   }, [id]);
 
-  const triggerHaptic = useCallback((style: Haptics.ImpactFeedbackStyle) => {
+  const triggerMediumHaptic = useCallback(() => {
     try {
-      Haptics.impactAsync(style);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch {}
   }, []);
 
@@ -103,97 +103,120 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
     });
   }, [id, translateX, isOpen, isPastThreshold]);
 
-  const panGesture = Gesture.Pan()
-    .enabled(!disabled)
-    .activeOffsetX([-12, 12])
-    .failOffsetY([-12, 12])
-    .onTouchesDown((e, stateManager) => {
-      'worklet';
-      const touch = e.allTouches[0];
-      if (touch) {
-        startX.value = touch.absoluteX;
-        // If card is NOT open, swipe MUST start in right 20% of screen
-        if (!isOpen.value && touch.absoluteX < screenWidth * 0.8) {
-          stateManager.fail();
-        }
+  // Clean up active card if unmounted while open
+  useEffect(() => {
+    return () => {
+      if (swipeCardManager.getActiveId() === id) {
+        swipeCardManager.setActive(null);
       }
-    })
-    .onBegin((e) => {
-      'worklet';
-      startX.value = e.absoluteX;
-    })
-    .onUpdate((e) => {
-      'worklet';
-      // 1. If card is currently open: allow dragging right to close
-      if (isOpen.value) {
-        if (e.translationX > 0) {
-          translateX.value = Math.min(0, -TOTAL_ACTIONS_WIDTH + e.translationX);
-        }
-        return;
-      }
+    };
+  }, [id]);
 
-      // 2. Closed card swipe MUST start in the right 20% of the screen
-      if (startX.value < screenWidth * 0.8) {
-        return;
-      }
-
-      // 3. Only swiping left is allowed
-      if (e.translationX < 0) {
-        translateX.value = e.translationX;
-
-        // Long swipe: quick delete threshold (> 50% screen width)
-        const isOver = Math.abs(e.translationX) >= QUICK_DELETE_THRESHOLD;
-        if (isOver !== isPastThreshold.value) {
-          isPastThreshold.value = isOver;
-          if (isOver) {
-            runOnJS(triggerHaptic)(Haptics.ImpactFeedbackStyle.Medium);
+  const panGesture = useMemo(() => {
+    return Gesture.Pan()
+      .enabled(!disabled)
+      .activeOffsetX([-12, 12])
+      .failOffsetY([-12, 12])
+      .onTouchesDown((e, stateManager) => {
+        'worklet';
+        const touch = e.allTouches[0];
+        if (touch) {
+          startX.value = touch.absoluteX;
+          // If card is NOT open, swipe MUST start in right 20% of screen
+          if (!isOpen.value && touch.absoluteX < screenWidth * 0.8) {
+            stateManager.fail();
           }
         }
-      }
-    })
-    .onEnd((e) => {
-      'worklet';
-      // If card was open and dragged right
-      if (isOpen.value) {
-        if (e.translationX > 35) {
-          // Snap closed
+      })
+      .onBegin((e) => {
+        'worklet';
+        startX.value = e.absoluteX;
+      })
+      .onUpdate((e) => {
+        'worklet';
+        // 1. If card is currently open: allow dragging right to close
+        if (isOpen.value) {
+          if (e.translationX > 0) {
+            translateX.value = Math.min(0, -TOTAL_ACTIONS_WIDTH + e.translationX);
+          }
+          return;
+        }
+
+        // 2. Closed card swipe MUST start in the right 20% of the screen
+        if (startX.value < screenWidth * 0.8) {
+          return;
+        }
+
+        // 3. Only swiping left is allowed
+        if (e.translationX < 0) {
+          translateX.value = e.translationX;
+
+          // Long swipe: quick delete threshold (> 50% screen width)
+          const isOver = Math.abs(e.translationX) >= QUICK_DELETE_THRESHOLD;
+          if (isOver !== isPastThreshold.value) {
+            isPastThreshold.value = isOver;
+            if (isOver) {
+              runOnJS(triggerMediumHaptic)();
+            }
+          }
+        }
+      })
+      .onEnd((e) => {
+        'worklet';
+        // If card was open and dragged right
+        if (isOpen.value) {
+          if (e.translationX > 35) {
+            // Snap closed
+            translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
+            isOpen.value = false;
+            runOnJS(syncOpen)(false);
+          } else {
+            // Snap back to open
+            translateX.value = withSpring(-TOTAL_ACTIONS_WIDTH, { damping: 20, stiffness: 220 });
+          }
+          return;
+        }
+
+        // Did not start in right 20%
+        if (startX.value < screenWidth * 0.8) {
+          return;
+        }
+
+        // Quick delete triggered past 50% width threshold
+        if (isPastThreshold.value) {
+          translateX.value = withTiming(-screenWidth, { duration: 180 }, (finished) => {
+            if (finished) {
+              runOnJS(handleQuickDelete)();
+            }
+          });
+          return;
+        }
+
+        // Short swipe: check snap threshold
+        if (translateX.value < SNAP_THRESHOLD) {
+          translateX.value = withSpring(-TOTAL_ACTIONS_WIDTH, { damping: 20, stiffness: 220 });
+          isOpen.value = true;
+          runOnJS(triggerSelectionHaptic)();
+          runOnJS(syncOpen)(true);
+        } else {
           translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
           isOpen.value = false;
           runOnJS(syncOpen)(false);
-        } else {
-          // Snap back to open
-          translateX.value = withSpring(-TOTAL_ACTIONS_WIDTH, { damping: 20, stiffness: 220 });
         }
-        return;
-      }
-
-      // Did not start in right 20%
-      if (startX.value < screenWidth * 0.8) {
-        return;
-      }
-
-      // Quick delete triggered past 50% width threshold
-      if (isPastThreshold.value) {
-        translateX.value = withTiming(-screenWidth, { duration: 180 }, (finished) => {
-          if (finished) {
-            runOnJS(handleQuickDelete)();
-          }
-        });
-        return;
-      }
-
-      // Short swipe: check snap threshold
-      if (translateX.value < SNAP_THRESHOLD) {
-        translateX.value = withSpring(-TOTAL_ACTIONS_WIDTH, { damping: 20, stiffness: 220 });
-        isOpen.value = true;
-        runOnJS(triggerSelectionHaptic)();
-        runOnJS(syncOpen)(true);
-      } else {
-        translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
-        isOpen.value = false;
-        runOnJS(syncOpen)(false);
-      }
-    });
+      });
+  }, [
+    disabled,
+    screenWidth,
+    QUICK_DELETE_THRESHOLD,
+    translateX,
+    startX,
+    isPastThreshold,
+    isOpen,
+    triggerMediumHaptic,
+    triggerSelectionHaptic,
+    syncOpen,
+    handleQuickDelete,
+  ]);
 
   const animatedCardStyle = useAnimatedStyle(() => {
     return {
