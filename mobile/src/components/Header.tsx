@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   topNavbar: {
-    height: 54,
+    height: 56,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -159,11 +159,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#334155',
   },
   titleButton: {
-    paddingVertical: 6,
+    paddingVertical: 4,
     maxWidth: '75%',
   },
   navTitleText: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: '700',
     letterSpacing: -0.4,
   },

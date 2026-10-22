@@ -153,7 +153,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
             {/* Header Title: Dynamic Tab Title on Mobile, Logo on Desktop */}
             <div className="flex items-center min-w-0 py-1 shrink-0">
-              <h1 className="md:hidden text-lg sm:text-xl font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] truncate">
+              <h1 className="md:hidden text-[26px] font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] truncate">
                 {currentTabTitle}
               </h1>
               <div
@@ -164,7 +164,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 onClick={() => handleNavSelect('editor')}
               >
-                <span className="text-lg sm:text-xl font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] hover:text-[#2563eb] dark:hover:text-[#60a5fa] transition-colors">
+                <span className="text-[26px] font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] hover:text-[#2563eb] dark:hover:text-[#60a5fa] transition-colors">
                   FitLog
                 </span>
               </div>
@@ -364,7 +364,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
         >
           <Dumbbell className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[11px] font-semibold leading-none">Тренування</span>
+          <span className="text-[9px] font-semibold leading-none">Тренування</span>
           {hasActiveWorkout && currentTab !== 'editor' && (
             <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#60a5fa]" />
           )}
@@ -382,7 +382,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
         >
           <BarChart2 className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[11px] font-semibold leading-none">Аналітика</span>
+          <span className="text-[9px] font-semibold leading-none">Аналітика</span>
         </button>
 
         {/* Central '+' Create Workout Button (accent, circular, Ocean Blue, hidden when viewing/editing a workout) */}
@@ -410,7 +410,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
         >
           <BookOpen className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[11px] font-semibold leading-none">Вправи</span>
+          <span className="text-[9px] font-semibold leading-none">Вправи</span>
         </button>
 
         {/* 4. Профіль */}
@@ -425,7 +425,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
         >
           <UserIcon className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[11px] font-semibold leading-none">Профіль</span>
+          <span className="text-[9px] font-semibold leading-none">Профіль</span>
         </button>
       </nav>
     </>
