@@ -55,7 +55,7 @@ export const InstagramTabPager: React.FC<InstagramTabPagerProps> = ({ initialTab
   };
 
   const resolveTargetTab = useCallback((inputTab?: string): TabName => {
-    if (inputTab && inputTab !== 'index' && TAB_ORDER.includes(inputTab as TabName)) {
+    if (inputTab && TAB_ORDER.includes(inputTab as TabName)) {
       savedActiveTab = inputTab as TabName;
       return inputTab as TabName;
     }

@@ -218,34 +218,23 @@ export const ExercisesScreen: React.FC = () => {
 
 
 
-  // Delete exercise with confirmation
-  const handleDeleteExercise = (ex: Exercise) => {
+  // Delete exercise directly without popup
+  const handleDeleteExercise = async (ex: Exercise) => {
     const isOwner = ex.userId === user?.id;
     if (!isOwner && !isAdmin) {
       Alert.alert('Заборонено', 'Ви можете видаляти лише власні вправи');
       return;
     }
 
-    Alert.alert(
-      'Видалити вправу?',
-      `Ви впевнені, що хочете видалити «${ex.name}»?`,
-      [
-        { text: 'Скасувати', style: 'cancel' },
-        {
-          text: 'Видалити',
-          style: 'destructive',
-          onPress: async () => {
-            const ok = await ExerciseService.deleteExercise(ex.id, user?.id, isAdmin);
-            if (ok) {
-              await loadExercises();
-              Alert.alert('Успішно', `Вправу «${ex.name}» видалено`);
-            } else {
-              Alert.alert('Помилка', 'Не вдалося видалити вправу');
-            }
-          },
-        },
-      ]
-    );
+    setExercises((prev) => prev.filter((item) => item.id !== ex.id));
+    try {
+      const ok = await ExerciseService.deleteExercise(ex.id, user?.id, isAdmin);
+      if (!ok) {
+        await loadExercises();
+      }
+    } catch {
+      await loadExercises();
+    }
   };
 
   const { showUndoToast } = useSwipeUndo();
@@ -458,8 +447,6 @@ export const ExercisesScreen: React.FC = () => {
                   onEdit={canEdit ? () => handleOpenEdit(ex) : undefined}
                   onDelete={() => handleDeleteExercise(ex)}
                   onQuickDelete={() => handleQuickDeleteExercise(ex)}
-                  confirmTitle="Видалити вправу?"
-                  confirmMessage={`Ви впевнені, що хочете видалити «${ex.name}» з бази вправ?`}
                 >
                   <TouchableOpacity
                     activeOpacity={0.7}
@@ -486,20 +473,6 @@ export const ExercisesScreen: React.FC = () => {
                           </View>
                         </View>
                       </View>
-
-                      {/* Action buttons: Edit opens separate page */}
-                      {canEdit ? (
-                        <View style={styles.actionsRow}>
-                          <TouchableOpacity
-                            style={[styles.iconButton, isDark ? styles.btnOutlineDark : styles.btnOutlineLight]}
-                            onPress={() => handleOpenEdit(ex)}
-                            activeOpacity={0.7}
-                            accessibilityLabel="Редагувати вправу"
-                          >
-                            <Ionicons name="pencil-outline" size={15} color={isDark ? '#F8FAFC' : '#0F172A'} />
-                          </TouchableOpacity>
-                        </View>
-                      ) : null}
                     </View>
                   </TouchableOpacity>
                 </SwipeableExerciseCard>

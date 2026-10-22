@@ -20,8 +20,9 @@ import {
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Header } from '../components/Header';
@@ -182,6 +183,13 @@ export const WorkoutsScreen: React.FC = () => {
     loadData();
   }, [loadData]);
 
+  useFocusEffect(
+    useCallback(() => {
+      setSavedActiveTab('index');
+      loadData();
+    }, [loadData])
+  );
+
   const onRefresh = useCallback(() => {
     setIsRefreshing(true);
     loadData();
@@ -228,6 +236,7 @@ export const WorkoutsScreen: React.FC = () => {
 
         // 2. Secondary operations: navigate & background data refresh (handled separately)
         try {
+          setSavedActiveTab('index');
           router.push({ pathname: '/workout/[id]', params: { id: newWorkout.id } });
         } catch (navErr) {
           console.warn('[WorkoutsScreen] Failed navigating to editor:', navErr);
@@ -494,7 +503,10 @@ export const WorkoutsScreen: React.FC = () => {
                           >
                             <TouchableOpacity
                               activeOpacity={0.7}
-                              onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
+                              onPress={() => {
+                                setSavedActiveTab('index');
+                                router.push({ pathname: '/workout/[id]', params: { id: w.id } });
+                              }}
                             >
                               <View style={styles.workoutCard}>
                                 {/* Top Row: Status, Coach */}

@@ -28,7 +28,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
   const [historyModalExercise, setHistoryModalExercise] = useState<Exercise | null>(null);
-  const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const blockHistoryModalUntilRef = useRef<number>(0);
 
@@ -78,11 +77,8 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
     });
   }, [exercises, search, selectedMuscle]);
 
-  const handleConfirmDelete = async () => {
-    if (!exerciseToDelete) return;
-    const idToDelete = exerciseToDelete.id;
-    await StorageService.deleteExercise(idToDelete);
-    setExerciseToDelete(null);
+  const handleDeleteExercise = async (id: string) => {
+    await StorageService.deleteExercise(id);
     setRefreshKey((prev) => prev + 1);
   };
 
@@ -192,7 +188,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                 key={ex.id}
                 exerciseId={ex.id}
                 disabled={!canEdit}
-                onDelete={() => setExerciseToDelete(ex)}
+                onDelete={() => handleDeleteExercise(ex.id)}
               >
                 <div
                   onClick={() => {
@@ -210,20 +206,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                         <span className="rounded-md border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-zinc-400">
                           {muscleInfo.nameUk}
                         </span>
-                        {canEdit && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setExerciseToEdit(ex);
-                            }}
-                            className="p-1 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ml-0.5"
-                            title="Редагувати вправу"
-                            aria-label={`Редагувати вправу ${ex.name}`}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                        )}
                       </div>
                     </div>
 
@@ -301,16 +283,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         userId={userId}
         isOpen={Boolean(historyModalExercise)}
         onClose={() => setHistoryModalExercise(null)}
-      />
-
-      <ConfirmDeleteModal
-        isOpen={Boolean(exerciseToDelete)}
-        title="Видалити вправу?"
-        message={`Ви впевнені, що хочете видалити вправу "${exerciseToDelete?.name || ''}"? Її буде вилучено з бази вправ.`}
-        confirmLabel="Видалити"
-        cancelLabel="Скасувати"
-        onConfirm={handleConfirmDelete}
-        onClose={() => setExerciseToDelete(null)}
       />
     </div>
   );

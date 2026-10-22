@@ -43,6 +43,7 @@ import { useSwipeUndo } from '../context/SwipeUndoContext';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 import { DatePickerModal } from '../components/DatePickerModal';
 import { formatDateDDMMYYYY } from '../utils/date';
+import { setSavedActiveTab } from '../components/InstagramTabPager';
 
 export const computeWorkoutStatus = (exercises: WorkoutExercise[]): 'completed' | 'in_progress' => {
   if (!exercises || exercises.length === 0) return 'in_progress';
@@ -355,6 +356,15 @@ export const WorkoutEditorScreen: React.FC = () => {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const exerciseLayoutsRef = useRef<{ [weId: string]: number }>({});
+
+  const handleBack = useCallback(() => {
+    setSavedActiveTab('index');
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  }, [router]);
 
   // Load workout details
   const loadWorkout = useCallback(async () => {
@@ -1246,7 +1256,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                 user?.id
               );
               if (ok) {
-                router.back();
+                handleBack();
               } else {
                 Alert.alert('Помилка', 'Не вдалося видалити тренування');
               }
@@ -1276,7 +1286,7 @@ export const WorkoutEditorScreen: React.FC = () => {
     return (
       <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
+          <TouchableOpacity onPress={handleBack} style={styles.iconBtn}>
             <Ionicons name="arrow-back" size={24} color={isDark ? '#F8FAFC' : '#0F172A'} />
           </TouchableOpacity>
         </View>
@@ -1285,7 +1295,7 @@ export const WorkoutEditorScreen: React.FC = () => {
           <Text style={[styles.errorTitle, isDark ? styles.textDark : styles.textLight]}>
             Тренування не знайдено
           </Text>
-          <Button title="Назад" variant="outline" onPress={() => router.back()} style={{ marginTop: 12 }} />
+          <Button title="Назад" variant="outline" onPress={handleBack} style={{ marginTop: 12 }} />
         </View>
       </SafeAreaView>
     );
@@ -1309,13 +1319,13 @@ export const WorkoutEditorScreen: React.FC = () => {
   });
 
   return (
-    <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true}>
+    <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBack}>
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Top Header Bar */}
       <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.iconBtn}
           accessibilityRole="button"
           accessibilityLabel="Назад"
