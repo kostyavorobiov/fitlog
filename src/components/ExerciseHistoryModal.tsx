@@ -4,6 +4,7 @@ import { Exercise, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { calculate1RM } from '../utils/workout';
 import {
+  ArrowLeft,
   ChevronLeft,
   Trophy,
   TrendingUp,
@@ -290,29 +291,28 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md animate-fade-in md:p-4 overflow-y-auto"
     >
       <div className="relative w-full h-full md:h-auto md:max-h-[92vh] md:max-w-xl md:rounded-3xl border-0 md:border border-[#e2e8f0] dark:border-[#334155] bg-[#f8fafc] dark:bg-[#0b1220] shadow-2xl overflow-y-auto flex flex-col text-[#0f172a] dark:text-[#f8fafc]">
-        {/* 1. Sticky Top Navigation Header */}
+        {/* 1. Sticky Top Navigation Header - Matching WorkoutEditor */}
         <div className="sticky top-0 z-30 bg-[#f8fafc]/90 dark:bg-[#0b1220]/90 backdrop-blur-xl border-b border-[#e2e8f0]/80 dark:border-[#334155]/80 px-4 py-3 flex items-center justify-between gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-9 h-9 rounded-xl bg-white dark:bg-[#1d2939] border border-[#e2e8f0] dark:border-[#334155] flex items-center justify-center text-[#0f172a] dark:text-[#f8fafc] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] transition-colors cursor-pointer shrink-0 shadow-xs"
-            aria-label="Назад"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 -ml-1 text-zinc-700 dark:text-zinc-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer shrink-0"
+              title="Назад"
+              aria-label="Назад"
+            >
+              <ArrowLeft className="h-6 w-6 stroke-[2]" />
+            </button>
 
-          <div className="flex-1 min-w-0 text-center">
-            <h2 className="text-base sm:text-lg font-bold truncate tracking-tight">
-              {exercise.name}
-            </h2>
-            <div className="flex items-center justify-center gap-1.5 mt-0.5">
-              <span className="text-[11px] font-semibold text-[#64748b] dark:text-[#94a3b8]">
+            <div className="min-w-0 flex flex-col items-start text-left">
+              <h2 className="font-bold text-[17px] sm:text-lg text-zinc-900 dark:text-white truncate">
+                {exercise.name}
+              </h2>
+              <span className="text-xs font-medium text-zinc-500 dark:text-[#94A3B8] mt-0.5">
                 {muscleInfo.nameUk}
               </span>
             </div>
           </div>
-
-          <div className="w-9" />
         </div>
 
         {/* 2. Scrollable Body Content */}

@@ -81,6 +81,7 @@ function RootNavigator() {
         <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
         <Stack.Screen name="workout/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="exercise/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="exercise/edit" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ title: 'Не знайдено' }} />
       </Stack>
 

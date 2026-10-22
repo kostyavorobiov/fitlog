@@ -20,7 +20,7 @@ import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
@@ -46,6 +46,8 @@ interface SwipeableExerciseCardProps {
   onEdit?: () => void;
   onDelete: () => void;
   onQuickDelete?: () => void;
+  confirmTitle?: string;
+  confirmMessage?: string;
   isDark: boolean;
   disabled?: boolean;
   children: React.ReactNode;
@@ -56,6 +58,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
   onEdit,
   onDelete,
   onQuickDelete,
+  confirmTitle,
+  confirmMessage,
   isDark,
   disabled = false,
   children,
@@ -68,6 +72,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
       onEdit={onEdit}
       onDelete={onDelete}
       onQuickDelete={onQuickDelete}
+      confirmTitle={confirmTitle}
+      confirmMessage={confirmMessage}
       editLabel="Редагувати"
       deleteLabel="Видалити"
     >
@@ -94,17 +100,28 @@ export const ExercisesScreen: React.FC = () => {
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
   const isSubmittingCreateRef = useRef(false);
 
-  // Edit Modal State
-  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editMuscle, setEditMuscle] = useState<MuscleGroup>('chest');
-  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
-
   const handleOpenExerciseDetail = (ex: Exercise) => {
     setSavedActiveTab('exercises');
     router.push({
       pathname: `/exercise/${ex.id}` as any,
       params: {
+        name: ex.name,
+        muscleGroup: ex.muscleGroup,
+      },
+    });
+  };
+
+  const handleOpenEdit = (ex: Exercise) => {
+    const isOwner = ex.userId === user?.id;
+    if (!isOwner && !isAdmin) {
+      Alert.alert('Заборонено', 'Ви можете редагувати лише власні вправи');
+      return;
+    }
+    setSavedActiveTab('exercises');
+    router.push({
+      pathname: '/exercise/edit' as any,
+      params: {
+        id: ex.id,
         name: ex.name,
         muscleGroup: ex.muscleGroup,
       },
@@ -124,12 +141,14 @@ export const ExercisesScreen: React.FC = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    setSavedActiveTab('exercises');
-  }, []);
-
-  useEffect(() => {
     loadExercises();
   }, [loadExercises]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadExercises();
+    }, [loadExercises])
+  );
 
   const filteredExercises = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -197,51 +216,7 @@ export const ExercisesScreen: React.FC = () => {
     }
   };
 
-  // Handle open edit modal (only for own exercises or admin)
-  const handleOpenEditModal = (ex: Exercise) => {
-    const isOwner = ex.userId === user?.id;
-    if (!isOwner && !isAdmin) {
-      Alert.alert('Заборонено', 'Ви можете редагувати лише власні вправи');
-      return;
-    }
 
-    setEditingExercise(ex);
-    setEditName(ex.name);
-    setEditMuscle(ex.muscleGroup || 'chest');
-  };
-
-  // Submit edit private exercise
-  const handleSaveEdit = async () => {
-    if (!editingExercise) return;
-
-    const cleanName = editName.trim();
-    if (!cleanName) {
-      Alert.alert('Помилка', 'Назва вправи не може бути порожньою');
-      return;
-    }
-
-    setIsSubmittingEdit(true);
-    try {
-      const updated: Exercise = {
-        ...editingExercise,
-        name: cleanName,
-        muscleGroup: editMuscle,
-      };
-
-      const result = await ExerciseService.updateExercise(updated, user?.id, isAdmin);
-      if (result.success) {
-        setEditingExercise(null);
-        await loadExercises();
-        Alert.alert('Успішно', `Вправу «${cleanName}» оновлено!`);
-      } else {
-        Alert.alert('Помилка', result.error || 'Не вдалося оновити вправу');
-      }
-    } catch (err: any) {
-      Alert.alert('Помилка', err?.message || 'Помилка при збереженні змін');
-    } finally {
-      setIsSubmittingEdit(false);
-    }
-  };
 
   // Delete exercise with confirmation
   const handleDeleteExercise = (ex: Exercise) => {
@@ -480,9 +455,11 @@ export const ExercisesScreen: React.FC = () => {
                   id={ex.id}
                   isDark={isDark}
                   disabled={!canEdit}
-                  onEdit={canEdit ? () => handleOpenEditModal(ex) : undefined}
+                  onEdit={canEdit ? () => handleOpenEdit(ex) : undefined}
                   onDelete={() => handleDeleteExercise(ex)}
                   onQuickDelete={() => handleQuickDeleteExercise(ex)}
+                  confirmTitle="Видалити вправу?"
+                  confirmMessage={`Ви впевнені, що хочете видалити «${ex.name}» з бази вправ?`}
                 >
                   <TouchableOpacity
                     activeOpacity={0.7}
@@ -510,13 +487,14 @@ export const ExercisesScreen: React.FC = () => {
                         </View>
                       </View>
 
-                      {/* Action buttons: Edit for own exercises or admin */}
+                      {/* Action buttons: Edit opens separate page */}
                       {canEdit ? (
                         <View style={styles.actionsRow}>
                           <TouchableOpacity
                             style={[styles.iconButton, isDark ? styles.btnOutlineDark : styles.btnOutlineLight]}
-                            onPress={() => handleOpenEditModal(ex)}
+                            onPress={() => handleOpenEdit(ex)}
                             activeOpacity={0.7}
+                            accessibilityLabel="Редагувати вправу"
                           >
                             <Ionicons name="pencil-outline" size={15} color={isDark ? '#F8FAFC' : '#0F172A'} />
                           </TouchableOpacity>
@@ -642,116 +620,7 @@ export const ExercisesScreen: React.FC = () => {
         </SafeAreaView>
       </Modal>
 
-      {/* EDIT MODAL */}
-      <Modal
-        visible={Boolean(editingExercise)}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setEditingExercise(null)}
-      >
-        <SafeAreaView edges={['top', 'bottom']} style={[styles.modalContainer, isDark ? styles.bgDark : styles.bgLight]}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={{ flex: 1 }}
-          >
-            {/* Modal Header */}
-            <View style={[styles.modalHeader, isDark ? styles.borderDark : styles.borderLight]}>
-              <View style={styles.modalTitleRow}>
-                <Ionicons name="pencil" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
-                <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
-                  Редагування власної вправи
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setEditingExercise(null)} style={styles.modalCloseBtn}>
-                <Ionicons name="close" size={22} color={isDark ? '#f8fafc' : '#0f172a'} />
-              </TouchableOpacity>
-            </View>
 
-            <ScrollView contentContainerStyle={styles.modalBody} showsVerticalScrollIndicator={false}>
-              <View style={styles.fieldGroup}>
-                <Text style={[styles.fieldLabel, isDark ? styles.textDark : styles.textLight]}>
-                  Назва вправи *
-                </Text>
-                <TextInput
-                  style={[styles.modalInput, isDark ? styles.inputDark : styles.inputLight]}
-                  placeholder="Назва вправи..."
-                  placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
-                  value={editName}
-                  onChangeText={setEditName}
-                  autoFocus
-                />
-              </View>
-
-              <View style={styles.fieldGroup}>
-                <Text style={[styles.fieldLabel, isDark ? styles.textDark : styles.textLight]}>
-                  Група м'язів / Категорія *
-                </Text>
-                <View style={styles.muscleChipsWrap}>
-                  {MUSCLE_ORDER.map((group) => {
-                    const isSelected = editMuscle === group;
-                    const info = MUSCLE_GROUPS[group];
-                    return (
-                      <TouchableOpacity
-                        key={group}
-                        onPress={() => setEditMuscle(group)}
-                        style={[
-                          styles.formChip,
-                          isDark ? styles.formChipDark : styles.formChipLight,
-                          isSelected && (isDark ? styles.formChipActiveDark : styles.formChipActiveLight),
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.formChipText,
-                            isSelected
-                              ? (isDark ? styles.textDark : styles.textLight)
-                              : (isDark ? styles.subDark : styles.subLight),
-                            isSelected && { fontWeight: '700' },
-                          ]}
-                        >
-                          {info.nameUk}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <View style={styles.modalActionsRow}>
-                <TouchableOpacity
-                  style={[styles.modalCancelBtn, isDark ? styles.btnOutlineDark : styles.btnOutlineLight]}
-                  onPress={() => setEditingExercise(null)}
-                  disabled={isSubmittingEdit}
-                >
-                  <Text style={[styles.modalCancelText, isDark ? styles.textDark : styles.textLight]}>
-                    Скасувати
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.modalSaveBtn,
-                    isSubmittingEdit && styles.btnDisabled,
-                  ]}
-                  onPress={handleSaveEdit}
-                  disabled={isSubmittingEdit}
-                >
-                  {isSubmittingEdit ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <>
-                      <Ionicons name="checkmark" size={18} color="#ffffff" />
-                      <Text style={styles.modalSaveText}>
-                        Зберегти зміни
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </Modal>
 
     </SafeAreaView>
   );

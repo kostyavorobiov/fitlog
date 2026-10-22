@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, StyleSheet, useWindowDimensions, Platform } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -85,16 +85,21 @@ export const InstagramTabPager: React.FC<InstagramTabPagerProps> = ({ initialTab
     };
   }, [screenWidth, activeTabShared, translateX]);
 
-  // Sync state if initialTab changes from outside (e.g. router)
+  const prevInitialTabRef = useRef(initialTab);
+
+  // Sync state if initialTab genuinely changes from outside (e.g. router navigation)
   useEffect(() => {
-    const resolved = resolveTargetTab(initialTab);
-    const targetIdx = getTabIndex(resolved);
-    if (TAB_ORDER[targetIdx] !== activeTab) {
-      setActiveTab(TAB_ORDER[targetIdx]);
+    if (initialTab && initialTab !== prevInitialTabRef.current) {
+      prevInitialTabRef.current = initialTab;
+      const resolved = resolveTargetTab(initialTab);
+      const targetIdx = getTabIndex(resolved);
+      const targetTab = TAB_ORDER[targetIdx];
+      savedActiveTab = targetTab;
+      setActiveTab(targetTab);
       activeTabShared.value = targetIdx;
       translateX.value = withTiming(-targetIdx * screenWidth, TIMING_CONFIG);
     }
-  }, [initialTab, screenWidth, resolveTargetTab, activeTab]);
+  }, [initialTab, screenWidth, resolveTargetTab, activeTabShared, translateX]);
 
   // Adjust on screen dimension change
   useEffect(() => {

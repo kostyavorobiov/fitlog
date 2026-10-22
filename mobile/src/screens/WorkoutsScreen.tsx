@@ -109,6 +109,8 @@ interface SwipeableWorkoutCardProps {
   onCopy?: () => void;
   onDelete: (onCancel?: () => void) => void;
   onQuickDelete?: (onCancel?: () => void) => void;
+  confirmTitle?: string;
+  confirmMessage?: string;
   isDark: boolean;
   children: React.ReactNode;
 }
@@ -118,6 +120,8 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
   onCopy,
   onDelete,
   onQuickDelete,
+  confirmTitle,
+  confirmMessage,
   isDark,
   children,
 }) => {
@@ -128,6 +132,8 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
       onCopy={onCopy}
       onDelete={onDelete}
       onQuickDelete={onQuickDelete}
+      confirmTitle={confirmTitle}
+      confirmMessage={confirmMessage}
     >
       {children}
     </SwipeableActionCard>
@@ -483,6 +489,8 @@ export const WorkoutsScreen: React.FC = () => {
                             onCopy={() => handleCopyWorkout(w)}
                             onDelete={(onCancel) => handleDeleteWorkout(w, onCancel)}
                             onQuickDelete={(onCancel) => handleQuickDeleteWorkout(w, onCancel)}
+                            confirmTitle="Видалити тренування?"
+                            confirmMessage={`Ви впевнені, що хочете видалити тренування «${w.title || 'це тренування'}»?`}
                           >
                             <TouchableOpacity
                               activeOpacity={0.7}

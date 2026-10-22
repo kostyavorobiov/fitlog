@@ -1360,12 +1360,11 @@ export const WorkoutEditorScreen: React.FC = () => {
               setTemplateName(workout.title || 'Моє тренування');
               setIsTemplateModalOpen(true);
             }}
-            style={[styles.saveTemplateBtn, isDark ? styles.saveTemplateBtnDark : styles.saveTemplateBtnLight]}
+            style={styles.iconBtn}
             accessibilityRole="button"
             accessibilityLabel="Зберегти як шаблон"
           >
-            <Ionicons name="bookmark-outline" size={14} color="#2563EB" />
-            <Text style={styles.saveTemplateBtnText}>Шаблон</Text>
+            <Ionicons name="bookmark-outline" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
           </TouchableOpacity>
         </View>
       </View>
@@ -1442,7 +1441,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                           left: 0,
                           top: 0,
                           bottom: 0,
-                          width: 4,
+                          width: 8,
                           backgroundColor: palette.borderColor,
                           zIndex: 1,
                         }}

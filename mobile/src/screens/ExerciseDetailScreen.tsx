@@ -307,17 +307,16 @@ export const ExerciseDetailScreen: React.FC = () => {
   return (
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBack}>
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-        {/* Sticky Top Navigation Header - Matching mobile web version */}
+        {/* Sticky Top Navigation Header - Matching WorkoutEditorScreen */}
         <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleBack}
-            style={[styles.backBtn, isDark ? styles.backBtnDark : styles.backBtnLight]}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.iconBtn}
             accessibilityRole="button"
-            accessibilityLabel="Назад до списку вправ"
+            accessibilityLabel="Назад"
           >
-            <Ionicons name="chevron-back" size={20} color={isDark ? '#F8FAFC' : '#0F172A'} />
+            <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
@@ -328,8 +327,6 @@ export const ExerciseDetailScreen: React.FC = () => {
               {muscleInfo.nameUk}
             </Text>
           </View>
-
-          <View style={{ width: 36 }} />
         </View>
 
         {loading ? (
@@ -765,37 +762,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backBtnLight: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-  },
-  backBtnDark: {
-    backgroundColor: '#1D2939',
-    borderColor: '#334155',
+  iconBtn: {
+    padding: 6,
   },
   headerCenter: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginHorizontal: 8,
   },
   topBarTitle: {
     fontSize: 16,
     fontWeight: '700',
-    textAlign: 'center',
   },
   topBarSub: {
     fontSize: 11,
     fontWeight: '600',
     marginTop: 1,
-    textAlign: 'center',
   },
   centerContainer: {
     flex: 1,

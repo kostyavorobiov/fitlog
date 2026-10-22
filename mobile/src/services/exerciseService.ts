@@ -253,9 +253,16 @@ export class ExerciseService {
     if (isSupabaseConfigured() && supabase) {
       try {
         let effectiveUserId = exercise.isDefault ? null : exercise.userId;
-        if (!effectiveUserId && !exercise.isDefault) {
+        const isUuid =
+          effectiveUserId &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(effectiveUserId);
+        if (!isUuid && !exercise.isDefault) {
           const { data: authData } = await supabase.auth.getUser();
-          effectiveUserId = authData?.user?.id || null;
+          effectiveUserId =
+            authData?.user?.id &&
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(authData.user.id)
+              ? authData.user.id
+              : null;
         }
 
         // Try RPC save_exercise first
@@ -356,8 +363,100 @@ export class ExerciseService {
       return { success: false, error: 'Ви можете редагувати лише власні вправи' };
     }
 
-    const ok = await this.createExercise(exercise);
-    return { success: ok, error: ok ? undefined : 'Помилка при оновленні вправи' };
+    // 1. Update local cache
+    const cached = await MobileStorage.getItem<Exercise[]>(EXERCISES_CACHE_KEY, []);
+    const existingIdx = cached.findIndex((e) => e.id === exercise.id);
+    if (existingIdx >= 0) {
+      cached[existingIdx] = exercise;
+    } else {
+      cached.push(exercise);
+    }
+    await MobileStorage.setItem(EXERCISES_CACHE_KEY, cached);
+
+    // 2. Also update embedded exercises in local workouts cache so everything stays in sync
+    try {
+      const workouts = await MobileStorage.getItem<any[]>('@fitlog_workouts', []);
+      let updatedWorkouts = false;
+      workouts.forEach((w) => {
+        (w.exercises || []).forEach((we: any) => {
+          if (we.exerciseId === exercise.id) {
+            we.exerciseName = exercise.name;
+            we.muscleGroup = exercise.muscleGroup;
+            updatedWorkouts = true;
+          }
+        });
+      });
+      if (updatedWorkouts) {
+        await MobileStorage.setItem('@fitlog_workouts', workouts);
+      }
+    } catch {}
+
+    // 3. Persist to Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        let effectiveUserId = exercise.isDefault ? null : exercise.userId;
+        const isUuid =
+          effectiveUserId &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(effectiveUserId);
+        if (!isUuid && !exercise.isDefault) {
+          const { data: authData } = await supabase.auth.getUser();
+          effectiveUserId =
+            authData?.user?.id &&
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(authData.user.id)
+              ? authData.user.id
+              : null;
+        }
+
+        // Direct table update first (safest under RLS)
+        const { error: updateErr } = await supabase
+          .from('exercises')
+          .update({
+            name: exercise.name,
+            muscle_group: exercise.muscleGroup,
+            description: exercise.description || '',
+          })
+          .eq('id', exercise.id);
+
+        if (!updateErr) {
+          return { success: true };
+        }
+
+        // Fallback: try RPC save_exercise
+        const { data: rpcRes, error: rpcError } = await supabase.rpc('save_exercise', {
+          p_id: exercise.id,
+          p_user_id: effectiveUserId,
+          p_name: exercise.name,
+          p_muscle_group: exercise.muscleGroup,
+          p_description: exercise.description || '',
+          p_is_default: Boolean(exercise.isDefault),
+        });
+
+        if (!rpcError && (rpcRes === true || rpcRes === null || rpcRes === undefined || typeof rpcRes === 'object')) {
+          return { success: true };
+        }
+
+        // Direct table upsert fallback
+        await supabase.from('exercises').upsert(
+          {
+            id: exercise.id,
+            user_id: effectiveUserId,
+            name: exercise.name,
+            muscle_group: exercise.muscleGroup,
+            description: exercise.description || '',
+            is_default: Boolean(exercise.isDefault),
+          },
+          { onConflict: 'id' }
+        );
+
+        return { success: true };
+      } catch (e) {
+        console.warn('[ExerciseService.updateExercise] Cloud sync error:', e);
+        // Local cache updated successfully
+        return { success: true };
+      }
+    }
+
+    return { success: true };
   }
 
   /**

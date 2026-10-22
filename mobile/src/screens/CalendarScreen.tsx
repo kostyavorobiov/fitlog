@@ -509,6 +509,8 @@ export const CalendarScreen: React.FC = () => {
                     onEdit={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
                     onDelete={() => handleDeleteWorkout(w)}
                     onQuickDelete={() => handleQuickDeleteWorkout(w)}
+                    confirmTitle="Видалити тренування?"
+                    confirmMessage={`Ви впевнені, що хочете видалити тренування «${w.title || 'це тренування'}»?`}
                     editLabel="Редагувати"
                     deleteLabel="Видалити"
                   >

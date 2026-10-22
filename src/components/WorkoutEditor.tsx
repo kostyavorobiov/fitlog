@@ -244,6 +244,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [exerciseToReplaceId, setExerciseToReplaceId] = useState<string | null>(null);
   const exerciseToReplaceIdRef = useRef<string | null>(null);
+  const [exerciseToRemove, setExerciseToRemove] = useState<{ id: string; name: string } | null>(null);
 
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [templateNameInput, setTemplateNameInput] = useState('');
@@ -1168,11 +1169,11 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               setTemplateNameInput(workout.title || 'Моє тренування');
               setIsTemplateModalOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/25 transition-colors cursor-pointer"
+            className="p-1 -mr-1 text-zinc-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer shrink-0"
             title="Зберегти як шаблон"
+            aria-label="Зберегти як шаблон"
           >
-            <Bookmark className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            <span>Шаблон</span>
+            <Bookmark className="h-6 w-6 stroke-[2]" />
           </button>
         </div>
       </div>
@@ -1236,7 +1237,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 {/* Superset stripe across full height of card on the left */}
                 {isSuperset && (
                   <div
-                    className="absolute left-0 top-0 bottom-0 w-1 sm:w-1.5 z-10 pointer-events-none"
+                    className="absolute left-0 top-0 bottom-0 w-2 z-10 pointer-events-none"
                     style={{
                       backgroundColor: supersetPalette ? supersetPalette.hex : '#10b981',
                     }}
@@ -1247,7 +1248,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 <div className="block sm:hidden">
                   <MobileSwipeableExerciseCard
                     exerciseId={weItem.id}
-                    onDelete={() => handleRemoveExercise(weItem.id)}
+                    onDelete={() => setExerciseToRemove({ id: weItem.id, name: exerciseName })}
                     onChangeExercise={() => handleChangeExercise(weItem.id)}
                   >
 
@@ -1679,14 +1680,6 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                     >
                       <ArrowLeftRight className="h-4 w-4" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveExercise(weItem.id)}
-                      className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-rose-400 hover:text-rose-600 dark:text-rose-500 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-800 transition-colors cursor-pointer"
-                      title="Видалити вправу"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
 
@@ -2042,6 +2035,21 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         confirmLabel="Видалити тренування"
         onConfirm={handleDeleteCurrentWorkout}
         onClose={() => setIsDeleteModalOpen(false)}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={Boolean(exerciseToRemove)}
+        title="Видалити вправу з тренування?"
+        message={`Ви впевнені, що хочете видалити «${exerciseToRemove?.name || 'цю вправу'}» з поточного тренування? Всі підходи цієї вправи буде вилучено.`}
+        confirmLabel="Видалити вправу"
+        cancelLabel="Скасувати"
+        onConfirm={() => {
+          if (exerciseToRemove) {
+            handleRemoveExercise(exerciseToRemove.id);
+            setExerciseToRemove(null);
+          }
+        }}
+        onClose={() => setExerciseToRemove(null)}
       />
 
       {/* Edit Title Modal */}
