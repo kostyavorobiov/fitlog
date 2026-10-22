@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Dumbbell, Calendar, Plus, AlertCircle } from 'lucide-react';
+import { X, Dumbbell, Calendar, Plus, AlertCircle, Bookmark, Check } from 'lucide-react';
 import { formatDateDDMMYYYY } from './WorkoutListView';
+import { WorkoutTemplate, TemplateService } from '../services/templateService';
+import { StorageService } from '../services/storageService';
 
 interface CreateWorkoutModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (title: string, scheduledDate: string) => void;
+  onCreate: (title: string, scheduledDate: string, template?: WorkoutTemplate) => void;
   initialDate?: string;
+  userId?: string;
 }
 
 export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
@@ -15,20 +18,37 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   onClose,
   onCreate,
   initialDate,
+  userId,
 }) => {
+  const [mode, setMode] = useState<'empty' | 'template'>('empty');
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
   const [error, setError] = useState('');
-  const backdropMouseDownRef = React.useRef(false);
+  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<WorkoutTemplate | null>(null);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+  const backdropMouseDownRef = useRef(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       if (initialDate) {
         setDate(initialDate);
       }
+      setTitle('');
       setError('');
+      setMode('empty');
+      setSelectedTemplate(null);
+
+      const effectiveUserId = userId || StorageService.getActiveUserId() || '';
+      if (effectiveUserId) {
+        setIsLoadingTemplates(true);
+        TemplateService.getTemplates(effectiveUserId)
+          .then((tpls) => setTemplates(tpls))
+          .catch((e) => console.warn('[CreateWorkoutModal] Templates load error:', e))
+          .finally(() => setIsLoadingTemplates(false));
+      }
     }
-  }, [isOpen, initialDate]);
+  }, [isOpen, initialDate, userId]);
 
   if (!isOpen) return null;
 
@@ -43,6 +63,23 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (mode === 'template') {
+      if (!selectedTemplate) {
+        setError('Оберіть шаблон зі списку');
+        return;
+      }
+      onCreate(
+        title.trim() || selectedTemplate.title,
+        date || new Date().toISOString().split('T')[0],
+        selectedTemplate
+      );
+      setTitle('');
+      setError('');
+      onClose();
+      return;
+    }
+
     const cleanTitle = title.trim();
     if (!cleanTitle) {
       setError("Назва тренування обов'язкова до заповнення");
@@ -92,7 +129,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100">Нове тренування</h3>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400">Вкажіть назву та заплановану дату</p>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400">Створіть порожнє або з збереженого шаблону</p>
             </div>
           </div>
           <button
@@ -104,60 +141,167 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
           </button>
         </div>
 
+        {/* Mode Selector Segment */}
+        <div className="flex rounded-2xl bg-slate-100 dark:bg-zinc-950 p-1 mt-4 border border-slate-200/80 dark:border-zinc-800">
+          <button
+            type="button"
+            onClick={() => {
+              setMode('empty');
+              setError('');
+            }}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+              mode === 'empty'
+                ? 'bg-white dark:bg-zinc-800 text-[#2563EB] dark:text-[#60A5FA] shadow-xs'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Dumbbell className="h-3.5 w-3.5" />
+            <span>Порожнє</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('template');
+              setError('');
+            }}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+              mode === 'template'
+                ? 'bg-white dark:bg-zinc-800 text-[#2563EB] dark:text-[#60A5FA] shadow-xs'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Bookmark className="h-3.5 w-3.5" />
+            <span>З шаблону {templates.length > 0 ? `(${templates.length})` : ''}</span>
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          {/* Title Field */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">
-              Назва тренування *
-            </label>
-            <input
-              type="text"
-              required
-              autoFocus
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                if (error) setError('');
-              }}
-              placeholder="наприклад: Груди та Тріцепс"
-              className={`w-full h-11 rounded-2xl border px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 bg-slate-50 dark:bg-zinc-950 focus:outline-none transition-colors ${
-                error
-                  ? 'border-rose-500'
-                  : 'border-slate-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]'
-              }`}
-            />
-            {error && (
-              <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center space-x-1 mt-1.5">
-                <AlertCircle className="h-3 w-3 shrink-0" />
-                <span>{error}</span>
-              </p>
-            )}
-          </div>
-
-          {/* Quick presets */}
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1.5">
-              Швидкі шаблони назв:
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {titlePresets.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => handleSelectPreset(preset)}
-                  className={`rounded-xl border px-2.5 py-1 text-[11px] transition-all cursor-pointer ${
-                    title === preset
-                      ? 'border-[#2563EB] bg-[#2563EB] text-white font-bold shadow-xs'
-                      : 'border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-                  }`}
-                >
-                  {preset}
-                </button>
-              ))}
+          {mode === 'template' ? (
+            <div className="space-y-3">
+              {isLoadingTemplates ? (
+                <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-400 font-mono">
+                  Завантаження шаблонів...
+                </div>
+              ) : templates.length === 0 ? (
+                <div className="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800 text-center space-y-2">
+                  <Bookmark className="h-6 w-6 text-slate-400 mx-auto" />
+                  <p className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                    Немає збережених шаблонів
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                    Збережіть будь-яке створене тренування як шаблон, натиснувши «Шаблон» у верхньому меню.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setMode('empty')}
+                    className="inline-block mt-1 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:bg-blue-100 transition cursor-pointer"
+                  >
+                    Створити порожнє тренування
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">
+                    Оберіть шаблон *
+                  </label>
+                  <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                    {templates.map((tpl) => {
+                      const isSelected = selectedTemplate?.id === tpl.id;
+                      return (
+                        <div
+                          key={tpl.id}
+                          onClick={() => {
+                            setSelectedTemplate(tpl);
+                            setTitle(tpl.title);
+                            setError('');
+                          }}
+                          className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${
+                            isSelected
+                              ? 'border-[#2563EB] bg-blue-50/50 dark:bg-blue-950/30 ring-1 ring-[#2563EB]'
+                              : 'border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50 dark:bg-zinc-950'
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1 pr-2">
+                            <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
+                              {tpl.title}
+                            </h4>
+                            <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5 truncate">
+                              {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
+                            </p>
+                          </div>
+                          <div
+                            className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 border ${
+                              isSelected
+                                ? 'bg-[#2563EB] border-[#2563EB] text-white'
+                                : 'border-slate-300 dark:border-zinc-700'
+                            }`}
+                          >
+                            {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <>
+              {/* Title Field */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">
+                  Назва тренування *
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={title}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    if (error) setError('');
+                  }}
+                  placeholder="наприклад: Груди та Тріцепс"
+                  className={`w-full h-11 rounded-2xl border px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 bg-slate-50 dark:bg-zinc-950 focus:outline-none transition-colors ${
+                    error
+                      ? 'border-rose-500'
+                      : 'border-slate-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]'
+                  }`}
+                />
+              </div>
 
-          {/* Date Field */}
+              {/* Quick presets */}
+              <div>
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1.5">
+                  Швидкі шаблони назв:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {titlePresets.map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => handleSelectPreset(preset)}
+                      className={`rounded-xl border px-2.5 py-1 text-[11px] transition-all cursor-pointer ${
+                        title === preset
+                          ? 'border-[#2563EB] bg-[#2563EB] text-white font-bold shadow-xs'
+                          : 'border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {error && (
+            <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center space-x-1 mt-1.5">
+              <AlertCircle className="h-3 w-3 shrink-0" />
+              <span>{error}</span>
+            </p>
+          )}
+
           {/* Date Field with Calendar Picker and DD/MM/YYYY display */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">
@@ -197,7 +341,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
               className="flex-1 h-11 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4" />
-              <span>Створити</span>
+              <span>{mode === 'template' ? 'Створити з шаблону' : 'Створити'}</span>
             </button>
           </div>
         </form>

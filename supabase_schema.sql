@@ -69,6 +69,17 @@ create table if not exists public.workout_sets (
   is_warmup boolean default false
 );
 
+-- 6. WORKOUT TEMPLATES TABLE
+create table if not exists public.workout_templates (
+  id text primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  notes text default '',
+  data jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- ==============================================================================
 -- INDEXES
 -- ==============================================================================
@@ -78,6 +89,7 @@ create index if not exists idx_workout_exercises_workout_id on public.workout_ex
 create index if not exists idx_workout_sets_exercise_id on public.workout_sets(workout_exercise_id);
 create index if not exists idx_exercises_user_id on public.exercises(user_id);
 create index if not exists idx_profiles_coach_id on public.profiles(coach_id);
+create index if not exists idx_workout_templates_user_id on public.workout_templates(user_id);
 
 -- Security policies and RPCs (also available as a standalone upgrade migration).
 -- FitLog: apply the entire file in Supabase SQL Editor to an existing database.
@@ -134,7 +146,7 @@ for each row execute function fitlog_private.guard_profile();
 -- Replace policies on FitLog tables, including permissive policies from older revisions.
 do $$ declare p record; begin
   for p in select schemaname, tablename, policyname from pg_policies
-    where schemaname = 'public' and tablename in ('profiles','exercises','workouts','workout_exercises','workout_sets')
+    where schemaname = 'public' and tablename in ('profiles','exercises','workouts','workout_exercises','workout_sets','workout_templates')
   loop execute format('drop policy %I on %I.%I', p.policyname, p.schemaname, p.tablename); end loop;
 end $$;
 alter table public.profiles enable row level security;
@@ -142,10 +154,11 @@ alter table public.exercises enable row level security;
 alter table public.workouts enable row level security;
 alter table public.workout_exercises enable row level security;
 alter table public.workout_sets enable row level security;
-revoke all on public.profiles, public.exercises, public.workouts, public.workout_exercises, public.workout_sets from public, anon;
-revoke all on public.profiles, public.exercises, public.workouts, public.workout_exercises, public.workout_sets from authenticated;
+alter table public.workout_templates enable row level security;
+revoke all on public.profiles, public.exercises, public.workouts, public.workout_exercises, public.workout_sets, public.workout_templates from public, anon;
+revoke all on public.profiles, public.exercises, public.workouts, public.workout_exercises, public.workout_sets, public.workout_templates from authenticated;
 grant select, insert, update on public.profiles, public.exercises to authenticated;
-grant select, insert, update, delete on public.workouts, public.workout_exercises, public.workout_sets to authenticated;
+grant select, insert, update, delete on public.workouts, public.workout_exercises, public.workout_sets, public.workout_templates to authenticated;
 
 create policy profiles_read on public.profiles for select to authenticated using (true);
 create policy profiles_insert on public.profiles for insert to authenticated with check (id = auth.uid());
@@ -153,6 +166,8 @@ create policy profiles_update on public.profiles for update to authenticated
 using (id = auth.uid()) with check (id = auth.uid());
 
 create policy workouts_access on public.workouts for all to authenticated
+using (fitlog_private.can_manage_user(user_id)) with check (fitlog_private.can_manage_user(user_id));
+create policy workout_templates_access on public.workout_templates for all to authenticated
 using (fitlog_private.can_manage_user(user_id)) with check (fitlog_private.can_manage_user(user_id));
 create policy workout_exercises_access on public.workout_exercises for all to authenticated
 using (exists (select 1 from public.workouts w where w.id = workout_id))

@@ -17,6 +17,7 @@ import { MobileSwipeableExerciseCard } from './MobileSwipeableExerciseCard';
 import { playSuccessChime, playBeep } from '../utils/audio';
 import { getExercise1RM, format1RM, getMinRepsFromRange } from '../utils/workout';
 import { formatDateDDMMYYYY } from './WorkoutListView';
+import { TemplateService } from '../services/templateService';
 import {
   Calendar,
   Plus,
@@ -37,6 +38,8 @@ import {
   Link,
   Unlink,
   X,
+  Bookmark,
+  Pencil,
 } from 'lucide-react';
 
 const computeWorkoutStatus = (exercises: WorkoutExercise[]): 'completed' | 'in_progress' => {
@@ -237,6 +240,55 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [exerciseToReplaceId, setExerciseToReplaceId] = useState<string | null>(null);
   const exerciseToReplaceIdRef = useRef<string | null>(null);
+
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [templateNameInput, setTemplateNameInput] = useState('');
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [templateNotice, setTemplateNotice] = useState<string | null>(null);
+  const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState(false);
+  const [newTitleInput, setNewTitleInput] = useState('');
+
+  const handleSaveAsTemplate = async () => {
+    const effectiveUserId = workout.userId || userId;
+    if (!effectiveUserId || !templateNameInput.trim()) return;
+    setIsSavingTemplate(true);
+    try {
+      const ok = await TemplateService.saveTemplate({
+        id: `tmpl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        userId: effectiveUserId,
+        title: templateNameInput.trim(),
+        notes: workout.notes || '',
+        exercises: workout.exercises || [],
+        createdAt: new Date().toISOString(),
+      });
+      if (ok) {
+        setIsTemplateModalOpen(false);
+        setTemplateNotice('Шаблон тренування збережено!');
+        setTimeout(() => setTemplateNotice(null), 3000);
+      } else {
+        alert('Не вдалося зберегти шаблон');
+      }
+    } catch (e: any) {
+      alert(e?.message || 'Помилка при збереженні шаблону');
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  const handleSaveEditedTitle = () => {
+    const clean = newTitleInput.trim() || 'Тренування';
+    handleTitleChange(clean);
+    setIsEditTitleModalOpen(false);
+  };
+
+  const get1RMForExercise = (we: WorkoutExercise) => {
+    const effectiveUserId = workout.userId || userId;
+    let lastPerf = null;
+    try {
+      lastPerf = StorageService.getLastExercisePerformance(effectiveUserId, we.exerciseId, workout.id);
+    } catch {}
+    return format1RM(getExercise1RM(we.sets, lastPerf));
+  };
 
   const handleChangeExercise = (workoutExerciseId: string) => {
     exerciseToReplaceIdRef.current = workoutExerciseId;
@@ -1055,97 +1107,79 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
           <button type="button" className="ml-2 underline cursor-pointer" onClick={() => updateAndSave(workoutRef.current)}>Повторити</button>
         </div>
       )}
-      {/* Back button to return to workouts list */}
-      {onBack && (
-        <div className="flex items-center justify-between">
+      {/* Top Bar matching Mobile React Native */}
+      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs">
+        {/* Back Button */}
+        {onBack ? (
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center space-x-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="p-2 -ml-1 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+            title="Назад"
           >
-            <ArrowLeft className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-            <span>До списку тренувань</span>
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        ) : (
+          <div className="w-5" />
+        )}
+
+        {/* Center: Title (tap to edit) & Date (tap to pick without calendar icon) */}
+        <div className="flex-1 min-w-0 flex flex-col items-center text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setNewTitleInput(workout.title || 'Тренування');
+              setIsEditTitleModalOpen(true);
+            }}
+            className="group inline-flex items-center gap-1.5 max-w-full cursor-pointer hover:opacity-80 transition-opacity"
+            title="Редагувати назву"
+          >
+            <span className="font-bold text-base sm:text-lg text-zinc-900 dark:text-zinc-100 truncate">
+              {workout.title || 'Тренування'}
+            </span>
+            <Pencil className="h-3.5 w-3.5 text-zinc-400 group-hover:text-blue-600 transition-colors shrink-0" />
+          </button>
+
+          <label className="relative inline-flex items-center cursor-pointer text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mt-0.5">
+            <span>{workout.scheduledDate ? formatDateDDMMYYYY(workout.scheduledDate) : 'Виберіть дату'}</span>
+            <input
+              type="date"
+              value={workout.scheduledDate ? workout.scheduledDate.split('T')[0] : ''}
+              onChange={(e) => handleDateChange(e.target.value)}
+              onClick={(e) => {
+                try {
+                  (e.target as any).showPicker?.();
+                } catch {}
+              }}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+              tabIndex={-1}
+            />
+          </label>
+        </div>
+
+        {/* Right: Save as Template button */}
+        <button
+          type="button"
+          onClick={() => {
+            setTemplateNameInput(workout.title || 'Моє тренування');
+            setIsTemplateModalOpen(true);
+          }}
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer shrink-0"
+          title="Зберегти як шаблон"
+        >
+          <Bookmark className="h-3.5 w-3.5" />
+          <span>Шаблон</span>
+        </button>
+      </div>
+
+      {templateNotice && (
+        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 px-3.5 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
+          <span>{templateNotice}</span>
+          <button type="button" onClick={() => setTemplateNotice(null)} className="cursor-pointer ml-2">
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
-
-      {/* Workout Metadata Card */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-xs">
-        {/* Title & Status Header */}
-        <div className="flex flex-col gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3.5 mb-3.5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                Програма тренування
-              </span>
-              <span
-                className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[10px] font-semibold border ${workout.status === 'completed'
-                  ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30'
-                  : 'bg-[#2563eb]/10 text-[#2563eb] dark:text-[#60a5fa] border-[#2563eb]/30'
-                  }`}
-              >
-                {workout.status === 'completed'
-                  ? 'Виконано ✓'
-                  : 'В процесі ⚡'}
-              </span>
-              {workout.assignedByCoachId && (
-                <span className="inline-flex items-center space-x-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold border border-[#2563eb]/30 bg-[#2563eb]/10 text-[#2563eb] dark:text-[#60a5fa]">
-                  <Award className="h-3 w-3" />
-                  <span>Призначено тренером</span>
-                </span>
-              )}
-            </div>
-
-          </div>
-
-          {/* Title input - Functional and non-blocking */}
-          <div className="space-y-1">
-            <input
-              type="text"
-              value={workout.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              placeholder="Назва тренування (напр. Груди та Тріцепс)"
-              className="w-full font-bold text-lg sm:text-xl text-[#0f172a] dark:text-[#f8fafc] bg-transparent border-b border-[#e2e8f0] dark:border-[#334155] hover:border-[#60a5fa] focus:border-[#2563eb] dark:focus:border-[#60a5fa] focus:outline-none transition py-1"
-            />
-          </div>
-
-          {/* Date Picker row */}
-          <div className="flex items-center space-x-2 pt-1">
-            <label className="relative flex items-center space-x-1.5 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] px-2.5 py-1 text-xs text-[#0f172a] dark:text-[#f8fafc] cursor-pointer hover:border-[#2563eb] dark:hover:border-[#60a5fa] transition-colors">
-              <Calendar className="h-3.5 w-3.5 text-[#2563eb] dark:text-[#60a5fa] shrink-0" />
-              <span className="font-mono text-xs select-none">
-                {workout.scheduledDate ? formatDateDDMMYYYY(workout.scheduledDate) : 'Виберіть дату'}
-              </span>
-              <input
-                type="date"
-                value={workout.scheduledDate ? workout.scheduledDate.split('T')[0] : ''}
-                onChange={(e) => handleDateChange(e.target.value)}
-                onClick={(e) => {
-                  try {
-                    (e.target as any).showPicker?.();
-                  } catch {}
-                }}
-                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                tabIndex={-1}
-              />
-            </label>
-          </div>
-        </div>
-
-        {/* Quick Title Presets */}
-
-
-        {/* Workout notes */}
-        <div className="mt-3">
-          <input
-            type="text"
-            placeholder="Загальні примітки до тренування..."
-            value={workout.notes || ''}
-            onChange={(e) => handleNotesChange(e.target.value)}
-            className="w-full text-xs text-[#0f172a] dark:text-[#f8fafc] bg-[#f1f5f9] dark:bg-[#0b1220] rounded-xl px-3 py-2 border border-[#e2e8f0] dark:border-[#334155] placeholder-[#64748b] dark:placeholder-[#94a3b8] focus:outline-none focus:border-[#2563eb]"
-          />
-        </div>
-      </div>
 
       {/* Exercises List */}
       <div className="space-y-4">
@@ -1268,7 +1302,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                               <span>•</span>
                               <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
                               <span>•</span>
-                              <span>1RM: {format1RM(getExercise1RM(weItem.sets))}</span>
+                              <span>1RM: {get1RMForExercise(weItem)}</span>
                             </div>
                           )}
                         </div>
@@ -1318,7 +1352,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                             </select>
                           </div>
                           <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                            1RM: <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{format1RM(getExercise1RM(weItem.sets))}</span>
+                            1RM: <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{get1RMForExercise(weItem)}</span>
                           </div>
                         </div>
 
@@ -1576,7 +1610,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <span>•</span>
                           <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
                           <span>•</span>
-                          <span>1RM: {format1RM(getExercise1RM(weItem.sets))}</span>
+                          <span>1RM: {get1RMForExercise(weItem)}</span>
                         </div>
                       )}
                     </div>
@@ -1660,7 +1694,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         </select>
                       </div>
                       <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                        1RM: <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{format1RM(getExercise1RM(weItem.sets))}</span>
+                        1RM: <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{get1RMForExercise(weItem)}</span>
                       </div>
                     </div>
 
@@ -1992,6 +2026,91 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         onConfirm={handleDeleteCurrentWorkout}
         onClose={() => setIsDeleteModalOpen(false)}
       />
+
+      {/* Edit Title Modal */}
+      {isEditTitleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-xl space-y-4">
+            <h3 className="font-bold text-base text-zinc-900 dark:text-zinc-100">
+              Назва тренування
+            </h3>
+            <input
+              type="text"
+              autoFocus
+              value={newTitleInput}
+              onChange={(e) => setNewTitleInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveEditedTitle();
+                if (e.key === 'Escape') setIsEditTitleModalOpen(false);
+              }}
+              placeholder="Введіть назву..."
+              className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setIsEditTitleModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+              >
+                Скасувати
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEditedTitle}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition cursor-pointer"
+              >
+                Зберегти
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save Template Modal */}
+      {isTemplateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-xl space-y-4">
+            <div>
+              <h3 className="font-bold text-base text-zinc-900 dark:text-zinc-100">
+                Зберегти як шаблон
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                Введіть назву для нового шаблону тренування
+              </p>
+            </div>
+            <input
+              type="text"
+              autoFocus
+              value={templateNameInput}
+              onChange={(e) => setTemplateNameInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveAsTemplate();
+                if (e.key === 'Escape' && !isSavingTemplate) setIsTemplateModalOpen(false);
+              }}
+              placeholder="Назва шаблону..."
+              className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                disabled={isSavingTemplate}
+                onClick={() => setIsTemplateModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer disabled:opacity-50"
+              >
+                Скасувати
+              </button>
+              <button
+                type="button"
+                disabled={isSavingTemplate || !templateNameInput.trim()}
+                onClick={handleSaveAsTemplate}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition cursor-pointer disabled:opacity-50"
+              >
+                {isSavingTemplate ? 'Збереження...' : 'Зберегти'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

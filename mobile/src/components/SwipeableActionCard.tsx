@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   useWindowDimensions,
@@ -24,19 +23,21 @@ export interface SwipeableActionCardProps {
   isDark: boolean;
   disabled?: boolean;
   onEdit?: () => void;
+  onCopy?: () => void;
   onDelete: (onCancel?: () => void) => void;
   onQuickDelete?: (onCancel?: () => void) => void;
   confirmTitle?: string;
   confirmMessage?: string;
   editLabel?: string;
   deleteLabel?: string;
+  copyLabel?: string;
   children: React.ReactNode;
 }
 
-const NORMAL_BTN_WIDTH = 88;
-const GAP = 8;
-const PADDING_RIGHT = 12;
-const SNAP_THRESHOLD = -40;
+const NORMAL_BTN_WIDTH = 56;
+const GAP = 6;
+const PADDING_RIGHT = 6;
+const SNAP_THRESHOLD = -32;
 
 const TIMING_CONFIG = {
   duration: 220,
@@ -48,19 +49,18 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
   isDark,
   disabled = false,
   onEdit,
+  onCopy,
   onDelete,
   onQuickDelete,
   confirmTitle,
   confirmMessage,
-  editLabel = 'Змінити',
-  deleteLabel = 'Видалити',
   children,
 }) => {
   const { width: screenWidth } = useWindowDimensions();
   const QUICK_DELETE_THRESHOLD = screenWidth * 0.5;
 
-  const hasEdit = Boolean(onEdit);
-  const restingWidth = hasEdit
+  const hasFirstAction = Boolean(onCopy || onEdit);
+  const restingWidth = hasFirstAction
     ? NORMAL_BTN_WIDTH * 2 + GAP + PADDING_RIGHT
     : NORMAL_BTN_WIDTH + PADDING_RIGHT;
 
@@ -163,8 +163,8 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
         const touch = e.allTouches[0];
         if (touch) {
           startX.value = touch.absoluteX;
-          // If card is NOT open, swipe MUST start in right 20% of screen
-          if (!isOpen.value && touch.absoluteX < screenWidth * 0.8) {
+          // If card is NOT open, swipe MUST start in right 25% of screen
+          if (!isOpen.value && touch.absoluteX < screenWidth * 0.75) {
             stateManager.fail();
           }
         }
@@ -183,8 +183,8 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
           return;
         }
 
-        // 2. Closed card swipe MUST start in the right 20% of the screen
-        if (startX.value < screenWidth * 0.8) {
+        // 2. Closed card swipe MUST start in the right 25% of the screen
+        if (startX.value < screenWidth * 0.75) {
           return;
         }
 
@@ -206,7 +206,7 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
         'worklet';
         // If card was open and dragged right
         if (isOpen.value) {
-          if (e.translationX > 35) {
+          if (e.translationX > 28) {
             // Snap closed smoothly without bounce
             translateX.value = withTiming(0, TIMING_CONFIG);
             isOpen.value = false;
@@ -218,8 +218,8 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
           return;
         }
 
-        // Did not start in right 20%
-        if (startX.value < screenWidth * 0.8) {
+        // Did not start in right 25%
+        if (startX.value < screenWidth * 0.75) {
           return;
         }
 
@@ -266,7 +266,7 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
     };
   });
 
-  const animatedEditBtnStyle = useAnimatedStyle(() => {
+  const animatedFirstBtnStyle = useAnimatedStyle(() => {
     const currentPull = -translateX.value;
     if (currentPull <= restingWidth) {
       return { opacity: 1, transform: [{ scale: 1 }] };
@@ -287,14 +287,14 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
       return { width: NORMAL_BTN_WIDTH };
     }
     const extra = currentPull - restingWidth;
-    if (hasEdit) {
+    if (hasFirstAction) {
       const progress = Math.min(
         1,
         Math.max(0, (currentPull - restingWidth) / Math.max(1, QUICK_DELETE_THRESHOLD - restingWidth))
       );
-      const editSpaceAbsorbed = (NORMAL_BTN_WIDTH + GAP) * progress;
+      const spaceAbsorbed = (NORMAL_BTN_WIDTH + GAP) * progress;
       return {
-        width: NORMAL_BTN_WIDTH + extra + editSpaceAbsorbed,
+        width: NORMAL_BTN_WIDTH + extra + spaceAbsorbed,
       };
     }
     return {
@@ -312,36 +312,39 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
         },
       ]}
     >
-      {/* Background Actions Row with Pill-shaped buttons */}
+      {/* Background Actions Row with full-height rounded buttons */}
       <View style={styles.swipeActionsBg}>
-        {hasEdit && (
-          <Animated.View style={animatedEditBtnStyle}>
+        {hasFirstAction && (
+          <Animated.View style={[styles.btnWrapper, animatedFirstBtnStyle]}>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => {
                 closeSwipe();
-                if (onEdit) onEdit();
+                if (onCopy) onCopy();
+                else if (onEdit) onEdit();
               }}
-              style={styles.actionBtnEdit}
+              style={styles.actionBtnFirst}
               accessibilityRole="button"
-              accessibilityLabel={editLabel}
+              accessibilityLabel={onCopy ? 'Копіювати' : 'Редагувати'}
             >
-              <Ionicons name="pencil" size={16} color="#FFFFFF" />
-              <Text style={styles.actionBtnText} numberOfLines={1}>{editLabel}</Text>
+              <Ionicons
+                name={onCopy ? 'copy-outline' : 'pencil'}
+                size={20}
+                color="#FFFFFF"
+              />
             </TouchableOpacity>
           </Animated.View>
         )}
 
-        <Animated.View style={animatedDeleteBtnStyle}>
+        <Animated.View style={[styles.btnWrapper, animatedDeleteBtnStyle]}>
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={handleDeleteAction}
             style={styles.actionBtnDelete}
             accessibilityRole="button"
-            accessibilityLabel={deleteLabel}
+            accessibilityLabel="Видалити"
           >
-            <Ionicons name="trash-outline" size={16} color="#FFFFFF" />
-            <Text style={styles.actionBtnText} numberOfLines={1}>{deleteLabel}</Text>
+            <Ionicons name="trash-outline" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -387,36 +390,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    paddingVertical: 4,
     paddingRight: PADDING_RIGHT,
     gap: GAP,
     backgroundColor: 'transparent',
   },
-  actionBtnEdit: {
+  btnWrapper: {
+    height: '100%',
+  },
+  actionBtnFirst: {
     width: NORMAL_BTN_WIDTH,
-    height: 42,
-    borderRadius: 9999,
+    height: '100%',
+    borderRadius: 16,
     backgroundColor: '#2563EB', // Ocean Blue primary
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    gap: 6,
   },
   actionBtnDelete: {
     width: '100%',
-    height: 42,
-    borderRadius: 9999,
+    height: '100%',
+    borderRadius: 16,
     backgroundColor: '#EF4444', // Danger Red
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    gap: 6,
-  },
-  actionBtnText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
   },
   swipeForeground: {
     width: '100%',

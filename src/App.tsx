@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { WorkoutPlan, User } from './types/workout';
 import { StorageService, generateId } from './services/storageService';
+import { TemplateService, WorkoutTemplate } from './services/templateService';
 import { Navbar } from './components/Navbar';
 import { WorkoutListView } from './components/WorkoutListView';
 import { WorkoutEditor } from './components/WorkoutEditor';
@@ -46,23 +47,35 @@ const MainContent: React.FC = () => {
     }
   }, [activeWorkout, user]);
 
-
-
   // Helper to create a fresh workout
-  const handleCreateNewWorkout = (title: string, scheduledDate: string) => {
+  const handleCreateNewWorkout = (
+    title: string,
+    scheduledDate: string,
+    template?: WorkoutTemplate
+  ) => {
     if (!user) return;
     setEditingTrainee(null);
-    const newWorkout: WorkoutPlan = {
-      id: generateId('workout'),
-      userId: user.id,
-      title: title.trim(),
-      scheduledDate,
-      status: 'in_progress',
-      completedAt: null,
-      notes: '',
-      createdAt: new Date().toISOString(),
-      exercises: [],
-    };
+    let newWorkout: WorkoutPlan;
+    if (template) {
+      newWorkout = TemplateService.createWorkoutFromTemplate(
+        template,
+        user.id,
+        scheduledDate
+      );
+      if (title.trim()) newWorkout.title = title.trim();
+    } else {
+      newWorkout = {
+        id: generateId('workout'),
+        userId: user.id,
+        title: title.trim(),
+        scheduledDate,
+        status: 'in_progress',
+        completedAt: null,
+        notes: '',
+        createdAt: new Date().toISOString(),
+        exercises: [],
+      };
+    }
     StorageService.saveWorkout(newWorkout);
     setActiveWorkout(newWorkout);
     setWorkoutViewMode('editor');
@@ -245,6 +258,7 @@ const MainContent: React.FC = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateNewWorkout}
+        userId={user?.id}
       />
 
 

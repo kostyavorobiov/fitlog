@@ -21,13 +21,14 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Header } from '../components/Header';
 import { WorkoutService } from '../services/workoutService';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
-import { WorkoutPlan } from '../types/workout';
+import { WorkoutPlan, WorkoutExercise, WorkoutSet } from '../types/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
 import { useSwipeUndo } from '../context/SwipeUndoContext';
 import { DatePickerModal } from '../components/DatePickerModal';
@@ -105,7 +106,7 @@ export interface MonthGroup {
 
 interface SwipeableWorkoutCardProps {
   id: string;
-  onEdit?: () => void;
+  onCopy?: () => void;
   onDelete: (onCancel?: () => void) => void;
   onQuickDelete?: (onCancel?: () => void) => void;
   isDark: boolean;
@@ -114,7 +115,7 @@ interface SwipeableWorkoutCardProps {
 
 const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
   id,
-  onEdit,
+  onCopy,
   onDelete,
   onQuickDelete,
   isDark,
@@ -124,11 +125,9 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
     <SwipeableActionCard
       id={id}
       isDark={isDark}
-      onEdit={onEdit}
+      onCopy={onCopy}
       onDelete={onDelete}
       onQuickDelete={onQuickDelete}
-      editLabel="Редагувати"
-      deleteLabel="Видалити"
     >
       {children}
     </SwipeableActionCard>
@@ -142,7 +141,6 @@ export const WorkoutsScreen: React.FC = () => {
   const { handleScroll } = useScrollTabBar();
 
   const [workouts, setWorkouts] = useState<WorkoutPlan[]>([]);
-  const [filterStatus, setFilterStatus] = useState<WorkoutFilterStatus>('all');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
@@ -285,32 +283,71 @@ export const WorkoutsScreen: React.FC = () => {
     [user]
   );
 
-  // Filtered workouts: only 'all' and 'completed'
-  const filteredWorkouts = useMemo(() => {
-    return workouts.filter((w) => {
-      if (filterStatus === 'all') return true;
-      if (filterStatus === 'completed') return w.status === 'completed';
-      return true;
-    });
-  }, [workouts, filterStatus]);
+  // Copy workout with exercises and sets
+  const handleCopyWorkout = async (source: WorkoutPlan) => {
+    if (!user) return;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const newWorkoutId = `wo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const clonedExercises: WorkoutExercise[] = (source.exercises || []).map((ex, exIdx) => {
+        const weId = `we_${Date.now()}_${exIdx}_${Math.random().toString(36).substring(2, 6)}`;
+        const clonedSets: WorkoutSet[] = (ex.sets || []).map((s, sIdx) => ({
+          id: `set_${Date.now()}_${exIdx}_${sIdx}_${Math.random().toString(36).substring(2, 5)}`,
+          workoutExerciseId: weId,
+          setNumber: sIdx + 1,
+          targetRepsRange: s.targetRepsRange || ex.targetRepsRange || '8-12',
+          weight: Number(s.weight) || 0,
+          actualReps: s.actualReps !== null && s.actualReps !== undefined ? Number(s.actualReps) : 10,
+          completedAt: null,
+          isWarmup: Boolean(s.isWarmup),
+        }));
+        return {
+          ...ex,
+          id: weId,
+          workoutPlanId: newWorkoutId,
+          sets: clonedSets,
+        };
+      });
 
-  const completedCount = useMemo(() => {
-    return workouts.filter((w) => w.status === 'completed').length;
-  }, [workouts]);
+      const copied: WorkoutPlan = {
+        ...source,
+        id: newWorkoutId,
+        userId: user.id,
+        title: `${source.title || 'Тренування'} (Копія)`,
+        scheduledDate: today,
+        status: 'planned',
+        createdAt: new Date().toISOString(),
+        completedAt: null,
+        exercises: clonedExercises,
+      };
+
+      const ok = await WorkoutService.saveWorkout(copied);
+      if (ok) {
+        setWorkouts((prev) => [copied, ...prev]);
+        try {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch {}
+      } else {
+        Alert.alert('Помилка', 'Не вдалося скопіювати тренування');
+      }
+    } catch (e: any) {
+      Alert.alert('Помилка', e?.message || 'Не вдалося скопіювати тренування');
+    }
+  };
 
   // Sort workouts within each month from newest to oldest
-  const sortedFilteredWorkouts = useMemo(() => {
-    return [...filteredWorkouts].sort((a, b) => {
+  const sortedWorkouts = useMemo(() => {
+    return [...workouts].sort((a, b) => {
       const dateA = a.scheduledDate || a.createdAt || '';
       const dateB = b.scheduledDate || b.createdAt || '';
       return dateB.localeCompare(dateA);
     });
-  }, [filteredWorkouts]);
+  }, [workouts]);
 
   // Group workouts by calendar month (YYYY-MM), sorted newest to oldest
   const monthGroups = useMemo<MonthGroup[]>(() => {
     const map = new Map<string, { label: string; workouts: WorkoutPlan[] }>();
-    for (const w of sortedFilteredWorkouts) {
+    for (const w of sortedWorkouts) {
       const { key, label } = getMonthKeyAndLabel(w.scheduledDate);
       if (!map.has(key)) {
         map.set(key, { label, workouts: [] });
@@ -323,7 +360,7 @@ export const WorkoutsScreen: React.FC = () => {
       label: map.get(key)!.label,
       workouts: map.get(key)!.workouts,
     }));
-  }, [sortedFilteredWorkouts]);
+  }, [sortedWorkouts]);
 
   // Current calendar month key (e.g. "2026-10")
   const currentMonthKey = useMemo(() => {
@@ -339,20 +376,12 @@ export const WorkoutsScreen: React.FC = () => {
   }, [monthGroups, currentMonthKey]);
 
   const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
-  const prevFilterRef = useRef<WorkoutFilterStatus>(filterStatus);
 
   useEffect(() => {
-    if (prevFilterRef.current !== filterStatus) {
-      prevFilterRef.current = filterStatus;
-      if (defaultOpenKey) {
-        setOpenMonths({ [defaultOpenKey]: true });
-      }
-      return;
-    }
     if (defaultOpenKey && Object.keys(openMonths).length === 0) {
       setOpenMonths({ [defaultOpenKey]: true });
     }
-  }, [filterStatus, defaultOpenKey, openMonths]);
+  }, [defaultOpenKey, openMonths]);
 
   const toggleMonth = (key: string) => {
     if (Platform.OS !== 'web') {
@@ -364,93 +393,10 @@ export const WorkoutsScreen: React.FC = () => {
     }));
   };
 
-  // Swipe gesture for cycling through filters (only 'all' and 'completed')
-  const filterOrder: WorkoutFilterStatus[] = ['all', 'completed'];
-
-  const handleFilterSwipeLeft = useCallback(() => {
-    setFilterStatus((curr) => {
-      const idx = filterOrder.indexOf(curr);
-      if (idx < filterOrder.length - 1) return filterOrder[idx + 1];
-      return curr;
-    });
-  }, []);
-
-  const handleFilterSwipeRight = useCallback(() => {
-    setFilterStatus((curr) => {
-      const idx = filterOrder.indexOf(curr);
-      if (idx > 0) return filterOrder[idx - 1];
-      return curr;
-    });
-  }, []);
-
-  const emptySwipePanResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          return Math.abs(gestureState.dx) > 18 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2;
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          if (gestureState.dx < -30) {
-            handleFilterSwipeLeft();
-          } else if (gestureState.dx > 30) {
-            handleFilterSwipeRight();
-          }
-        },
-      }),
-    [handleFilterSwipeLeft, handleFilterSwipeRight]
-  );
-
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Top Navbar */}
       <Header title="Тренування" />
-
-      {/* Top Filter Row */}
-      <View style={styles.topSection}>
-        {/* Full-width Modern Segmented Pill Bar with 2 tabs: Всі and Завершені */}
-        <View style={[styles.filterContainer, isDark ? styles.filterDark : styles.filterLight]}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => setFilterStatus('all')}
-            style={[
-              styles.filterBtn,
-              filterStatus === 'all' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterBtnText,
-                filterStatus === 'all'
-                  ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
-                  : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
-              ]}
-            >
-              Всі ({workouts.length})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => setFilterStatus('completed')}
-            style={[
-              styles.filterBtn,
-              filterStatus === 'completed' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterBtnText,
-                filterStatus === 'completed'
-                  ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
-                  : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
-              ]}
-            >
-              Завершені ({completedCount})
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -473,23 +419,16 @@ export const WorkoutsScreen: React.FC = () => {
               Завантаження списку тренувань...
             </Text>
           </View>
-        ) : filteredWorkouts.length === 0 ? (
-          <View
-            {...emptySwipePanResponder.panHandlers}
-            style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}
-          >
+        ) : workouts.length === 0 ? (
+          <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
             <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
               <Ionicons name="time-outline" size={26} color={isDark ? '#94A3B8' : '#64748B'} />
             </View>
             <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
-              {workouts.length === 0
-                ? 'Тренувань ще немає'
-                : 'Немає тренувань зі статусом «Завершені».'}
+              Тренувань ще немає
             </Text>
             <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
-              {workouts.length === 0
-                ? 'Створіть своє перше тренування для відстеження підходів, ваги та прогресу.'
-                : 'Свайпніть вліво або вправо для перемикання фільтрів.'}
+              Створіть своє перше тренування для відстеження підходів, ваги та прогресу.
             </Text>
           </View>
         ) : (
@@ -541,6 +480,7 @@ export const WorkoutsScreen: React.FC = () => {
                             key={w.id}
                             id={w.id}
                             isDark={isDark}
+                            onCopy={() => handleCopyWorkout(w)}
                             onDelete={(onCancel) => handleDeleteWorkout(w, onCancel)}
                             onQuickDelete={(onCancel) => handleQuickDeleteWorkout(w, onCancel)}
                           >

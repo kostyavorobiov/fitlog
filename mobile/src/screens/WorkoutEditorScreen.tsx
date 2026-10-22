@@ -23,6 +23,7 @@ import { Button } from '../components/Button';
 import { ExerciseSelectorModal } from '../components/ExerciseSelectorModal';
 import { useAuth } from '../context/AuthContext';
 import { WorkoutService } from '../services/workoutService';
+import { TemplateService } from '../services/templateService';
 import { ExerciseService } from '../services/exerciseService';
 import {
   WorkoutPlan,
@@ -284,6 +285,55 @@ export const WorkoutEditorScreen: React.FC = () => {
   const [saveSuccessNotice, setSaveSuccessNotice] = useState<boolean>(false);
   const [saveNoticeMsg, setSaveNoticeMsg] = useState<string>('Збережено ✓');
   const [isTitleModalOpen, setIsTitleModalOpen] = useState<boolean>(false);
+  const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState<boolean>(false);
+  const [editTitleValue, setEditTitleValue] = useState<string>('');
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState<boolean>(false);
+  const [templateName, setTemplateName] = useState<string>('');
+  const [isSavingTemplate, setIsSavingTemplate] = useState<boolean>(false);
+
+  const handleSaveAsTemplate = async () => {
+    if (!workout || !user) return;
+    const cleanName = templateName.trim();
+    if (!cleanName) {
+      Alert.alert('Помилка', 'Введіть назву шаблону');
+      return;
+    }
+
+    setIsSavingTemplate(true);
+    try {
+      const templateId = `tmpl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const effectiveUserId = workout.userId || user.id;
+
+      const ok = await TemplateService.saveTemplate({
+        id: templateId,
+        userId: effectiveUserId,
+        title: cleanName,
+        notes: workout.notes || '',
+        exercises: workout.exercises || [],
+        createdAt: new Date().toISOString(),
+      });
+
+      if (ok) {
+        setIsTemplateModalOpen(false);
+        setSaveNoticeMsg('Шаблон збережено успішно!');
+        setSaveSuccessNotice(true);
+        setTimeout(() => setSaveSuccessNotice(false), 2500);
+      } else {
+        Alert.alert('Помилка', 'Не вдалося зберегти шаблон');
+      }
+    } catch (e: any) {
+      Alert.alert('Помилка', e?.message || 'Помилка при збереженні шаблону');
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  const handleSaveEditedTitle = () => {
+    if (!workout) return;
+    const clean = editTitleValue.trim() || 'Тренування';
+    handleUpdateTitle(clean);
+    setIsEditTitleModalOpen(false);
+  };
   const [lastPerformances, setLastPerformances] = useState<Record<string, PastExercisePerformance | null>>({});
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [exerciseToReplaceId, setExerciseToReplaceId] = useState<string | null>(null);
@@ -1263,35 +1313,72 @@ export const WorkoutEditorScreen: React.FC = () => {
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Top Header Bar */}
       <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
-        <TouchableOpacity activeOpacity={0.7} onPress={() => router.back()} style={styles.iconBtn}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => router.back()}
+          style={styles.iconBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Назад"
+        >
           <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
-            {workout.title || 'Тренування'}
-          </Text>
-          <Text style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
-            {formatDateDDMMYYYY(workout.scheduledDate)} • {isCompleted ? 'Виконано ✓' : 'В процесі ⚡'} ({completedSets}/{totalSets} підходів)
-          </Text>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              setEditTitleValue(workout.title || 'Тренування');
+              setIsEditTitleModalOpen(true);
+            }}
+            style={styles.headerTitleRow}
+            accessibilityRole="button"
+            accessibilityLabel="Редагувати назву тренування"
+          >
+            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+              {workout.title || 'Тренування'}
+            </Text>
+            <Ionicons name="pencil" size={13} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 5 }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setIsDatePickerOpen(true)}
+            style={styles.headerDateRow}
+            accessibilityRole="button"
+            accessibilityLabel="Вибрати дату тренування"
+          >
+            <Text style={[styles.topBarDateText, isDark ? styles.subDark : styles.subLight]}>
+              {formatDateDDMMYYYY(workout.scheduledDate)}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.headerRightActions}>
           <TouchableOpacity
             activeOpacity={0.7}
-            style={styles.iconBtn}
-            disabled={isDeleting}
-            onPress={handleDeleteWorkout}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() => {
+              setTemplateName(workout.title || 'Моє тренування');
+              setIsTemplateModalOpen(true);
+            }}
+            style={[styles.saveTemplateBtn, isDark ? styles.saveTemplateBtnDark : styles.saveTemplateBtnLight]}
+            accessibilityRole="button"
+            accessibilityLabel="Зберегти як шаблон"
           >
-            {isDeleting ? (
-              <ActivityIndicator size="small" color="#ef4444" />
-            ) : (
-              <Ionicons name="trash-outline" size={20} color="#ef4444" />
-            )}
+            <Ionicons name="bookmark-outline" size={14} color="#2563EB" />
+            <Text style={styles.saveTemplateBtnText}>Шаблон</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      <DatePickerModal
+        visible={isDatePickerOpen}
+        selectedDate={workout.scheduledDate}
+        onClose={() => setIsDatePickerOpen(false)}
+        onSelectDate={(newIso: string) => {
+          handleUpdateDate(newIso);
+          setIsDatePickerOpen(false);
+        }}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -1307,122 +1394,6 @@ export const WorkoutEditorScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Workout Metadata Card */}
-          <Card style={styles.metaCard}>
-            <View style={styles.metaHeaderRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.labelSmall, isDark ? styles.subDark : styles.subLight]}>
-                  Назва тренування
-                </Text>
-                <TextInput
-                  style={[styles.titleInput, isDark ? styles.textDark : styles.textLight]}
-                  value={workout.title}
-                  onChangeText={handleUpdateTitle}
-                  placeholder="Введіть назву..."
-                  placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
-                  returnKeyType="done"
-                />
-              </View>
-
-              <View style={{ width: 130 }}>
-                <Text style={[styles.labelSmall, isDark ? styles.subDark : styles.subLight]}>
-                  Дата
-                </Text>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => setIsDatePickerOpen(true)}
-                  style={[
-                    styles.dateInput,
-                    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-                    isDark ? styles.borderDark : styles.borderLight,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Вибрати дату тренування"
-                >
-                  <Ionicons name="calendar-outline" size={14} color="#2563EB" />
-                  <Text style={[{ fontSize: 13, fontWeight: '600' }, isDark ? styles.textDark : styles.textLight]}>
-                    {formatDateDDMMYYYY(workout.scheduledDate)}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <DatePickerModal
-              visible={isDatePickerOpen}
-              selectedDate={workout.scheduledDate}
-              onClose={() => setIsDatePickerOpen(false)}
-              onSelectDate={(newIso: string) => {
-                handleUpdateDate(newIso);
-                setIsDatePickerOpen(false);
-              }}
-            />
-
-            {/* Title Presets Horizontal Chips */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsList}>
-              {TITLE_PRESETS.map((preset) => {
-                const isSelected = workout.title === preset;
-                return (
-                  <TouchableOpacity
-                    key={preset}
-                    activeOpacity={0.7}
-                    onPress={() => handleUpdateTitle(preset)}
-                    style={[
-                      styles.presetChip,
-                      isSelected
-                        ? (isDark ? styles.presetChipActiveDark : styles.presetChipActiveLight)
-                        : (isDark ? styles.presetChipDark : styles.presetChipLight),
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.presetChipText,
-                        isSelected
-                          ? (isDark ? styles.presetChipTextActiveDark : styles.presetChipTextActiveLight)
-                          : (isDark ? styles.subDark : styles.subLight),
-                      ]}
-                    >
-                      {preset}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            {/* Quick Metrics Bar */}
-            <View style={[styles.metaDivider, isDark ? styles.borderDark : styles.borderLight]} />
-            <View style={styles.metricsRow}>
-              <View style={styles.metricItem}>
-                <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
-                  {exercises.length}
-                </Text>
-                <Text style={[styles.metricLbl, isDark ? styles.subDark : styles.subLight]}>
-                  вправ
-                </Text>
-              </View>
-
-              <View style={[styles.metricDivider, isDark ? styles.borderDark : styles.borderLight]} />
-
-              <View style={styles.metricItem}>
-                <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
-                  {completedSets}/{totalSets}
-                </Text>
-                <Text style={[styles.metricLbl, isDark ? styles.subDark : styles.subLight]}>
-                  підходів
-                </Text>
-              </View>
-
-              <View style={[styles.metricDivider, isDark ? styles.borderDark : styles.borderLight]} />
-
-              <View style={styles.metricItem}>
-                <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
-                  {totalVolume > 0 ? `${totalVolume} кг` : '—'}
-                </Text>
-                <Text style={[styles.metricLbl, isDark ? styles.subDark : styles.subLight]}>
-                  тоннаж
-                </Text>
-              </View>
-            </View>
-          </Card>
 
           {/* Empty Prompt if empty */}
           {exercises.length === 0 && (
@@ -1530,7 +1501,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                             {!isExpanded && (
                               <View style={styles.collapsedSummaryRow}>
                                 <Text style={[styles.collapsedSummaryText, isDark ? styles.subDark : styles.subLight]}>
-                                  {(ex.sets || []).length} підходи • {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'} повт. • 1RM: {format1RM(getExercise1RM(ex.sets))}
+                                  {(ex.sets || []).length} підходи • {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'} повт. • 1RM: {format1RM(getExercise1RM(ex.sets, pastPerf))}
                                 </Text>
                               </View>
                             )}
@@ -1596,7 +1567,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                               1RM:
                             </Text>
                             <Text style={[{ fontSize: 13, fontWeight: '700' }, isDark ? styles.textDark : styles.textLight]}>
-                              {format1RM(getExercise1RM(ex.sets))}
+                              {format1RM(getExercise1RM(ex.sets, pastPerf))}
                             </Text>
                           </View>
                         </View>
@@ -1891,6 +1862,134 @@ export const WorkoutEditorScreen: React.FC = () => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Edit Title Modal */}
+      <Modal
+        visible={isEditTitleModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsEditTitleModalOpen(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setIsEditTitleModalOpen(false)}
+          style={styles.modalOverlay}
+        >
+          <View
+            style={[
+              styles.simpleModalContent,
+              isDark ? styles.modalContentDark : styles.modalContentLight,
+            ]}
+            onStartShouldSetResponder={() => true}
+          >
+            <Text style={[styles.simpleModalTitle, isDark ? styles.textDark : styles.textLight]}>
+              Назва тренування
+            </Text>
+            <TextInput
+              style={[
+                styles.simpleModalInput,
+                isDark ? styles.modalInputDark : styles.modalInputLight,
+              ]}
+              value={editTitleValue}
+              onChangeText={setEditTitleValue}
+              placeholder="Введіть назву..."
+              placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+              autoFocus
+              selectTextOnFocus
+              returnKeyType="done"
+              onSubmitEditing={handleSaveEditedTitle}
+            />
+            <View style={styles.simpleModalButtons}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setIsEditTitleModalOpen(false)}
+                style={[styles.simpleModalCancelBtn, isDark ? styles.modalBtnDark : styles.modalBtnLight]}
+              >
+                <Text style={[styles.simpleModalCancelText, isDark ? styles.subDark : styles.subLight]}>
+                  Скасувати
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleSaveEditedTitle}
+                style={styles.simpleModalConfirmBtn}
+              >
+                <Text style={styles.simpleModalConfirmText}>Зберегти</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Save Template Modal */}
+      <Modal
+        visible={isTemplateModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => !isSavingTemplate && setIsTemplateModalOpen(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => !isSavingTemplate && setIsTemplateModalOpen(false)}
+          style={styles.modalOverlay}
+        >
+          <View
+            style={[
+              styles.simpleModalContent,
+              isDark ? styles.modalContentDark : styles.modalContentLight,
+            ]}
+            onStartShouldSetResponder={() => true}
+          >
+            <Text style={[styles.simpleModalTitle, isDark ? styles.textDark : styles.textLight]}>
+              Зберегти як шаблон
+            </Text>
+            <Text style={[styles.simpleModalSub, isDark ? styles.subDark : styles.subLight]}>
+              Введіть назву для нового шаблону тренування
+            </Text>
+            <TextInput
+              style={[
+                styles.simpleModalInput,
+                isDark ? styles.modalInputDark : styles.modalInputLight,
+              ]}
+              value={templateName}
+              onChangeText={setTemplateName}
+              placeholder="Назва шаблону..."
+              placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+              autoFocus
+              selectTextOnFocus
+              returnKeyType="done"
+              onSubmitEditing={handleSaveAsTemplate}
+            />
+            <View style={styles.simpleModalButtons}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                disabled={isSavingTemplate}
+                onPress={() => setIsTemplateModalOpen(false)}
+                style={[styles.simpleModalCancelBtn, isDark ? styles.modalBtnDark : styles.modalBtnLight]}
+              >
+                <Text style={[styles.simpleModalCancelText, isDark ? styles.subDark : styles.subLight]}>
+                  Скасувати
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                disabled={isSavingTemplate || !templateName.trim()}
+                onPress={handleSaveAsTemplate}
+                style={[
+                  styles.simpleModalConfirmBtn,
+                  (!templateName.trim() || isSavingTemplate) && { opacity: 0.5 },
+                ]}
+              >
+                {isSavingTemplate ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.simpleModalConfirmText}>Зберегти</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
       </SafeAreaView>
     </ScreenGestureWrapper>
   );
@@ -1949,6 +2048,128 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerDateRow: {
+    marginTop: 2,
+  },
+  topBarDateText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  saveTemplateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(37, 99, 235, 0.3)',
+  },
+  saveTemplateBtnLight: {
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+  },
+  saveTemplateBtnDark: {
+    backgroundColor: 'rgba(37, 99, 235, 0.15)',
+  },
+  saveTemplateBtnText: {
+    color: '#2563EB',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  simpleModalContent: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalContentLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  modalContentDark: {
+    backgroundColor: '#182032',
+    borderColor: '#334155',
+  },
+  simpleModalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  simpleModalSub: {
+    fontSize: 13,
+    marginBottom: 14,
+  },
+  simpleModalInput: {
+    height: 44,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  modalInputLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#cbd5e1',
+    color: '#0f172a',
+  },
+  modalInputDark: {
+    backgroundColor: '#0f172a',
+    borderColor: '#334155',
+    color: '#f8fafc',
+  },
+  simpleModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  simpleModalCancelBtn: {
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  modalBtnLight: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  modalBtnDark: {
+    backgroundColor: '#1e293b',
+    borderColor: '#334155',
+  },
+  simpleModalCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  simpleModalConfirmBtn: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  simpleModalConfirmText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   saveBanner: {
     flexDirection: 'row',

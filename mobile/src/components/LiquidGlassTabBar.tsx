@@ -39,20 +39,24 @@ export interface TabBarDescriptor {
 }
 
 export interface BottomTabBarProps {
-  state: {
+  state?: {
     index: number;
     routes: TabBarRoute[];
     [key: string]: any;
   };
-  descriptors: Record<string, TabBarDescriptor>;
-  navigation: any;
+  descriptors?: Record<string, TabBarDescriptor>;
+  navigation?: any;
   insets?: any;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
   state,
   descriptors,
   navigation,
+  activeTab,
+  onTabChange,
 }) => {
   const { isDark } = useTheme();
   const { user } = useAuth();
@@ -82,18 +86,92 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
     return () => {
       isSubscribed = false;
     };
-  }, [user?.id, state.index]);
+  }, [user?.id, state?.index, activeTab]);
 
   // Strictly filter to the 4 designated bottom navigation tabs in order:
   // 1. Тренування (index), 2. Аналітика (analytics) -- [+] -- 3. Вправи (exercises), 4. Профіль (profile)
   const BOTTOM_NAV_TABS = ['index', 'analytics', 'exercises', 'profile'];
-  const visibleRoutes = BOTTOM_NAV_TABS
-    .map((name) => state.routes.find((r) => r.name === name))
-    .filter((r): r is TabBarRoute => Boolean(r && descriptors[r.key]));
+  const visibleRoutes = state && descriptors
+    ? BOTTOM_NAV_TABS
+        .map((name) => state.routes.find((r) => r.name === name))
+        .filter((r): r is TabBarRoute => Boolean(r && descriptors[r.key]))
+    : [];
+
+  const STANDALONE_ITEMS = [
+    {
+      name: 'index',
+      label: 'Тренування',
+      icon: (focused: boolean, color: string) => (
+        <Ionicons name={focused ? 'barbell' : 'barbell-outline'} size={20} color={color} />
+      ),
+    },
+    {
+      name: 'analytics',
+      label: 'Аналітика',
+      icon: (focused: boolean, color: string) => (
+        <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} size={20} color={color} />
+      ),
+    },
+    {
+      name: 'exercises',
+      label: 'Вправи',
+      icon: (focused: boolean, color: string) => (
+        <Ionicons name={focused ? 'fitness' : 'fitness-outline'} size={20} color={color} />
+      ),
+    },
+    {
+      name: 'profile',
+      label: 'Профіль',
+      icon: (focused: boolean, color: string) => (
+        <Ionicons name={focused ? 'person' : 'person-outline'} size={20} color={color} />
+      ),
+    },
+  ];
+
+  const renderStandaloneItem = (item: (typeof STANDALONE_ITEMS)[0]) => {
+    const isFocused = (activeTab || 'index') === item.name;
+    const activeColor = isDark ? '#60A5FA' : '#2563EB';
+    const inactiveColor = isDark ? '#94A3B8' : '#64748B';
+    const color = isFocused ? activeColor : inactiveColor;
+
+    return (
+      <TouchableOpacity
+        key={item.name}
+        accessibilityRole="button"
+        accessibilityState={isFocused ? { selected: true } : {}}
+        accessibilityLabel={item.label}
+        onPress={() => onTabChange?.(item.name)}
+        activeOpacity={0.7}
+        style={[
+          styles.tabButton,
+          isFocused && (isDark ? styles.tabButtonActiveDark : styles.tabButtonActiveLight),
+        ]}
+        hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+      >
+        <View style={styles.iconWrap}>
+          {item.icon(isFocused, color)}
+          {item.name === 'index' && hasActiveWorkout && !isFocused && (
+            <View style={styles.amberBadgeDot} />
+          )}
+        </View>
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.tabLabel,
+            { color },
+            isFocused && styles.tabLabelFocused,
+          ]}
+        >
+          {item.label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   const hasNativeGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
 
   const renderTabItem = (route: TabBarRoute) => {
+    if (!state || !descriptors) return null;
     const isFocused = state.routes[state.index]?.key === route.key;
     const { options } = descriptors[route.key];
 
@@ -107,19 +185,19 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
     const labelText = typeof label === 'string' ? label : route.name;
 
     const onPress = () => {
-      const event = navigation.emit({
+      const event = navigation?.emit({
         type: 'tabPress',
         target: route.key,
         canPreventDefault: true,
       });
 
-      if (!isFocused && !event.defaultPrevented) {
-        navigation.navigate(route.name, route.params);
+      if (!isFocused && !event?.defaultPrevented) {
+        navigation?.navigate(route.name, route.params);
       }
     };
 
     const onLongPress = () => {
-      navigation.emit({
+      navigation?.emit({
         type: 'tabLongPress',
         target: route.key,
       });
@@ -207,22 +285,45 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
 
         {/* Tab Items Row with Central '+' Action Button */}
         <View style={styles.tabsRow}>
-          {leftRoutes.map(renderTabItem)}
+          {activeTab && onTabChange ? (
+            <>
+              {STANDALONE_ITEMS.slice(0, 2).map(renderStandaloneItem)}
 
-          {/* Central '+' Create Workout Button (action only, round Ocean Blue accent) */}
-          {!isEditingOrViewingWorkout && (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => openCreateModal()}
-              style={styles.centerAddBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Створити нове тренування"
-            >
-              <Ionicons name="add" size={28} color="#FFFFFF" />
-            </TouchableOpacity>
+              {/* Central '+' Create Workout Button (action only, round Ocean Blue accent) */}
+              {!isEditingOrViewingWorkout && (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => openCreateModal()}
+                  style={styles.centerAddBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Створити нове тренування"
+                >
+                  <Ionicons name="add" size={28} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
+
+              {STANDALONE_ITEMS.slice(2).map(renderStandaloneItem)}
+            </>
+          ) : (
+            <>
+              {leftRoutes.map(renderTabItem)}
+
+              {/* Central '+' Create Workout Button (action only, round Ocean Blue accent) */}
+              {!isEditingOrViewingWorkout && (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => openCreateModal()}
+                  style={styles.centerAddBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Створити нове тренування"
+                >
+                  <Ionicons name="add" size={28} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
+
+              {rightRoutes.map(renderTabItem)}
+            </>
           )}
-
-          {rightRoutes.map(renderTabItem)}
         </View>
       </View>
     </Animated.View>

@@ -15,21 +15,50 @@ export const calculate1RM = (weight: number, reps: number): number => {
 };
 
 /**
- * Calculate the best estimated 1RM from completed sets of an exercise.
- * Only completed sets (completedAt is truthy) with valid weight > 0 and actualReps > 0 are considered.
- * Returns 0 if no valid completed sets exist.
+ * Calculate the best estimated 1RM for an exercise.
+ * Considers current workout sets (any valid weight > 0 and actualReps > 0)
+ * and falls back to past performance history (pastPerf) so 1RM is always visible if exercise was ever done.
+ * Returns 0 if no valid records exist.
  */
-export const getExercise1RM = (sets?: WorkoutSet[]): number => {
-  if (!sets || !Array.isArray(sets) || sets.length === 0) return 0;
+export const getExercise1RM = (
+  sets?: WorkoutSet[],
+  pastPerf?: import('../types/workout').PastExercisePerformance | null
+): number => {
   let best1RM = 0;
-  for (const s of sets) {
-    if (s.completedAt && s.weight && s.weight > 0 && s.actualReps && s.actualReps > 0) {
-      const est1RM = calculate1RM(s.weight, s.actualReps);
-      if (est1RM > best1RM) {
-        best1RM = est1RM;
+
+  // 1. Check current sets (any set with weight and reps)
+  if (sets && Array.isArray(sets) && sets.length > 0) {
+    for (const s of sets) {
+      const w = Number(s.weight);
+      const r = Number(s.actualReps);
+      if (w > 0 && r > 0) {
+        const est1RM = calculate1RM(w, r);
+        if (est1RM > best1RM) {
+          best1RM = est1RM;
+        }
       }
     }
   }
+
+  // 2. Fall back to past performance if current sets don't have recorded 1RM
+  if (best1RM === 0 && pastPerf) {
+    if (pastPerf.sets && Array.isArray(pastPerf.sets)) {
+      for (const ps of pastPerf.sets) {
+        const w = Number(ps.weight);
+        const r = Number(ps.actualReps);
+        if (w > 0 && r > 0) {
+          const est = calculate1RM(w, r);
+          if (est > best1RM) {
+            best1RM = est;
+          }
+        }
+      }
+    }
+    if (best1RM === 0 && pastPerf.maxWeight && pastPerf.maxWeight > 0) {
+      best1RM = pastPerf.maxWeight;
+    }
+  }
+
   return best1RM;
 };
 

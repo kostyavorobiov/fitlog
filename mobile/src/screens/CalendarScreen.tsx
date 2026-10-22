@@ -19,6 +19,7 @@ import { CreateWorkoutModal } from '../components/CreateWorkoutModal';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutService } from '../services/workoutService';
+import { TemplateService, WorkoutTemplate } from '../services/templateService';
 import { WorkoutPlan } from '../types/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
 import { useSwipeUndo } from '../context/SwipeUndoContext';
@@ -160,24 +161,40 @@ export const CalendarScreen: React.FC = () => {
   }, [workoutsByDate, selectedDateStr]);
 
   // Handle create new workout for selected date
-  const handleCreateWorkout = async (title: string, scheduledDate: string, notes: string) => {
+  const handleCreateWorkout = async (
+    title: string,
+    scheduledDate: string,
+    notes: string,
+    template?: WorkoutTemplate
+  ) => {
     if (!user) return;
     if (isCreatingRef.current) return;
     isCreatingRef.current = true;
     setIsCreating(true);
 
     try {
-      const workoutId = `wo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-      const newWorkout: WorkoutPlan = {
-        id: workoutId,
-        userId: user.id,
-        title,
-        scheduledDate,
-        status: 'planned',
-        notes,
-        createdAt: new Date().toISOString(),
-        exercises: [],
-      };
+      let newWorkout: WorkoutPlan;
+      if (template) {
+        newWorkout = TemplateService.createWorkoutFromTemplate(
+          template,
+          user.id,
+          scheduledDate
+        );
+        if (title.trim()) newWorkout.title = title.trim();
+        if (notes.trim()) newWorkout.notes = notes.trim();
+      } else {
+        const workoutId = `wo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        newWorkout = {
+          id: workoutId,
+          userId: user.id,
+          title,
+          scheduledDate,
+          status: 'planned',
+          notes,
+          createdAt: new Date().toISOString(),
+          exercises: [],
+        };
+      }
 
       // 1. Primary write to DB & local cache
       const success = await WorkoutService.saveWorkout(newWorkout);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WorkoutPlan } from '../types/workout';
 import { StorageService, generateId } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
+import { TemplateService, WorkoutTemplate } from '../services/templateService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateWorkoutModal } from './CreateWorkoutModal';
 import { MobileSwipeableWorkoutCard } from './MobileSwipeableWorkoutCard';
@@ -19,7 +20,7 @@ interface WorkoutHistoryViewProps {
   userId: string;
   onSelectWorkout: (workout: WorkoutPlan) => void;
   onCreateNew?: () => void;
-  onCreateWorkout?: (title: string, scheduledDate: string) => void;
+  onCreateWorkout?: (title: string, scheduledDate: string, template?: WorkoutTemplate) => void;
   onDeleteWorkout?: (workoutId: string) => void;
 }
 
@@ -162,21 +163,27 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
     (w) => w.scheduledDate === selectedCalendarDateStr
   );
 
-  const handleCreateForDate = (title: string, dateStr: string) => {
+  const handleCreateForDate = (title: string, dateStr: string, template?: WorkoutTemplate) => {
     if (onCreateWorkout) {
-      onCreateWorkout(title, dateStr);
+      onCreateWorkout(title, dateStr, template);
     } else {
-      const newWorkout: WorkoutPlan = {
-        id: generateId('workout'),
-        userId,
-        title: title.trim(),
-        scheduledDate: dateStr,
-        status: 'in_progress',
-        completedAt: null,
-        notes: '',
-        createdAt: new Date().toISOString(),
-        exercises: [],
-      };
+      let newWorkout: WorkoutPlan;
+      if (template) {
+        newWorkout = TemplateService.createWorkoutFromTemplate(template, userId, dateStr);
+        if (title.trim()) newWorkout.title = title.trim();
+      } else {
+        newWorkout = {
+          id: generateId('workout'),
+          userId,
+          title: title.trim(),
+          scheduledDate: dateStr,
+          status: 'in_progress',
+          completedAt: null,
+          notes: '',
+          createdAt: new Date().toISOString(),
+          exercises: [],
+        };
+      }
       StorageService.saveWorkout(newWorkout);
       onSelectWorkout(newWorkout);
     }
@@ -531,8 +538,9 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
       <CreateWorkoutModal
         isOpen={isCreateModalOpen}
         initialDate={selectedCalendarDateStr}
+        userId={userId}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreate={(title, dateStr) => handleCreateForDate(title, dateStr)}
+        onCreate={(title, dateStr, template) => handleCreateForDate(title, dateStr, template)}
       />
 
       {/* Delete Confirmation Modal */}

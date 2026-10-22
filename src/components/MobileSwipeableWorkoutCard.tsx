@@ -1,17 +1,20 @@
 import React, { useState, useRef } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Copy } from 'lucide-react';
 
 interface MobileSwipeableWorkoutCardProps {
   workoutId: string;
+  onCopy?: () => void;
   onDelete: () => void;
   disabled?: boolean;
   children: React.ReactNode;
 }
 
-const BUTTON_WIDTH = 88;
-const SWIPE_THRESHOLD = 36;
+const ACTION_BTN_WIDTH = 54;
+const TOTAL_SWIPE_WIDTH = 120; // 54 * 2 + gap + padding
+const SWIPE_THRESHOLD = 32;
 
 export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProps> = ({
+  onCopy,
   onDelete,
   disabled = false,
   children,
@@ -72,7 +75,7 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
 
     if (isMovingHorizontallyRef.current === true) {
       e.stopPropagation();
-      const base = isOpenRef.current ? -BUTTON_WIDTH : 0;
+      const base = isOpenRef.current ? -TOTAL_SWIPE_WIDTH : 0;
       const targetX = base + dx;
       const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
       // Clamp between -screenWidth and 0
@@ -107,7 +110,7 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
         onDelete();
       } else if (offsetX < -SWIPE_THRESHOLD) {
         isOpenRef.current = true;
-        setOffsetX(-BUTTON_WIDTH);
+        setOffsetX(-TOTAL_SWIPE_WIDTH);
       } else {
         isOpenRef.current = false;
         setOffsetX(0);
@@ -116,6 +119,13 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
       setIsDragging(false);
       isMovingHorizontallyRef.current = null;
     }
+  };
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    isOpenRef.current = false;
+    setOffsetX(0);
+    if (onCopy) onCopy();
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -137,7 +147,10 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
   };
 
   const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
-  const isPastHalf = -offsetX > screenWidth * 0.5;
+  const halfScreen = screenWidth * 0.5;
+  const isPastHalf = -offsetX > halfScreen;
+  const stretchProgress = Math.max(0, Math.min(1, (-offsetX - TOTAL_SWIPE_WIDTH) / Math.max(1, halfScreen - TOTAL_SWIPE_WIDTH)));
+  const copyBtnOpacity = isPastHalf ? 0 : Math.max(0, 1 - stretchProgress);
 
   return (
     <div
@@ -148,31 +161,51 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
           : 'max-h-[3000px]'
       }`}
     >
-      {/* Background Delete Action Button with Pill-shaped button and smooth stretch */}
+      {/* Background Actions (Clean and transparent wrapper without redundant backdrop) */}
       <div
-        className="absolute inset-y-0 right-0 bg-rose-600 dark:bg-rose-600 flex items-center justify-center z-0 px-3"
+        className="absolute inset-y-0 right-0 flex items-center justify-end z-0 p-1.5 gap-1.5 overflow-hidden bg-transparent"
         style={{
-          width: `${Math.max(BUTTON_WIDTH, -offsetX)}px`,
+          width: `${Math.max(TOTAL_SWIPE_WIDTH, -offsetX)}px`,
           opacity: offsetX < -4 ? 1 : 0,
+          pointerEvents: offsetX < -4 ? 'auto' : 'none',
           transition: isDragging
             ? 'none'
             : 'width 0.22s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.15s ease',
         }}
       >
+        {/* Blue Copy Action Button */}
+        {onCopy && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            onPointerDown={(e) => e.stopPropagation()}
+            style={{
+              opacity: copyBtnOpacity,
+              display: isPastHalf ? 'none' : 'flex',
+              transition: 'opacity 0.18s ease',
+            }}
+            className="w-[52px] h-full rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer select-none touch-manipulation shrink-0"
+            title="Копіювати тренування"
+            aria-label="Копіювати тренування"
+          >
+            <Copy className="h-5 w-5 shrink-0" />
+          </button>
+        )}
+
+        {/* Red Delete Button (stretches when past 50%) */}
         <button
           type="button"
           onClick={handleDelete}
-          className="h-10 px-4 rounded-full bg-rose-700 hover:bg-rose-800 active:bg-rose-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer select-none"
+          onPointerDown={(e) => e.stopPropagation()}
           style={{
-            width: isPastHalf ? 'calc(100% - 24px)' : 'auto',
-            maxWidth: '220px',
-            transition: 'width 0.22s cubic-bezier(0.25, 0.1, 0.25, 1)',
+            width: isPastHalf ? '100%' : '52px',
+            transition: 'all 0.22s cubic-bezier(0.25, 0.1, 0.25, 1)',
           }}
+          className="h-full rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer select-none touch-manipulation shrink-0"
           title="Видалити тренування"
           aria-label="Видалити тренування"
         >
-          <Trash2 className="h-4 w-4 shrink-0" />
-          <span className="truncate">Видалити</span>
+          <Trash2 className="h-5 w-5 shrink-0" />
         </button>
       </div>
 

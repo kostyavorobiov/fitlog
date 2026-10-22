@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import { useAuth } from './AuthContext';
 import { WorkoutService } from '../services/workoutService';
+import { TemplateService, WorkoutTemplate } from '../services/templateService';
 import { WorkoutPlan } from '../types/workout';
 import { CreateWorkoutModal } from '../components/CreateWorkoutModal';
 import { formatLocalDate } from '../utils/date';
@@ -37,7 +38,12 @@ export const CreateWorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsVisible(false);
   }, []);
 
-  const handleCreateSubmit = async (title: string, scheduledDate: string, notes: string) => {
+  const handleCreateSubmit = async (
+    title: string,
+    scheduledDate: string,
+    notes: string,
+    template?: WorkoutTemplate
+  ) => {
     if (!user) {
       Alert.alert('Потрібна авторизація', 'Будь ласка, увійдіть у свій акаунт.');
       return;
@@ -45,17 +51,28 @@ export const CreateWorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setIsLoading(true);
     try {
-      const workoutId = `wo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-      const newWorkout: WorkoutPlan = {
-        id: workoutId,
-        userId: user.id,
-        title: title.trim() || 'Нове тренування',
-        scheduledDate: scheduledDate || formatLocalDate(),
-        status: 'planned',
-        notes: notes.trim(),
-        createdAt: new Date().toISOString(),
-        exercises: [],
-      };
+      let newWorkout: WorkoutPlan;
+      if (template) {
+        newWorkout = TemplateService.createWorkoutFromTemplate(
+          template,
+          user.id,
+          scheduledDate || formatLocalDate()
+        );
+        if (title.trim()) newWorkout.title = title.trim();
+        if (notes.trim()) newWorkout.notes = notes.trim();
+      } else {
+        const workoutId = `wo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        newWorkout = {
+          id: workoutId,
+          userId: user.id,
+          title: title.trim() || 'Нове тренування',
+          scheduledDate: scheduledDate || formatLocalDate(),
+          status: 'planned',
+          notes: notes.trim(),
+          createdAt: new Date().toISOString(),
+          exercises: [],
+        };
+      }
 
       const success = await WorkoutService.saveWorkout(newWorkout);
       if (!success) {
