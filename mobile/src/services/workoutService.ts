@@ -404,6 +404,83 @@ export class WorkoutService {
   }
 
   /**
+   * Retrieves all past performances for an exercise (from first day to latest)
+   */
+  static async getAllPastPerformances(
+    userId: string,
+    exerciseId: string,
+    exerciseName?: string
+  ): Promise<PastExercisePerformance[]> {
+    try {
+      const workouts = await this.getWorkouts(userId);
+      if (!Array.isArray(workouts)) return [];
+
+      let targetName = exerciseName?.toLowerCase().trim();
+      if (!targetName) {
+        try {
+          const cachedExercises = await MobileStorage.getItem<any[]>('mobile_exercises_cache', []);
+          const found = cachedExercises.find((e: any) => e.id === exerciseId);
+          if (found && found.name) targetName = found.name.toLowerCase().trim();
+        } catch { }
+      }
+
+      const results: PastExercisePerformance[] = [];
+
+      for (const w of workouts) {
+        if (!w || !Array.isArray(w.exercises)) continue;
+
+        const we = w.exercises.find((item) => {
+          if (!item) return false;
+          if (item.exerciseId === exerciseId) return true;
+          if (targetName && item.exerciseName && item.exerciseName.toLowerCase().trim() === targetName) {
+            return true;
+          }
+          return false;
+        });
+        if (!we || !Array.isArray(we.sets) || we.sets.length === 0) continue;
+
+        const validSets = we.sets
+          .filter((s) => s && (
+            Boolean(s.completedAt) ||
+            Boolean((s as any).completed) ||
+            (s.actualReps !== null && s.actualReps !== undefined && s.actualReps > 0)
+          ))
+          .sort((a, b) => a.setNumber - b.setNumber);
+
+        if (validSets.length > 0) {
+          let maxWeight = 0;
+          let totalVolume = 0;
+          const setSummaries: PastExerciseSetSummary[] = validSets.map((s) => {
+            const wVal = Number(s.weight) || 0;
+            if (wVal > maxWeight) maxWeight = wVal;
+            totalVolume += wVal * (s.actualReps || 0);
+            return {
+              setNumber: s.setNumber,
+              weight: wVal,
+              actualReps: s.actualReps !== null && s.actualReps !== undefined ? Number(s.actualReps) : 0,
+              targetRepsRange: s.targetRepsRange,
+            };
+          });
+
+          results.push({
+            workoutId: w.id,
+            workoutTitle: w.title,
+            date: w.scheduledDate,
+            sets: setSummaries,
+            maxWeight,
+            totalVolume,
+          });
+        }
+      }
+
+      return results;
+    } catch (e) {
+      console.warn('[WorkoutService.getAllPastPerformances] Error:', e);
+      return [];
+    }
+  }
+
+  /**
    * Retrieves previous workout to repeat (by matching title, or latest completed workout)
    */
   static async getPreviousWorkoutToRepeat(

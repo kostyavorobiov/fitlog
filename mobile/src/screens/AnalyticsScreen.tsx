@@ -21,6 +21,7 @@ import { WorkoutService } from '../services/workoutService';
 import { WorkoutPlan, MUSCLE_GROUPS } from '../types/workout';
 import { getPeriodRange, PeriodRange, formatLocalDate } from '../utils/date';
 import { WorkoutCalendarView } from '../components/WorkoutCalendarView';
+import { ExerciseDetailModal } from '../components/ExerciseDetailModal';
 import {
   calculateAnalytics,
   AnalyticsPeriod,
@@ -50,6 +51,7 @@ export const AnalyticsScreen: React.FC = () => {
   const [hasError, setHasError] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewTab, setViewTab] = useState<'muscles' | 'exercises'>('muscles');
+  const [selectedExerciseModal, setSelectedExerciseModal] = useState<AggregatedExercise | null>(null);
 
   // Load workouts
   const loadData = useCallback(async () => {
@@ -550,8 +552,10 @@ export const AnalyticsScreen: React.FC = () => {
                       {filteredExercises.map((item, idx) => {
                         const muscle = MUSCLE_GROUPS[item.muscleGroup] || MUSCLE_GROUPS.other;
                         return (
-                          <View
+                          <TouchableOpacity
                             key={item.exerciseId || `ex_${idx}`}
+                            activeOpacity={0.7}
+                            onPress={() => setSelectedExerciseModal(item)}
                             style={[
                               styles.exerciseItem,
                               idx > 0 && (isDark ? styles.itemBorderDark : styles.itemBorderLight),
@@ -596,7 +600,7 @@ export const AnalyticsScreen: React.FC = () => {
                                   : 'підходів'}
                               </Text>
                             </View>
-                          </View>
+                          </TouchableOpacity>
                         );
                       })}
                     </View>
@@ -607,6 +611,16 @@ export const AnalyticsScreen: React.FC = () => {
           </>
         )}
       </ScrollView>
+
+      {/* Exercise Detail / History Modal */}
+      <ExerciseDetailModal
+        visible={Boolean(selectedExerciseModal)}
+        onClose={() => setSelectedExerciseModal(null)}
+        exerciseId={selectedExerciseModal?.exerciseId || ''}
+        exerciseName={selectedExerciseModal?.exerciseName || ''}
+        muscleGroup={selectedExerciseModal?.muscleGroup}
+        userId={targetUserId}
+      />
     </SafeAreaView>
   );
 };

@@ -23,6 +23,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { ExerciseService } from '../services/exerciseService';
+import { ExerciseDetailModal } from '../components/ExerciseDetailModal';
 import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
 import { useSwipeUndo } from '../context/SwipeUndoContext';
@@ -95,6 +96,7 @@ export const ExercisesScreen: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editMuscle, setEditMuscle] = useState<MuscleGroup>('chest');
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+  const [selectedExerciseForDetail, setSelectedExerciseForDetail] = useState<Exercise | null>(null);
 
   const loadExercises = useCallback(async () => {
     setIsLoading(true);
@@ -465,7 +467,11 @@ export const ExercisesScreen: React.FC = () => {
                   onDelete={() => handleDeleteExercise(ex)}
                   onQuickDelete={() => handleQuickDeleteExercise(ex)}
                 >
-                  <View style={styles.exCard}>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setSelectedExerciseForDetail(ex)}
+                    style={styles.exCard}
+                  >
                     <View style={styles.exCardHeader}>
                       <View style={{ flex: 1, gap: 4 }}>
                         <Text style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}>
@@ -500,7 +506,7 @@ export const ExercisesScreen: React.FC = () => {
                         </View>
                       ) : null}
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 </SwipeableExerciseCard>
               );
             })}
@@ -729,6 +735,16 @@ export const ExercisesScreen: React.FC = () => {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
+
+      {/* Exercise Detail / History Modal */}
+      <ExerciseDetailModal
+        visible={Boolean(selectedExerciseForDetail)}
+        onClose={() => setSelectedExerciseForDetail(null)}
+        exerciseId={selectedExerciseForDetail?.id || ''}
+        exerciseName={selectedExerciseForDetail?.name || ''}
+        muscleGroup={selectedExerciseForDetail?.muscleGroup}
+        userId={user?.id || ''}
+      />
     </SafeAreaView>
   );
 };

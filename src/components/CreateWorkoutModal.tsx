@@ -149,14 +149,13 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
               setMode('empty');
               setError('');
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-              mode === 'empty'
-                ? 'bg-white dark:bg-zinc-800 text-[#2563EB] dark:text-[#60A5FA] shadow-xs'
-                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${mode === 'empty'
+              ? 'bg-white dark:bg-zinc-800 text-[#2563EB] dark:text-[#60A5FA] shadow-xs'
+              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
           >
             <Dumbbell className="h-3.5 w-3.5" />
-            <span>Порожнє</span>
+            <span>Нове тренування</span>
           </button>
           <button
             type="button"
@@ -164,11 +163,10 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
               setMode('template');
               setError('');
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-              mode === 'template'
-                ? 'bg-white dark:bg-zinc-800 text-[#2563EB] dark:text-[#60A5FA] shadow-xs'
-                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${mode === 'template'
+              ? 'bg-white dark:bg-zinc-800 text-[#2563EB] dark:text-[#60A5FA] shadow-xs'
+              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
           >
             <Bookmark className="h-3.5 w-3.5" />
             <span>З шаблону {templates.length > 0 ? `(${templates.length})` : ''}</span>
@@ -215,11 +213,10 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                             setTitle(tpl.title);
                             setError('');
                           }}
-                          className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${
-                            isSelected
-                              ? 'border-[#2563EB] bg-blue-50/50 dark:bg-blue-950/30 ring-1 ring-[#2563EB]'
-                              : 'border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50 dark:bg-zinc-950'
-                          }`}
+                          className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${isSelected
+                            ? 'border-[#2563EB] bg-blue-50/50 dark:bg-blue-950/30 ring-1 ring-[#2563EB]'
+                            : 'border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50 dark:bg-zinc-950'
+                            }`}
                         >
                           <div className="min-w-0 flex-1 pr-2">
                             <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
@@ -230,11 +227,10 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                             </p>
                           </div>
                           <div
-                            className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 border ${
-                              isSelected
-                                ? 'bg-[#2563EB] border-[#2563EB] text-white'
-                                : 'border-slate-300 dark:border-zinc-700'
-                            }`}
+                            className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 border ${isSelected
+                              ? 'bg-[#2563EB] border-[#2563EB] text-white'
+                              : 'border-slate-300 dark:border-zinc-700'
+                              }`}
                           >
                             {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
                           </div>
@@ -262,11 +258,10 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     if (error) setError('');
                   }}
                   placeholder="наприклад: Груди та Тріцепс"
-                  className={`w-full h-11 rounded-2xl border px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 bg-slate-50 dark:bg-zinc-950 focus:outline-none transition-colors ${
-                    error
-                      ? 'border-rose-500'
-                      : 'border-slate-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]'
-                  }`}
+                  className={`w-full h-11 rounded-2xl border px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 bg-slate-50 dark:bg-zinc-950 focus:outline-none transition-colors ${error
+                    ? 'border-rose-500'
+                    : 'border-slate-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]'
+                    }`}
                 />
               </div>
 
@@ -281,11 +276,10 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                       key={preset}
                       type="button"
                       onClick={() => handleSelectPreset(preset)}
-                      className={`rounded-xl border px-2.5 py-1 text-[11px] transition-all cursor-pointer ${
-                        title === preset
-                          ? 'border-[#2563EB] bg-[#2563EB] text-white font-bold shadow-xs'
-                          : 'border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-                      }`}
+                      className={`rounded-xl border px-2.5 py-1 text-[11px] transition-all cursor-pointer ${title === preset
+                        ? 'border-[#2563EB] bg-[#2563EB] text-white font-bold shadow-xs'
+                        : 'border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                        }`}
                     >
                       {preset}
                     </button>
@@ -319,7 +313,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                 onClick={(e) => {
                   try {
                     (e.target as any).showPicker?.();
-                  } catch {}
+                  } catch { }
                 }}
                 className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                 tabIndex={-1}
