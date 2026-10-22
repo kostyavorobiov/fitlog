@@ -59,39 +59,45 @@ const computeWorkoutStatus = (exercises: WorkoutExercise[]): 'completed' | 'in_p
 
 const SUPERSET_PALETTES = [
   {
-    border: 'border-l-4 border-l-emerald-500',
-    badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30',
-    buttonActive: 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60',
+    hex: '#10b981',
+    border: 'border-emerald-500/50',
+    badge: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+    buttonActive: 'border-emerald-500/60 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25',
     nameUk: 'Смарагдовий',
   },
   {
-    border: 'border-l-4 border-l-amber-500',
-    badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30',
-    buttonActive: 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60',
+    hex: '#f59e0b',
+    border: 'border-amber-500/50',
+    badge: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+    buttonActive: 'border-amber-500/60 bg-amber-500/15 text-amber-400 hover:bg-amber-500/25',
     nameUk: 'Бурштиновий',
   },
   {
-    border: 'border-l-4 border-l-indigo-500',
-    badge: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30',
-    buttonActive: 'border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60',
+    hex: '#6366f1',
+    border: 'border-indigo-500/50',
+    badge: 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30',
+    buttonActive: 'border-indigo-500/60 bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25',
     nameUk: 'Індиго',
   },
   {
-    border: 'border-l-4 border-l-rose-500',
-    badge: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30',
-    buttonActive: 'border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60',
+    hex: '#f43f5e',
+    border: 'border-rose-500/50',
+    badge: 'bg-rose-500/15 text-rose-400 border border-rose-500/30',
+    buttonActive: 'border-rose-500/60 bg-rose-500/15 text-rose-400 hover:bg-rose-500/25',
     nameUk: 'Рожевий',
   },
   {
-    border: 'border-l-4 border-l-cyan-500',
-    badge: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30',
-    buttonActive: 'border-cyan-300 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60',
+    hex: '#06b6d4',
+    border: 'border-cyan-500/50',
+    badge: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30',
+    buttonActive: 'border-cyan-500/60 bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25',
     nameUk: 'Блакитний',
   },
   {
-    border: 'border-l-4 border-l-purple-500',
-    badge: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/30',
-    buttonActive: 'border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60',
+    hex: '#a855f7',
+    border: 'border-purple-500/50',
+    badge: 'bg-purple-500/15 text-purple-400 border border-purple-500/30',
+    buttonActive: 'border-purple-500/60 bg-purple-500/15 text-purple-400 hover:bg-purple-500/25',
     nameUk: 'Фіолетовий',
   },
 ];
@@ -118,58 +124,56 @@ const ExerciseProgressRing: React.FC<{
           : `Прогрес: ${completed}/${total} підходів`
       }
     >
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="transform -rotate-90 pointer-events-none"
-      >
-        {/* Track circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill={
-            isAllDone
-              ? 'rgba(34, 197, 94, 0.08)'
-              : progress > 0
-                ? 'rgba(96, 165, 250, 0.08)'
-                : 'none'
-          }
-          className="stroke-[#e2e8f0] dark:stroke-[#334155]"
-          strokeWidth={strokeWidth}
-        />
-        {/* Progress arc */}
-        {progress > 0 && (
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={isAllDone ? '#22c55e' : '#60a5fa'}
-            strokeWidth={strokeWidth}
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            className="transition-all duration-300 ease-out"
-          />
-        )}
-      </svg>
-      {/* Center label */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {isAllDone ? (
-          <Check className="w-3.5 h-3.5 text-[#22c55e] stroke-[3]" />
-        ) : (
-          <span
-            className={`font-mono text-[9px] font-bold leading-none ${progress > 0
-              ? 'text-[#2563eb] dark:text-[#60a5fa]'
-              : 'text-[#64748b] dark:text-[#94a3b8]'
-              }`}
+      {isAllDone ? (
+        <div className="w-full h-full rounded-full border-2 border-emerald-500 bg-emerald-500/15 flex items-center justify-center text-emerald-400 shadow-xs">
+          <Check className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
+        </div>
+      ) : (
+        <>
+          <svg
+            width={size}
+            height={size}
+            viewBox={`0 0 ${size} ${size}`}
+            className="transform -rotate-90 pointer-events-none"
           >
-            {total > 0 ? `${completed}/${total}` : '0'}
-          </span>
-        )}
-      </div>
+            {/* Track circle */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill={progress > 0 ? 'rgba(96, 165, 250, 0.08)' : 'none'}
+              className="stroke-[#e2e8f0] dark:stroke-[#334155]"
+              strokeWidth={strokeWidth}
+            />
+            {/* Progress arc */}
+            {progress > 0 && (
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                fill="none"
+                stroke="#60a5fa"
+                strokeWidth={strokeWidth}
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                className="transition-all duration-300 ease-out"
+              />
+            )}
+          </svg>
+          {/* Center label */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span
+              className={`font-mono text-[9px] font-bold leading-none ${progress > 0
+                ? 'text-[#2563eb] dark:text-[#60a5fa]'
+                : 'text-[#64748b] dark:text-[#94a3b8]'
+                }`}
+            >
+              {total > 0 ? `${completed}/${total}` : '0'}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -1223,13 +1227,21 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 onDragStart={() => handleDragStart(weIndex)}
                 onDragOver={(e) => handleDragOver(e, weIndex)}
                 onDragEnd={handleDragEnd}
-                className={`rounded-2xl border bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-colors ${isDragged
+                className={`rounded-2xl border bg-white dark:bg-[#1D2939] shadow-xs overflow-hidden transition-colors ${isDragged
                   ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70'
-                  : isSuperset && supersetPalette
-                    ? `${supersetPalette.border} border-zinc-200 dark:border-zinc-800`
-                    : 'border-zinc-200 dark:border-zinc-800'
+                  : 'border-zinc-200 dark:border-[#334155]'
                   }`}
               >
+                {/* Superset stripe across full width of card */}
+                {isSuperset && (
+                  <div
+                    className="h-1 w-full"
+                    style={{
+                      backgroundColor: supersetPalette ? supersetPalette.hex : '#10b981',
+                    }}
+                  />
+                )}
+
                 {/* ================= MOBILE VIEW (sm:hidden) ================= */}
                 <div className="block sm:hidden">
                   <MobileSwipeableExerciseCard
@@ -1240,20 +1252,20 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
                     {/* Mobile Exercise Header */}
                     <div
-                      className={`flex items-center justify-between gap-2 px-3 pt-3 pb-2.5 ${isExpanded ? 'border-b border-zinc-100 dark:border-zinc-800' : ''
+                      className={`flex items-center justify-between gap-2.5 px-3.5 py-3 ${isExpanded ? 'border-b border-zinc-100 dark:border-[#334155]' : ''
                         }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1 select-none">
                         {/* Vertical Reorder Stepper (Up/Down) */}
                         <div
-                          className="flex flex-col items-center justify-center shrink-0 -space-y-1 py-0.5 select-none"
+                          className="flex flex-col items-center justify-center shrink-0 -space-y-0.5 py-0.5 select-none"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
                             type="button"
                             onClick={() => handleMoveExercise(weIndex, 'up')}
                             disabled={weIndex === 0}
-                            className="p-0.5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none transition-colors cursor-pointer"
+                            className="p-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-20 disabled:pointer-events-none transition-colors cursor-pointer"
                             title="Перемістити вгору"
                           >
                             <ChevronUp className="h-4 w-4 stroke-[2.5]" />
@@ -1262,7 +1274,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                             type="button"
                             onClick={() => handleMoveExercise(weIndex, 'down')}
                             disabled={weIndex === currentExList.length - 1}
-                            className="p-0.5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none transition-colors cursor-pointer"
+                            className="p-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-20 disabled:pointer-events-none transition-colors cursor-pointer"
                             title="Перемістити вниз"
                           >
                             <ChevronDown className="h-4 w-4 stroke-[2.5]" />
@@ -1275,7 +1287,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           className="min-w-0 flex-1 flex flex-col justify-center cursor-pointer"
                         >
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug break-words">
+                            <h4 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 leading-snug break-words">
                               {exerciseName}
                             </h4>
                             {(() => {
@@ -1287,17 +1299,21 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                 </span>
                               );
                             })()}
-                            {isSuperset && (
+                          </div>
+
+                          {isSuperset && (
+                            <div className="mt-1">
                               <span
-                                className={`inline-flex items-center gap-0.5 rounded-lg px-1.5 py-0.5 text-[9px] font-bold ${supersetPalette ? supersetPalette.badge : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30'}`}
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${supersetPalette ? supersetPalette.badge : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'}`}
                               >
                                 <Link className="h-2.5 w-2.5" />
                                 <span>Суперсет</span>
                               </span>
-                            )}
-                          </div>
+                            </div>
+                          )}
+
                           {!isExpanded && (
-                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+                            <div className="flex items-center gap-1.5 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                               <span>{weItem.sets?.length || 0} підходи</span>
                               <span>•</span>
                               <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
@@ -1309,24 +1325,24 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                         {currentExList.length > 1 && (
                           <button
                             type="button"
                             onClick={() => handleToggleSuperset(weIndex)}
-                            className={`p-1.5 rounded-xl border transition-colors cursor-pointer ${isSuperset && supersetPalette
+                            className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-colors cursor-pointer ${isSuperset && supersetPalette
                               ? supersetPalette.buttonActive
-                              : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+                              : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
                               }`}
                             title={isSuperset ? "Роз'єднати суперсет" : 'Обʼєднати в суперсет'}
                           >
-                            {isSuperset ? <Unlink className="h-3.5 w-3.5" /> : <Link className="h-3.5 w-3.5" />}
+                            <Link className="h-3.5 w-3.5" />
                           </button>
                         )}
                         <ExerciseProgressRing
                           completed={(weItem.sets || []).filter((s) => Boolean(s.completedAt)).length}
                           total={(weItem.sets || []).length}
-                          size={28}
+                          size={32}
                         />
                       </div>
                     </div>

@@ -1422,10 +1422,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                 onLayout={(e) => {
                   exerciseLayoutsRef.current[ex.id] = e.nativeEvent.layout.y;
                 }}
-                style={[
-                  styles.exerciseCardWrap,
-                  isSuperset && palette && { borderLeftColor: palette.borderColor, borderLeftWidth: 4 },
-                ]}
+                style={styles.exerciseCardWrap}
               >
                 <SwipeableExerciseCard
                   id={ex.id}
@@ -1436,7 +1433,19 @@ export const WorkoutEditorScreen: React.FC = () => {
                   onChangeExercise={() => handleChangeExercise(ex.id)}
                   isDark={isDark}
                 >
-                  <Card style={styles.exerciseCard}>
+                  <Card style={[styles.exerciseCard, { overflow: 'hidden' }]}>
+                    {/* Superset Full Width Top Stripe */}
+                    {isSuperset && palette && (
+                      <View
+                        style={{
+                          height: 4,
+                          marginHorizontal: -12,
+                          marginTop: -12,
+                          backgroundColor: palette.borderColor,
+                          alignSelf: 'stretch',
+                        }}
+                      />
+                    )}
                     {/* Exercise Card Header */}
                     <View style={[styles.exHeader, isExpanded && (isDark ? styles.borderBottomDark : styles.borderBottomLight)]}>
                       {/* Index/Reorder, Name & Collapsed Summary */}
