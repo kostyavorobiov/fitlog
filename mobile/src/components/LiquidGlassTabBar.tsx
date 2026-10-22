@@ -8,6 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSegments } from 'expo-router';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -56,9 +57,14 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
   const { isDark } = useTheme();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+  const segments = useSegments();
   const { translateY } = useScrollTabBar();
   const { openCreateModal } = useCreateWorkout();
   const [hasActiveWorkout, setHasActiveWorkout] = useState(false);
+
+  const isEditingOrViewingWorkout = segments.some(
+    (s) => (s as string) === 'workout' || (s as string) === '[id]'
+  );
 
   // Check if any in-progress workout exists (matches Web hasActiveWorkout indicator)
   useEffect(() => {
@@ -203,16 +209,18 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
         <View style={styles.tabsRow}>
           {leftRoutes.map(renderTabItem)}
 
-          {/* Central '+' Create Workout Button */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => openCreateModal()}
-            style={styles.centerAddBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Створити нове тренування"
-          >
-            <Ionicons name="add" size={26} color="#FFFFFF" />
-          </TouchableOpacity>
+          {/* Central '+' Create Workout Button (action only, round Ocean Blue accent) */}
+          {!isEditingOrViewingWorkout && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => openCreateModal()}
+              style={styles.centerAddBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Створити нове тренування"
+            >
+              <Ionicons name="add" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
 
           {rightRoutes.map(renderTabItem)}
         </View>
@@ -271,18 +279,20 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   centerAddBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 4,
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
   },
   tabButtonActiveLight: {
     backgroundColor: 'rgba(37, 99, 235, 0.08)',

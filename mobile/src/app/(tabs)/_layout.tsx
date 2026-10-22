@@ -34,8 +34,8 @@ export default function TabLayout() {
             name="index"
             options={{
               title: 'Тренування',
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name="barbell-outline" size={size} color={color} />
+              tabBarIcon: ({ color, size, focused }) => (
+                <Ionicons name={focused ? 'barbell' : 'barbell-outline'} size={size} color={color} />
               ),
             }}
           />
@@ -43,8 +43,8 @@ export default function TabLayout() {
             name="analytics"
             options={{
               title: 'Аналітика',
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name="stats-chart-outline" size={size} color={color} />
+              tabBarIcon: ({ color, size, focused }) => (
+                <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} size={size} color={color} />
               ),
             }}
           />
@@ -52,8 +52,8 @@ export default function TabLayout() {
             name="exercises"
             options={{
               title: 'Вправи',
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name="book-outline" size={size} color={color} />
+              tabBarIcon: ({ color, size, focused }) => (
+                <Ionicons name={focused ? 'fitness' : 'fitness-outline'} size={size} color={color} />
               ),
             }}
           />
@@ -61,8 +61,8 @@ export default function TabLayout() {
             name="profile"
             options={{
               title: 'Профіль',
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name="person-outline" size={size} color={color} />
+              tabBarIcon: ({ color, size, focused }) => (
+                <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
               ),
             }}
           />

@@ -14,18 +14,17 @@ import { UserAvatar } from './UserAvatar';
 export interface WebTopNavbarProps {
   title?: string;
   onLogoPress?: () => void;
+  rightAction?: React.ReactNode;
   style?: any;
 }
 
 /**
  * WebTopNavbar: Matches Ocean Blue top navbar
- * - Left: Tab / Screen Title (e.g. "Тренування", "Аналітика", "Профіль")
- * - Right: UserAvatar (or "Увійти" button)
- * - Removed: "Workout diary / FitLog" brand name & Theme switcher
+ * - Left: Tab / Screen Title (e.g. "Тренування", "Аналітика", "Вправи", "Профіль")
+ * - Profile button moved into bottom navbar (old button removed from top)
  */
-export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ title, onLogoPress, style }) => {
+export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ title, onLogoPress, rightAction, style }) => {
   const router = useRouter();
-  const { user } = useAuth();
   const { isDark } = useTheme();
 
   const handleTitlePress = () => {
@@ -34,14 +33,6 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ title, onLogoPress, 
     } else {
       router.push('/(tabs)');
     }
-  };
-
-  const handleAvatarPress = () => {
-    router.push('/(tabs)/profile');
-  };
-
-  const handleLoginPress = () => {
-    router.push('/(auth)/login');
   };
 
   return (
@@ -66,41 +57,9 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ title, onLogoPress, 
         </Text>
       </TouchableOpacity>
 
-      {/* Right Header Actions: User Avatar only (Theme toggle removed) */}
+      {/* Right Header Actions: Custom action if passed (Profile moved to bottom navbar) */}
       <View style={styles.rightActions}>
-        {user ? (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleAvatarPress}
-            style={[
-              styles.avatarContainer,
-              isDark ? styles.avatarContainerDark : styles.avatarContainerLight,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Мій профіль"
-          >
-            <UserAvatar
-              image={user.image}
-              name={user.name}
-              size="sm"
-            />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleLoginPress}
-            style={[
-              styles.loginBtn,
-              isDark ? styles.loginBtnDark : styles.loginBtnLight,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Увійти"
-          >
-            <Text style={styles.loginBtnText}>
-              Увійти
-            </Text>
-          </TouchableOpacity>
-        )}
+        {rightAction ? rightAction : null}
       </View>
     </View>
   );
@@ -166,8 +125,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <View style={styles.wrapper}>
-      {!hideTopNavbar && <WebTopNavbar title={title} onLogoPress={onLogoPress} />}
-      {subtitle || rightAction ? (
+      {!hideTopNavbar && <WebTopNavbar title={title} onLogoPress={onLogoPress} rightAction={!subtitle ? rightAction : undefined} />}
+      {subtitle ? (
         <View style={styles.sectionContainer}>
           <SectionHeader
             subtitle={subtitle}

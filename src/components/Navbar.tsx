@@ -317,7 +317,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('profile');
                     }}
                     onClick={() => handleNavSelect('profile')}
-                    className={`relative flex items-center justify-center rounded-full p-0.5 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563eb]/40 active:scale-95 ${currentTab === 'profile'
+                    className={`hidden md:flex relative items-center justify-center rounded-full p-0.5 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563eb]/40 active:scale-95 ${currentTab === 'profile'
                       ? 'border-[#2563eb] ring-2 ring-[#2563eb]/30'
                       : 'border-[#e2e8f0] dark:border-[#334155] hover:border-[#2563eb]'
                       }`}
@@ -410,16 +410,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="text-[9px] font-semibold leading-none">Аналітика</span>
         </button>
 
-        {/* Central '+' Create Workout Button (hidden when viewing/editing a workout) */}
+        {/* Central '+' Create Workout Button (accent, circular, Ocean Blue, hidden when viewing/editing a workout) */}
         {!isEditingWorkout && (
           <button
             type="button"
             onClick={onCreateWorkout}
-            className="w-10 h-10 rounded-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform cursor-pointer shrink-0"
+            className="w-11 h-11 rounded-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white flex items-center justify-center shadow-lg shadow-[#2563eb]/40 active:scale-95 transition-all cursor-pointer shrink-0 border border-white/25 dark:border-[#38bdf8]/30 mx-1"
             title="Створити нове тренування"
             aria-label="Створити нове тренування"
           >
-            <Plus className="h-5 w-5 stroke-[2.5]" />
+            <Plus className="h-6 w-6 stroke-[2.5]" />
           </button>
         )}
 
