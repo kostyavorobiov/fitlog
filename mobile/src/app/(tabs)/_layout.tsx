@@ -1,23 +1,39 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
+import React, { useMemo } from 'react';
+import { Tabs, useSegments } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { LiquidGlassTabBar } from '../../components/LiquidGlassTabBar';
 import { ScrollTabBarProvider } from '../../context/ScrollTabBarContext';
+import { ScreenGestureWrapper } from '../../components/ScreenGestureWrapper';
 
 export default function TabLayout() {
   const { user, isAdmin } = useAuth();
   const isTrainer = user?.role === 'coach' || isAdmin;
+  const segments = useSegments();
+
+  const currentTab = segments[1] || 'index';
+
+  const tabOrder = useMemo(() => {
+    return isTrainer
+      ? ['index', 'calendar', 'analytics', 'exercises', 'trainees']
+      : ['index', 'calendar', 'analytics', 'exercises'];
+  }, [isTrainer]);
 
   return (
     <ScrollTabBarProvider>
-      <Tabs
-        tabBar={(props) => <LiquidGlassTabBar {...props} />}
-        screenOptions={{
-          headerShown: false,
-          tabBarHideOnKeyboard: true,
-        }}
+      <ScreenGestureWrapper
+        currentTab={currentTab}
+        tabOrder={tabOrder}
+        enableTabSwipe={currentTab !== 'profile'}
+        enableBackSwipe={currentTab === 'profile'}
       >
+        <Tabs
+          tabBar={(props) => <LiquidGlassTabBar {...props} />}
+          screenOptions={{
+            headerShown: false,
+            tabBarHideOnKeyboard: true,
+          }}
+        >
         <Tabs.Screen
           name="index"
           options={{
@@ -71,6 +87,7 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
+      </ScreenGestureWrapper>
     </ScrollTabBarProvider>
   );
 }

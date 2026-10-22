@@ -9,6 +9,7 @@ import * as Linking from 'expo-linking';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { AuthService } from '../services/authService';
 import { ThemeProvider as AppThemeProvider, useTheme as useAppTheme } from '../context/ThemeContext';
+import { SwipeUndoProvider } from '../context/SwipeUndoContext';
 
 // Ensure browser session can complete redirect for OAuth flows
 WebBrowser.maybeCompleteAuthSession();
@@ -107,7 +108,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AppThemeProvider>
         <AuthProvider>
-          <RootNavigator />
+          <SwipeUndoProvider>
+            <RootNavigator />
+          </SwipeUndoProvider>
         </AuthProvider>
       </AppThemeProvider>
     </SafeAreaProvider>

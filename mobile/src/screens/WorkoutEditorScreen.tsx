@@ -37,6 +37,9 @@ import {
 
 import { SupersetPalette, SUPERSET_PALETTES } from '../constants/supersets';
 import { getExercise1RM, format1RM, getMinRepsFromRange } from '../utils/workout';
+import { SwipeableActionCard } from '../components/SwipeableActionCard';
+import { useSwipeUndo } from '../context/SwipeUndoContext';
+import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 
 export const computeWorkoutStatus = (exercises: WorkoutExercise[]): 'completed' | 'in_progress' => {
   if (!exercises || exercises.length === 0) return 'in_progress';
@@ -58,158 +61,34 @@ const TITLE_PRESETS = [
 ];
 
 interface SwipeableExerciseCardProps {
+  id: string;
   onDelete: () => void;
+  onQuickDelete: () => void;
   onChangeExercise?: () => void;
   isDark: boolean;
   children: React.ReactNode;
 }
 
-const SWIPE_ACTION_WIDTH = 76;
-const SWIPE_TOTAL_WIDTH = SWIPE_ACTION_WIDTH * 2;
-const SWIPE_THRESHOLD = -35;
-
 const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
+  id,
   onDelete,
+  onQuickDelete,
   onChangeExercise,
   isDark,
   children,
 }) => {
-  const panX = useRef(new Animated.Value(0)).current;
-  const opacityAnim = useRef(new Animated.Value(1)).current;
-  const isOpenRef = useRef(false);
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onStartShouldSetPanResponderCapture: () => false,
-        onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-          return (
-            Math.abs(gestureState.dx) > 10 &&
-            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2
-          );
-        },
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          return (
-            Math.abs(gestureState.dx) > 10 &&
-            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2
-          );
-        },
-        onPanResponderTerminationRequest: () => false,
-        onPanResponderGrant: () => {
-          panX.stopAnimation();
-        },
-        onPanResponderMove: (_, gestureState) => {
-          const base = isOpenRef.current ? -SWIPE_TOTAL_WIDTH : 0;
-          const newX = Math.min(0, Math.max(-SWIPE_TOTAL_WIDTH - 20, base + gestureState.dx));
-          panX.setValue(newX);
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          const currentVal = (panX as any)._value ?? (isOpenRef.current ? -SWIPE_TOTAL_WIDTH : 0);
-          if (gestureState.dx < -30 || currentVal < SWIPE_THRESHOLD) {
-            isOpenRef.current = true;
-            Animated.spring(panX, {
-              toValue: -SWIPE_TOTAL_WIDTH,
-              useNativeDriver: true,
-              bounciness: 4,
-            }).start();
-          } else {
-            isOpenRef.current = false;
-            Animated.spring(panX, {
-              toValue: 0,
-              useNativeDriver: true,
-              bounciness: 4,
-            }).start();
-          }
-        },
-        onPanResponderTerminate: () => {
-          isOpenRef.current = false;
-          Animated.spring(panX, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        },
-      }),
-    [panX]
-  );
-
-  const handleDelete = () => {
-    Animated.parallel([
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(panX, {
-        toValue: -350,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onDelete();
-    });
-  };
-
-  const closeSwipe = () => {
-    if (isOpenRef.current) {
-      isOpenRef.current = false;
-      Animated.spring(panX, {
-        toValue: 0,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
   return (
-    <Animated.View style={[styles.swipeContainer, { opacity: opacityAnim }]}>
-      {/* Background Actions: Change (Yellow) & Delete (Red) */}
-      <View style={styles.swipeActionsBg}>
-        {/* Yellow Change Exercise Button */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
-            closeSwipe();
-            onChangeExercise?.();
-          }}
-          style={styles.swipeChangeBtn}
-          accessibilityLabel="Змінити вправу"
-        >
-          <Ionicons name="swap-horizontal" size={20} color="#0F172A" />
-          <Text style={styles.swipeChangeBtnText}>Змінити</Text>
-        </TouchableOpacity>
-
-        {/* Red Delete Button */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleDelete}
-          style={styles.swipeDeleteBtn}
-          accessibilityLabel="Видалити вправу"
-        >
-          <Ionicons name="trash" size={20} color="#ffffff" />
-          <Text style={styles.swipeDeleteBtnText}>Видалити</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Foreground Swipeable Card */}
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          styles.swipeForeground,
-          {
-            transform: [{ translateX: panX }],
-            backgroundColor: isDark ? '#1D2939' : '#FFFFFF',
-          },
-        ]}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={closeSwipe}
-          disabled={!isOpenRef.current}
-        >
-          {children}
-        </TouchableOpacity>
-      </Animated.View>
-    </Animated.View>
+    <SwipeableActionCard
+      id={id}
+      isDark={isDark}
+      onEdit={onChangeExercise}
+      onDelete={onDelete}
+      onQuickDelete={onQuickDelete}
+      editLabel="Змінити"
+      deleteLabel="Видалити"
+    >
+      {children}
+    </SwipeableActionCard>
   );
 };
 
@@ -749,6 +628,54 @@ export const WorkoutEditorScreen: React.FC = () => {
       }, 100);
     }
   };
+
+  const { showUndoToast } = useSwipeUndo();
+
+  const handleQuickDeleteExercise = useCallback(
+    (weId: string) => {
+      if (!workout) return;
+      const currentExercises = workout.exercises || [];
+      const exerciseIndex = currentExercises.findIndex((e) => e.id === weId);
+      if (exerciseIndex === -1) return;
+
+      const exerciseToRemove = currentExercises[exerciseIndex];
+      const previousWorkoutState = { ...workout };
+
+      // Optimistically remove from state
+      let updatedExercises = currentExercises
+        .filter((e) => e.id !== weId)
+        .map((e, idx) => ({ ...e, order: idx + 1 }));
+
+      if (exerciseToRemove?.supersetGroupId) {
+        const remainingInGroup = updatedExercises.filter(
+          (e) => e.supersetGroupId === exerciseToRemove.supersetGroupId
+        );
+        if (remainingInGroup.length <= 1) {
+          updatedExercises = updatedExercises.map((e) =>
+            e.supersetGroupId === exerciseToRemove.supersetGroupId
+              ? { ...e, supersetGroupId: null }
+              : e
+          );
+        }
+      }
+
+      setWorkout((prev) => (prev ? { ...prev, exercises: updatedExercises } : prev));
+
+      showUndoToast({
+        id: weId,
+        title: exerciseToRemove.exerciseName || 'Вправа',
+        type: 'exercise',
+        onUndo: () => {
+          setWorkout(previousWorkoutState);
+          updateAndSave(previousWorkoutState, true);
+        },
+        onCommit: async () => {
+          updateAndSave({ ...workout, exercises: updatedExercises }, true);
+        },
+      });
+    },
+    [workout, updateAndSave, showUndoToast]
+  );
 
   // Move exercise Up / Down
   const handleMoveExercise = (index: number, direction: 'up' | 'down') => {
@@ -1321,7 +1248,8 @@ export const WorkoutEditorScreen: React.FC = () => {
   });
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+    <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true}>
+      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Top Header Bar */}
       <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
         <TouchableOpacity activeOpacity={0.7} onPress={() => router.back()} style={styles.iconBtn}>
@@ -1500,7 +1428,9 @@ export const WorkoutEditorScreen: React.FC = () => {
                 ]}
               >
                 <SwipeableExerciseCard
+                  id={ex.id}
                   onDelete={() => handleRemoveExercise(ex.id)}
+                  onQuickDelete={() => handleQuickDeleteExercise(ex.id)}
                   onChangeExercise={() => handleChangeExercise(ex.id)}
                   isDark={isDark}
                 >
@@ -1930,7 +1860,8 @@ export const WorkoutEditorScreen: React.FC = () => {
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ScreenGestureWrapper>
   );
 };
 

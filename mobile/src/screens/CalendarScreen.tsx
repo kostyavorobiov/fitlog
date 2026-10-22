@@ -20,6 +20,8 @@ import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutService } from '../services/workoutService';
 import { WorkoutPlan } from '../types/workout';
+import { SwipeableActionCard } from '../components/SwipeableActionCard';
+import { useSwipeUndo } from '../context/SwipeUndoContext';
 import {
   UKRAINIAN_MONTHS,
   UKRAINIAN_WEEKDAYS_SHORT,
@@ -189,6 +191,51 @@ export const CalendarScreen: React.FC = () => {
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const { showUndoToast } = useSwipeUndo();
+
+  const handleDeleteWorkout = (workout: WorkoutPlan) => {
+    if (!user) return;
+    Alert.alert(
+      'Видалити тренування?',
+      `Ви впевнені, що хочете видалити «${workout.title || 'це тренування'}»?`,
+      [
+        { text: 'Скасувати', style: 'cancel' },
+        {
+          text: 'Видалити',
+          style: 'destructive',
+          onPress: async () => {
+            const ok = await WorkoutService.deleteWorkout(user.id, workout.id);
+            if (ok) {
+              setWorkouts((prev) => prev.filter((w) => w.id !== workout.id));
+            } else {
+              Alert.alert('Помилка', 'Не вдалося видалити тренування');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleQuickDeleteWorkout = (workout: WorkoutPlan) => {
+    if (!user) return;
+    setWorkouts((prev) => prev.filter((w) => w.id !== workout.id));
+    showUndoToast({
+      id: workout.id,
+      title: workout.title || 'Тренування',
+      type: 'workout',
+      onUndo: () => {
+        setWorkouts((prev) => [workout, ...prev]);
+      },
+      onCommit: async () => {
+        try {
+          await WorkoutService.deleteWorkout(user.id, workout.id);
+        } catch (e) {
+          console.error('[CalendarScreen] Failed to delete workout permanently:', e);
+        }
+      },
+    });
   };
 
   return (
@@ -424,15 +471,24 @@ export const CalendarScreen: React.FC = () => {
                 });
 
                 return (
-                  <TouchableOpacity
+                  <SwipeableActionCard
                     key={w.id}
-                    activeOpacity={0.7}
-                    onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
-                    style={[
-                      styles.workoutItem,
-                      isDark ? styles.workoutItemDark : styles.workoutItemLight,
-                    ]}
+                    id={w.id}
+                    isDark={isDark}
+                    onEdit={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
+                    onDelete={() => handleDeleteWorkout(w)}
+                    onQuickDelete={() => handleQuickDeleteWorkout(w)}
+                    editLabel="Редагувати"
+                    deleteLabel="Видалити"
                   >
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
+                      style={[
+                        styles.workoutItem,
+                        isDark ? styles.workoutItemDark : styles.workoutItemLight,
+                      ]}
+                    >
                     <View style={styles.workoutItemLeft}>
                       <View style={styles.workoutItemTitleRow}>
                         <Text
@@ -488,7 +544,8 @@ export const CalendarScreen: React.FC = () => {
                       color={isDark ? '#94A3B8' : '#64748B'}
                       style={styles.chevronIcon}
                     />
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  </SwipeableActionCard>
                 );
               })}
             </View>
@@ -832,8 +889,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 14,
-    borderRadius: 18,
-    borderWidth: 1,
+    borderRadius: 20,
+    borderWidth: 0,
   },
   workoutItemLight: {
     backgroundColor: '#FFFFFF',

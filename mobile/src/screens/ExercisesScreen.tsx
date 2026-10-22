@@ -24,6 +24,8 @@ import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { ExerciseService } from '../services/exerciseService';
 import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
+import { SwipeableActionCard } from '../components/SwipeableActionCard';
+import { useSwipeUndo } from '../context/SwipeUndoContext';
 
 const MUSCLE_ORDER: MuscleGroup[] = [
   'chest',
@@ -37,158 +39,37 @@ const MUSCLE_ORDER: MuscleGroup[] = [
 ];
 
 interface SwipeableExerciseCardProps {
+  id: string;
+  onEdit?: () => void;
   onDelete: () => void;
+  onQuickDelete?: () => void;
   isDark: boolean;
   disabled?: boolean;
   children: React.ReactNode;
 }
 
-const SWIPE_DELETE_WIDTH = 84;
-const SWIPE_THRESHOLD = -40;
-
 const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
+  id,
+  onEdit,
   onDelete,
+  onQuickDelete,
   isDark,
   disabled = false,
   children,
 }) => {
-  const panX = useRef(new Animated.Value(0)).current;
-  const opacityAnim = useRef(new Animated.Value(1)).current;
-  const isOpenRef = useRef(false);
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onStartShouldSetPanResponderCapture: () => false,
-        onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-          if (disabled) return false;
-          return (
-            Math.abs(gestureState.dx) > 10 &&
-            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2
-          );
-        },
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (disabled) return false;
-          return (
-            Math.abs(gestureState.dx) > 10 &&
-            Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2
-          );
-        },
-        onPanResponderTerminationRequest: () => false,
-        onPanResponderGrant: () => {
-          panX.stopAnimation();
-        },
-        onPanResponderMove: (_, gestureState) => {
-          const base = isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0;
-          const newX = Math.min(0, Math.max(-SWIPE_DELETE_WIDTH - 20, base + gestureState.dx));
-          panX.setValue(newX);
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          const currentVal = (panX as any)._value ?? (isOpenRef.current ? -SWIPE_DELETE_WIDTH : 0);
-          if (gestureState.dx < -30 || currentVal < SWIPE_THRESHOLD) {
-            isOpenRef.current = true;
-            Animated.spring(panX, {
-              toValue: -SWIPE_DELETE_WIDTH,
-              useNativeDriver: true,
-              bounciness: 4,
-            }).start();
-          } else {
-            isOpenRef.current = false;
-            Animated.spring(panX, {
-              toValue: 0,
-              useNativeDriver: true,
-              bounciness: 4,
-            }).start();
-          }
-        },
-        onPanResponderTerminate: () => {
-          isOpenRef.current = false;
-          Animated.spring(panX, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        },
-      }),
-    [disabled, panX]
-  );
-
-  const handleDelete = () => {
-    onDelete();
-  };
-
-  const closeSwipe = () => {
-    if (isOpenRef.current) {
-      isOpenRef.current = false;
-      Animated.spring(panX, {
-        toValue: 0,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  if (disabled) {
-    return (
-      <View
-        style={[
-          styles.swipeContainer,
-          {
-            borderColor: isDark ? '#334155' : '#e2e8f0',
-            backgroundColor: isDark ? '#1d2939' : '#ffffff',
-          },
-        ]}
-      >
-        {children}
-      </View>
-    );
-  }
-
   return (
-    <Animated.View
-      style={[
-        styles.swipeContainer,
-        {
-          opacity: opacityAnim,
-          borderColor: isDark ? '#334155' : '#e2e8f0',
-          backgroundColor: isDark ? '#1d2939' : '#ffffff',
-        },
-      ]}
+    <SwipeableActionCard
+      id={id}
+      isDark={isDark}
+      disabled={disabled}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      onQuickDelete={onQuickDelete}
+      editLabel="Редагувати"
+      deleteLabel="Видалити"
     >
-      {/* Background Red Delete Button */}
-      <View style={styles.swipeDeleteActionBg}>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleDelete}
-          style={styles.swipeDeleteBtn}
-          accessibilityLabel="Видалити вправу"
-        >
-          <Ionicons name="trash" size={20} color="#ffffff" />
-          <Text style={styles.swipeDeleteBtnText}>Видалити</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Foreground Swipeable Card */}
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          styles.swipeForeground,
-          {
-            transform: [{ translateX: panX }],
-            backgroundColor: isDark ? '#1d2939' : '#ffffff',
-            borderRightWidth: StyleSheet.hairlineWidth,
-            borderRightColor: isDark ? '#334155' : '#e2e8f0',
-          },
-        ]}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={closeSwipe}
-          disabled={!isOpenRef.current}
-        >
-          {children}
-        </TouchableOpacity>
-      </Animated.View>
-    </Animated.View>
+      {children}
+    </SwipeableActionCard>
   );
 };
 
@@ -363,6 +244,37 @@ export const ExercisesScreen: React.FC = () => {
     );
   };
 
+  const { showUndoToast } = useSwipeUndo();
+
+  const handleQuickDeleteExercise = useCallback(
+    (ex: Exercise) => {
+      if (!user) return;
+      const isOwner = ex.userId === user.id;
+      if (!isOwner && !isAdmin) return;
+
+      // Optimistic removal from state
+      setExercises((prev) => prev.filter((item) => item.id !== ex.id));
+
+      // Show Undo Toast with 5s countdown
+      showUndoToast({
+        id: ex.id,
+        title: ex.name,
+        type: 'exercise',
+        onUndo: () => {
+          setExercises((prev) => [ex, ...prev]);
+        },
+        onCommit: async () => {
+          try {
+            await ExerciseService.deleteExercise(ex.id, user.id, isAdmin);
+          } catch (e) {
+            console.error('[ExercisesScreen] Failed to delete exercise permanently:', e);
+          }
+        },
+      });
+    },
+    [user, isAdmin, showUndoToast]
+  );
+
   return (
     <SafeAreaView
       edges={['top']}
@@ -536,9 +448,12 @@ export const ExercisesScreen: React.FC = () => {
               return (
                 <SwipeableExerciseCard
                   key={ex.id}
+                  id={ex.id}
                   isDark={isDark}
                   disabled={!canEdit}
+                  onEdit={canEdit ? () => handleOpenEditModal(ex) : undefined}
                   onDelete={() => handleDeleteExercise(ex)}
+                  onQuickDelete={() => handleQuickDeleteExercise(ex)}
                 >
                   <View style={styles.exCard}>
                     <View style={styles.exCardHeader}>
