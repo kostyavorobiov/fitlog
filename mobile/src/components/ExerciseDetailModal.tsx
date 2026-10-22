@@ -7,8 +7,10 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Card } from './Card';
@@ -45,6 +47,10 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
   userId,
 }) => {
   const isDark = useColorScheme() === 'dark';
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'ios' ? 47 : 24);
+  const bottomInset = Math.max(insets.bottom, 16);
+
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<PastExercisePerformance[]>([]);
   const [activeTooltipIdx, setActiveTooltipIdx] = useState<number | null>(null);
@@ -227,38 +233,44 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <SafeAreaView
-        edges={['top', 'bottom']}
-        style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <View
+        style={[
+          styles.container,
+          isDark ? styles.bgDark : styles.bgLight,
+          { paddingTop: topInset, paddingBottom: bottomInset },
+        ]}
       >
         {/* Top Header Bar - Exact Workout Style */}
         <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={onClose}
-            style={styles.backBtn}
+            style={styles.iconBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Назад"
           >
             <Ionicons
               name="arrow-back"
               size={22}
-              color={isDark ? '#f8fafc' : '#0f172a'}
+              color={isDark ? '#F8FAFC' : '#0F172A'}
             />
           </TouchableOpacity>
 
-          <View style={styles.headerTitleWrap}>
+          <View style={styles.headerCenter}>
             <Text
               numberOfLines={1}
-              style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}
+              style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}
             >
               {exerciseName}
             </Text>
-            <Text style={[styles.headerSub, isDark ? styles.subDark : styles.subLight]}>
+            <Text style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
               {muscleInfo.nameUk}
             </Text>
           </View>
 
-          <View style={{ width: 32 }} />
+          <View style={{ width: 34 }} />
         </View>
 
         {loading ? (
@@ -546,7 +558,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
             )}
           </ScrollView>
         )}
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };
@@ -575,23 +587,24 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    gap: 12,
   },
-  backBtn: {
-    padding: 4,
+  iconBtn: {
+    padding: 6,
   },
-  headerTitleWrap: {
+  headerCenter: {
     flex: 1,
+    marginHorizontal: 8,
   },
-  headerTitle: {
-    fontSize: 17,
+  topBarTitle: {
+    fontSize: 16,
     fontWeight: '700',
   },
-  headerSub: {
-    fontSize: 12,
+  topBarSub: {
+    fontSize: 11,
     marginTop: 1,
   },
   content: {
