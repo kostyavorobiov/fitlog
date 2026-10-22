@@ -252,7 +252,7 @@ export const TraineesScreen: React.FC = () => {
         <Header title="Підопічні" subtitle="Розділ для тренерів" />
         <View style={styles.nonCoachContainer}>
           <View style={styles.nonCoachIconWrap}>
-            <Ionicons name="shield-outline" size={48} color="#0284c7" />
+            <Ionicons name="shield-outline" size={48} color="#2563eb" />
           </View>
           <Text style={[styles.nonCoachTitle, isDark ? styles.textDark : styles.textLight]}>
             Доступ лише для тренерів
@@ -261,12 +261,12 @@ export const TraineesScreen: React.FC = () => {
             Цей розділ призначений для перегляду та складання тренувальних планів ваших спортсменів.
           </Text>
           <TouchableOpacity
-            style={[styles.goToProfileBtn, isDark ? styles.goToProfileBtnDark : styles.goToProfileBtnLight]}
+            style={styles.goToProfileBtn}
             onPress={() => router.push('/(tabs)/profile')}
             activeOpacity={0.8}
           >
-            <Ionicons name="person-outline" size={18} color={isDark ? '#09090b' : '#ffffff'} />
-            <Text style={[styles.goToProfileBtnText, isDark ? styles.goToProfileBtnTextDark : styles.goToProfileBtnTextLight]}>
+            <Ionicons name="person-outline" size={18} color="#ffffff" />
+            <Text style={styles.goToProfileBtnText}>
               Перейти у профіль
             </Text>
           </TouchableOpacity>
@@ -292,8 +292,8 @@ export const TraineesScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#0284c7"
-            colors={['#0284c7']}
+            tintColor="#2563eb"
+            colors={['#2563eb']}
           />
         }
       >
@@ -302,7 +302,7 @@ export const TraineesScreen: React.FC = () => {
           <View style={styles.coachCodeRow}>
             <View style={styles.coachCodeLeft}>
               <View style={styles.codeIconWrap}>
-                <Ionicons name="key-outline" size={18} color="#0284c7" />
+                <Ionicons name="key-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
               </View>
               <View>
                 <Text style={[styles.codeLabel, isDark ? styles.subDark : styles.subLight]}>
@@ -322,12 +322,12 @@ export const TraineesScreen: React.FC = () => {
               <Ionicons
                 name={copiedCode ? 'checkmark' : 'copy-outline'}
                 size={16}
-                color={copiedCode ? '#10b981' : (isDark ? '#fafafa' : '#09090b')}
+                color={copiedCode ? '#22c55e' : (isDark ? '#f8fafc' : '#0f172a')}
               />
               <Text
                 style={[
                   styles.copyBtnText,
-                  copiedCode ? { color: '#10b981' } : (isDark ? styles.textDark : styles.textLight),
+                  copiedCode ? { color: '#22c55e' } : (isDark ? styles.textDark : styles.textLight),
                 ]}
               >
                 {copiedCode ? 'Скопійовано' : 'Копіювати'}
@@ -347,11 +347,11 @@ export const TraineesScreen: React.FC = () => {
 
           <View style={styles.inputRow}>
             <View style={[styles.inputWrap, isDark ? styles.inputDark : styles.inputLight]}>
-              <Ionicons name="person-add-outline" size={18} color={isDark ? '#71717a' : '#a1a1aa'} />
+              <Ionicons name="person-add-outline" size={18} color={isDark ? '#94a3b8' : '#64748b'} />
               <TextInput
                 style={[styles.input, isDark ? styles.textDark : styles.textLight]}
                 placeholder="Код або email підопічного..."
-                placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
                 value={addCodeInput}
                 onChangeText={setAddCodeInput}
                 autoCapitalize="none"
@@ -362,7 +362,6 @@ export const TraineesScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.addBtn,
-                isDark ? styles.addBtnDark : styles.addBtnLight,
                 isAddingTrainee && styles.addBtnDisabled,
               ]}
               onPress={handleAddTrainee}
@@ -370,11 +369,11 @@ export const TraineesScreen: React.FC = () => {
               activeOpacity={0.8}
             >
               {isAddingTrainee ? (
-                <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
+                <ActivityIndicator size="small" color="#ffffff" />
               ) : (
                 <>
-                  <Ionicons name="add" size={18} color={isDark ? '#09090b' : '#ffffff'} />
-                  <Text style={[styles.addBtnText, isDark ? styles.addBtnTextDark : styles.addBtnTextLight]}>
+                  <Ionicons name="add" size={18} color="#ffffff" />
+                  <Text style={styles.addBtnText}>
                     Додати
                   </Text>
                 </>
@@ -386,7 +385,7 @@ export const TraineesScreen: React.FC = () => {
         {/* Trainees List Selector */}
         {isLoadingTrainees && !isRefreshing ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="small" color="#0284c7" />
+            <ActivityIndicator size="small" color="#2563eb" />
             <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
               Завантаження підопічних...
             </Text>
@@ -395,7 +394,7 @@ export const TraineesScreen: React.FC = () => {
           /* Empty Trainees State */
           <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
             <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-              <Ionicons name="people-outline" size={26} color={isDark ? '#71717a' : '#94a3b8'} />
+              <Ionicons name="people-outline" size={26} color={isDark ? '#94A3B8' : '#64748B'} />
             </View>
             <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
               У вас ще немає підопічних
@@ -490,12 +489,12 @@ export const TraineesScreen: React.FC = () => {
                 {/* Trainee Action Buttons */}
                 <View style={styles.actionButtonsRow}>
                   <TouchableOpacity
-                    style={[styles.createWorkoutBtn, isDark ? styles.createWorkoutBtnDark : styles.createWorkoutBtnLight]}
+                    style={styles.createWorkoutBtn}
                     activeOpacity={0.8}
                     onPress={handleCreateWorkoutForTrainee}
                   >
-                    <Ionicons name="add-circle" size={18} color={isDark ? '#09090b' : '#ffffff'} />
-                    <Text style={[styles.createWorkoutBtnText, isDark ? styles.createWorkoutBtnTextDark : styles.createWorkoutBtnTextLight]}>
+                    <Ionicons name="add-circle" size={18} color="#ffffff" />
+                    <Text style={styles.createWorkoutBtnText}>
                       Додати тренування
                     </Text>
                   </TouchableOpacity>
@@ -513,7 +512,7 @@ export const TraineesScreen: React.FC = () => {
                       })
                     }
                   >
-                    <Ionicons name="stats-chart-outline" size={16} color={isDark ? '#fafafa' : '#09090b'} />
+                    <Ionicons name="stats-chart-outline" size={16} color={isDark ? '#f8fafc' : '#0f172a'} />
                     <Text style={[styles.analyticsBtnText, isDark ? styles.textDark : styles.textLight]}>
                       Аналітика
                     </Text>
@@ -533,12 +532,12 @@ export const TraineesScreen: React.FC = () => {
                 {/* Trainee Workouts List */}
                 {isLoadingWorkouts ? (
                   <View style={styles.centerContainer}>
-                    <ActivityIndicator size="small" color="#0284c7" />
+                    <ActivityIndicator size="small" color="#2563eb" />
                   </View>
                 ) : traineeWorkouts.length === 0 ? (
                   <View style={[styles.noWorkoutsWrap, isDark ? styles.noWorkoutsDark : styles.noWorkoutsLight]}>
                     <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-                      <Ionicons name="barbell-outline" size={24} color={isDark ? '#71717a' : '#94a3b8'} />
+                      <Ionicons name="barbell-outline" size={24} color={isDark ? '#94a3b8' : '#64748b'} />
                     </View>
                     <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
                       У підопічного немає запланованих тренувань. Натисніть «Додати тренування», щоб скласти перший план.
@@ -610,14 +609,14 @@ export const TraineesScreen: React.FC = () => {
 
                             <View style={styles.workoutMetaRow}>
                               <View style={styles.metaItem}>
-                                <Ionicons name="calendar-outline" size={13} color={isDark ? '#a1a1aa' : '#71717a'} />
+                                <Ionicons name="calendar-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
                                 <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
                                   {w.scheduledDate}
                                 </Text>
                               </View>
 
                               <View style={styles.metaItem}>
-                                <Ionicons name="barbell-outline" size={13} color={isDark ? '#a1a1aa' : '#71717a'} />
+                                <Ionicons name="barbell-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
                                 <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
                                   {exerciseCount} {exerciseCount === 1 ? 'вправа' : 'вправ'} ({setsCount} підх.)
                                 </Text>
@@ -651,10 +650,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#f8fafc',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0b1220',
   },
   scrollContent: {
     padding: 16,
@@ -681,7 +680,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: 'rgba(2, 132, 199, 0.12)',
+    backgroundColor: 'rgba(37, 99, 235, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -704,12 +703,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   copyBtnLight: {
-    backgroundColor: '#eef2f6',
+    backgroundColor: '#f1f5f9',
     borderColor: '#e2e8f0',
   },
   copyBtnDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   copyBtnText: {
     fontSize: 12,
@@ -745,11 +744,11 @@ const styles = StyleSheet.create({
   },
   inputLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
   },
   inputDark: {
-    backgroundColor: '#09090b',
-    borderColor: '#27272a',
+    backgroundColor: '#0b1220',
+    borderColor: '#334155',
   },
   input: {
     flex: 1,
@@ -763,12 +762,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 16,
     justifyContent: 'center',
-  },
-  addBtnLight: {
-    backgroundColor: '#0f172a',
-  },
-  addBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   addBtnDisabled: {
     opacity: 0.6,
@@ -776,12 +770,7 @@ const styles = StyleSheet.create({
   addBtnText: {
     fontSize: 13,
     fontWeight: '700',
-  },
-  addBtnTextLight: {
     color: '#ffffff',
-  },
-  addBtnTextDark: {
-    color: '#09090b',
   },
   traineeSelectorSection: {
     gap: 8,
@@ -807,38 +796,38 @@ const styles = StyleSheet.create({
   },
   pillLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
   },
   pillDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   traineePillActiveLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#0f172a',
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+    borderColor: '#2563eb',
   },
   traineePillActiveDark: {
-    backgroundColor: '#27272a',
-    borderColor: '#f4f4f5',
+    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+    borderColor: '#60a5fa',
   },
   avatarCircle: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarCircleActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#2563eb',
   },
   avatarText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#334155',
+    color: '#64748b',
   },
   avatarTextActive: {
-    color: '#0284c7',
+    color: '#ffffff',
   },
   pillTextWrap: {
     maxWidth: 130,
@@ -848,21 +837,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   pillNameActiveLight: {
-    color: '#09090b',
+    color: '#2563eb',
     fontWeight: '700',
   },
   pillNameActiveDark: {
-    color: '#ffffff',
+    color: '#60a5fa',
     fontWeight: '700',
   },
   pillCode: {
     fontSize: 10,
   },
   pillCodeActiveLight: {
-    color: '#71717a',
+    color: '#64748b',
   },
   pillCodeActiveDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
   },
   selectedTraineeCard: {
     padding: 16,
@@ -874,7 +863,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#71717a20',
+    borderBottomColor: '#334155',
   },
   traineeHeaderLeft: {
     flexDirection: 'row',
@@ -886,14 +875,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(2, 132, 199, 0.15)',
+    backgroundColor: 'rgba(37, 99, 235, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   bigAvatarText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0284c7',
+    color: '#2563eb',
   },
   traineeNameTitle: {
     fontSize: 16,
@@ -918,22 +907,12 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
     borderRadius: 16,
-  },
-  createWorkoutBtnLight: {
-    backgroundColor: '#0f172a',
-  },
-  createWorkoutBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   createWorkoutBtnText: {
     fontSize: 13,
     fontWeight: '700',
-  },
-  createWorkoutBtnTextLight: {
     color: '#ffffff',
-  },
-  createWorkoutBtnTextDark: {
-    color: '#09090b',
   },
   analyticsBtn: {
     flexDirection: 'row',
@@ -946,11 +925,11 @@ const styles = StyleSheet.create({
   },
   analyticsBtnLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
   },
   analyticsBtnDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   analyticsBtnText: {
     fontSize: 13,
@@ -967,13 +946,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   countBadge: {
-    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
   },
   countBadgeText: {
-    color: '#0284c7',
+    color: '#2563eb',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -992,8 +971,8 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   noWorkoutsDark: {
-    backgroundColor: '#18181b80',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   noWorkoutsText: {
     fontSize: 12,
@@ -1014,11 +993,11 @@ const styles = StyleSheet.create({
   },
   workoutItemLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
   },
   workoutItemDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   workoutItemMain: {
     flex: 1,
@@ -1041,26 +1020,26 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   statusCompleted: {
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
   },
   statusInProgress: {
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    backgroundColor: 'rgba(96, 165, 250, 0.15)',
   },
   statusPlanned: {
-    backgroundColor: 'rgba(113, 113, 122, 0.12)',
+    backgroundColor: 'rgba(100, 116, 139, 0.12)',
   },
   statusText: {
     fontSize: 10,
     fontWeight: '600',
   },
   statusTextCompleted: {
-    color: '#10b981',
+    color: '#22c55e',
   },
   statusTextInProgress: {
-    color: '#f59e0b',
+    color: '#60a5fa',
   },
   statusTextPlanned: {
-    color: '#71717a',
+    color: '#64748b',
   },
   workoutMetaRow: {
     flexDirection: 'row',
@@ -1101,8 +1080,8 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   emptyDark: {
-    backgroundColor: '#18181b80',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   emptyIconBox: {
     width: 56,
@@ -1112,10 +1091,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyIconBoxLight: {
-    backgroundColor: '#eef2f8',
+    backgroundColor: '#f1f5f9',
   },
   emptyIconBoxDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   emptyTitle: {
     fontSize: 16,
@@ -1129,7 +1108,7 @@ const styles = StyleSheet.create({
     color: '#0f172a',
   },
   emptyTitleDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   emptySubtitle: {
     fontSize: 12,
@@ -1139,10 +1118,10 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   emptySubtitleLight: {
-    color: '#94a3b8',
+    color: '#64748b',
   },
   emptySubtitleDark: {
-    color: '#71717a',
+    color: '#94a3b8',
   },
   emptyCard: {
     padding: 32,
@@ -1157,16 +1136,16 @@ const styles = StyleSheet.create({
     maxWidth: 290,
   },
   textLight: {
-    color: '#09090b',
+    color: '#0f172a',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748b',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
   },
   nonCoachContainer: {
     flex: 1,
@@ -1179,7 +1158,7 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -1203,21 +1182,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 16,
     marginTop: 12,
-  },
-  goToProfileBtnLight: {
-    backgroundColor: '#0f172a',
-  },
-  goToProfileBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   goToProfileBtnText: {
     fontSize: 14,
     fontWeight: '700',
-  },
-  goToProfileBtnTextLight: {
     color: '#ffffff',
-  },
-  goToProfileBtnTextDark: {
-    color: '#09090b',
   },
 });

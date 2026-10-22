@@ -238,20 +238,20 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
       <button
         type="button"
         onClick={handleCreateNewDirectly}
-        className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-[#0f172a] dark:bg-zinc-100 hover:bg-[#1e293b] dark:hover:bg-white active:scale-[0.99] text-white dark:text-zinc-950 font-bold text-sm sm:text-base shadow-sm transition-all cursor-pointer"
+        className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-sm transition-all cursor-pointer"
       >
         <Plus className="h-4 w-4 stroke-[3]" />
         <span>Нове тренування</span>
       </button>
 
       {/* Filter Tabs - Full-width modern segmented pill bar with 2 tabs: Всі and Завершені */}
-      <div className="w-full bg-[#eef2f6] dark:bg-zinc-800/80 p-1 rounded-2xl flex items-center gap-1">
+      <div className="w-full bg-[#f1f5f9] dark:bg-[#1d2939] p-1 rounded-2xl flex items-center gap-1 border border-[#e2e8f0] dark:border-[#334155]">
         <button
           type="button"
           onClick={() => setFilterStatus('all')}
           className={`flex-1 py-2 px-2 text-center text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${filterStatus === 'all'
-            ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-bold shadow-sm'
-            : 'text-slate-500 dark:text-zinc-400 font-medium hover:text-slate-900 dark:hover:text-zinc-200'
+            ? 'bg-[#2563eb] text-white font-bold shadow-sm'
+            : 'text-[#64748b] dark:text-[#94a3b8] font-medium hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
             }`}
         >
           Всі ({workouts.length})
@@ -260,8 +260,8 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
           type="button"
           onClick={() => setFilterStatus('completed')}
           className={`flex-1 py-2 px-2 text-center text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${filterStatus === 'completed'
-            ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-bold shadow-sm'
-            : 'text-slate-500 dark:text-zinc-400 font-medium hover:text-slate-900 dark:hover:text-zinc-200'
+            ? 'bg-[#2563eb] text-white font-bold shadow-sm'
+            : 'text-[#64748b] dark:text-[#94a3b8] font-medium hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
             }`}
         >
           Завершені ({completedCount})
@@ -270,16 +270,16 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
 
       {/* Workouts List or Empty State */}
       {filteredWorkouts.length === 0 ? (
-        <div className="w-full rounded-[28px] border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 py-16 px-6 flex flex-col items-center justify-center text-center shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-          <div className="w-14 h-14 rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 flex items-center justify-center">
-            <Clock className="w-6 h-6 text-slate-400 dark:text-zinc-400 stroke-[1.75]" />
+        <div className="w-full rounded-[28px] border border-dashed border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939]/50 py-16 px-6 flex flex-col items-center justify-center text-center shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+          <div className="w-14 h-14 rounded-2xl bg-[#f1f5f9] dark:bg-[#263140] flex items-center justify-center">
+            <Clock className="w-6 h-6 text-[#2563eb] dark:text-[#60a5fa] stroke-[1.75]" />
           </div>
-          <h3 className="mt-5 font-bold text-base sm:text-lg text-[#0f172a] dark:text-zinc-100 max-w-xs leading-snug">
+          <h3 className="mt-5 font-bold text-base sm:text-lg text-[#0f172a] dark:text-[#f8fafc] max-w-xs leading-snug">
             {workouts.length === 0
               ? 'Тренувань ще немає'
               : 'Немає тренувань зі статусом «Завершені».'}
           </h3>
-          <p className="mt-2 text-xs sm:text-sm text-[#94a3b8] dark:text-zinc-400 max-w-xs leading-relaxed">
+          <p className="mt-2 text-xs sm:text-sm text-[#64748b] dark:text-[#94a3b8] max-w-xs leading-relaxed">
             {workouts.length === 0
               ? 'Створіть своє перше тренування для відстеження підходів, ваги та прогресу.'
               : 'Свайпніть вліво або вправо для перемикання фільтрів.'}
@@ -296,19 +296,19 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                 <button
                   type="button"
                   onClick={() => toggleMonth(group.key)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-100/80 dark:bg-zinc-800/60 hover:bg-slate-200/70 dark:hover:bg-zinc-800 transition-colors cursor-pointer select-none"
+                  className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-[#f1f5f9] dark:bg-[#1d2939] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] border border-[#e2e8f0] dark:border-[#334155] transition-colors cursor-pointer select-none"
                   aria-expanded={isOpen}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm sm:text-base text-slate-800 dark:text-zinc-100">
+                    <span className="font-bold text-sm sm:text-base text-[#0f172a] dark:text-[#f8fafc]">
                       {group.label}
                     </span>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-700/80 text-slate-500 dark:text-zinc-400 shadow-xs">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-[#263140] text-[#64748b] dark:text-[#94a3b8] shadow-xs">
                       {group.workouts.length}
                     </span>
                   </div>
                   <ChevronDown
-                    className={`w-4 h-4 text-slate-500 dark:text-zinc-400 transition-transform duration-200 shrink-0 ${
+                    className={`w-4 h-4 text-[#64748b] dark:text-[#94a3b8] transition-transform duration-200 shrink-0 ${
                       isOpen ? 'rotate-180' : ''
                     }`}
                   />
@@ -332,7 +332,7 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                         >
                           <div
                             onClick={() => onSelectWorkout(w)}
-                            className="group bg-white dark:bg-zinc-900 px-4 py-3.5 transition-colors cursor-pointer space-y-1.5"
+                            className="group bg-white dark:bg-[#1d2939] px-4 py-3.5 transition-colors cursor-pointer space-y-1.5"
                           >
                             {/* Row 1: Status & Coach info */}
                             <div className="flex items-center justify-between gap-2">
@@ -340,10 +340,10 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                                 <span
                                   className={`font-semibold ${
                                     isCompleted
-                                      ? 'text-emerald-600 dark:text-emerald-400'
+                                      ? 'text-[#22c55e]'
                                       : w.status === 'in_progress'
-                                      ? 'text-amber-500 dark:text-amber-400'
-                                      : 'text-zinc-500 dark:text-zinc-400'
+                                      ? 'text-[#60a5fa]'
+                                      : 'text-[#64748b] dark:text-[#94a3b8]'
                                   }`}
                                 >
                                   {isCompleted
@@ -354,8 +354,8 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                                 </span>
                                 {w.assignedByCoachId && (
                                   <>
-                                    <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                                    <span className="text-indigo-500 dark:text-indigo-400 font-medium">
+                                    <span className="text-[#cbd5e1] dark:text-[#334155]">·</span>
+                                    <span className="text-[#2563eb] dark:text-[#60a5fa] font-medium">
                                       Від тренера
                                     </span>
                                   </>

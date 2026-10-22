@@ -174,7 +174,7 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
           style={styles.swipeChangeBtn}
           accessibilityLabel="Змінити вправу"
         >
-          <Ionicons name="swap-horizontal" size={20} color="#09090b" />
+          <Ionicons name="swap-horizontal" size={20} color="#0F172A" />
           <Text style={styles.swipeChangeBtnText}>Змінити</Text>
         </TouchableOpacity>
 
@@ -197,7 +197,7 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
           styles.swipeForeground,
           {
             transform: [{ translateX: panX }],
-            backgroundColor: isDark ? '#18181b' : '#ffffff',
+            backgroundColor: isDark ? '#1D2939' : '#FFFFFF',
           },
         ]}
       >
@@ -232,12 +232,12 @@ const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
   const progress = total > 0 ? Math.min(1, Math.max(0, completed / total)) : 0;
   const halfSize = size / 2;
 
-  const color = isAllDone ? '#10b981' : '#3b82f6';
-  const trackColor = isDark ? '#27272a' : '#e2e8f0';
+  const color = isAllDone ? '#22C55E' : '#60A5FA';
+  const trackColor = isDark ? '#334155' : '#E2E8F0';
   const bgFill = isAllDone
-    ? 'rgba(16, 185, 129, 0.08)'
+    ? 'rgba(34, 197, 94, 0.08)'
     : progress > 0
-      ? 'rgba(59, 130, 246, 0.06)'
+      ? 'rgba(96, 165, 250, 0.08)'
       : 'transparent';
 
   const rightAngle = -135 + Math.min(progress, 0.5) * 360;
@@ -276,7 +276,7 @@ const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
             height: size,
             borderRadius: halfSize,
             borderWidth: strokeWidth,
-            borderColor: '#10b981',
+            borderColor: '#22C55E',
           }}
         />
       ) : progress > 0 ? (
@@ -354,7 +354,7 @@ const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
         }}
       >
         {isAllDone ? (
-          <Ionicons name="checkmark" size={13} color="#10b981" />
+          <Ionicons name="checkmark" size={13} color="#22C55E" />
         ) : (
           <Text
             style={{
@@ -364,11 +364,11 @@ const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
               color:
                 progress > 0
                   ? isDark
-                    ? '#60a5fa'
-                    : '#2563eb'
+                    ? '#60A5FA'
+                    : '#2563EB'
                   : isDark
-                    ? '#71717a'
-                    : '#a1a1aa',
+                    ? '#94A3B8'
+                    : '#64748B',
               includeFontPadding: false,
               textAlign: 'center',
             }}
@@ -1275,7 +1275,7 @@ export const WorkoutEditorScreen: React.FC = () => {
     return (
       <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="small" color={isDark ? '#fafafa' : '#18181b'} />
+          <ActivityIndicator size="small" color="#2563EB" />
           <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
             Завантаження тренування...
           </Text>
@@ -1289,7 +1289,7 @@ export const WorkoutEditorScreen: React.FC = () => {
       <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
-            <Ionicons name="arrow-back" size={24} color={isDark ? '#fafafa' : '#09090b'} />
+            <Ionicons name="arrow-back" size={24} color={isDark ? '#F8FAFC' : '#0F172A'} />
           </TouchableOpacity>
         </View>
         <View style={styles.centerContainer}>
@@ -1325,7 +1325,7 @@ export const WorkoutEditorScreen: React.FC = () => {
       {/* Top Header Bar */}
       <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
         <TouchableOpacity activeOpacity={0.7} onPress={() => router.back()} style={styles.iconBtn}>
-          <Ionicons name="arrow-back" size={22} color={isDark ? '#fafafa' : '#09090b'} />
+          <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
@@ -1776,7 +1776,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                                   <Ionicons
                                     name={isDone ? 'checkmark-circle' : 'ellipse-outline'}
                                     size={26}
-                                    color={isDone ? '#10b981' : (isDark ? '#52525b' : '#d4d4d8')}
+                                    color={isDone ? '#22C55E' : (isDark ? '#334155' : '#E2E8F0')}
                                   />
                                 </TouchableOpacity>
 
@@ -1787,7 +1787,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                                   style={styles.tdAction}
                                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                                 >
-                                  <Ionicons name="close" size={18} color={isDark ? '#71717a' : '#a1a1aa'} />
+                                  <Ionicons name="close" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
                                 </TouchableOpacity>
                               </View>
                             );
@@ -1800,7 +1800,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                           onPress={() => handleAddSet(ex.id)}
                           style={[styles.addSetBtn, isDark ? styles.borderDark : styles.borderLight]}
                         >
-                          <Ionicons name="add" size={16} color={isDark ? '#fafafa' : '#09090b'} />
+                          <Ionicons name="add" size={16} color={isDark ? '#F8FAFC' : '#0F172A'} />
                           <Text style={[styles.addSetBtnText, isDark ? styles.textDark : styles.textLight]}>
                             Додати підхід
                           </Text>
@@ -1819,7 +1819,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             onPress={() => setIsSelectorOpen(true)}
             style={[styles.bigAddExerciseBtn, isDark ? styles.borderDark : styles.borderLight]}
           >
-            <Ionicons name="add" size={20} color={isDark ? '#fafafa' : '#09090b'} />
+            <Ionicons name="add" size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
             <Text style={[styles.bigAddExerciseText, isDark ? styles.textDark : styles.textLight]}>
               Додати вправу з каталогу
             </Text>
@@ -1920,7 +1920,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                       <Ionicons
                         name="checkmark"
                         size={18}
-                        color={isDark ? '#fafafa' : '#18181b'}
+                        color={isDark ? '#F8FAFC' : '#0F172A'}
                       />
                     )}
                   </TouchableOpacity>
@@ -1939,10 +1939,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F8FAFC',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0B1220',
   },
   centerContainer: {
     flex: 1,
@@ -1992,13 +1992,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    backgroundColor: 'rgba(34, 197, 94, 0.12)',
     paddingVertical: 6,
     paddingHorizontal: 12,
     gap: 6,
   },
   saveBannerText: {
-    color: '#10b981',
+    color: '#22C55E',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -2042,20 +2042,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   presetChipLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
   },
   presetChipDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   presetChipActiveLight: {
-    backgroundColor: '#18181b',
-    borderColor: '#18181b',
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
   },
   presetChipActiveDark: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#f4f4f5',
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
   },
   presetChipText: {
     fontSize: 11,
@@ -2065,7 +2065,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   presetChipTextActiveDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   metaDivider: {
     height: 1,
@@ -2137,13 +2137,13 @@ const styles = StyleSheet.create({
   swipeChangeBtn: {
     width: 76,
     height: '100%',
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#60A5FA',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 4,
   },
   swipeChangeBtnText: {
-    color: '#09090b',
+    color: '#0B1220',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -2173,12 +2173,12 @@ const styles = StyleSheet.create({
   },
   borderBottomLight: {
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#E2E8F0',
     paddingBottom: 8,
   },
   borderBottomDark: {
     borderBottomWidth: 1,
-    borderBottomColor: '#27272a',
+    borderBottomColor: '#334155',
     paddingBottom: 8,
   },
   exHeaderTitleRow: {
@@ -2221,12 +2221,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   exIndexLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
   },
   exIndexDark: {
-    backgroundColor: '#27272a',
-    borderColor: '#3f3f46',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   exIndexText: {
     fontSize: 11,
@@ -2285,12 +2285,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   actionBtnLight: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
   },
   actionBtnDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   supersetToggleBtn: {
     padding: 7,
@@ -2310,19 +2310,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   pastPerfLight: {
-    backgroundColor: 'rgba(2, 132, 199, 0.08)',
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
   },
   pastPerfDark: {
-    backgroundColor: 'rgba(2, 132, 199, 0.15)',
+    backgroundColor: 'rgba(96, 165, 250, 0.15)',
   },
   pastPerfText: {
     fontSize: 11,
-    color: '#0284c7',
+    color: '#2563EB',
     fontWeight: '500',
   },
   pastPerfApply: {
     fontSize: 11,
-    color: '#0284c7',
+    color: '#2563EB',
     fontWeight: '700',
   },
   quickSelectorsRow: {
@@ -2332,13 +2332,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   quickSelectorsRowLight: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F1F5F9',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 12,
   },
   quickSelectorsRowDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#263140',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 12,
@@ -2364,12 +2364,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   repsDropdownBtnLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
   },
   repsDropdownBtnDark: {
-    backgroundColor: '#27272a',
-    borderColor: '#3f3f46',
+    backgroundColor: '#1D2939',
+    borderColor: '#334155',
   },
   repsDropdownBtnText: {
     fontSize: 12,
@@ -2394,12 +2394,12 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   repsModalLight: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
   },
   repsModalDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#1D2939',
     borderWidth: 1,
-    borderColor: '#27272a',
+    borderColor: '#334155',
   },
   repsModalHeader: {
     flexDirection: 'row',
@@ -2408,7 +2408,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#E2E8F0',
   },
   repsModalTitle: {
     fontSize: 15,
@@ -2426,10 +2426,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   repsModalItemActiveLight: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
   },
   repsModalItemActiveDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: 'rgba(96, 165, 250, 0.12)',
   },
   repsModalItemText: {
     fontSize: 14,
@@ -2437,11 +2437,11 @@ const styles = StyleSheet.create({
   },
   repsModalItemTextActiveLight: {
     fontWeight: '700',
-    color: '#09090b',
+    color: '#2563EB',
   },
   repsModalItemTextActiveDark: {
     fontWeight: '700',
-    color: '#fafafa',
+    color: '#60A5FA',
   },
   setsTable: {
     marginTop: 4,
@@ -2485,10 +2485,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   setRowDoneLight: {
-    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+    backgroundColor: 'rgba(34, 197, 94, 0.06)',
   },
   setRowDoneDark: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    backgroundColor: 'rgba(34, 197, 94, 0.12)',
   },
   tdSet: {
     width: 32,
@@ -2500,7 +2500,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   warmupText: {
-    color: '#f59e0b',
+    color: '#60A5FA',
   },
   tdWeight: {
     flex: 1,
@@ -2524,10 +2524,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepBtnLight: {
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#F1F5F9',
   },
   stepBtnDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   stepBtnText: {
     fontSize: 15,
@@ -2544,14 +2544,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   inputLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#cbd5e1',
-    color: '#09090b',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+    color: '#0F172A',
   },
   inputDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#3f3f46',
-    color: '#fafafa',
+    backgroundColor: '#0B1220',
+    borderColor: '#334155',
+    color: '#F8FAFC',
   },
   tdDone: {
     width: 40,
@@ -2632,33 +2632,33 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   bottomLight: {
-    backgroundColor: '#ffffff',
-    borderTopColor: '#e2e8f0',
+    backgroundColor: '#FFFFFF',
+    borderTopColor: '#E2E8F0',
   },
   bottomDark: {
-    backgroundColor: '#09090b',
-    borderTopColor: '#27272a',
+    backgroundColor: '#0B1220',
+    borderTopColor: '#334155',
   },
   bottomButtonsRow: {
     flexDirection: 'row',
     gap: 12,
   },
   textLight: {
-    color: '#09090b',
+    color: '#0F172A',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#F8FAFC',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748B',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94A3B8',
   },
   borderLight: {
-    borderColor: '#e2e8f0',
+    borderColor: '#E2E8F0',
   },
   borderDark: {
-    borderColor: '#27272a',
+    borderColor: '#334155',
   },
 });

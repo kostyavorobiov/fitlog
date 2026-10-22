@@ -200,8 +200,8 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
         styles.swipeContainer,
         {
           opacity: opacityAnim,
-          borderColor: isDark ? '#27272a' : '#e4e4e7',
-          backgroundColor: isDark ? '#18181b' : '#ffffff',
+          borderColor: isDark ? '#334155' : '#E2E8F0',
+          backgroundColor: isDark ? '#1D2939' : '#FFFFFF',
         },
       ]}
     >
@@ -225,9 +225,9 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
           styles.swipeForeground,
           {
             transform: [{ translateX: panX }],
-            backgroundColor: isDark ? '#18181b' : '#ffffff',
+            backgroundColor: isDark ? '#1D2939' : '#FFFFFF',
             borderRightWidth: StyleSheet.hairlineWidth,
-            borderRightColor: isDark ? '#27272a' : '#e4e4e7',
+            borderRightColor: isDark ? '#334155' : '#E2E8F0',
           },
         ]}
       >
@@ -497,7 +497,7 @@ export const WorkoutsScreen: React.FC = () => {
           accessibilityRole="button"
           accessibilityLabel="Нове тренування"
         >
-          <Ionicons name="add" size={18} color={isDark ? '#09090b' : '#ffffff'} />
+          <Ionicons name="add" size={18} color="#ffffff" />
           <Text
             style={[
               styles.bigNewWorkoutBtnText,
@@ -561,13 +561,14 @@ export const WorkoutsScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={isDark ? '#38bdf8' : '#0284c7'}
+            tintColor="#2563EB"
+            colors={['#2563EB']}
           />
         }
       >
         {isLoading && !isRefreshing ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#0284c7" />
+            <ActivityIndicator size="small" color="#2563EB" />
             <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
               Завантаження списку тренувань...
             </Text>
@@ -578,7 +579,7 @@ export const WorkoutsScreen: React.FC = () => {
             style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}
           >
             <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-              <Ionicons name="time-outline" size={26} color={isDark ? '#a1a1aa' : '#94a3b8'} />
+              <Ionicons name="time-outline" size={26} color={isDark ? '#94A3B8' : '#64748B'} />
             </View>
             <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
               {workouts.length === 0
@@ -622,7 +623,7 @@ export const WorkoutsScreen: React.FC = () => {
                     <Ionicons
                       name={isOpen ? 'chevron-up' : 'chevron-down'}
                       size={18}
-                      color={isDark ? '#a1a1aa' : '#64748b'}
+                      color={isDark ? '#94A3B8' : '#64748B'}
                     />
                   </TouchableOpacity>
 
@@ -654,10 +655,10 @@ export const WorkoutsScreen: React.FC = () => {
                                         styles.statusText,
                                         {
                                           color: isCompleted
-                                            ? (isDark ? '#34d399' : '#059669')
+                                            ? '#22C55E'
                                             : isInProgress
-                                              ? (isDark ? '#fbbf24' : '#d97706')
-                                              : (isDark ? '#a1a1aa' : '#71717a'),
+                                              ? '#60A5FA'
+                                              : (isDark ? '#94A3B8' : '#64748B'),
                                         },
                                       ]}
                                     >
@@ -689,7 +690,7 @@ export const WorkoutsScreen: React.FC = () => {
                                     <Ionicons
                                       name="calendar-outline"
                                       size={13}
-                                      color={isDark ? '#71717a' : '#94a3b8'}
+                                      color={isDark ? '#94A3B8' : '#64748B'}
                                     />
                                     <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
                                       {formatDateDDMMYY(w.scheduledDate)}
@@ -702,7 +703,7 @@ export const WorkoutsScreen: React.FC = () => {
                                     <Ionicons
                                       name="layers-outline"
                                       size={14}
-                                      color={isDark ? '#71717a' : '#94a3b8'}
+                                      color={isDark ? '#94A3B8' : '#64748B'}
                                     />
                                     <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
                                       <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
@@ -764,7 +765,7 @@ export const WorkoutsScreen: React.FC = () => {
                 Нове тренування
               </Text>
               <TouchableOpacity onPress={() => setIsModalOpen(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={22} color={isDark ? '#a1a1aa' : '#71717a'} />
+                <Ionicons name="close" size={22} color={isDark ? '#94A3B8' : '#64748B'} />
               </TouchableOpacity>
             </View>
 
@@ -776,7 +777,7 @@ export const WorkoutsScreen: React.FC = () => {
               <TextInput
                 style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
                 placeholder="Наприклад: Силове тренування"
-                placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                 value={newTitle}
                 onChangeText={setNewTitle}
                 autoFocus
@@ -791,7 +792,7 @@ export const WorkoutsScreen: React.FC = () => {
               <TextInput
                 style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
                 placeholder="2026-09-29"
-                placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                 value={newDate}
                 onChangeText={setNewDate}
               />
@@ -827,7 +828,7 @@ export const WorkoutsScreen: React.FC = () => {
               <TextInput
                 style={[styles.input, styles.textArea, isDark ? styles.inputDark : styles.inputLight]}
                 placeholder="Цілі, самопочуття або план на день..."
-                placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                 multiline
                 numberOfLines={3}
                 value={newNotes}
@@ -862,10 +863,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#F8FAFC',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0B1220',
   },
   headerBar: {
     flexDirection: 'row',
@@ -909,10 +910,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   bigNewWorkoutBtnLight: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#2563EB',
   },
   bigNewWorkoutBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563EB',
   },
   bigNewWorkoutBtnText: {
     fontSize: 15,
@@ -922,7 +923,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   bigNewWorkoutTextDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   filterContainer: {
     flexDirection: 'row',
@@ -931,10 +932,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   filterLight: {
-    backgroundColor: '#eef2f6',
+    backgroundColor: '#F1F5F9',
   },
   filterDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   filterBtn: {
     flex: 1,
@@ -945,7 +946,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   filterBtnActiveLight: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#2563EB',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -953,7 +954,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   filterBtnActiveDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#2563EB',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -964,19 +965,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   filterTextActiveLight: {
-    color: '#0f172a',
+    color: '#ffffff',
     fontWeight: '700',
   },
   filterTextActiveDark: {
-    color: '#fafafa',
+    color: '#ffffff',
     fontWeight: '700',
   },
   filterTextInactiveLight: {
-    color: '#64748b',
+    color: '#64748B',
     fontWeight: '600',
   },
   filterTextInactiveDark: {
-    color: '#a1a1aa',
+    color: '#94A3B8',
     fontWeight: '600',
   },
   content: {
@@ -1003,12 +1004,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   emptyLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
   },
   emptyDark: {
-    backgroundColor: '#18181b80',
-    borderColor: '#27272a',
+    backgroundColor: '#1D2939',
+    borderColor: '#334155',
   },
   emptyIconBox: {
     width: 56,
@@ -1018,10 +1019,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyIconBoxLight: {
-    backgroundColor: '#eef2f8',
+    backgroundColor: '#F1F5F9',
   },
   emptyIconBoxDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   emptyTitle: {
     fontSize: 16,
@@ -1032,10 +1033,10 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   emptyTitleLight: {
-    color: '#0f172a',
+    color: '#0F172A',
   },
   emptyTitleDark: {
-    color: '#fafafa',
+    color: '#F8FAFC',
   },
   emptySubtitle: {
     fontSize: 12,
@@ -1045,10 +1046,10 @@ const styles = StyleSheet.create({
     maxWidth: 260,
   },
   emptySubtitleLight: {
-    color: '#94a3b8',
+    color: '#64748B',
   },
   emptySubtitleDark: {
-    color: '#71717a',
+    color: '#94A3B8',
   },
   accordionContainer: {
     gap: 14,
@@ -1065,10 +1066,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   monthHeaderLight: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#F1F5F9',
   },
   monthHeaderDark: {
-    backgroundColor: '#27272a80',
+    backgroundColor: '#263140',
   },
   monthHeaderLeft: {
     flexDirection: 'row',
@@ -1085,20 +1086,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   monthCountBadgeLight: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
   },
   monthCountBadgeDark: {
-    backgroundColor: '#3f3f46',
+    backgroundColor: '#1D2939',
   },
   monthCountText: {
     fontSize: 11,
     fontWeight: '600',
   },
   monthCountTextLight: {
-    color: '#64748b',
+    color: '#64748B',
   },
   monthCountTextDark: {
-    color: '#d4d4d8',
+    color: '#94A3B8',
   },
   monthWorkoutsList: {
     gap: 10,
@@ -1133,10 +1134,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ecfdf5',
   },
   statusInProgress: {
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#eff6ff',
   },
   statusPlanned: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#F1F5F9',
   },
   statusDot: {
     width: 6,
@@ -1160,20 +1161,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   dotLight: {
-    color: '#d4d4d8',
+    color: '#64748B',
   },
   dotDark: {
-    color: '#3f3f46',
+    color: '#94A3B8',
   },
   coachText: {
     fontSize: 11,
     fontWeight: '500',
   },
   coachLight: {
-    color: '#4f46e5',
+    color: '#2563EB',
   },
   coachDark: {
-    color: '#818cf8',
+    color: '#60A5FA',
   },
   cardDeleteBtn: {
     padding: 4,
@@ -1217,10 +1218,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   modalLight: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
   },
   modalDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#1D2939',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1254,14 +1255,14 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   inputLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-    color: '#0f172a',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+    color: '#0F172A',
   },
   inputDark: {
-    backgroundColor: '#09090b',
-    borderColor: '#27272a',
-    color: '#f8fafc',
+    backgroundColor: '#0B1220',
+    borderColor: '#334155',
+    color: '#F8FAFC',
   },
   quickDateRow: {
     flexDirection: 'row',
@@ -1275,12 +1276,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   chipLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
   },
   chipDark: {
-    backgroundColor: '#27272a',
-    borderColor: '#3f3f46',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   quickChipText: {
     fontSize: 11,
@@ -1292,22 +1293,22 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   textLight: {
-    color: '#09090b',
+    color: '#0F172A',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#F8FAFC',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748B',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94A3B8',
   },
   borderLight: {
-    borderColor: '#e4e4e7',
+    borderColor: '#E2E8F0',
   },
   borderDark: {
-    borderColor: '#27272a',
+    borderColor: '#334155',
   },
   swipeContainer: {
     position: 'relative',

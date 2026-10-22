@@ -24,7 +24,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <View style={styles.container}>
       <View style={[styles.iconCircle, isDark ? styles.iconCircleDark : styles.iconCircleLight]}>
-        <Ionicons name={icon} size={32} color={isDark ? '#e4e4e7' : '#27272a'} />
+        <Ionicons name={icon} size={32} color={isDark ? '#60a5fa' : '#2563eb'} />
       </View>
       <Text style={[styles.title, isDark ? styles.textDark : styles.textLight]}>{title}</Text>
       <Text style={[styles.description, isDark ? styles.subDark : styles.subLight]}>
@@ -53,10 +53,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   iconCircleLight: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#f1f5f9',
   },
   iconCircleDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#1d2939',
   },
   title: {
     fontSize: 16,
@@ -71,16 +71,16 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   textLight: {
-    color: '#09090b',
+    color: '#0f172a',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748b',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
   },
   button: {
     marginTop: 20,

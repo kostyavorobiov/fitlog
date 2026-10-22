@@ -151,8 +151,8 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
               });
             };
 
-            const activeColor = isDark ? '#ffffff' : '#09090b';
-            const inactiveColor = isDark ? '#71717a' : '#a1a1aa';
+            const activeColor = isDark ? '#60A5FA' : '#2563EB';
+            const inactiveColor = isDark ? '#94A3B8' : '#64748B';
             const color = isFocused ? activeColor : inactiveColor;
 
             return (
@@ -220,18 +220,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   glassCardLight: {
-    borderColor: 'rgba(0, 0, 0, 0.08)',
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderColor: '#E2E8F0',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
   },
   glassCardDark: {
-    borderColor: 'rgba(255, 255, 255, 0.14)',
-    backgroundColor: 'rgba(24, 24, 27, 0.82)',
+    borderColor: '#334155',
+    backgroundColor: 'rgba(29, 41, 57, 0.92)',
   },
   fallbackBgLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
   },
   fallbackBgDark: {
-    backgroundColor: 'rgba(24, 24, 27, 0.85)',
+    backgroundColor: 'rgba(29, 41, 57, 0.92)',
   },
   tabsRow: {
     flexDirection: 'row',
@@ -250,10 +250,10 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   tabButtonActiveLight: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
   },
   tabButtonActiveDark: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(96, 165, 250, 0.12)',
   },
   iconWrap: {
     position: 'relative',
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#60A5FA',
   },
   tabLabel: {
     fontSize: 10,

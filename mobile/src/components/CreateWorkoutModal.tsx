@@ -97,7 +97,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close" size={22} color={isDark ? '#a1a1aa' : '#71717a'} />
+              <Ionicons name="close" size={22} color={isDark ? '#94a3b8' : '#64748b'} />
             </TouchableOpacity>
           </View>
 
@@ -109,7 +109,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
             <TextInput
               style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
               placeholder="Наприклад: Груди та Тріцепс"
-              placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
               value={title}
               onChangeText={setTitle}
               autoFocus
@@ -155,7 +155,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
             <TextInput
               style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
               placeholder={formatLocalDate()}
-              placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
               value={date}
               onChangeText={setDate}
             />
@@ -195,7 +195,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
             <TextInput
               style={[styles.input, styles.textArea, isDark ? styles.inputDark : styles.inputLight]}
               placeholder="Цілі, самопочуття або план на тренування..."
-              placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
               multiline
               numberOfLines={2}
               value={notes}
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   modalDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#1d2939',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -280,12 +280,12 @@ const styles = StyleSheet.create({
   inputLight: {
     backgroundColor: '#f8fafc',
     borderColor: '#e2e8f0',
-    color: '#09090b',
+    color: '#0f172a',
   },
   inputDark: {
-    backgroundColor: '#09090b',
-    borderColor: '#27272a',
-    color: '#fafafa',
+    backgroundColor: '#0b1220',
+    borderColor: '#334155',
+    color: '#f8fafc',
   },
   textArea: {
     height: 60,
@@ -303,8 +303,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   presetChipActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
   },
   presetChipText: {
     fontSize: 12,
@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   chipDark: {
-    backgroundColor: '#27272a',
-    borderColor: '#3f3f46',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   modalActionsRow: {
     flexDirection: 'row',
@@ -342,15 +342,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   textLight: {
-    color: '#09090b',
+    color: '#0f172a',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748b',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
   },
 });

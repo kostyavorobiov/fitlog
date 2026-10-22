@@ -169,15 +169,15 @@ export const ProfileView: React.FC = () => {
     },
     coach: {
       title: 'Тренер',
-      color: 'text-indigo-700 dark:text-indigo-400',
-      bg: 'bg-indigo-50 dark:bg-indigo-950/40',
-      border: 'border-indigo-200 dark:border-indigo-800',
+      color: 'text-[#2563EB] dark:text-[#60A5FA]',
+      bg: 'bg-[#2563EB]/10',
+      border: 'border-[#2563EB]/30',
     },
     athlete: {
       title: 'Атлет',
-      color: 'text-emerald-700 dark:text-emerald-400',
-      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
-      border: 'border-emerald-200 dark:border-emerald-800',
+      color: 'text-[#2563EB] dark:text-[#60A5FA]',
+      bg: 'bg-[#2563EB]/10',
+      border: 'border-[#2563EB]/30',
     },
   };
 
@@ -188,7 +188,7 @@ export const ProfileView: React.FC = () => {
       {/* Toast Alert */}
       {saveToast && (
         <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-3 flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
-          <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <Check className="h-4 w-4 text-[#22C55E] shrink-0" />
           <span>Профіль користувача успішно оновлено!</span>
         </div>
       )}
@@ -253,8 +253,8 @@ export const ProfileView: React.FC = () => {
                 >
                   {copied ? (
                     <>
-                      <Check className="h-3 w-3 text-emerald-500" />
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">Скопійовано!</span>
+                      <Check className="h-3 w-3 text-[#22C55E]" />
+                      <span className="text-[#22C55E] font-bold">Скопійовано!</span>
                     </>
                   ) : (
                     <>
@@ -288,7 +288,7 @@ export const ProfileView: React.FC = () => {
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3.5 text-base sm:text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700"
+                  className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3.5 text-base sm:text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
                 />
               </div>
 
@@ -300,7 +300,7 @@ export const ProfileView: React.FC = () => {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3.5 text-base sm:text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700"
+                  className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3.5 text-base sm:text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
                 />
               </div>
             </div>
@@ -320,7 +320,7 @@ export const ProfileView: React.FC = () => {
                       onClick={() => setSelectedRole(r)}
                       className={`rounded-2xl p-2.5 text-xs font-semibold border transition-all text-center cursor-pointer ${
                         isCurrent
-                          ? 'border-slate-900 bg-slate-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs font-bold'
+                          ? 'border-[#2563EB] bg-[#2563EB] text-white shadow-xs font-bold'
                           : 'border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
                       }`}
                     >
@@ -341,7 +341,7 @@ export const ProfileView: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="h-10 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 px-5 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer"
+                className="h-10 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-5 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
               >
                 <Save className="h-4 w-4" />
                 <span>Зберегти зміни</span>
@@ -402,16 +402,16 @@ export const ProfileView: React.FC = () => {
           </div>
           <ul className="text-xs text-slate-600 dark:text-zinc-400 space-y-1.5">
             <li className="flex items-center space-x-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" />
               <span>Ведення щоденника тренувань і підходів</span>
             </li>
             <li className="flex items-center space-x-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" />
               <span>База вправ, історія ваг та персональні рекорди</span>
             </li>
             {isCoach && (
-              <li className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-semibold">
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+              <li className="flex items-center space-x-2 text-[#2563EB] dark:text-[#60A5FA] font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" />
                 <span>Розділ «Підопічні»: складання планів та контроль</span>
               </li>
             )}
@@ -511,13 +511,13 @@ export const ProfileView: React.FC = () => {
                       }
                     }}
                     disabled={isLinkingCoach}
-                    className="flex-1 h-9 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700 disabled:opacity-50"
+                    className="flex-1 h-9 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB] disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={handleLinkCoach}
                     disabled={isLinkingCoach || !coachInputCode.trim()}
-                    className="h-9 px-4 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center space-x-1"
+                    className="h-9 px-4 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center space-x-1"
                   >
                     {isLinkingCoach ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                     <span>Прикріпитися</span>
@@ -527,7 +527,7 @@ export const ProfileView: React.FC = () => {
                   <p
                     className={`text-[11px] font-medium ${
                       coachToast.type === 'success'
-                        ? 'text-emerald-600 dark:text-emerald-400'
+                        ? 'text-[#22C55E]'
                         : 'text-rose-600 dark:text-rose-400'
                     }`}
                   >

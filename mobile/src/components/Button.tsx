@@ -71,7 +71,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? (isDark ? '#09090b' : '#ffffff') : '#71717a'}
+          color={variant === 'primary' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B')}
         />
       ) : (
         <Text style={[styles.textBase, getTextStyle()]}>{title}</Text>
@@ -97,44 +97,44 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   primaryLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#2563EB',
   },
   primaryDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563EB',
   },
   textPrimaryLight: {
     color: '#ffffff',
   },
   textPrimaryDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   secondaryLight: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#F1F5F9',
   },
   secondaryDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   textSecondaryLight: {
-    color: '#18181b',
+    color: '#0F172A',
   },
   textSecondaryDark: {
-    color: '#f4f4f5',
+    color: '#F8FAFC',
   },
   outlineLight: {
     borderWidth: 1,
-    borderColor: '#e4e4e7',
+    borderColor: '#E2E8F0',
     backgroundColor: 'transparent',
   },
   outlineDark: {
     borderWidth: 1,
-    borderColor: '#3f3f46',
+    borderColor: '#334155',
     backgroundColor: 'transparent',
   },
   textOutlineLight: {
-    color: '#18181b',
+    color: '#0F172A',
   },
   textOutlineDark: {
-    color: '#f4f4f5',
+    color: '#F8FAFC',
   },
   danger: {
     backgroundColor: '#ef4444',

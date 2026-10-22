@@ -172,7 +172,7 @@ export const PullToRefresh: React.FC = () => {
       <div
         className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-md backdrop-blur-md transition-all duration-200 ${
           isReady || isRefreshing
-            ? 'border-indigo-400/50 bg-indigo-50/95 dark:bg-indigo-950/90 text-indigo-600 dark:text-indigo-400'
+            ? 'border-[#2563EB]/40 bg-[#2563EB]/10 text-[#2563EB] dark:text-[#60A5FA]'
             : 'border-zinc-200/80 dark:border-zinc-700/80 bg-white/95 dark:bg-zinc-900/95 text-zinc-600 dark:text-zinc-300'
         }`}
         style={{

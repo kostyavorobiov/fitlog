@@ -86,7 +86,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-zinc-800">
           <div className="flex items-center space-x-2.5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2563EB]/10 dark:bg-[#2563EB]/15 text-[#2563EB] dark:text-[#60A5FA]">
               <Dumbbell className="h-5 w-5" />
             </div>
             <div>
@@ -122,7 +122,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
               className={`w-full h-11 rounded-2xl border px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 bg-slate-50 dark:bg-zinc-950 focus:outline-none transition-colors ${
                 error
                   ? 'border-rose-500'
-                  : 'border-slate-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700'
+                  : 'border-slate-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]'
               }`}
             />
             {error && (
@@ -146,7 +146,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                   onClick={() => handleSelectPreset(preset)}
                   className={`rounded-xl border px-2.5 py-1 text-[11px] transition-all cursor-pointer ${
                     title === preset
-                      ? 'border-slate-900 bg-slate-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs'
+                      ? 'border-[#2563EB] bg-[#2563EB] text-white font-bold shadow-xs'
                       : 'border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
                   }`}
                 >
@@ -183,7 +183,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
             </button>
             <button
               type="submit"
-              className="flex-1 h-11 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer"
+              className="flex-1 h-11 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>Створити</span>

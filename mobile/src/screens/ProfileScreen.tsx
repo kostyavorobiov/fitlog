@@ -199,7 +199,7 @@ export const ProfileScreen: React.FC = () => {
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
         <Header title="Профіль" showAvatar={false} />
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={isDark ? '#fafafa' : '#18181b'} />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
             Завантаження профілю...
           </Text>
@@ -212,18 +212,18 @@ export const ProfileScreen: React.FC = () => {
   const roleMeta: Record<UserRole, { title: string; color: string; bg: string }> = {
     admin: {
       title: 'Адміністратор',
-      color: '#f43f5e',
-      bg: isDark ? 'rgba(244, 63, 94, 0.15)' : '#ffe4e6',
+      color: '#ef4444',
+      bg: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)',
     },
     coach: {
       title: 'Тренер',
-      color: '#6366f1',
-      bg: isDark ? 'rgba(99, 102, 241, 0.15)' : '#e0e7ff',
+      color: isDark ? '#60a5fa' : '#2563eb',
+      bg: isDark ? 'rgba(37, 99, 235, 0.25)' : 'rgba(37, 99, 235, 0.1)',
     },
     athlete: {
       title: 'Атлет',
-      color: '#10b981',
-      bg: isDark ? 'rgba(16, 185, 129, 0.15)' : '#d1fae5',
+      color: isDark ? '#60a5fa' : '#2563eb',
+      bg: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(37, 99, 235, 0.08)',
     },
   };
   const currentRole = roleMeta[user.role] || roleMeta.athlete;
@@ -265,7 +265,7 @@ export const ProfileScreen: React.FC = () => {
                 {user.firstName || user.name} {user.lastName || ''}
               </Text>
               <View style={styles.emailRow}>
-                <Ionicons name="mail-outline" size={14} color={isDark ? '#a1a1aa' : '#71717a'} />
+                <Ionicons name="mail-outline" size={14} color={isDark ? '#94A3B8' : '#64748B'} />
                 <Text style={[styles.userEmail, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
                   {user.email || 'Немає email'}
                 </Text>
@@ -277,7 +277,7 @@ export const ProfileScreen: React.FC = () => {
                   onPress={() => setIsEditing(true)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="create-outline" size={14} color={isDark ? '#fafafa' : '#09090b'} />
+                  <Ionicons name="create-outline" size={14} color={isDark ? '#f8fafc' : '#0f172a'} />
                   <Text style={[styles.editProfileBtnText, isDark ? styles.textDark : styles.textLight]}>
                     Редагувати профіль
                   </Text>
@@ -302,7 +302,7 @@ export const ProfileScreen: React.FC = () => {
                   value={firstName}
                   onChangeText={setFirstName}
                   placeholder="Ім'я"
-                  placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                  placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                 />
               </View>
 
@@ -315,7 +315,7 @@ export const ProfileScreen: React.FC = () => {
                   value={lastName}
                   onChangeText={setLastName}
                   placeholder="Прізвище"
-                  placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                  placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                 />
               </View>
 
@@ -366,18 +366,17 @@ export const ProfileScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.saveBtn,
-                    isDark ? styles.saveBtnDark : styles.saveBtnLight,
                     isSavingProfile && styles.btnDisabled,
                   ]}
                   onPress={handleSaveProfile}
                   disabled={isSavingProfile}
                 >
                   {isSavingProfile ? (
-                    <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
+                    <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={16} color={isDark ? '#09090b' : '#ffffff'} />
-                      <Text style={[styles.saveBtnText, isDark ? styles.saveBtnTextDark : styles.saveBtnTextLight]}>
+                      <Ionicons name="checkmark" size={16} color="#ffffff" />
+                      <Text style={styles.saveBtnText}>
                         Зберегти зміни
                       </Text>
                     </>
@@ -406,12 +405,12 @@ export const ProfileScreen: React.FC = () => {
               <Ionicons
                 name={copiedCode ? 'checkmark' : 'copy-outline'}
                 size={14}
-                color={copiedCode ? '#10b981' : (isDark ? '#fafafa' : '#09090b')}
+                color={copiedCode ? '#22c55e' : (isDark ? '#f8fafc' : '#0f172a')}
               />
               <Text
                 style={[
                   styles.copyBtnText,
-                  copiedCode ? { color: '#10b981' } : (isDark ? styles.textDark : styles.textLight),
+                  copiedCode ? { color: '#22c55e' } : (isDark ? styles.textDark : styles.textLight),
                 ]}
               >
                 {copiedCode ? 'Скопійовано' : 'Копіювати ID'}
@@ -456,7 +455,7 @@ export const ProfileScreen: React.FC = () => {
               <Ionicons
                 name="sunny-outline"
                 size={16}
-                color={!isDark ? '#09090b' : (isDark ? '#a1a1aa' : '#71717a')}
+                color={!isDark ? '#2563eb' : (isDark ? '#94a3b8' : '#64748b')}
               />
               <Text
                 style={[
@@ -479,7 +478,7 @@ export const ProfileScreen: React.FC = () => {
               <Ionicons
                 name="moon-outline"
                 size={16}
-                color={isDark ? '#ffffff' : '#71717a'}
+                color={isDark ? '#60a5fa' : '#64748b'}
               />
               <Text
                 style={[
@@ -496,7 +495,7 @@ export const ProfileScreen: React.FC = () => {
         {/* 3. Coach / Trainee Relationship Status */}
         <Card style={styles.sectionCard}>
           <View style={styles.sectionIconRow}>
-            <Ionicons name="people-outline" size={18} color="#6366f1" />
+            <Ionicons name="people-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
             <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
               Тренерський статус
             </Text>
@@ -559,7 +558,7 @@ export const ProfileScreen: React.FC = () => {
                 <TextInput
                   style={[styles.linkCoachInput, isDark ? styles.inputDark : styles.inputLight]}
                   placeholder="Введіть код або email тренера..."
-                  placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                  placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                   value={coachCodeInput}
                   onChangeText={setCoachCodeInput}
                   autoCapitalize="none"
@@ -568,16 +567,15 @@ export const ProfileScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.linkCoachBtn,
-                    isDark ? styles.linkCoachBtnDark : styles.linkCoachBtnLight,
                     isLinkingCoach && styles.btnDisabled,
                   ]}
                   onPress={handleLinkCoach}
                   disabled={isLinkingCoach}
                 >
                   {isLinkingCoach ? (
-                    <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
+                    <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
-                    <Text style={[styles.linkCoachBtnText, isDark ? styles.linkCoachBtnTextDark : styles.linkCoachBtnTextLight]}>
+                    <Text style={styles.linkCoachBtnText}>
                       Прикріпитися
                     </Text>
                   )}
@@ -664,6 +662,15 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 14,
     marginTop: 6,
+    borderWidth: 1,
+  },
+  editProfileBtnLight: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  editProfileBtnDark: {
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   editProfileBtnText: {
     fontSize: 12,
@@ -707,20 +714,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   roleOptionLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   roleOptionDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   roleOptionActiveLight: {
-    borderColor: '#0f172a',
-    backgroundColor: '#eef2f6',
+    borderColor: '#2563eb',
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
   },
   roleOptionActiveDark: {
-    borderColor: '#fafafa',
-    backgroundColor: '#27272a',
+    borderColor: '#60a5fa',
+    backgroundColor: 'rgba(37, 99, 235, 0.25)',
   },
   formActionsRow: {
     flexDirection: 'row',
@@ -746,22 +753,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     flexDirection: 'row',
     gap: 6,
-  },
-  saveBtnLight: {
-    backgroundColor: '#0f172a',
-  },
-  saveBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   saveBtnText: {
+    color: '#ffffff',
     fontSize: 13,
     fontWeight: '700',
-  },
-  saveBtnTextLight: {
-    color: '#ffffff',
-  },
-  saveBtnTextDark: {
-    color: '#09090b',
   },
   btnDisabled: {
     opacity: 0.6,
@@ -795,11 +792,11 @@ const styles = StyleSheet.create({
   },
   copyBtnLight: {
     borderColor: '#e2e8f0',
-    backgroundColor: '#eef2f6',
+    backgroundColor: '#f1f5f9',
   },
   copyBtnDark: {
-    borderColor: '#27272a',
-    backgroundColor: '#18181b',
+    borderColor: '#334155',
+    backgroundColor: '#263140',
   },
   copyBtnText: {
     fontSize: 12,
@@ -841,10 +838,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   themeSegmentLight: {
-    backgroundColor: '#eef2f6',
+    backgroundColor: '#f1f5f9',
   },
   themeSegmentDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   themeSegmentBtn: {
     flex: 1,
@@ -865,7 +862,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   themeSegmentActiveDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#1d2939',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -876,11 +873,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   themeSegmentTextActiveLight: {
-    color: '#0f172a',
+    color: '#2563eb',
     fontWeight: '700',
   },
   themeSegmentTextActiveDark: {
-    color: '#fafafa',
+    color: '#60a5fa',
     fontWeight: '700',
   },
   themeSegmentTextInactive: {
@@ -910,7 +907,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   goToTraineesBtn: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#2563eb',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -934,7 +931,7 @@ const styles = StyleSheet.create({
   unlinkText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#f43f5e',
+    color: '#ef4444',
   },
   coachCardInner: {
     flexDirection: 'row',
@@ -972,27 +969,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  linkCoachBtnLight: {
-    backgroundColor: '#0f172a',
-  },
-  linkCoachBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   linkCoachBtnText: {
+    color: '#ffffff',
     fontSize: 13,
     fontWeight: '700',
   },
-  linkCoachBtnTextLight: {
-    color: '#ffffff',
-  },
-  linkCoachBtnTextDark: {
-    color: '#09090b',
-  },
   logoutBtn: {
-    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(244, 63, 94, 0.3)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1002,54 +989,54 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   logoutBtnText: {
-    color: '#f43f5e',
+    color: '#ef4444',
     fontSize: 14,
     fontWeight: '700',
   },
   btnOutlineLight: {
     borderWidth: 1,
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
     backgroundColor: '#ffffff',
   },
   btnOutlineDark: {
     borderWidth: 1,
-    borderColor: '#27272a',
-    backgroundColor: '#18181b',
+    borderColor: '#334155',
+    backgroundColor: '#1d2939',
   },
   borderTopLight: {
     borderTopWidth: 1,
-    borderTopColor: '#f4f4f5',
+    borderTopColor: '#e2e8f0',
   },
   borderTopDark: {
     borderTopWidth: 1,
-    borderTopColor: '#27272a',
+    borderTopColor: '#334155',
   },
   inputLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
-    color: '#09090b',
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    color: '#0f172a',
   },
   inputDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
-    color: '#fafafa',
+    backgroundColor: '#0b1220',
+    borderColor: '#334155',
+    color: '#f8fafc',
   },
   bgLight: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#f8fafc',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0b1220',
   },
   textLight: {
-    color: '#09090b',
+    color: '#0f172a',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748b',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
   },
 });

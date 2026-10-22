@@ -139,10 +139,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   touchableLight: {
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
   },
   touchableDark: {
-    borderColor: '#3f3f46',
+    borderColor: '#334155',
   },
   fallbackContainer: {
     alignItems: 'center',
@@ -150,21 +150,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   fallbackLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#d4d4d8',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   fallbackDark: {
-    backgroundColor: '#27272a',
-    borderColor: '#3f3f46',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   fallbackText: {
     fontWeight: '800',
     letterSpacing: -0.5,
   },
   fallbackTextLight: {
-    color: '#18181b',
+    color: '#0f172a',
   },
   fallbackTextDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
 });

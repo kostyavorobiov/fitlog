@@ -127,12 +127,12 @@ const ExerciseProgressRing: React.FC<{
           r={radius}
           fill={
             isAllDone
-              ? 'rgba(16, 185, 129, 0.08)'
+              ? 'rgba(34, 197, 94, 0.08)'
               : progress > 0
-                ? 'rgba(59, 130, 246, 0.06)'
+                ? 'rgba(96, 165, 250, 0.08)'
                 : 'none'
           }
-          className="stroke-zinc-200 dark:stroke-zinc-700"
+          className="stroke-[#e2e8f0] dark:stroke-[#334155]"
           strokeWidth={strokeWidth}
         />
         {/* Progress arc */}
@@ -142,7 +142,7 @@ const ExerciseProgressRing: React.FC<{
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={isAllDone ? '#10b981' : '#3b82f6'}
+            stroke={isAllDone ? '#22c55e' : '#60a5fa'}
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
@@ -154,12 +154,12 @@ const ExerciseProgressRing: React.FC<{
       {/* Center label */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         {isAllDone ? (
-          <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 stroke-[3]" />
+          <Check className="w-3.5 h-3.5 text-[#22c55e] stroke-[3]" />
         ) : (
           <span
             className={`font-mono text-[9px] font-bold leading-none ${progress > 0
-              ? 'text-blue-600 dark:text-blue-400'
-              : 'text-zinc-400 dark:text-zinc-500'
+              ? 'text-[#2563eb] dark:text-[#60a5fa]'
+              : 'text-[#64748b] dark:text-[#94a3b8]'
               }`}
           >
             {total > 0 ? `${completed}/${total}` : '0'}
@@ -1079,8 +1079,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               </span>
               <span
                 className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[10px] font-semibold border ${workout.status === 'completed'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700'
+                  ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30'
+                  : 'bg-[#2563eb]/10 text-[#2563eb] dark:text-[#60a5fa] border-[#2563eb]/30'
                   }`}
               >
                 {workout.status === 'completed'
@@ -1088,7 +1088,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                   : 'В процесі ⚡'}
               </span>
               {workout.assignedByCoachId && (
-                <span className="inline-flex items-center space-x-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                <span className="inline-flex items-center space-x-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold border border-[#2563eb]/30 bg-[#2563eb]/10 text-[#2563eb] dark:text-[#60a5fa]">
                   <Award className="h-3 w-3" />
                   <span>Призначено тренером</span>
                 </span>
@@ -1104,19 +1104,19 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               value={workout.title}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Назва тренування (напр. Груди та Тріцепс)"
-              className="w-full font-bold text-lg sm:text-xl text-zinc-900 dark:text-zinc-100 bg-transparent border-b border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 focus:border-zinc-900 dark:focus:border-zinc-100 focus:outline-none transition py-1"
+              className="w-full font-bold text-lg sm:text-xl text-[#0f172a] dark:text-[#f8fafc] bg-transparent border-b border-[#e2e8f0] dark:border-[#334155] hover:border-[#60a5fa] focus:border-[#2563eb] dark:focus:border-[#60a5fa] focus:outline-none transition py-1"
             />
           </div>
 
           {/* Date Picker row */}
           <div className="flex items-center space-x-2 pt-1">
-            <div className="flex items-center space-x-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-2.5 py-1 text-xs text-zinc-700 dark:text-zinc-300">
-              <Calendar className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
+            <div className="flex items-center space-x-1.5 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] px-2.5 py-1 text-xs text-[#0f172a] dark:text-[#f8fafc]">
+              <Calendar className="h-3.5 w-3.5 text-[#2563eb] dark:text-[#60a5fa]" />
               <input
                 type="date"
                 value={workout.scheduledDate}
                 onChange={(e) => handleDateChange(e.target.value)}
-                className="bg-transparent text-zinc-900 dark:text-zinc-100 focus:outline-none cursor-pointer text-xs"
+                className="bg-transparent text-[#0f172a] dark:text-[#f8fafc] focus:outline-none cursor-pointer text-xs"
               />
             </div>
           </div>
@@ -1132,7 +1132,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             placeholder="Загальні примітки до тренування..."
             value={workout.notes || ''}
             onChange={(e) => handleNotesChange(e.target.value)}
-            className="w-full text-xs text-zinc-900 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl px-3 py-2 border border-zinc-200 dark:border-zinc-800 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100"
+            className="w-full text-xs text-[#0f172a] dark:text-[#f8fafc] bg-[#f1f5f9] dark:bg-[#0b1220] rounded-xl px-3 py-2 border border-[#e2e8f0] dark:border-[#334155] placeholder-[#64748b] dark:placeholder-[#94a3b8] focus:outline-none focus:border-[#2563eb]"
           />
         </div>
       </div>
@@ -1140,18 +1140,18 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       {/* Exercises List */}
       <div className="space-y-4">
         {currentExList.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-8 sm:p-12 text-center">
-            <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 mb-3">
+          <div className="rounded-2xl border border-dashed border-[#e2e8f0] dark:border-[#334155] bg-[#f8fafc] dark:bg-[#1d2939]/40 p-8 sm:p-12 text-center">
+            <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-[#f1f5f9] dark:bg-[#263140] border border-[#e2e8f0] dark:border-[#334155] text-[#2563eb] dark:text-[#60a5fa] mb-3">
               <Dumbbell className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
-            <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">Тренування порожнє</h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mb-4">
+            <h3 className="text-base sm:text-lg font-bold text-[#0f172a] dark:text-[#f8fafc] mb-1">Тренування порожнє</h3>
+            <p className="text-xs text-[#64748b] dark:text-[#94a3b8] max-w-sm mx-auto mb-4">
               Додайте вправи до сьогоднішньої програми. Застосунок автоматично підтягне попередні робочі ваги та повторення!
             </p>
             <button
               type="button"
               onClick={() => setIsSelectorOpen(true)}
-              className="inline-flex items-center space-x-2 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold transition-colors cursor-pointer active:scale-[0.98]"
+              className="inline-flex items-center space-x-2 rounded-xl bg-[#2563eb] text-white hover:bg-[#1d4ed8] px-5 py-2.5 text-xs sm:text-sm font-semibold transition-colors cursor-pointer active:scale-[0.98]"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>Додати першу вправу</span>
@@ -1333,7 +1333,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                               return (
                                 <div
                                   key={setItem.id}
-                                  className={`grid items-center gap-1 px-3 py-2 transition-colors ${isDone ? 'bg-emerald-50/70 dark:bg-emerald-950/20' : ''}`}
+                                  className={`grid items-center gap-1 px-3 py-2 transition-colors ${isDone ? 'bg-[#22c55e]/10 dark:bg-[#22c55e]/15' : ''}`}
                                   style={{ gridTemplateColumns: '1.75rem 1fr 1fr 2.25rem 1.75rem' }}
                                 >
                                   {/* Set number */}
@@ -1471,8 +1471,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                       type="button"
                                       onClick={() => handleToggleCompleteSet(weItem.id, setItem)}
                                       className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${isDone
-                                        ? 'bg-emerald-500 text-white'
-                                        : 'border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-300 dark:text-zinc-600'
+                                        ? 'bg-[#22c55e] text-white hover:bg-[#16a34a]'
+                                        : 'border-2 border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] text-[#cbd5e1] dark:text-[#64748b]'
                                         }`}
                                       title={isDone ? 'Скасувати' : 'Виконано'}
                                     >
@@ -1673,7 +1673,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           return (
                             <div
                               key={setItem.id}
-                              className={`grid items-center gap-2 px-5 py-2.5 transition-colors ${isDone ? 'bg-emerald-50/70 dark:bg-emerald-950/20' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}
+                              className={`grid items-center gap-2 px-5 py-2.5 transition-colors ${isDone ? 'bg-[#22c55e]/10 dark:bg-[#22c55e]/15' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}
                               style={{ gridTemplateColumns: '3rem 1fr 1fr 5rem 2.5rem' }}
                             >
                               {/* Set number */}
@@ -1811,8 +1811,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                   type="button"
                                   onClick={() => handleToggleCompleteSet(weItem.id, setItem)}
                                   className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors cursor-pointer ${isDone
-                                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                                    : 'border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-300 dark:text-zinc-600 hover:border-emerald-400 hover:text-emerald-400'
+                                    ? 'bg-[#22c55e] text-white hover:bg-[#16a34a]'
+                                    : 'border-2 border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] text-[#cbd5e1] dark:text-[#64748b] hover:border-[#22c55e] hover:text-[#22c55e]'
                                     }`}
                                   title={isDone ? 'Позначити як незавершений' : 'Завершити підхід'}
                                 >
@@ -1891,7 +1891,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             </div>
 
             <div className="flex items-center space-x-1">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-[#22c55e]" />
               <span className="text-zinc-500 dark:text-zinc-400 text-[11px]">Підходи:</span>
               <strong className="text-zinc-800 dark:text-zinc-100 font-mono text-xs">
                 {completedSets} / {totalSets}

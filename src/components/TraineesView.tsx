@@ -269,7 +269,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
             className="p-1 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             title="Скопіювати код"
           >
-            {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+            {copiedCode ? <Check className="h-3.5 w-3.5 text-[#22C55E]" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
         </div>
       </div>
@@ -291,13 +291,13 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
               }
             }}
             disabled={isAdding}
-            className="flex-1 h-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700 disabled:opacity-50"
+            className="flex-1 h-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB] disabled:opacity-50 transition-all"
           />
           <button
             type="button"
             onClick={() => handleAddTrainee()}
             disabled={isAdding}
-            className="h-11 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 px-5 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer shrink-0 disabled:opacity-50"
+            className="h-11 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-5 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer shrink-0 disabled:opacity-50"
           >
             {isAdding ? (
               <>
@@ -317,7 +317,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
       {/* Trainees List & Details Split */}
       {trainees.length === 0 ? (
         <div className="rounded-[28px] border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 py-12 px-6 flex flex-col items-center justify-center text-center shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 flex items-center justify-center mb-3 text-slate-400 dark:text-zinc-500">
+          <div className="w-14 h-14 rounded-2xl bg-[#2563EB]/10 dark:bg-[#2563EB]/15 flex items-center justify-center mb-3 text-[#2563EB] dark:text-[#60A5FA]">
             <Users className="h-7 w-7" />
           </div>
           <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100">
@@ -345,7 +345,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                     onClick={() => selectTrainee(t)}
                     className={`rounded-2xl border p-3.5 cursor-pointer transition-all flex items-center justify-between gap-3 shadow-xs ${
                       isSelected
-                        ? 'border-slate-900 dark:border-zinc-100 bg-slate-50 dark:bg-zinc-800/80 ring-1 ring-slate-900 dark:ring-zinc-100'
+                        ? 'border-[#2563EB] dark:border-[#60A5FA] bg-[#2563EB]/5 dark:bg-[#2563EB]/10 ring-1 ring-[#2563EB] dark:ring-[#60A5FA]'
                         : 'border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-slate-300 dark:hover:border-zinc-700'
                     }`}
                   >
@@ -382,7 +382,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                       <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
                         {selectedTrainee.firstName || selectedTrainee.name} {selectedTrainee.lastName || ''}
                       </h2>
-                      <span className="rounded-md border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-zinc-400">
+                      <span className="rounded-md border border-[#2563EB]/30 bg-[#2563EB]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#2563EB] dark:text-[#60A5FA]">
                         Атлет
                       </span>
                     </div>
@@ -405,7 +405,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                   <button
                     type="button"
                     onClick={handleCreatePlanForTrainee}
-                    className="h-9 inline-flex items-center space-x-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer"
+                    className="h-9 inline-flex items-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>Створити план тренування</span>
@@ -423,7 +423,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
 
                 {traineeWorkouts.length === 0 ? (
                   <div className="rounded-[24px] border border-dashed border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/30 py-8 px-6 text-center space-y-3 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 flex items-center justify-center text-slate-400 dark:text-zinc-500">
+                    <div className="w-12 h-12 rounded-2xl bg-[#2563EB]/10 dark:bg-[#2563EB]/15 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA]">
                       <Dumbbell className="h-6 w-6" />
                     </div>
                     <p className="text-xs text-slate-600 dark:text-zinc-400">
@@ -432,7 +432,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                     <button
                       type="button"
                       onClick={handleCreatePlanForTrainee}
-                      className="inline-flex items-center space-x-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer"
+                      className="inline-flex items-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 py-2 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>Скласти перше тренування</span>
@@ -458,9 +458,9 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                               <span
                                 className={`font-semibold ${
                                   isCompleted
-                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    ? 'text-[#22C55E]'
                                     : w.status === 'in_progress'
-                                    ? 'text-amber-600 dark:text-amber-400'
+                                    ? 'text-[#60A5FA]'
                                     : 'text-slate-500 dark:text-zinc-400'
                                 }`}
                               >

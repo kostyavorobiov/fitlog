@@ -78,7 +78,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                 {workoutTitle || 'Тренування'}
               </span>
               {isCompleted && (
-                <span className="rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                <span className="rounded-md border border-[#22C55E]/30 bg-[#22C55E]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#22C55E]">
                   Завершене
                 </span>
               )}

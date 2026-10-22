@@ -13,6 +13,30 @@ import { ThemeProvider as AppThemeProvider, useTheme as useAppTheme } from '../c
 // Ensure browser session can complete redirect for OAuth flows
 WebBrowser.maybeCompleteAuthSession();
 
+const OceanNavigationDarkTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: '#0B1220',
+    card: '#1D2939',
+    text: '#F8FAFC',
+    border: '#334155',
+    primary: '#2563EB',
+  },
+};
+
+const OceanNavigationLightTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: '#F8FAFC',
+    card: '#FFFFFF',
+    text: '#0F172A',
+    border: '#E2E8F0',
+    primary: '#2563EB',
+  },
+};
+
 function RootNavigator() {
   const { user, isLoading } = useAuth();
   const segments = useSegments();
@@ -36,18 +60,18 @@ function RootNavigator() {
     return (
       <View style={[styles.loadingContainer, isDark ? styles.bgDark : styles.bgLight]}>
         <View style={[styles.loadingLogoCircle, isDark ? styles.logoDark : styles.logoLight]}>
-          <Ionicons name="barbell" size={40} color={isDark ? '#38bdf8' : '#0284c7'} />
+          <Ionicons name="barbell" size={40} color={isDark ? '#60A5FA' : '#2563EB'} />
         </View>
         <Text style={[styles.loadingTitle, isDark ? styles.textDark : styles.textLight]}>
           Workout Diary
         </Text>
-        <ActivityIndicator size="small" color="#0284c7" style={{ marginTop: 12 }} />
+        <ActivityIndicator size="small" color="#2563EB" style={{ marginTop: 12 }} />
       </View>
     );
   }
 
   return (
-    <NavigationThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+    <NavigationThemeProvider value={isDark ? OceanNavigationDarkTheme : OceanNavigationLightTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -98,10 +122,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   bgLight: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F8FAFC',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0B1220',
   },
   loadingLogoCircle: {
     width: 76,
@@ -112,10 +136,10 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   logoLight: {
-    backgroundColor: '#e0f2fe',
+    backgroundColor: '#F1F5F9',
   },
   logoDark: {
-    backgroundColor: '#0c4a6e',
+    backgroundColor: '#1D2939',
   },
   loadingTitle: {
     fontSize: 22,
@@ -123,9 +147,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   textLight: {
-    color: '#0f172a',
+    color: '#0F172A',
   },
   textDark: {
-    color: '#f8fafc',
+    color: '#F8FAFC',
   },
 });

@@ -133,8 +133,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
         style={[
           styles.swipeContainer,
           {
-            borderColor: isDark ? '#27272a' : '#e4e4e7',
-            backgroundColor: isDark ? '#18181b' : '#ffffff',
+            borderColor: isDark ? '#334155' : '#e2e8f0',
+            backgroundColor: isDark ? '#1d2939' : '#ffffff',
           },
         ]}
       >
@@ -149,8 +149,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
         styles.swipeContainer,
         {
           opacity: opacityAnim,
-          borderColor: isDark ? '#27272a' : '#e4e4e7',
-          backgroundColor: isDark ? '#18181b' : '#ffffff',
+          borderColor: isDark ? '#334155' : '#e2e8f0',
+          backgroundColor: isDark ? '#1d2939' : '#ffffff',
         },
       ]}
     >
@@ -174,9 +174,9 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
           styles.swipeForeground,
           {
             transform: [{ translateX: panX }],
-            backgroundColor: isDark ? '#18181b' : '#ffffff',
+            backgroundColor: isDark ? '#1d2939' : '#ffffff',
             borderRightWidth: StyleSheet.hairlineWidth,
-            borderRightColor: isDark ? '#27272a' : '#e4e4e7',
+            borderRightColor: isDark ? '#334155' : '#e2e8f0',
           },
         ]}
       >
@@ -375,10 +375,10 @@ export const ExercisesScreen: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={handleOpenCreateModal}
-            style={[styles.webAddBtn, isDark ? styles.webAddBtnDark : styles.webAddBtnLight]}
+            style={styles.webAddBtn}
           >
-            <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
-            <Text style={[styles.webAddBtnText, isDark ? styles.webAddBtnTextDark : styles.webAddBtnTextLight]}>
+            <Ionicons name="add" size={16} color="#ffffff" />
+            <Text style={styles.webAddBtnText}>
               Додати вправу
             </Text>
           </TouchableOpacity>
@@ -398,13 +398,13 @@ export const ExercisesScreen: React.FC = () => {
             <Ionicons
               name="search"
               size={18}
-              color={isDark ? '#71717a' : '#a1a1aa'}
+              color={isDark ? '#94a3b8' : '#64748b'}
               style={styles.searchIcon}
             />
             <TextInput
               style={[styles.searchInput, isDark ? styles.textDark : styles.textLight]}
               placeholder="Пошук вправи за назвою..."
-              placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCorrect={false}
@@ -412,7 +412,7 @@ export const ExercisesScreen: React.FC = () => {
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={16} color={isDark ? '#71717a' : '#a1a1aa'} />
+                <Ionicons name="close-circle" size={16} color={isDark ? '#94a3b8' : '#64748b'} />
               </TouchableOpacity>
             )}
           </View>
@@ -497,7 +497,7 @@ export const ExercisesScreen: React.FC = () => {
         {/* Exercises List */}
         {isLoading ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#0284c7" />
+            <ActivityIndicator size="large" color="#2563eb" />
             <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
               Завантаження вправ...
             </Text>
@@ -505,7 +505,7 @@ export const ExercisesScreen: React.FC = () => {
         ) : filteredExercises.length === 0 ? (
           <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
             <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-              <Ionicons name="barbell-outline" size={26} color={isDark ? '#71717a' : '#94a3b8'} />
+              <Ionicons name="barbell-outline" size={26} color={isDark ? '#94a3b8' : '#64748b'} />
             </View>
             <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
               Вправ не знайдено
@@ -516,12 +516,12 @@ export const ExercisesScreen: React.FC = () => {
                 : 'У цій категорії поки що немає вправ.'}
             </Text>
             <TouchableOpacity
-              style={[styles.emptyBtn, isDark ? styles.emptyBtnDark : styles.emptyBtnLight]}
+              style={styles.emptyBtn}
               activeOpacity={0.8}
               onPress={handleOpenCreateModal}
             >
-              <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
-              <Text style={[styles.emptyBtnText, isDark ? styles.emptyBtnTextDark : styles.emptyBtnTextLight]}>
+              <Ionicons name="add" size={16} color="#ffffff" />
+              <Text style={styles.emptyBtnText}>
                 Створити власну вправу
               </Text>
             </TouchableOpacity>
@@ -570,7 +570,7 @@ export const ExercisesScreen: React.FC = () => {
                             onPress={() => handleOpenEditModal(ex)}
                             activeOpacity={0.7}
                           >
-                            <Ionicons name="pencil-outline" size={15} color={isDark ? '#fafafa' : '#09090b'} />
+                            <Ionicons name="pencil-outline" size={15} color={isDark ? '#F8FAFC' : '#0F172A'} />
                           </TouchableOpacity>
                         </View>
                       ) : null}
@@ -598,13 +598,13 @@ export const ExercisesScreen: React.FC = () => {
             {/* Modal Header */}
             <View style={[styles.modalHeader, isDark ? styles.borderDark : styles.borderLight]}>
               <View style={styles.modalTitleRow}>
-                <Ionicons name="barbell-outline" size={20} color="#0284c7" />
+                <Ionicons name="barbell-outline" size={20} color={isDark ? '#60a5fa' : '#2563eb'} />
                 <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
                   Створити власну вправу
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setIsCreateOpen(false)} style={styles.modalCloseBtn}>
-                <Ionicons name="close" size={22} color={isDark ? '#fafafa' : '#09090b'} />
+                <Ionicons name="close" size={22} color={isDark ? '#f8fafc' : '#0f172a'} />
               </TouchableOpacity>
             </View>
 
@@ -616,7 +616,7 @@ export const ExercisesScreen: React.FC = () => {
                 <TextInput
                   style={[styles.modalInput, isDark ? styles.inputDark : styles.inputLight]}
                   placeholder="Наприклад: Жим штанги під кутом"
-                  placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                  placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                   value={createName}
                   onChangeText={setCreateName}
                   autoFocus
@@ -672,18 +672,17 @@ export const ExercisesScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.modalSaveBtn,
-                    isDark ? styles.modalSaveBtnDark : styles.modalSaveBtnLight,
                     isSubmittingCreate && styles.btnDisabled,
                   ]}
                   onPress={handleSaveCreate}
                   disabled={isSubmittingCreate}
                 >
                   {isSubmittingCreate ? (
-                    <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
+                    <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={18} color={isDark ? '#09090b' : '#ffffff'} />
-                      <Text style={isDark ? styles.modalSaveTextDark : styles.modalSaveTextLight}>
+                      <Ionicons name="checkmark" size={18} color="#ffffff" />
+                      <Text style={styles.modalSaveText}>
                         Зберегти вправу
                       </Text>
                     </>
@@ -710,13 +709,13 @@ export const ExercisesScreen: React.FC = () => {
             {/* Modal Header */}
             <View style={[styles.modalHeader, isDark ? styles.borderDark : styles.borderLight]}>
               <View style={styles.modalTitleRow}>
-                <Ionicons name="pencil" size={18} color="#0284c7" />
+                <Ionicons name="pencil" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
                 <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
                   Редагування власної вправи
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setEditingExercise(null)} style={styles.modalCloseBtn}>
-                <Ionicons name="close" size={22} color={isDark ? '#fafafa' : '#09090b'} />
+                <Ionicons name="close" size={22} color={isDark ? '#f8fafc' : '#0f172a'} />
               </TouchableOpacity>
             </View>
 
@@ -728,7 +727,7 @@ export const ExercisesScreen: React.FC = () => {
                 <TextInput
                   style={[styles.modalInput, isDark ? styles.inputDark : styles.inputLight]}
                   placeholder="Назва вправи..."
-                  placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                  placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                   value={editName}
                   onChangeText={setEditName}
                   autoFocus
@@ -784,18 +783,17 @@ export const ExercisesScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.modalSaveBtn,
-                    isDark ? styles.modalSaveBtnDark : styles.modalSaveBtnLight,
                     isSubmittingEdit && styles.btnDisabled,
                   ]}
                   onPress={handleSaveEdit}
                   disabled={isSubmittingEdit}
                 >
                   {isSubmittingEdit ? (
-                    <ActivityIndicator size="small" color={isDark ? '#09090b' : '#ffffff'} />
+                    <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={18} color={isDark ? '#09090b' : '#ffffff'} />
-                      <Text style={isDark ? styles.modalSaveTextDark : styles.modalSaveTextLight}>
+                      <Ionicons name="checkmark" size={18} color="#ffffff" />
+                      <Text style={styles.modalSaveText}>
                         Зберегти зміни
                       </Text>
                     </>
@@ -815,10 +813,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#f8fafc',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0b1220',
   },
   content: {
     padding: 16,
@@ -839,11 +837,11 @@ const styles = StyleSheet.create({
   },
   searchBarLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
   },
   searchBarDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   searchIcon: {
     marginRight: 8,
@@ -870,20 +868,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   tabActiveLight: {
-    backgroundColor: '#0f172a',
-    borderColor: '#0f172a',
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
   },
   tabActiveDark: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
   },
   tabInactiveLight: {
-    backgroundColor: '#eef2f6',
-    borderColor: 'transparent',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   tabInactiveDark: {
-    backgroundColor: '#27272a',
-    borderColor: 'transparent',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   tabText: {
     fontSize: 12,
@@ -893,7 +891,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   textPrimaryDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   loaderContainer: {
     padding: 32,
@@ -918,8 +916,8 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   emptyDark: {
-    backgroundColor: '#18181b80',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   emptyIconBox: {
     width: 56,
@@ -929,10 +927,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyIconBoxLight: {
-    backgroundColor: '#eef2f8',
+    backgroundColor: '#f1f5f9',
   },
   emptyIconBoxDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   emptyTitle: {
     fontSize: 16,
@@ -946,7 +944,7 @@ const styles = StyleSheet.create({
     color: '#0f172a',
   },
   emptyTitleDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   emptySubtitle: {
     fontSize: 12,
@@ -956,10 +954,10 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   emptySubtitleLight: {
-    color: '#94a3b8',
+    color: '#64748b',
   },
   emptySubtitleDark: {
-    color: '#71717a',
+    color: '#94a3b8',
   },
   emptyBtn: {
     flexDirection: 'row',
@@ -969,22 +967,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 16,
     marginTop: 16,
-  },
-  emptyBtnLight: {
-    backgroundColor: '#0f172a',
-  },
-  emptyBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   emptyBtnText: {
     fontSize: 13,
     fontWeight: '700',
-  },
-  emptyBtnTextLight: {
     color: '#ffffff',
-  },
-  emptyBtnTextDark: {
-    color: '#09090b',
   },
   grid: {
     gap: 10,
@@ -1026,17 +1014,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   ownerBadgeLight: {
-    backgroundColor: '#fef3c7',
-    borderColor: '#fde68a',
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+    borderColor: '#e2e8f0',
   },
   ownerBadgeDark: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+    borderColor: '#334155',
   },
   ownerBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#f59e0b',
+    color: '#2563eb',
   },
   globalBadge: {
     paddingHorizontal: 6,
@@ -1045,12 +1033,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   globalBadgeLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   globalBadgeDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   globalBadgeText: {
     fontSize: 10,
@@ -1069,9 +1057,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   deleteBtnBg: {
-    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(244, 63, 94, 0.3)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
   },
   modalContainer: {
     flex: 1,
@@ -1128,20 +1116,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   formChipLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   formChipDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   formChipActiveLight: {
-    backgroundColor: '#e0e7ff',
-    borderColor: '#6366f1',
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+    borderColor: '#2563eb',
   },
   formChipActiveDark: {
-    backgroundColor: 'rgba(99, 102, 241, 0.25)',
-    borderColor: '#818cf8',
+    backgroundColor: 'rgba(37, 99, 235, 0.25)',
+    borderColor: '#60a5fa',
   },
   formChipText: {
     fontSize: 12,
@@ -1169,22 +1157,12 @@ const styles = StyleSheet.create({
     height: 38,
     paddingHorizontal: 14,
     borderRadius: 14,
-  },
-  webAddBtnLight: {
-    backgroundColor: '#0f172a',
-  },
-  webAddBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   webAddBtnText: {
     fontSize: 13,
     fontWeight: '700',
-  },
-  webAddBtnTextLight: {
     color: '#ffffff',
-  },
-  webAddBtnTextDark: {
-    color: '#09090b',
   },
   filterBarContainer: {
     gap: 8,
@@ -1200,20 +1178,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   customToggleActiveLight: {
-    backgroundColor: '#18181b',
-    borderColor: '#18181b',
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
   },
   customToggleActiveDark: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
   },
   customToggleInactiveLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   customToggleInactiveDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   customToggleText: {
     fontSize: 12,
@@ -1227,20 +1205,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 6,
+    backgroundColor: '#2563eb',
   },
-  modalSaveBtnLight: {
-    backgroundColor: '#0f172a',
-  },
-  modalSaveBtnDark: {
-    backgroundColor: '#f4f4f5',
-  },
-  modalSaveTextLight: {
+  modalSaveText: {
     color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  modalSaveTextDark: {
-    color: '#09090b',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -1249,41 +1217,41 @@ const styles = StyleSheet.create({
   },
   btnOutlineLight: {
     borderWidth: 1,
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
     backgroundColor: '#ffffff',
   },
   btnOutlineDark: {
     borderWidth: 1,
-    borderColor: '#27272a',
-    backgroundColor: '#18181b',
+    borderColor: '#334155',
+    backgroundColor: '#1d2939',
   },
   borderLight: {
-    borderBottomColor: '#f4f4f5',
+    borderBottomColor: '#e2e8f0',
   },
   borderDark: {
-    borderBottomColor: '#27272a',
+    borderBottomColor: '#334155',
   },
   inputLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#e4e4e7',
-    color: '#09090b',
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    color: '#0f172a',
   },
   inputDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
-    color: '#fafafa',
+    backgroundColor: '#0b1220',
+    borderColor: '#334155',
+    color: '#f8fafc',
   },
   textLight: {
-    color: '#09090b',
+    color: '#0f172a',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748b',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
   },
   swipeContainer: {
     position: 'relative',

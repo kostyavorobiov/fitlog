@@ -120,7 +120,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               <div
-                className="h-11 w-11 flex items-center justify-center rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 shrink-0 border border-slate-200/80 dark:border-zinc-700"
+                className="h-11 w-11 flex items-center justify-center rounded-2xl bg-[#2563EB]/10 dark:bg-[#2563EB]/15 text-[#2563EB] dark:text-[#60A5FA] shrink-0 border border-[#2563EB]/20 dark:border-[#2563EB]/30"
               >
                 <Dumbbell className="h-5 w-5" />
               </div>
@@ -154,7 +154,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* PR Weight */}
             <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-2.5 sm:p-3 text-center shadow-xs">
-              <div className="flex items-center justify-center space-x-1 text-amber-600 dark:text-amber-400 text-[10px] font-semibold">
+              <div className="flex items-center justify-center space-x-1 text-[#2563EB] dark:text-[#60A5FA] text-[10px] font-semibold">
                 <Trophy className="h-3 w-3" />
                 <span>Рекорд (PR)</span>
               </div>
@@ -182,11 +182,11 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
 
             {/* Last Performance */}
             <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-2.5 sm:p-3 text-center shadow-xs">
-              <div className="flex items-center justify-center space-x-1 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
+              <div className="flex items-center justify-center space-x-1 text-[#22C55E] text-[10px] font-semibold">
                 <Clock className="h-3 w-3" />
                 <span>Останній раз</span>
               </div>
-              <div className="font-mono text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">
+              <div className="font-mono text-sm sm:text-base font-bold text-[#22C55E] mt-0.5 truncate">
                 {lastPerformance ? `${lastPerformance.maxWeight} кг` : '—'}
               </div>
               <div className="text-[10px] text-slate-500 dark:text-zinc-400 truncate">
@@ -250,7 +250,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
                         key={pIdx}
                         className={`rounded-2xl border p-3.5 sm:p-4 transition ${
                           isBestSession
-                            ? 'border-amber-300 dark:border-amber-800/80 bg-amber-50/30 dark:bg-amber-950/20'
+                            ? 'border-[#2563EB]/40 bg-[#2563EB]/5 dark:bg-[#2563EB]/10'
                             : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/30'
                         }`}
                       >
@@ -260,7 +260,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
                               {perf.date}
                             </span>
                             {isBestSession && (
-                              <span className="inline-flex items-center space-x-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                              <span className="inline-flex items-center space-x-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-[#2563EB]/15 text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/30">
                                 <Award className="h-3 w-3" />
                                 <span>PR Сесія</span>
                               </span>
@@ -286,7 +286,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
                                 key={sIdx}
                                 className={`rounded-xl border px-2 py-1.5 text-center font-mono ${
                                   isPrSet
-                                    ? 'border-amber-300 dark:border-amber-700 bg-amber-100/60 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200'
+                                    ? 'border-[#2563EB]/40 bg-[#2563EB]/10 text-[#2563EB] dark:text-[#60A5FA]'
                                     : 'border-zinc-200 dark:border-zinc-700/60 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-800 dark:text-zinc-200'
                                 }`}
                               >
@@ -314,7 +314,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl bg-[#0f172a] dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-[#1e293b] dark:hover:bg-white px-5 py-2 text-xs font-bold shadow-sm transition cursor-pointer"
+            className="rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-5 py-2 text-xs font-bold shadow-xs active:scale-[0.98] transition cursor-pointer"
           >
             Закрити
           </button>

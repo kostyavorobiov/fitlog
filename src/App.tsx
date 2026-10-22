@@ -145,17 +145,17 @@ const MainContent: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-[#0b1220] text-[#0f172a] dark:text-[#f8fafc]">
         <div className="flex flex-col items-center space-y-3">
-          <div className="h-9 w-9 animate-spin rounded-full border-2 border-zinc-300 dark:border-zinc-700 border-t-zinc-900 dark:border-t-zinc-100" />
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">Завантаження щоденника...</p>
+          <div className="h-9 w-9 animate-spin rounded-full border-2 border-[#e2e8f0] dark:border-[#334155] border-t-[#2563eb] dark:border-t-[#60a5fa]" />
+          <p className="text-xs text-[#64748b] dark:text-[#94a3b8] font-mono">Завантаження щоденника...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-150">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b1220] text-[#0f172a] dark:text-[#f8fafc] flex flex-col transition-colors duration-150">
       {/* Pull To Refresh for mobile Web */}
       <PullToRefresh />
 
@@ -251,17 +251,17 @@ const MainContent: React.FC = () => {
         <aside
           role="region"
           aria-label="Повернення в мобільний застосунок"
-          className="fixed top-0 inset-x-0 z-[100] px-4 py-3 bg-indigo-600 text-white flex items-center justify-between shadow-2xl animate-fade-in"
+          className="fixed top-0 inset-x-0 z-[100] px-4 py-3 bg-[#2563eb] text-white flex items-center justify-between shadow-2xl animate-fade-in"
         >
           <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="flex h-2.5 w-2.5 rounded-full bg-[#22c55e] animate-pulse" />
             <span className="text-xs sm:text-sm font-semibold">
               Успішно авторизовано! Поверніться в додаток:
             </span>
           </div>
           <a
             href={mobileAuthUrl}
-            className="px-4 py-2 bg-white text-indigo-900 font-bold text-xs rounded-xl shadow active:scale-95 transition-transform"
+            className="px-4 py-2 bg-white text-[#2563eb] font-bold text-xs rounded-xl shadow active:scale-95 transition-transform"
           >
             Відкрити додаток
           </a>

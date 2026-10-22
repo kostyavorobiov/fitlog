@@ -111,7 +111,7 @@ export const LoginScreen: React.FC = () => {
           {/* Brand Header */}
           <View style={styles.brandHeader}>
             <View style={[styles.logoCircle, isDark ? styles.logoDark : styles.logoLight]}>
-              <Ionicons name="barbell" size={36} color={isDark ? '#38bdf8' : '#0284c7'} />
+              <Ionicons name="barbell" size={36} color={isDark ? '#60a5fa' : '#2563eb'} />
             </View>
             <Text style={[styles.brandTitle, isDark ? styles.textDark : styles.textLight]}>
               Workout Diary
@@ -130,13 +130,13 @@ export const LoginScreen: React.FC = () => {
               <View
                 style={[
                   styles.dot,
-                  { backgroundColor: isCloudConnected ? '#10b981' : '#f59e0b' },
+                  { backgroundColor: isCloudConnected ? '#22c55e' : (isDark ? '#94a3b8' : '#64748b') },
                 ]}
               />
               <Text
                 style={[
                   styles.cloudBadgeText,
-                  { color: isCloudConnected ? '#10b981' : '#f59e0b' },
+                  { color: isCloudConnected ? '#22c55e' : (isDark ? '#94a3b8' : '#64748b') },
                 ]}
               >
                 {isCloudConnected ? 'Supabase Cloud зв’язок готовий' : 'Офлайн / Тестовий режим'}
@@ -296,7 +296,7 @@ export const LoginScreen: React.FC = () => {
                     <Ionicons
                       name="fitness"
                       size={16}
-                      color={role === 'athlete' ? '#0284c7' : (isDark ? '#a1a1aa' : '#71717a')}
+                      color={role === 'athlete' ? (isDark ? '#60a5fa' : '#2563eb') : (isDark ? '#94a3b8' : '#64748b')}
                     />
                     <Text
                       style={[
@@ -320,7 +320,7 @@ export const LoginScreen: React.FC = () => {
                     <Ionicons
                       name="people"
                       size={16}
-                      color={role === 'coach' ? '#0284c7' : (isDark ? '#a1a1aa' : '#71717a')}
+                      color={role === 'coach' ? (isDark ? '#60a5fa' : '#2563eb') : (isDark ? '#94a3b8' : '#64748b')}
                     />
                     <Text
                       style={[
@@ -361,7 +361,7 @@ export const LoginScreen: React.FC = () => {
                 onPress={() => handleDemoLogin('admin')}
                 style={[styles.demoBtn, isDark ? styles.demoBtnDark : styles.demoBtnLight]}
               >
-                <Ionicons name="shield-checkmark" size={16} color="#38bdf8" />
+                <Ionicons name="shield-checkmark" size={16} color={isDark ? '#60a5fa' : '#2563eb'} />
                 <Text style={[styles.demoBtnText, isDark ? styles.textDark : styles.textLight]}>
                   Костянтин (Адмін)
                 </Text>
@@ -371,7 +371,7 @@ export const LoginScreen: React.FC = () => {
                 onPress={() => handleDemoLogin('athlete')}
                 style={[styles.demoBtn, isDark ? styles.demoBtnDark : styles.demoBtnLight]}
               >
-                <Ionicons name="barbell-outline" size={16} color="#10b981" />
+                <Ionicons name="barbell-outline" size={16} color={isDark ? '#60a5fa' : '#2563eb'} />
                 <Text style={[styles.demoBtnText, isDark ? styles.textDark : styles.textLight]}>
                   Атлет Demo
                 </Text>
@@ -381,7 +381,7 @@ export const LoginScreen: React.FC = () => {
                 onPress={() => handleDemoLogin('coach')}
                 style={[styles.demoBtn, isDark ? styles.demoBtnDark : styles.demoBtnLight]}
               >
-                <Ionicons name="school-outline" size={16} color="#a855f7" />
+                <Ionicons name="school-outline" size={16} color={isDark ? '#60a5fa' : '#2563eb'} />
                 <Text style={[styles.demoBtnText, isDark ? styles.textDark : styles.textLight]}>
                   Тренер Demo
                 </Text>
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0b1220',
   },
   scrollContent: {
     padding: 20,
@@ -421,10 +421,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   logoLight: {
-    backgroundColor: '#e0f2fe',
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
   },
   logoDark: {
-    backgroundColor: '#0c4a6e',
+    backgroundColor: 'rgba(37, 99, 235, 0.25)',
   },
   brandTitle: {
     fontSize: 26,
@@ -445,10 +445,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   cloudBadgeOnline: {
-    backgroundColor: '#ecfdf5',
+    backgroundColor: 'rgba(34, 197, 94, 0.12)',
   },
   cloudBadgeOffline: {
-    backgroundColor: '#fffbeb',
+    backgroundColor: 'rgba(100, 116, 139, 0.12)',
   },
   cloudBadgeText: {
     fontSize: 12,
@@ -463,14 +463,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#fef2f2',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderWidth: 1,
-    borderColor: '#fecaca',
+    borderColor: 'rgba(239, 68, 68, 0.25)',
     padding: 12,
     borderRadius: 14,
   },
   errorText: {
-    color: '#b91c1c',
+    color: '#ef4444',
     fontSize: 13,
     flex: 1,
   },
@@ -492,8 +492,8 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   googleDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   googleText: {
     fontSize: 15,
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
   },
   toggleDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#263140',
   },
   toggleBtn: {
     flex: 1,
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   toggleBtnActive: {
-    backgroundColor: '#0284c7',
+    backgroundColor: '#2563eb',
   },
   toggleBtnText: {
     fontSize: 13,
@@ -565,8 +565,8 @@ const styles = StyleSheet.create({
     color: '#0f172a',
   },
   inputDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#0b1220',
+    borderColor: '#334155',
     color: '#f8fafc',
   },
   roleRow: {
@@ -584,25 +584,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   roleChipActive: {
-    borderColor: '#0284c7',
-    backgroundColor: '#e0f2fe20',
+    borderColor: '#2563eb',
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
   },
   chipLight: {
     borderColor: '#e2e8f0',
   },
   chipDark: {
-    borderColor: '#27272a',
+    borderColor: '#334155',
   },
   roleChipText: {
     fontSize: 13,
     fontWeight: '500',
   },
   roleChipTextActive: {
-    color: '#0284c7',
+    color: '#2563eb',
     fontWeight: '600',
   },
   demoCard: {
-    backgroundColor: '#f8fafc50',
     borderStyle: 'dashed',
   },
   demoHeader: {
@@ -637,8 +636,8 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   demoBtnDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   demoBtnText: {
     fontSize: 12,
@@ -660,6 +659,6 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   borderDark: {
-    borderColor: '#27272a',
+    borderColor: '#334155',
   },
 });

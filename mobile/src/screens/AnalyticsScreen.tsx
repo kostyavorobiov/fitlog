@@ -200,8 +200,8 @@ export const AnalyticsScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#0284c7"
-            colors={['#0284c7']}
+            tintColor="#2563eb"
+            colors={['#2563eb']}
           />
         }
       >
@@ -214,12 +214,12 @@ export const AnalyticsScreen: React.FC = () => {
               activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="chevron-back" size={18} color={isDark ? '#fafafa' : '#09090b'} />
+              <Ionicons name="chevron-back" size={18} color={isDark ? '#f8fafc' : '#0f172a'} />
             </TouchableOpacity>
 
             <View style={styles.dateNavCenter}>
               <View style={styles.dateNavTitleRow}>
-                <Ionicons name="calendar-outline" size={15} color="#0284c7" />
+                <Ionicons name="calendar-outline" size={15} color={isDark ? '#60a5fa' : '#2563eb'} />
                 <Text
                   numberOfLines={1}
                   style={[styles.dateNavTitle, isDark ? styles.textDark : styles.textLight]}
@@ -243,7 +243,7 @@ export const AnalyticsScreen: React.FC = () => {
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="chevron-forward" size={18} color={isDark ? '#fafafa' : '#09090b'} />
+                <Ionicons name="chevron-forward" size={18} color={isDark ? '#f8fafc' : '#0f172a'} />
               </TouchableOpacity>
 
               {!periodRange.isCurrent && (
@@ -252,7 +252,7 @@ export const AnalyticsScreen: React.FC = () => {
                   style={[styles.todayBtn, isDark ? styles.todayBtnDark : styles.todayBtnLight]}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.todayBtnText}>Сьогодні</Text>
+                  <Text style={[styles.todayBtnText, isDark ? styles.todayBtnTextDark : styles.todayBtnTextLight]}>Сьогодні</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -262,7 +262,7 @@ export const AnalyticsScreen: React.FC = () => {
         {/* Loading State */}
         {isLoading && !isRefreshing ? (
           <View style={styles.stateContainer}>
-            <ActivityIndicator size="small" color="#0284c7" />
+            <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
             <Text style={[styles.stateText, isDark ? styles.subDark : styles.subLight]}>
               Розрахунок аналітики...
             </Text>
@@ -289,8 +289,8 @@ export const AnalyticsScreen: React.FC = () => {
               {/* Completed Sets */}
               <Card style={styles.kpiCard}>
                 <View style={styles.kpiHeaderRow}>
-                  <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
-                    <Ionicons name="checkmark-circle-outline" size={18} color="#10b981" />
+                  <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
+                    <Ionicons name="checkmark-circle-outline" size={18} color="#22c55e" />
                   </View>
                   <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
                     Підходи
@@ -307,8 +307,8 @@ export const AnalyticsScreen: React.FC = () => {
               {/* Active Workouts */}
               <Card style={styles.kpiCard}>
                 <View style={styles.kpiHeaderRow}>
-                  <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
-                    <Ionicons name="barbell-outline" size={18} color="#f59e0b" />
+                  <View style={[styles.kpiIconWrap, { backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(37, 99, 235, 0.12)' }]}>
+                    <Ionicons name="barbell-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
                   </View>
                   <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
                     Тренування
@@ -325,8 +325,8 @@ export const AnalyticsScreen: React.FC = () => {
               {/* Total Volume */}
               <Card style={styles.kpiCard}>
                 <View style={styles.kpiHeaderRow}>
-                  <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(2, 132, 199, 0.12)' }]}>
-                    <Ionicons name="flame-outline" size={18} color="#0284c7" />
+                  <View style={[styles.kpiIconWrap, { backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(37, 99, 235, 0.12)' }]}>
+                    <Ionicons name="flame-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
                   </View>
                   <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
                     Тоннаж
@@ -345,8 +345,8 @@ export const AnalyticsScreen: React.FC = () => {
               {/* Tracked Exercises */}
               <Card style={styles.kpiCard}>
                 <View style={styles.kpiHeaderRow}>
-                  <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(168, 85, 247, 0.12)' }]}>
-                    <Ionicons name="trophy-outline" size={18} color="#a855f7" />
+                  <View style={[styles.kpiIconWrap, { backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(37, 99, 235, 0.12)' }]}>
+                    <Ionicons name="trophy-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
                   </View>
                   <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
                     Вправи
@@ -365,7 +365,7 @@ export const AnalyticsScreen: React.FC = () => {
             {analyticsData.periodCompletedSets === 0 ? (
               <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
                 <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-                  <Ionicons name="layers-outline" size={26} color={isDark ? '#71717a' : '#94a3b8'} />
+                  <Ionicons name="layers-outline" size={26} color={isDark ? '#94a3b8' : '#64748b'} />
                 </View>
                 <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
                   За обраний період немає завершених підходів
@@ -374,12 +374,12 @@ export const AnalyticsScreen: React.FC = () => {
                   Враховуються лише успішно виконані підходи (відмічені галочкою ✓) у запланованих тренуваннях за цей календарний період.
                 </Text>
                 <TouchableOpacity
-                  style={[styles.emptyBtn, isDark ? styles.emptyBtnDark : styles.emptyBtnLight]}
+                  style={styles.emptyBtn}
                   activeOpacity={0.8}
                   onPress={() => router.push('/(tabs)')}
                 >
-                  <Ionicons name="arrow-back" size={16} color={isDark ? '#09090b' : '#ffffff'} />
-                  <Text style={[styles.emptyBtnText, isDark ? styles.emptyBtnTextDark : styles.emptyBtnTextLight]}>
+                  <Ionicons name="arrow-back" size={16} color="#ffffff" />
+                  <Text style={styles.emptyBtnText}>
                     До списку тренувань
                   </Text>
                 </TouchableOpacity>
@@ -515,17 +515,17 @@ export const AnalyticsScreen: React.FC = () => {
                     {/* Search Input for Exercises */}
                     {analyticsData.exercisesList.length > 4 && (
                       <View style={[styles.searchWrap, isDark ? styles.searchDark : styles.searchLight]}>
-                        <Ionicons name="search" size={16} color={isDark ? '#71717a' : '#a1a1aa'} />
+                        <Ionicons name="search" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
                         <TextInput
                           style={[styles.searchInput, isDark ? styles.textDark : styles.textLight]}
                           placeholder="Пошук вправи..."
-                          placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                          placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                           value={searchQuery}
                           onChangeText={setSearchQuery}
                         />
                         {searchQuery.length > 0 && (
                           <TouchableOpacity onPress={() => setSearchQuery('')}>
-                            <Ionicons name="close-circle" size={16} color={isDark ? '#71717a' : '#a1a1aa'} />
+                            <Ionicons name="close-circle" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
                           </TouchableOpacity>
                         )}
                       </View>
@@ -601,10 +601,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#f8fafc',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0b1220',
   },
   periodRow: {
     paddingHorizontal: 16,
@@ -617,10 +617,10 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   periodLight: {
-    backgroundColor: '#eef2f6',
+    backgroundColor: '#f1f5f9',
   },
   periodDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   periodBtn: {
     paddingVertical: 6,
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   periodBtnActiveDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#1d2939',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -649,11 +649,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   periodTextActiveLight: {
-    color: '#0f172a',
+    color: '#2563eb',
     fontWeight: '700',
   },
   periodTextActiveDark: {
-    color: '#fafafa',
+    color: '#60a5fa',
     fontWeight: '700',
   },
   scrollContent: {
@@ -680,12 +680,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   btnLight: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   btnDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   dateNavCenter: {
     flex: 1,
@@ -717,17 +717,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   todayBtnLight: {
-    backgroundColor: '#eef2f6',
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
     borderColor: '#e2e8f0',
   },
   todayBtnDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+    borderColor: '#334155',
   },
   todayBtnText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#0284c7',
+  },
+  todayBtnTextLight: {
+    color: '#2563eb',
+  },
+  todayBtnTextDark: {
+    color: '#60a5fa',
   },
   stateContainer: {
     padding: 40,
@@ -821,8 +826,8 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   emptyDark: {
-    backgroundColor: '#18181b80',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   emptyIconBox: {
     width: 56,
@@ -832,10 +837,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyIconBoxLight: {
-    backgroundColor: '#eef2f8',
+    backgroundColor: '#f1f5f9',
   },
   emptyIconBoxDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   emptyTitle: {
     fontSize: 16,
@@ -849,7 +854,7 @@ const styles = StyleSheet.create({
     color: '#0f172a',
   },
   emptyTitleDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   emptySubtitle: {
     fontSize: 12,
@@ -859,10 +864,10 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   emptySubtitleLight: {
-    color: '#94a3b8',
+    color: '#64748b',
   },
   emptySubtitleDark: {
-    color: '#71717a',
+    color: '#94a3b8',
   },
   emptyBtn: {
     flexDirection: 'row',
@@ -872,22 +877,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 16,
     marginTop: 16,
-  },
-  emptyBtnLight: {
-    backgroundColor: '#0f172a',
-  },
-  emptyBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   emptyBtnText: {
     fontSize: 13,
     fontWeight: '700',
-  },
-  emptyBtnTextLight: {
     color: '#ffffff',
-  },
-  emptyBtnTextDark: {
-    color: '#09090b',
   },
   filterContainer: {
     flexDirection: 'row',
@@ -896,10 +891,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   filterLight: {
-    backgroundColor: '#eef2f6',
+    backgroundColor: '#f1f5f9',
   },
   filterDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   filterBtn: {
     flex: 1,
@@ -918,7 +913,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   filterBtnActiveDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#1d2939',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -929,11 +924,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   filterTextActiveLight: {
-    color: '#0f172a',
+    color: '#2563eb',
     fontWeight: '700',
   },
   filterTextActiveDark: {
-    color: '#fafafa',
+    color: '#60a5fa',
     fontWeight: '700',
   },
   filterTextInactiveLight: {
@@ -941,7 +936,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   filterTextInactiveDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
     fontWeight: '600',
   },
   breakdownCard: {
@@ -954,7 +949,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#71717a20',
   },
   cardTitle: {
     fontSize: 15,
@@ -965,13 +959,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   totalBadge: {
-    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   totalBadgeText: {
-    color: '#0284c7',
+    color: '#2563eb',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1025,7 +1019,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
   },
   trackDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   progressFill: {
     height: '100%',
@@ -1041,12 +1035,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   searchLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   searchDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   searchInput: {
     flex: 1,
@@ -1064,11 +1058,11 @@ const styles = StyleSheet.create({
   },
   itemBorderLight: {
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#e2e8f0',
   },
   itemBorderDark: {
     borderTopWidth: 1,
-    borderTopColor: '#27272a',
+    borderTopColor: '#334155',
   },
   exLeftCol: {
     flex: 1,
@@ -1110,15 +1104,15 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   textLight: {
-    color: '#09090b',
+    color: '#0f172a',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748b',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
   },
 });

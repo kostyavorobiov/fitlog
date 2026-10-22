@@ -125,7 +125,7 @@ export const WorkoutDetailScreen: React.FC = () => {
     return (
       <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="small" color={isDark ? '#fafafa' : '#18181b'} />
+          <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
           <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
             Завантаження тренування...
           </Text>
@@ -220,10 +220,10 @@ export const WorkoutDetailScreen: React.FC = () => {
                   styles.statusDot,
                   {
                     backgroundColor: isCompleted
-                      ? '#10b981'
+                      ? '#22c55e'
                       : workout.status === 'in_progress'
-                      ? '#f59e0b'
-                      : '#94a3b8',
+                      ? '#60a5fa'
+                      : (isDark ? '#94a3b8' : '#64748b'),
                   },
                 ]}
               />
@@ -232,10 +232,10 @@ export const WorkoutDetailScreen: React.FC = () => {
                   styles.statusText,
                   {
                     color: isCompleted
-                      ? '#10b981'
+                      ? '#22c55e'
                       : workout.status === 'in_progress'
-                      ? '#f59e0b'
-                      : '#64748b',
+                      ? '#60a5fa'
+                      : (isDark ? '#94a3b8' : '#64748b'),
                   },
                 ]}
               >
@@ -244,9 +244,9 @@ export const WorkoutDetailScreen: React.FC = () => {
             </View>
 
             {workout.assignedByCoachId && (
-              <View style={styles.coachBadge}>
-                <Ionicons name="school-outline" size={14} color="#6366f1" />
-                <Text style={styles.coachText}>Призначено тренером</Text>
+              <View style={[styles.coachBadge, isDark ? styles.coachBadgeDark : styles.coachBadgeLight]}>
+                <Ionicons name="school-outline" size={14} color={isDark ? '#60a5fa' : '#2563eb'} />
+                <Text style={[styles.coachText, isDark ? styles.coachTextDark : styles.coachTextLight]}>Призначено тренером</Text>
               </View>
             )}
           </View>
@@ -320,7 +320,7 @@ export const WorkoutDetailScreen: React.FC = () => {
         {/* Exercises List */}
         {exercises.length === 0 ? (
           <Card style={styles.emptyExercisesCard}>
-            <Ionicons name="barbell-outline" size={36} color={isDark ? '#71717a' : '#a1a1aa'} />
+            <Ionicons name="barbell-outline" size={36} color={isDark ? '#334155' : '#94a3b8'} />
             <Text style={[styles.emptyExercisesTitle, isDark ? styles.textDark : styles.textLight]}>
               У цьому тренуванні ще немає вправ
             </Text>
@@ -358,7 +358,7 @@ export const WorkoutDetailScreen: React.FC = () => {
               {/* Sets Table */}
               {(ex.sets && ex.sets.length > 0) ? (
                 <View style={styles.setsTable}>
-                  <View style={styles.setsTableHeader}>
+                  <View style={[styles.setsTableHeader, isDark ? styles.rowBorderDark : styles.rowBorderLight]}>
                     <Text style={[styles.colHeader, styles.colSet, isDark ? styles.subDark : styles.subLight]}>Сет</Text>
                     <Text style={[styles.colHeader, styles.colWeight, isDark ? styles.subDark : styles.subLight]}>Вага</Text>
                     <Text style={[styles.colHeader, styles.colReps, isDark ? styles.subDark : styles.subLight]}>Повт.</Text>
@@ -399,7 +399,7 @@ export const WorkoutDetailScreen: React.FC = () => {
                           <Ionicons
                             name={isSetDone ? 'checkmark-circle' : 'ellipse-outline'}
                             size={18}
-                            color={isSetDone ? '#10b981' : (isDark ? '#71717a' : '#a1a1aa')}
+                            color={isSetDone ? '#22c55e' : (isDark ? '#334155' : '#cbd5e1')}
                           />
                         </View>
                       </View>
@@ -436,10 +436,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#f8fafc',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0b1220',
   },
   centerContainer: {
     flex: 1,
@@ -496,13 +496,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusCompleted: {
-    backgroundColor: '#ecfdf5',
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
   },
   statusInProgress: {
-    backgroundColor: '#fffbeb',
+    backgroundColor: 'rgba(96, 165, 250, 0.15)',
   },
   statusPlanned: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(100, 116, 139, 0.12)',
   },
   statusDot: {
     width: 6,
@@ -517,15 +517,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#e0e7ff20',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
+  coachBadgeLight: {
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+  },
+  coachBadgeDark: {
+    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+  },
   coachText: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#6366f1',
+  },
+  coachTextLight: {
+    color: '#2563eb',
+  },
+  coachTextDark: {
+    color: '#60a5fa',
   },
   metricsSummaryRow: {
     flexDirection: 'row',
@@ -556,10 +566,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   notesLight: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f1f5f9',
   },
   notesDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#263140',
   },
   notesText: {
     fontSize: 13,
@@ -608,10 +618,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   exIndexCircleLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#2563eb',
   },
   exIndexCircleDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#60a5fa',
   },
   exIndexText: {
     fontSize: 12,
@@ -621,7 +631,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   textPrimaryDark: {
-    color: '#09090b',
+    color: '#0b1220',
   },
   exTitle: {
     fontSize: 15,
@@ -636,12 +646,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   mgBadgeLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   mgBadgeDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   mgText: {
     fontSize: 10,
@@ -658,7 +668,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#71717a20',
   },
   colHeader: {
     fontSize: 11,
@@ -685,11 +694,11 @@ const styles = StyleSheet.create({
   },
   rowBorderLight: {
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#e2e8f0',
   },
   rowBorderDark: {
     borderTopWidth: 1,
-    borderTopColor: '#27272a',
+    borderTopColor: '#334155',
   },
   setNum: {
     fontSize: 13,
@@ -697,7 +706,7 @@ const styles = StyleSheet.create({
   },
   warmupTag: {
     fontSize: 10,
-    color: '#f59e0b',
+    color: '#60a5fa',
   },
   setVal: {
     fontSize: 13,
@@ -720,21 +729,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   textLight: {
-    color: '#09090b',
+    color: '#0f172a',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748b',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
   },
   borderLight: {
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
   },
   borderDark: {
-    borderColor: '#27272a',
+    borderColor: '#334155',
   },
 });

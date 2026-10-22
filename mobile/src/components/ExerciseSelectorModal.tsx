@@ -125,7 +125,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               }
             }}
           >
-            <Ionicons name="close" size={24} color={isDark ? '#fafafa' : '#09090b'} />
+            <Ionicons name="close" size={24} color={isDark ? '#f8fafc' : '#0f172a'} />
           </TouchableOpacity>
         </View>
 
@@ -136,7 +136,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             <TextInput
               style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
               placeholder="Наприклад: Жим штанги під кутом"
-              placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
               value={customName}
               onChangeText={setCustomName}
               autoFocus
@@ -190,11 +190,11 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             {/* Search Bar */}
             <View style={styles.searchContainer}>
               <View style={[styles.searchBar, isDark ? styles.searchBarDark : styles.searchBarLight]}>
-                <Ionicons name="search" size={18} color={isDark ? '#71717a' : '#a1a1aa'} style={styles.searchIcon} />
+                <Ionicons name="search" size={18} color={isDark ? '#94a3b8' : '#64748b'} style={styles.searchIcon} />
                 <TextInput
                   style={[styles.searchInput, isDark ? styles.textDark : styles.textLight]}
                   placeholder="Пошук вправи..."
-                  placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                  placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   autoCorrect={false}
@@ -202,7 +202,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 />
                 {searchQuery.length > 0 && (
                   <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Ionicons name="close-circle" size={16} color={isDark ? '#71717a' : '#a1a1aa'} />
+                    <Ionicons name="close-circle" size={16} color={isDark ? '#94a3b8' : '#64748b'} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -248,7 +248,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             {/* Exercises List */}
             {isLoading ? (
               <View style={styles.centerContainer}>
-                <ActivityIndicator size="small" color={isDark ? '#fafafa' : '#18181b'} />
+                <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
                 <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
                   Завантаження вправ...
                 </Text>
@@ -285,13 +285,13 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                         </View>
                       </View>
 
-                      <Ionicons name="add" size={20} color={isDark ? '#fafafa' : '#09090b'} />
+                      <Ionicons name="add" size={20} color={isDark ? '#60a5fa' : '#2563eb'} />
                     </TouchableOpacity>
                   );
                 }}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
-                    <Ionicons name="barbell-outline" size={40} color={isDark ? '#52525b' : '#d4d4d8'} />
+                    <Ionicons name="barbell-outline" size={40} color={isDark ? '#334155' : '#cbd5e1'} />
                     <Text style={[styles.emptyTitle, isDark ? styles.textDark : styles.textLight]}>
                       Вправ не знайдено
                     </Text>
@@ -306,7 +306,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                         setIsCreatingCustom(true);
                       }}
                     >
-                      <Ionicons name="add" size={16} color={isDark ? '#09090b' : '#ffffff'} />
+                      <Ionicons name="add" size={16} color="#ffffff" />
                       <Text style={[styles.addCustomBtnText, isDark ? styles.addCustomBtnTextDark : styles.addCustomBtnTextLight]}>
                         Створити власну вправу
                       </Text>
@@ -323,7 +323,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                         setIsCreatingCustom(true);
                       }}
                     >
-                      <Ionicons name="add-circle-outline" size={16} color={isDark ? '#a1a1aa' : '#71717a'} />
+                      <Ionicons name="add-circle-outline" size={16} color={isDark ? '#60a5fa' : '#2563eb'} />
                       <Text style={[styles.footerCustomBtnText, isDark ? styles.textDark : styles.textLight]}>
                         Не знайшли вправу? Створити власну
                       </Text>
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0b1220',
   },
   header: {
     flexDirection: 'row',
@@ -378,10 +378,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   searchBarLight: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#f1f5f9',
   },
   searchBarDark: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#1d2939',
   },
   searchIcon: {
     marginRight: 8,
@@ -405,20 +405,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   filterTabLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   filterTabDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   filterTabActiveLight: {
-    backgroundColor: '#18181b',
-    borderColor: '#18181b',
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
   },
   filterTabActiveDark: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
   },
   filterTabText: {
     fontSize: 13,
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   filterTabTextActiveDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   listContent: {
     paddingHorizontal: 16,
@@ -446,11 +446,11 @@ const styles = StyleSheet.create({
   },
   exerciseItemLight: {
     backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
   },
   exerciseItemDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   exerciseItemLeft: {
     flex: 1,
@@ -484,17 +484,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   ownerBadgeLight: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderColor: 'rgba(245, 158, 11, 0.25)',
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+    borderColor: 'rgba(37, 99, 235, 0.25)',
   },
   ownerBadgeDark: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    backgroundColor: 'rgba(96, 165, 250, 0.15)',
+    borderColor: 'rgba(96, 165, 250, 0.3)',
   },
   ownerBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#d97706',
+    color: '#2563eb',
   },
   centerContainer: {
     flex: 1,
@@ -534,10 +534,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   addCustomBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#2563eb',
   },
   addCustomBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   addCustomBtnText: {
     fontSize: 14,
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   addCustomBtnTextDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   footerCustomBtn: {
     flexDirection: 'row',
@@ -579,14 +579,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   inputLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#e4e4e7',
-    color: '#09090b',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+    color: '#0f172a',
   },
   inputDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
-    color: '#fafafa',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
+    color: '#f8fafc',
   },
   muscleChipsWrap: {
     flexDirection: 'row',
@@ -600,20 +600,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   muscleChipLight: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
   muscleChipDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1d2939',
+    borderColor: '#334155',
   },
   muscleChipActiveLight: {
-    backgroundColor: '#18181b',
-    borderColor: '#18181b',
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
   },
   muscleChipActiveDark: {
-    backgroundColor: '#f4f4f5',
-    borderColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
   },
   muscleChipText: {
     fontSize: 13,
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   muscleChipTextActiveDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   saveCustomBtn: {
     height: 44,
@@ -633,10 +633,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   saveCustomBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#2563eb',
   },
   saveCustomBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563eb',
   },
   saveCustomBtnText: {
     fontSize: 14,
@@ -646,24 +646,24 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   saveCustomBtnTextDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   textLight: {
-    color: '#09090b',
+    color: '#0f172a',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#f8fafc',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748b',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94a3b8',
   },
   borderLight: {
-    borderColor: '#e4e4e7',
+    borderColor: '#e2e8f0',
   },
   borderDark: {
-    borderColor: '#27272a',
+    borderColor: '#334155',
   },
 });

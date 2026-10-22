@@ -78,7 +78,7 @@ export default function AuthCallbackRoute() {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#0284c7" />
+      <ActivityIndicator size="large" color="#2563EB" />
       <Text style={styles.text}>{statusText}</Text>
     </View>
   );
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
-    backgroundColor: '#09090b',
+    backgroundColor: '#0B1220',
   },
   text: {
     color: '#94a3b8',

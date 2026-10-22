@@ -209,11 +209,11 @@ const styles = StyleSheet.create({
   },
   topNavbarLight: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderBottomColor: '#e4e4e7',
+    borderBottomColor: '#E2E8F0',
   },
   topNavbarDark: {
-    backgroundColor: 'rgba(9, 9, 11, 0.95)',
-    borderBottomColor: '#27272a',
+    backgroundColor: 'rgba(11, 18, 32, 0.95)',
+    borderBottomColor: '#334155',
   },
   logoButton: {
     paddingVertical: 6,
@@ -237,12 +237,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   themeToggleLight: {
-    borderColor: '#e4e4e7',
-    backgroundColor: '#f9fafb',
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F1F5F9',
   },
   themeToggleDark: {
-    borderColor: '#27272a',
-    backgroundColor: '#18181b',
+    borderColor: '#334155',
+    backgroundColor: '#263140',
   },
   avatarContainer: {
     borderRadius: 20,
@@ -250,10 +250,10 @@ const styles = StyleSheet.create({
     padding: 1,
   },
   avatarContainerLight: {
-    borderColor: '#e4e4e7',
+    borderColor: '#E2E8F0',
   },
   avatarContainerDark: {
-    borderColor: '#3f3f46',
+    borderColor: '#334155',
   },
   loginBtn: {
     borderRadius: 12,
@@ -261,10 +261,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   loginBtnLight: {
-    backgroundColor: '#18181b',
+    backgroundColor: '#2563EB',
   },
   loginBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563EB',
   },
   loginBtnText: {
     fontSize: 12,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   loginTextDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   sectionContainer: {
     paddingHorizontal: 16,
@@ -289,10 +289,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionBorderLight: {
-    borderBottomColor: '#e4e4e7',
+    borderBottomColor: '#E2E8F0',
   },
   sectionBorderDark: {
-    borderBottomColor: '#27272a',
+    borderBottomColor: '#334155',
   },
   sectionTitleWrap: {
     flex: 1,
@@ -310,15 +310,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   textLight: {
-    color: '#09090b',
+    color: '#0F172A',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#F8FAFC',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748B',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94A3B8',
   },
 });

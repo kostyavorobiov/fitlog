@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   cardDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1D2939',
+    borderColor: '#334155',
   },
 });

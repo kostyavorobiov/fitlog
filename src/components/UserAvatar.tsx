@@ -49,7 +49,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
       className={`relative inline-flex items-center justify-center rounded-full shrink-0 select-none overflow-hidden transition-all ${
         sizeClasses[size]
       } ${
-        onClick ? 'cursor-pointer hover:ring-2 hover:ring-zinc-400 dark:hover:ring-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-400' : ''
+        onClick ? 'cursor-pointer hover:ring-2 hover:ring-[#2563EB] dark:hover:ring-[#60A5FA] focus:outline-none focus:ring-2 focus:ring-[#2563EB]' : ''
       } ${className}`}
     >
       {hasValidImage ? (
@@ -62,7 +62,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
       ) : (
         /* Default Avatar: WD adapting to active theme */
         <div
-          className="h-full w-full rounded-full flex items-center justify-center font-bold tracking-tight border transition-colors bg-zinc-100 text-zinc-800 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700"
+          className="h-full w-full rounded-full flex items-center justify-center font-bold tracking-tight border transition-colors bg-[#2563EB]/10 text-[#2563EB] dark:text-[#60A5FA] border-[#2563EB]/25"
         >
           <span>WD</span>
         </div>

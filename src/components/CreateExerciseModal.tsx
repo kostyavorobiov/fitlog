@@ -105,7 +105,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
         </button>
 
         <div className="flex items-center space-x-2.5 mb-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2563EB]/10 dark:bg-[#2563EB]/15 text-[#2563EB] dark:text-[#60A5FA]">
             <Dumbbell className="h-5 w-5" />
           </div>
           <div>
@@ -134,7 +134,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
                 setName(e.target.value);
                 if (error) setError('');
               }}
-              className="w-full h-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700"
+              className="w-full h-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
             />
           </div>
 
@@ -153,7 +153,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
                     onClick={() => setMuscleGroup(groupKey)}
                     className={`rounded-xl p-2.5 text-xs font-semibold border text-center transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-slate-900 bg-slate-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs'
+                        ? 'border-[#2563EB] bg-[#2563EB] text-white font-bold shadow-xs'
                         : 'border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
                     }`}
                   >
@@ -173,7 +173,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
               placeholder="Короткі нотатки чи примітки до вправи..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 p-3 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-zinc-700 resize-none"
+              className="w-full rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 p-3 text-base sm:text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB] resize-none"
             />
           </div>
 
@@ -189,7 +189,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 h-11 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 text-xs font-bold shadow-sm hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer disabled:opacity-50"
+              className="flex-1 h-11 inline-flex items-center justify-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               <span>{isSubmitting ? 'Збереження...' : 'Зберегти вправу'}</span>

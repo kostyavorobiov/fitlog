@@ -266,21 +266,21 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
           <button
             type="button"
             onClick={handleToday}
-            className="rounded-xl border border-slate-200/80 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+            className="rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] px-3 py-1.5 text-xs font-bold text-[#0f172a] dark:text-[#f8fafc] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] transition-colors cursor-pointer"
           >
             Сьогодні
           </button>
         </div>
 
         {/* Weekdays header */}
-        <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] sm:text-xs text-slate-400 dark:text-zinc-500 pb-2 border-b border-slate-100 dark:border-zinc-800">
+        <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] sm:text-xs text-[#64748b] dark:text-[#94a3b8] pb-2 border-b border-[#e2e8f0] dark:border-[#334155]">
           <div>Пн</div>
           <div>Вт</div>
           <div>Ср</div>
           <div>Чт</div>
           <div>Пт</div>
-          <div className="text-slate-600 dark:text-zinc-400">Сб</div>
-          <div className="text-slate-600 dark:text-zinc-400">Нд</div>
+          <div className="text-[#2563eb] dark:text-[#60a5fa]">Сб</div>
+          <div className="text-[#2563eb] dark:text-[#60a5fa]">Нд</div>
         </div>
 
         {/* Calendar Days Grid */}
@@ -307,30 +307,30 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 key={`day-${dayNum}`}
                 onClick={() => setSelectedCalendarDateStr(dateStr)}
                 className={`h-14 sm:h-20 rounded-xl border p-1 sm:p-1.5 cursor-pointer transition-colors flex flex-col justify-between ${isSelected
-                  ? 'border-slate-900 dark:border-zinc-100 bg-slate-100/90 dark:bg-zinc-800 ring-1 ring-slate-900 dark:ring-zinc-100'
+                  ? 'border-[#2563eb] bg-blue-50/70 dark:bg-[#1d2939] ring-2 ring-[#2563eb]'
                   : isToday
-                    ? 'border-slate-300 dark:border-zinc-700 bg-slate-50/80 dark:bg-zinc-900'
+                    ? 'border-[#60a5fa] bg-[#f1f5f9] dark:bg-[#1d2939]'
                     : dayWorkouts.length > 0
-                      ? 'border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-slate-300 dark:hover:border-zinc-700'
-                      : 'border-slate-100 dark:border-zinc-800/60 bg-slate-50/50 dark:bg-zinc-900/40 hover:bg-slate-100 dark:hover:bg-zinc-800/50'
+                      ? 'border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] hover:border-[#60a5fa]'
+                      : 'border-[#f1f5f9] dark:border-[#334155]/60 bg-[#f8fafc]/50 dark:bg-[#1d2939]/40 hover:bg-[#f1f5f9] dark:hover:bg-[#263140]'
                   }`}
               >
                 <div className="flex items-center justify-between">
                   <span
                     className={`text-[11px] sm:text-xs font-bold ${isSelected
-                      ? 'text-zinc-950 dark:text-zinc-50'
+                      ? 'text-[#2563eb] dark:text-[#60a5fa] font-extrabold'
                       : isToday
-                        ? 'text-zinc-900 dark:text-zinc-100 font-extrabold'
+                        ? 'text-[#2563eb] dark:text-[#60a5fa] font-extrabold'
                         : dayWorkouts.length > 0
-                          ? 'text-zinc-800 dark:text-zinc-200'
-                          : 'text-zinc-400 dark:text-zinc-500'
+                          ? 'text-[#0f172a] dark:text-[#f8fafc]'
+                          : 'text-[#64748b] dark:text-[#94a3b8]'
                       }`}
                   >
                     {dayNum}
                   </span>
                   {isToday && (
                     <span
-                      className="h-1.5 w-1.5 rounded-full bg-amber-500"
+                      className="h-1.5 w-1.5 rounded-full bg-[#2563eb]"
                       title="Сьогодні"
                     />
                   )}
@@ -344,8 +344,8 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                       <div
                         key={dw.id}
                         className={`truncate rounded-md px-1 py-0.5 text-[8px] sm:text-[9px] font-semibold border ${isDone
-                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
-                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-[#22c55e] border-emerald-200 dark:border-emerald-800/60'
+                          : 'bg-blue-50 dark:bg-blue-950/40 text-[#2563eb] dark:text-[#60a5fa] border-blue-200 dark:border-blue-800'
                           }`}
                         title={dw.title}
                       >
@@ -357,7 +357,7 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                     );
                   })}
                   {dayWorkouts.length > 2 && (
-                    <div className="text-[8px] text-zinc-400 font-mono text-center">
+                    <div className="text-[8px] text-[#64748b] dark:text-[#94a3b8] font-mono text-center">
                       +{dayWorkouts.length - 2}
                     </div>
                   )}
@@ -371,28 +371,28 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
       {/* SELECTED DATE DETAILS & WORKOUTS */}
       <div
         ref={daySwipeRef}
-        className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-3 shadow-xs touch-pan-y"
+        className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 sm:p-5 space-y-3 shadow-xs touch-pan-y"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e2e8f0] dark:border-[#334155] pb-3">
           <div>
             <div className="flex items-center space-x-1.5">
-              <CalendarIcon className="h-4 w-4 text-slate-500 shrink-0" />
+              <CalendarIcon className="h-4 w-4 text-[#2563eb] shrink-0" />
               <button
                 type="button"
                 onClick={handlePrevDay}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="p-1 rounded-lg hover:bg-[#f1f5f9] dark:hover:bg-[#263140] text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] transition-colors cursor-pointer"
                 title="Попередній день"
                 aria-label="Попередній день"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </button>
-              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 select-none">
+              <h3 className="text-sm sm:text-base font-bold text-[#0f172a] dark:text-[#f8fafc] select-none">
                 {formatUkDate(selectedCalendarDateStr)}
               </h3>
               <button
                 type="button"
                 onClick={handleNextDay}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="p-1 rounded-lg hover:bg-[#f1f5f9] dark:hover:bg-[#263140] text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] transition-colors cursor-pointer"
                 title="Наступний день"
                 aria-label="Наступний день"
               >
@@ -410,7 +410,7 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 setIsCreateModalOpen(true);
               }
             }}
-            className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-[#0f172a] text-white dark:bg-zinc-100 dark:text-zinc-950 px-4 py-2 text-xs font-bold hover:bg-[#1e293b] dark:hover:bg-white transition-all cursor-pointer shrink-0 shadow-sm"
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-[#2563eb] text-white hover:bg-[#1d4ed8] px-4 py-2 text-xs font-bold transition-all cursor-pointer shrink-0 shadow-sm"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Додати тренування на цей день</span>
@@ -418,14 +418,14 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
         </div>
 
         {selectedDateWorkouts.length === 0 ? (
-          <div className="w-full rounded-[24px] border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 py-10 px-4 flex flex-col items-center justify-center text-center">
-            <div className="w-12 h-12 rounded-2xl bg-[#eef2f8] dark:bg-zinc-800 flex items-center justify-center">
-              <CalendarIcon className="w-5 h-5 text-slate-400 dark:text-zinc-400 stroke-[1.75]" />
+          <div className="w-full rounded-[24px] border border-dashed border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939]/50 py-10 px-4 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 rounded-2xl bg-[#f1f5f9] dark:bg-[#263140] flex items-center justify-center">
+              <CalendarIcon className="w-5 h-5 text-[#2563eb] dark:text-[#60a5fa] stroke-[1.75]" />
             </div>
-            <h4 className="mt-3 font-bold text-sm sm:text-base text-[#0f172a] dark:text-zinc-100">
+            <h4 className="mt-3 font-bold text-sm sm:text-base text-[#0f172a] dark:text-[#f8fafc]">
               На обрану дату немає тренувань
             </h4>
-            <p className="mt-1 text-xs text-[#94a3b8] dark:text-zinc-400 max-w-xs">
+            <p className="mt-1 text-xs text-[#64748b] dark:text-[#94a3b8] max-w-xs">
               Натисніть кнопку вище, щоб одразу скласти нову програму занять.
             </p>
           </div>
@@ -455,30 +455,30 @@ export const WorkoutHistoryView: React.FC<WorkoutHistoryViewProps> = ({
                 >
                   <div
                     onClick={() => onSelectWorkout(w)}
-                    className="group cursor-pointer bg-white dark:bg-zinc-900 px-4 py-3.5 transition-colors space-y-1.5"
+                    className="group cursor-pointer bg-white dark:bg-[#1d2939] px-4 py-3.5 transition-colors space-y-1.5"
                   >
                     {/* Row 1: Status · Date */}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
                         <span
                           className={`font-semibold ${isDone
-                            ? 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-[#22c55e]'
                             : w.status === 'in_progress'
-                              ? 'text-amber-500 dark:text-amber-400'
-                              : 'text-zinc-500 dark:text-zinc-400'
+                              ? 'text-[#60a5fa]'
+                              : 'text-[#64748b] dark:text-[#94a3b8]'
                             }`}
                         >
                           {isDone ? 'Завершено' : w.status === 'in_progress' ? 'У процесі' : 'Заплановано'}
                         </span>
-                        <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                        <span className="flex items-center gap-1 text-zinc-400 dark:text-zinc-500 font-mono">
+                        <span className="text-[#cbd5e1] dark:text-[#334155]">·</span>
+                        <span className="flex items-center gap-1 text-[#64748b] dark:text-[#94a3b8] font-mono">
                           <CalendarIcon className="h-3 w-3 shrink-0" />
                           <span>{w.scheduledDate}</span>
                         </span>
                         {w.assignedByCoachId && (
                           <>
-                            <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                            <span className="text-indigo-500 dark:text-indigo-400 font-medium">Від тренера</span>
+                            <span className="text-[#cbd5e1] dark:text-[#334155]">·</span>
+                            <span className="text-[#2563eb] dark:text-[#60a5fa] font-medium">Від тренера</span>
                           </>
                         )}
                       </div>

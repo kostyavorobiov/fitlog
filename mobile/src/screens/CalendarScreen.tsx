@@ -205,8 +205,8 @@ export const CalendarScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#0284c7"
-            colors={['#0284c7']}
+            tintColor="#2563EB"
+            colors={['#2563EB']}
           />
         }
       >
@@ -220,7 +220,7 @@ export const CalendarScreen: React.FC = () => {
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="chevron-back" size={18} color={isDark ? '#fafafa' : '#09090b'} />
+                <Ionicons name="chevron-back" size={18} color={isDark ? '#F8FAFC' : '#0F172A'} />
               </TouchableOpacity>
 
               <Text style={[styles.monthTitleText, isDark ? styles.textDark : styles.textLight]}>
@@ -233,7 +233,7 @@ export const CalendarScreen: React.FC = () => {
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="chevron-forward" size={18} color={isDark ? '#fafafa' : '#09090b'} />
+                <Ionicons name="chevron-forward" size={18} color={isDark ? '#F8FAFC' : '#0F172A'} />
               </TouchableOpacity>
             </View>
 
@@ -348,7 +348,7 @@ export const CalendarScreen: React.FC = () => {
                 style={[styles.miniArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
                 hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               >
-                <Ionicons name="chevron-back" size={16} color={isDark ? '#e4e4e7' : '#27272a'} />
+                <Ionicons name="chevron-back" size={16} color={isDark ? '#F8FAFC' : '#0F172A'} />
               </TouchableOpacity>
 
               <View style={{ flex: 1 }}>
@@ -367,7 +367,7 @@ export const CalendarScreen: React.FC = () => {
                 style={[styles.miniArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
                 hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               >
-                <Ionicons name="chevron-forward" size={16} color={isDark ? '#e4e4e7' : '#27272a'} />
+                <Ionicons name="chevron-forward" size={16} color={isDark ? '#F8FAFC' : '#0F172A'} />
               </TouchableOpacity>
             </View>
 
@@ -376,7 +376,7 @@ export const CalendarScreen: React.FC = () => {
               activeOpacity={0.8}
               onPress={() => setIsCreateModalOpen(true)}
             >
-              <Ionicons name="add" size={15} color={isDark ? '#09090b' : '#ffffff'} />
+              <Ionicons name="add" size={15} color="#ffffff" />
               <Text style={[styles.addForDateText, isDark ? styles.addForDateTextDark : styles.addForDateTextLight]}>
                 Додати на цей день
               </Text>
@@ -386,7 +386,7 @@ export const CalendarScreen: React.FC = () => {
           {/* Workouts List for Selected Date */}
           {isLoading ? (
             <View style={styles.centerContainer}>
-              <ActivityIndicator size="small" color="#0284c7" />
+              <ActivityIndicator size="small" color="#2563EB" />
               <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
                 Завантаження розкладу...
               </Text>
@@ -394,7 +394,7 @@ export const CalendarScreen: React.FC = () => {
           ) : selectedDateWorkouts.length === 0 ? (
             <View style={[styles.emptyDayContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
               <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-                <Ionicons name="calendar-clear-outline" size={26} color={isDark ? '#71717a' : '#94a3b8'} />
+                <Ionicons name="calendar-clear-outline" size={26} color={isDark ? '#94A3B8' : '#64748B'} />
               </View>
               <Text style={[styles.emptyDayTitle, isDark ? styles.textDark : styles.textLight]}>
                 Тренувань на обрану дату немає
@@ -485,7 +485,7 @@ export const CalendarScreen: React.FC = () => {
                     <Ionicons
                       name="chevron-forward"
                       size={20}
-                      color={isDark ? '#71717a' : '#a1a1aa'}
+                      color={isDark ? '#94A3B8' : '#64748B'}
                       style={styles.chevronIcon}
                     />
                   </TouchableOpacity>
@@ -513,10 +513,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgLight: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#F8FAFC',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0B1220',
   },
   headerAddBtn: {
     flexDirection: 'row',
@@ -527,10 +527,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   headerAddBtnLight: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#2563EB',
   },
   headerAddBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563EB',
   },
   headerAddBtnText: {
     fontSize: 12,
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   headerAddTextDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   scrollContent: {
     padding: 16,
@@ -574,12 +574,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   btnLight: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
   },
   btnDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   todayBtn: {
     paddingHorizontal: 10,
@@ -588,12 +588,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   todayBtnLight: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
   },
   todayBtnDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#263140',
+    borderColor: '#334155',
   },
   todayBtnText: {
     fontSize: 12,
@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   weekendText: {
-    color: '#f59e0b',
+    color: '#60A5FA',
   },
   daysGrid: {
     flexDirection: 'row',
@@ -633,14 +633,14 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   dayCellSelectedLight: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#2563EB',
   },
   dayCellSelectedDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563EB',
   },
   dayCellToday: {
     borderWidth: 1.5,
-    borderColor: '#71717a',
+    borderColor: '#2563EB',
   },
   dayNumWrap: {
     alignItems: 'center',
@@ -655,24 +655,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   dayCellNumSelectedDark: {
-    color: '#09090b',
+    color: '#ffffff',
     fontWeight: '700',
   },
   dayCellNumToday: {
-    color: '#0284c7',
+    color: '#2563EB',
     fontWeight: '700',
   },
   dayMutedLight: {
-    color: '#94a3b8',
+    color: '#94A3B8',
   },
   dayMutedDark: {
-    color: '#52525b',
+    color: '#64748B',
   },
   todayIndicatorDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#2563EB',
     position: 'absolute',
     bottom: -5,
   },
@@ -689,13 +689,13 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
   },
   dotCompleted: {
-    backgroundColor: '#10b981',
+    backgroundColor: '#22C55E',
   },
   dotInProgress: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#60A5FA',
   },
   dotPlanned: {
-    backgroundColor: '#0284c7',
+    backgroundColor: '#2563EB',
   },
   multipleCountText: {
     fontSize: 8,
@@ -744,10 +744,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   addForDateBtnLight: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#2563EB',
   },
   addForDateBtnDark: {
-    backgroundColor: '#f4f4f5',
+    backgroundColor: '#2563EB',
   },
   addForDateText: {
     fontSize: 12,
@@ -757,7 +757,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   addForDateTextDark: {
-    color: '#09090b',
+    color: '#ffffff',
   },
   centerContainer: {
     padding: 24,
@@ -777,12 +777,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
   },
   emptyDark: {
-    backgroundColor: '#18181b80',
-    borderColor: '#27272a',
+    backgroundColor: '#1D2939',
+    borderColor: '#334155',
   },
   emptyIconBox: {
     width: 52,
@@ -793,10 +793,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   emptyIconBoxLight: {
-    backgroundColor: '#eef2f8',
+    backgroundColor: '#F1F5F9',
   },
   emptyIconBoxDark: {
-    backgroundColor: '#27272a',
+    backgroundColor: '#263140',
   },
   emptyDayTitle: {
     fontSize: 15,
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#0284c7',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 14,
@@ -836,12 +836,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   workoutItemLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e4e4e7',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
   },
   workoutItemDark: {
-    backgroundColor: '#18181b',
-    borderColor: '#27272a',
+    backgroundColor: '#1D2939',
+    borderColor: '#334155',
   },
   workoutItemLeft: {
     flex: 1,
@@ -868,7 +868,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ecfdf5',
   },
   badgeInProgress: {
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#eff6ff',
   },
   badgePlanned: {
     backgroundColor: '#f1f5f9',
@@ -878,13 +878,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   statusTextCompleted: {
-    color: '#10b981',
+    color: '#22C55E',
   },
   statusTextInProgress: {
-    color: '#f59e0b',
+    color: '#60A5FA',
   },
   statusTextPlanned: {
-    color: '#64748b',
+    color: '#64748B',
   },
   workoutItemMetaRow: {
     flexDirection: 'row',
@@ -901,21 +901,21 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   textLight: {
-    color: '#09090b',
+    color: '#0F172A',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#F8FAFC',
   },
   subLight: {
-    color: '#71717a',
+    color: '#64748B',
   },
   subDark: {
-    color: '#a1a1aa',
+    color: '#94A3B8',
   },
   borderLight: {
-    borderColor: '#e2e8f0',
+    borderColor: '#E2E8F0',
   },
   borderDark: {
-    borderColor: '#27272a',
+    borderColor: '#334155',
   },
 });

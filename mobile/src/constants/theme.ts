@@ -7,24 +7,43 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
-export const Colors = {
+export const OceanColors = {
+  primary: '#2563EB',
+  accent: '#60A5FA',
+  success: '#22C55E',
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    primary: '#2563EB',
+    accent: '#60A5FA',
+    success: '#22C55E',
+    background: '#F8FAFC',
+    card: '#FFFFFF',
+    text: '#0F172A',
+    textSecondary: '#64748B',
+    border: '#E2E8F0',
+    inactive: '#F1F5F9',
+    backgroundElement: '#F1F5F9',
+    backgroundSelected: '#E2E8F0',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    primary: '#2563EB',
+    accent: '#60A5FA',
+    success: '#22C55E',
+    background: '#0B1220',
+    card: '#1D2939',
+    text: '#F8FAFC',
+    textSecondary: '#94A3B8',
+    border: '#334155',
+    inactive: '#263140',
+    backgroundElement: '#263140',
+    backgroundSelected: '#334155',
   },
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export const Colors = OceanColors;
+
+export const getOceanTheme = (isDark: boolean) => (isDark ? OceanColors.dark : OceanColors.light);
+
+export type ThemeColor = keyof typeof OceanColors.light & keyof typeof OceanColors.dark;
 
 export const Fonts = Platform.select({
   ios: {

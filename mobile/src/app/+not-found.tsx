@@ -29,20 +29,20 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   bgLight: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#F8FAFC',
   },
   bgDark: {
-    backgroundColor: '#09090b',
+    backgroundColor: '#0B1220',
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
   },
   textLight: {
-    color: '#09090b',
+    color: '#0F172A',
   },
   textDark: {
-    color: '#fafafa',
+    color: '#F8FAFC',
   },
   link: {
     marginTop: 16,
@@ -52,6 +52,6 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#f59e0b',
+    color: '#2563EB',
   },
 });

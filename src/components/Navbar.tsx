@@ -114,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Top Header - Liquid Glass with Mobile Auto-Hide */}
       <header
         data-no-swipe="true"
-        className={`sticky top-0 z-40 w-full border-b border-zinc-200/70 dark:border-zinc-800/70 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl transition-all duration-300 ease-in-out ${isNavVisible
+        className={`sticky top-0 z-40 w-full border-b border-[#e2e8f0]/80 dark:border-[#334155]/80 bg-[#f8fafc]/85 dark:bg-[#0b1220]/85 backdrop-blur-xl transition-all duration-300 ease-in-out ${isNavVisible
           ? 'translate-y-0 opacity-100'
           : '-translate-y-full opacity-0 pointer-events-none md:translate-y-0 md:opacity-100 md:pointer-events-auto'
           }`}
@@ -130,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               onClick={() => handleNavSelect('editor')}
             >
-              <span className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 hover:text-zinc-700 dark:hover:text-white transition-colors">
+              <span className="text-base sm:text-lg font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] hover:text-[#2563eb] dark:hover:text-[#60a5fa] transition-colors">
                 Your workout diary
               </span>
             </div>
@@ -145,14 +145,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 onClick={() => handleNavSelect('editor')}
                 className={`relative flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'editor'
-                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  ? 'bg-[#2563eb] text-white shadow-sm'
+                  : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                   }`}
               >
                 <Dumbbell className="h-4 w-4" />
                 <span>Тренування</span>
                 {hasActiveWorkout && currentTab !== 'editor' && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#60a5fa]" />
                 )}
               </button>
 
@@ -164,8 +164,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 onClick={() => handleNavSelect('history')}
                 className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'history'
-                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  ? 'bg-[#2563eb] text-white shadow-sm'
+                  : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                   }`}
               >
                 <Calendar className="h-4 w-4" />
@@ -180,8 +180,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 onClick={() => handleNavSelect('analytics')}
                 className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'analytics'
-                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  ? 'bg-[#2563eb] text-white shadow-sm'
+                  : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                   }`}
               >
                 <Activity className="h-4 w-4" />
@@ -196,8 +196,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 onClick={() => handleNavSelect('catalog')}
                 className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'catalog'
-                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  ? 'bg-[#2563eb] text-white shadow-sm'
+                  : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                   }`}
               >
                 <BookOpen className="h-4 w-4" />
@@ -213,8 +213,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   onClick={() => handleNavSelect('trainees')}
                   className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'trainees'
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                    ? 'bg-[#2563eb] text-white shadow-sm'
+                    : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                     }`}
                 >
                   <Users className="h-4 w-4" />
@@ -226,13 +226,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Right Header Actions: Language + Theme + User Avatar */}
             <div className="flex items-center space-x-1.5 shrink-0">
               {/* Language Switcher */}
-              <div className="flex items-center rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 p-0.5 gap-0.5">
+              <div className="flex items-center rounded-full border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] p-0.5 gap-0.5">
                 <button
                   type="button"
                   onClick={() => setLanguage('uk')}
                   className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${language === 'uk'
-                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                    ? 'bg-[#2563eb] text-white'
+                    : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
                     }`}
                   title="Українська"
                 >
@@ -242,8 +242,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   type="button"
                   onClick={() => setLanguage('en')}
                   className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${language === 'en'
-                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                    ? 'bg-[#2563eb] text-white'
+                    : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
                     }`}
                   title="English"
                 >
@@ -265,7 +265,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }
                 }}
                 onClick={toggleTheme}
-                className="h-9 w-9 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="h-9 w-9 rounded-full border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] flex items-center justify-center text-[#64748b] dark:text-[#94a3b8] hover:text-[#2563eb] dark:hover:text-[#60a5fa] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] transition-colors cursor-pointer"
                 title={isDark ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
                 aria-label={isDark ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
               >
@@ -282,9 +282,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                       if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('profile');
                     }}
                     onClick={() => handleNavSelect('profile')}
-                    className={`relative flex items-center justify-center rounded-full p-0.5 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-400 active:scale-95 ${currentTab === 'profile'
-                      ? 'border-zinc-900 dark:border-zinc-100 ring-2 ring-zinc-300 dark:ring-zinc-700'
-                      : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                    className={`relative flex items-center justify-center rounded-full p-0.5 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563eb]/40 active:scale-95 ${currentTab === 'profile'
+                      ? 'border-[#2563eb] ring-2 ring-[#2563eb]/30'
+                      : 'border-[#e2e8f0] dark:border-[#334155] hover:border-[#2563eb]'
                       }`}
                     style={{ minWidth: '40px', minHeight: '40px' }}
                     title="Мій профіль"
@@ -319,7 +319,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       }
                       onOpenAuthModal();
                     }}
-                    className="rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 px-3.5 py-1.5 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer"
+                    className="rounded-xl bg-[#2563eb] text-white hover:bg-[#1d4ed8] px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                   >
                     Увійти
                   </button>
@@ -334,7 +334,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <nav
         data-no-swipe="true"
         aria-label="Mobile Navigation"
-        className={`md:hidden fixed bottom-4 inset-x-4 max-w-sm mx-auto z-40 rounded-full bg-zinc-100 dark:bg-zinc-800 shadow-lg px-2 py-1.5 flex items-center justify-around transition-all duration-300 ease-in-out ${isNavVisible
+        className={`md:hidden fixed bottom-4 inset-x-4 max-w-sm mx-auto z-40 rounded-full bg-white/95 dark:bg-[#1d2939]/95 border border-[#e2e8f0] dark:border-[#334155] shadow-lg px-2 py-1.5 flex items-center justify-around transition-all duration-300 ease-in-out backdrop-blur-xl ${isNavVisible
           ? 'translate-y-0 opacity-100 pointer-events-auto'
           : 'translate-y-28 opacity-0 pointer-events-none'
           }`}
@@ -349,79 +349,79 @@ export const Navbar: React.FC<NavbarProps> = ({
           onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor'); }}
           onClick={() => handleNavSelect('editor')}
           className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'editor'
-            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-            : 'text-zinc-500 dark:text-zinc-400'
+            ? 'bg-[#2563eb] text-white shadow-sm font-bold'
+            : 'text-[#64748b] dark:text-[#94a3b8]'
             }`}
         >
-        <Dumbbell className="h-[18px] w-[18px] shrink-0" />
-        <span className="text-[9px] font-semibold leading-none">Тренування</span>
-        {hasActiveWorkout && currentTab !== 'editor' && (
-          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
-        )}
-      </button>
+          <Dumbbell className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Тренування</span>
+          {hasActiveWorkout && currentTab !== 'editor' && (
+            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#60a5fa]" />
+          )}
+        </button>
 
-      {/* Календар */}
-      <button
-        type="button"
-        onTouchStart={() => handleNavSelect('history')}
-        onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history'); }}
-        onClick={() => handleNavSelect('history')}
-        className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'history'
-          ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-          : 'text-zinc-500 dark:text-zinc-400'
-          }`}
-      >
-        <Calendar className="h-[18px] w-[18px] shrink-0" />
-        <span className="text-[9px] font-semibold leading-none">Календар</span>
-      </button>
-
-      {/* Аналітика */}
-      <button
-        type="button"
-        onTouchStart={() => handleNavSelect('analytics')}
-        onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics'); }}
-        onClick={() => handleNavSelect('analytics')}
-        className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'analytics'
-          ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-          : 'text-zinc-500 dark:text-zinc-400'
-          }`}
-      >
-        <BarChart2 className="h-[18px] w-[18px] shrink-0" />
-        <span className="text-[9px] font-semibold leading-none">Аналітика</span>
-      </button>
-
-      {/* Вправи */}
-      <button
-        type="button"
-        onTouchStart={() => handleNavSelect('catalog')}
-        onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog'); }}
-        onClick={() => handleNavSelect('catalog')}
-        className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'catalog'
-          ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-          : 'text-zinc-500 dark:text-zinc-400'
-          }`}
-      >
-        <BookOpen className="h-[18px] w-[18px] shrink-0" />
-        <span className="text-[9px] font-semibold leading-none">Вправи</span>
-      </button>
-
-      {/* Підопічні (тільки для тренерів/адмінів) */}
-      {(user?.role === 'coach' || isAdmin) && (
+        {/* Календар */}
         <button
           type="button"
-          onTouchStart={() => handleNavSelect('trainees')}
-          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees'); }}
-          onClick={() => handleNavSelect('trainees')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'trainees'
-            ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100 font-bold'
-            : 'text-zinc-500 dark:text-zinc-400'
+          onTouchStart={() => handleNavSelect('history')}
+          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history'); }}
+          onClick={() => handleNavSelect('history')}
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'history'
+            ? 'bg-[#2563eb] text-white shadow-sm font-bold'
+            : 'text-[#64748b] dark:text-[#94a3b8]'
             }`}
         >
-          <Users className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Підопічні</span>
+          <Calendar className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Календар</span>
         </button>
-      )}
-    </nav >
+
+        {/* Аналітика */}
+        <button
+          type="button"
+          onTouchStart={() => handleNavSelect('analytics')}
+          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics'); }}
+          onClick={() => handleNavSelect('analytics')}
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'analytics'
+            ? 'bg-[#2563eb] text-white shadow-sm font-bold'
+            : 'text-[#64748b] dark:text-[#94a3b8]'
+            }`}
+        >
+          <BarChart2 className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Аналітика</span>
+        </button>
+
+        {/* Вправи */}
+        <button
+          type="button"
+          onTouchStart={() => handleNavSelect('catalog')}
+          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog'); }}
+          onClick={() => handleNavSelect('catalog')}
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'catalog'
+            ? 'bg-[#2563eb] text-white shadow-sm font-bold'
+            : 'text-[#64748b] dark:text-[#94a3b8]'
+            }`}
+        >
+          <BookOpen className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Вправи</span>
+        </button>
+
+        {/* Підопічні (тільки для тренерів/адмінів) */}
+        {(user?.role === 'coach' || isAdmin) && (
+          <button
+            type="button"
+            onTouchStart={() => handleNavSelect('trainees')}
+            onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees'); }}
+            onClick={() => handleNavSelect('trainees')}
+            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'trainees'
+              ? 'bg-[#2563eb] text-white shadow-sm font-bold'
+              : 'text-[#64748b] dark:text-[#94a3b8]'
+              }`}
+          >
+            <Users className="h-[18px] w-[18px] shrink-0" />
+            <span className="text-[9px] font-semibold leading-none">Підопічні</span>
+          </button>
+        )}
+      </nav >
     </>
   );
 };
