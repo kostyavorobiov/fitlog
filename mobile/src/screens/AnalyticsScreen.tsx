@@ -555,7 +555,15 @@ export const AnalyticsScreen: React.FC = () => {
                           <TouchableOpacity
                             key={item.exerciseId || `ex_${idx}`}
                             activeOpacity={0.7}
-                            onPress={() => setSelectedExerciseModal(item)}
+                            onPress={() => {
+                              router.push({
+                                pathname: `/exercise/${item.exerciseId}` as any,
+                                params: {
+                                  name: item.exerciseName,
+                                  muscleGroup: item.muscleGroup,
+                                },
+                              });
+                            }}
                             style={[
                               styles.exerciseItem,
                               idx > 0 && (isDark ? styles.itemBorderDark : styles.itemBorderLight),
@@ -612,15 +620,6 @@ export const AnalyticsScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Exercise Detail / History Modal */}
-      <ExerciseDetailModal
-        visible={Boolean(selectedExerciseModal)}
-        onClose={() => setSelectedExerciseModal(null)}
-        exerciseId={selectedExerciseModal?.exerciseId || ''}
-        exerciseName={selectedExerciseModal?.exerciseName || ''}
-        muscleGroup={selectedExerciseModal?.muscleGroup}
-        userId={targetUserId}
-      />
     </SafeAreaView>
   );
 };

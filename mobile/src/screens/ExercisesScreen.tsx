@@ -20,6 +20,7 @@ import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { ExerciseService } from '../services/exerciseService';
@@ -78,6 +79,7 @@ export const ExercisesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const { user, isAdmin } = useAuth();
   const { handleScroll } = useScrollTabBar();
+  const router = useRouter();
 
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
@@ -96,7 +98,16 @@ export const ExercisesScreen: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editMuscle, setEditMuscle] = useState<MuscleGroup>('chest');
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
-  const [selectedExerciseForDetail, setSelectedExerciseForDetail] = useState<Exercise | null>(null);
+
+  const handleOpenExerciseDetail = (ex: Exercise) => {
+    router.push({
+      pathname: `/exercise/${ex.id}` as any,
+      params: {
+        name: ex.name,
+        muscleGroup: ex.muscleGroup,
+      },
+    });
+  };
 
   const loadExercises = useCallback(async () => {
     setIsLoading(true);
@@ -469,7 +480,7 @@ export const ExercisesScreen: React.FC = () => {
                 >
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={() => setSelectedExerciseForDetail(ex)}
+                    onPress={() => handleOpenExerciseDetail(ex)}
                     style={styles.exCard}
                   >
                     <View style={styles.exCardHeader}>
@@ -736,15 +747,6 @@ export const ExercisesScreen: React.FC = () => {
         </SafeAreaView>
       </Modal>
 
-      {/* Exercise Detail / History Modal */}
-      <ExerciseDetailModal
-        visible={Boolean(selectedExerciseForDetail)}
-        onClose={() => setSelectedExerciseForDetail(null)}
-        exerciseId={selectedExerciseForDetail?.id || ''}
-        exerciseName={selectedExerciseForDetail?.name || ''}
-        muscleGroup={selectedExerciseForDetail?.muscleGroup}
-        userId={user?.id || ''}
-      />
     </SafeAreaView>
   );
 };
