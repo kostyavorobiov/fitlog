@@ -15,6 +15,7 @@ import { ExerciseHistoryModal } from './ExerciseHistoryModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { MobileSwipeableExerciseCard } from './MobileSwipeableExerciseCard';
 import { playSuccessChime, playBeep } from '../utils/audio';
+import { getExercise1RM, format1RM, getMinRepsFromRange } from '../utils/workout';
 import {
   Calendar,
   Plus,
@@ -433,14 +434,17 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               workoutExerciseId: existingWe.id,
               setNumber: idx + 1,
               targetRepsRange: ps.targetRepsRange || targetRange,
-              weight: Number(ps.weight) || 20,
-              actualReps: ps.actualReps !== null && ps.actualReps !== undefined ? Number(ps.actualReps) : 10,
+              weight: ps.weight !== null && ps.weight !== undefined && !isNaN(Number(ps.weight)) ? Number(ps.weight) : 0,
+              actualReps: ps.actualReps !== null && ps.actualReps !== undefined ? Number(ps.actualReps) : getMinRepsFromRange(ps.targetRepsRange || targetRange),
               completedAt: null,
             }));
           } else {
+            const minReps = getMinRepsFromRange(targetRange);
             updatedSets = updatedSets.map((s) => ({
               ...s,
               targetRepsRange: targetRange,
+              weight: 0,
+              actualReps: minReps,
             }));
           }
         }
@@ -519,19 +523,20 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
           workoutExerciseId: '',
           setNumber: idx + 1,
           targetRepsRange: ps.targetRepsRange || targetRange,
-          weight: Number(ps.weight) || 20,
-          actualReps: ps.actualReps !== null && ps.actualReps !== undefined ? Number(ps.actualReps) : 10,
+          weight: ps.weight !== null && ps.weight !== undefined && !isNaN(Number(ps.weight)) ? Number(ps.weight) : 0,
+          actualReps: ps.actualReps !== null && ps.actualReps !== undefined ? Number(ps.actualReps) : getMinRepsFromRange(ps.targetRepsRange || targetRange),
           completedAt: null,
         }));
       } else {
+        const minReps = getMinRepsFromRange(targetRange);
         initialSets = [
           {
             id: generateId('set'),
             workoutExerciseId: '',
             setNumber: 1,
             targetRepsRange: targetRange,
-            weight: 20,
-            actualReps: 10,
+            weight: 0,
+            actualReps: minReps,
             completedAt: null,
           },
           {
@@ -539,8 +544,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             workoutExerciseId: '',
             setNumber: 2,
             targetRepsRange: targetRange,
-            weight: 20,
-            actualReps: 10,
+            weight: 0,
+            actualReps: minReps,
             completedAt: null,
           },
           {
@@ -548,8 +553,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             workoutExerciseId: '',
             setNumber: 3,
             targetRepsRange: targetRange,
-            weight: 20,
-            actualReps: 10,
+            weight: 0,
+            actualReps: minReps,
             completedAt: null,
           },
         ];
@@ -730,14 +735,15 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         let sets = [...e.sets];
         if (count > sets.length) {
           const lastSet = sets[sets.length - 1];
+          const minReps = getMinRepsFromRange(e.targetRepsRange || lastSet?.targetRepsRange || '8-12');
           for (let i = sets.length; i < count; i++) {
             sets.push({
               id: generateId('set'),
               workoutExerciseId: weId,
               setNumber: i + 1,
               targetRepsRange: e.targetRepsRange || lastSet?.targetRepsRange || '8-12',
-              weight: lastSet?.weight || 20,
-              actualReps: lastSet?.actualReps || 10,
+              weight: lastSet?.weight ?? 0,
+              actualReps: lastSet?.actualReps ?? minReps,
               completedAt: null,
             });
           }
@@ -758,13 +764,14 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     const updatedExercises = currentWorkout.exercises.map((e) => {
       if (e.id === weId) {
         const lastSet = e.sets[e.sets.length - 1];
+        const minReps = getMinRepsFromRange(e.targetRepsRange || lastSet?.targetRepsRange || '8-12');
         const newSet: WorkoutSet = {
           id: generateId('set'),
           workoutExerciseId: weId,
           setNumber: e.sets.length + 1,
           targetRepsRange: e.targetRepsRange || lastSet?.targetRepsRange || '8-12',
-          weight: lastSet?.weight || 0,
-          actualReps: lastSet?.actualReps || 10,
+          weight: lastSet?.weight ?? 0,
+          actualReps: lastSet?.actualReps ?? minReps,
           completedAt: null,
         };
         const newSets = [...e.sets, newSet];
@@ -799,11 +806,44 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     value: number | null
   ) => {
     const currentWorkout = workoutRef.current;
+    const targetExercise = currentWorkout.exercises.find((e) => e.id === weId);
+    const currentSet = targetExercise?.sets.find((s) => s.id === setId);
+
+    let shouldResetReps = false;
+    let newReps: number | null = null;
+
+    if (field === 'weight' && currentSet) {
+      const currentWeight = currentSet.weight ?? 0;
+      const targetWeight = value ?? 0;
+      if (currentWeight !== targetWeight) {
+        shouldResetReps = true;
+        const range = currentSet.targetRepsRange || targetExercise?.targetRepsRange || '8-12';
+        newReps = getMinRepsFromRange(range);
+      }
+    }
+
+    if (shouldResetReps) {
+      setActiveInputText((prev) => {
+        if (`${setId}_actualReps` in prev) {
+          const next = { ...prev };
+          delete next[`${setId}_actualReps`];
+          return next;
+        }
+        return prev;
+      });
+    }
+
     const updatedExercises = currentWorkout.exercises.map((e) => {
       if (e.id === weId) {
         const updatedSets = e.sets.map((s) => {
           if (s.id === setId) {
-            return { ...s, [field]: value };
+            if (shouldResetReps) {
+              return { ...s, weight: value ?? 0, actualReps: newReps };
+            }
+            if (field === 'weight') {
+              return { ...s, weight: value ?? 0 };
+            }
+            return { ...s, actualReps: value };
           }
           return s;
         });
@@ -1217,6 +1257,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                               <span>{weItem.sets?.length || 0} підходи</span>
                               <span>•</span>
                               <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
+                              <span>•</span>
+                              <span>1RM: {format1RM(getExercise1RM(weItem.sets))}</span>
                             </div>
                           )}
                         </div>
@@ -1247,7 +1289,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
                     {isExpanded && (
                       <>
-                        {/* Mobile Config Row: Reps Dropdown (Sets row deleted) */}
+                        {/* Mobile Config Row: Reps Dropdown */}
                         <div className="px-3 py-2 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
@@ -1264,6 +1306,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                                 </option>
                               ))}
                             </select>
+                          </div>
+                          <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                            1RM: <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{format1RM(getExercise1RM(weItem.sets))}</span>
                           </div>
                         </div>
 
@@ -1520,6 +1565,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           <span>{weItem.sets?.length || 0} підходи</span>
                           <span>•</span>
                           <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
+                          <span>•</span>
+                          <span>1RM: {format1RM(getExercise1RM(weItem.sets))}</span>
                         </div>
                       )}
                     </div>
@@ -1584,8 +1631,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
                 {isExpanded && (
                   <>
-                    {/* Desktop Config Row: Reps Dropdown (Sets row deleted) */}
-                    <div className="hidden sm:block px-5 py-3 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800">
+                    {/* Desktop Config Row: Reps Dropdown */}
+                    <div className="hidden sm:flex px-5 py-3 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
                           Діапазон повторень:
@@ -1595,12 +1642,15 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
                           className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
                         >
-                          {(['4-6', '6-8', '8-10', '8-12', '10-15'] as const).map((range) => (
+                          {(['4-6', '6-8', '6-10', '8-10', '8-12', '10-15'] as const).map((range) => (
                             <option key={range} value={range}>
                               {range}
                             </option>
                           ))}
                         </select>
+                      </div>
+                      <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                        1RM: <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{format1RM(getExercise1RM(weItem.sets))}</span>
                       </div>
                     </div>
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Exercise, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
+import { calculate1RM } from '../utils/workout';
 import {
   X,
   Dumbbell,
@@ -67,9 +68,9 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
         prWeight = s.weight;
         bestRepsAtPR = s.actualReps || 0;
       }
-      // Brzycki 1RM formula: weight * (36 / (37 - reps))
-      if (s.weight > 0 && s.actualReps && s.actualReps > 0 && s.actualReps <= 30) {
-        const est1RM = s.actualReps === 1 ? s.weight : s.weight * (36 / (37 - s.actualReps));
+      // Brzycki 1RM formula via calculate1RM
+      if (s.weight > 0 && s.actualReps && s.actualReps > 0) {
+        const est1RM = calculate1RM(s.weight, s.actualReps);
         if (est1RM > best1RM) best1RM = est1RM;
       }
       totalRepsAllTime += s.actualReps || 0;
