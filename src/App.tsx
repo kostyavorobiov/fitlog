@@ -44,6 +44,27 @@ const MainContent: React.FC = () => {
     }
   }, [activeWorkout, user]);
 
+  // Mobile OAuth Bridge: If redirected to web from OAuth on a mobile device/webview, bridge back to mobile app
+  const [mobileAuthUrl, setMobileAuthUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      const hasAuthTokens = hash.includes('access_token=') || search.includes('code=');
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (hasAuthTokens && isMobile) {
+        const target = `fitlog://auth/callback${hash}${search ? (hash ? '&' : '?') + search.slice(1) : ''}`;
+        setMobileAuthUrl(target);
+        // Automatically attempt deep link redirect to return to the mobile app
+        window.location.replace(target);
+      }
+    } catch (e) {
+      console.warn('[MobileOAuthBridge] Error:', e);
+    }
+  }, []);
+
   // Helper to create a fresh workout
   const handleCreateNewWorkout = (title: string, scheduledDate: string) => {
     if (!user) return;
@@ -224,6 +245,28 @@ const MainContent: React.FC = () => {
           <ProfileView />
         )}
       </main>
+
+      {/* Mobile OAuth Return Banner */}
+      {mobileAuthUrl && (
+        <aside
+          role="region"
+          aria-label="Повернення в мобільний застосунок"
+          className="fixed top-0 inset-x-0 z-[100] px-4 py-3 bg-indigo-600 text-white flex items-center justify-between shadow-2xl animate-fade-in"
+        >
+          <div className="flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs sm:text-sm font-semibold">
+              Успішно авторизовано! Поверніться в додаток:
+            </span>
+          </div>
+          <a
+            href={mobileAuthUrl}
+            className="px-4 py-2 bg-white text-indigo-900 font-bold text-xs rounded-xl shadow active:scale-95 transition-transform"
+          >
+            Відкрити додаток
+          </a>
+        </aside>
+      )}
 
       {/* Google Auth Modal */}
       <GoogleAuthModal

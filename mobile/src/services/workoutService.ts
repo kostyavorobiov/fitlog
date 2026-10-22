@@ -43,8 +43,9 @@ export class WorkoutService {
 
     const cacheKey = `${WORKOUTS_CACHE_KEY}_${userId}`;
 
-    // 1. Try Supabase if configured
-    if (isSupabaseConfigured() && supabase) {
+    // 1. Try Supabase if configured and userId is a valid UUID (not local demo CUID)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    if (isSupabaseConfigured() && supabase && isUuid) {
       try {
         const { data: workoutsData, error } = await supabase
           .from('workouts')
