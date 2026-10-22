@@ -144,7 +144,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Top Header - Liquid Glass with Mobile Auto-Hide */}
       <header
         data-no-swipe="true"
-        className={`sticky top-0 z-40 w-full border-b border-[#e2e8f0]/80 dark:border-[#334155]/80 bg-[#f8fafc]/85 dark:bg-[#0b1220]/85 backdrop-blur-xl transition-all duration-300 ease-in-out ${isEditingWorkout ? 'hidden md:block' : ''} ${isNavVisible
+        className={`sticky top-0 z-40 w-full border-b border-[#e2e8f0]/80 dark:border-[#334155]/80 bg-[#f8fafc]/85 dark:bg-[#0b1220]/85 backdrop-blur-xl transition-all duration-300 ease-in-out ${isEditingWorkout || currentTab === 'analytics' ? 'hidden md:block' : ''} ${isNavVisible
           ? 'translate-y-0 opacity-100'
           : '-translate-y-full opacity-0 pointer-events-none md:translate-y-0 md:opacity-100 md:pointer-events-auto'
           }`}
