@@ -1434,15 +1434,17 @@ export const WorkoutEditorScreen: React.FC = () => {
                   isDark={isDark}
                 >
                   <Card style={[styles.exerciseCard, { overflow: 'hidden' }]}>
-                    {/* Superset Full Width Top Stripe */}
+                    {/* Superset Full Height Left Stripe */}
                     {isSuperset && palette && (
                       <View
                         style={{
-                          height: 4,
-                          marginHorizontal: -12,
-                          marginTop: -12,
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: 4,
                           backgroundColor: palette.borderColor,
-                          alignSelf: 'stretch',
+                          zIndex: 1,
                         }}
                       />
                     )}

@@ -1111,69 +1111,70 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
           <button type="button" className="ml-2 underline cursor-pointer" onClick={() => updateAndSave(workoutRef.current)}>Повторити</button>
         </div>
       )}
-      {/* Top Bar matching Mobile React Native */}
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs">
-        {/* Back Button */}
-        {onBack ? (
-          <button
-            type="button"
-            onClick={onBack}
-            className="p-2 -ml-1 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
-            title="Назад"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        ) : (
-          <div className="w-5" />
-        )}
+      {/* Top Navbar matching mobile screenshot */}
+      <div className="flex items-center justify-between gap-3 px-1 sm:px-2 py-2 sm:py-3 border-b border-zinc-200 dark:border-[#334155] -mt-2 mb-3 sm:mb-5">
+        {/* Left: Back Button + Title & Date (left-aligned) */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="p-1 -ml-1 text-zinc-700 dark:text-zinc-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer shrink-0"
+              title="Назад"
+            >
+              <ArrowLeft className="h-6 w-6 stroke-[2]" />
+            </button>
+          ) : null}
 
-        {/* Center: Title (tap to edit) & Date (tap to pick without calendar icon) */}
-        <div className="flex-1 min-w-0 flex flex-col items-center text-center">
-          <button
-            type="button"
-            onClick={() => {
-              setNewTitleInput(workout.title || 'Тренування');
-              setIsEditTitleModalOpen(true);
-            }}
-            className="group inline-flex items-center gap-1.5 max-w-full cursor-pointer hover:opacity-80 transition-opacity"
-            title="Редагувати назву"
-          >
-            <span className="font-bold text-base sm:text-lg text-zinc-900 dark:text-zinc-100 truncate">
-              {workout.title || 'Тренування'}
-            </span>
-            <Pencil className="h-3.5 w-3.5 text-zinc-400 group-hover:text-blue-600 transition-colors shrink-0" />
-          </button>
-
-          <label className="relative inline-flex items-center cursor-pointer text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mt-0.5">
-            <span>{workout.scheduledDate ? formatDateDDMMYYYY(workout.scheduledDate) : 'Виберіть дату'}</span>
-            <input
-              type="date"
-              value={workout.scheduledDate ? workout.scheduledDate.split('T')[0] : ''}
-              onChange={(e) => handleDateChange(e.target.value)}
-              onClick={(e) => {
-                try {
-                  (e.target as any).showPicker?.();
-                } catch {}
+          <div className="min-w-0 flex flex-col items-start text-left">
+            <button
+              type="button"
+              onClick={() => {
+                setNewTitleInput(workout.title || 'Тренування');
+                setIsEditTitleModalOpen(true);
               }}
-              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-              tabIndex={-1}
-            />
-          </label>
+              className="group inline-flex items-center gap-1.5 max-w-full cursor-pointer hover:opacity-80 transition-opacity"
+              title="Редагувати назву"
+            >
+              <span className="font-bold text-[17px] sm:text-lg text-zinc-900 dark:text-white truncate">
+                {workout.title || 'Тренування'}
+              </span>
+              <Pencil className="h-3.5 w-3.5 text-zinc-400 dark:text-[#94A3B8] group-hover:text-blue-500 transition-colors shrink-0" />
+            </button>
+
+            <label className="relative inline-flex items-center cursor-pointer text-xs font-medium text-zinc-500 dark:text-[#94A3B8] hover:text-blue-600 dark:hover:text-blue-400 transition-colors mt-0.5">
+              <span>{workout.scheduledDate ? formatDateDDMMYYYY(workout.scheduledDate) : 'Виберіть дату'}</span>
+              <input
+                type="date"
+                value={workout.scheduledDate ? workout.scheduledDate.split('T')[0] : ''}
+                onChange={(e) => handleDateChange(e.target.value)}
+                onClick={(e) => {
+                  try {
+                    (e.target as any).showPicker?.();
+                  } catch {}
+                }}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                tabIndex={-1}
+              />
+            </label>
+          </div>
         </div>
 
         {/* Right: Save as Template button */}
-        <button
-          type="button"
-          onClick={() => {
-            setTemplateNameInput(workout.title || 'Моє тренування');
-            setIsTemplateModalOpen(true);
-          }}
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer shrink-0"
-          title="Зберегти як шаблон"
-        >
-          <Bookmark className="h-3.5 w-3.5" />
-          <span>Шаблон</span>
-        </button>
+        <div className="flex items-center shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setTemplateNameInput(workout.title || 'Моє тренування');
+              setIsTemplateModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/25 transition-colors cursor-pointer"
+            title="Зберегти як шаблон"
+          >
+            <Bookmark className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <span>Шаблон</span>
+          </button>
+        </div>
       </div>
 
       {templateNotice && (
@@ -1227,15 +1228,15 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                 onDragStart={() => handleDragStart(weIndex)}
                 onDragOver={(e) => handleDragOver(e, weIndex)}
                 onDragEnd={handleDragEnd}
-                className={`rounded-2xl border bg-white dark:bg-[#1D2939] shadow-xs overflow-hidden transition-colors ${isDragged
+                className={`relative rounded-2xl border bg-white dark:bg-[#1D2939] shadow-xs overflow-hidden transition-colors ${isDragged
                   ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800 opacity-70'
                   : 'border-zinc-200 dark:border-[#334155]'
                   }`}
               >
-                {/* Superset stripe across full width of card */}
+                {/* Superset stripe across full height of card on the left */}
                 {isSuperset && (
                   <div
-                    className="h-1 w-full"
+                    className="absolute left-0 top-0 bottom-0 w-1 sm:w-1.5 z-10 pointer-events-none"
                     style={{
                       backgroundColor: supersetPalette ? supersetPalette.hex : '#10b981',
                     }}
@@ -1916,25 +1917,25 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
       {/* Mobile Action Buttons (in document flow right after the exercises list) */}
       <div className="block sm:hidden mt-4 space-y-2.5 pb-6">
-        {/* Додати вправу */}
+        {/* Додати вправу з каталогу */}
         <button
           type="button"
           onClick={() => setIsSelectorOpen(true)}
-          className="w-full flex items-center justify-center space-x-2 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-3 px-4 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 dark:hover:border-zinc-600 active:scale-[0.99] transition-all cursor-pointer shadow-2xs"
+          className="w-full flex items-center justify-center space-x-2 rounded-2xl border border-dashed border-zinc-300 dark:border-[#334155] bg-white dark:bg-[#1D2939]/70 py-3.5 px-4 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500 active:scale-[0.99] transition-all cursor-pointer shadow-xs"
           title="Додати вправу до тренування"
         >
-          <Plus className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-          <span>Додати вправу</span>
+          <Plus className="h-4 w-4 text-blue-500 dark:text-blue-400 stroke-[2.5]" />
+          <span>Додати вправу з каталогу</span>
         </button>
 
         {/* Видалити тренування */}
         <button
           type="button"
           onClick={() => setIsDeleteModalOpen(true)}
-          className="w-full flex items-center justify-center space-x-1.5 rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 py-2.5 px-3 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-[0.99] transition-all cursor-pointer"
+          className="w-full flex items-center justify-center space-x-2 rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-[#2A1418] py-3 px-4 text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-[0.99] transition-all cursor-pointer"
           title="Видалити це тренування"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-4 w-4 text-rose-500 dark:text-rose-400" />
           <span>Видалити тренування</span>
         </button>
       </div>
