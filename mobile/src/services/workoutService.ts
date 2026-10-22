@@ -472,14 +472,88 @@ export class WorkoutService {
     if (!isSupabaseConfigured() || !supabase) return true;
     const payload = {
       ...workout,
-      exercises: workout.exercises.map((we) => ({
+      assignedByCoachId: workout.assignedByCoachId || null,
+      exercises: (workout.exercises || []).map((we) => ({
         ...we,
         notes: this.encodeExerciseMeta(we.exerciseName, we.muscleGroup, we.notes),
       })),
     };
-    const { data, error } = await supabase.rpc('save_workout', { p_workout: payload });
-    if (error) console.warn('[WorkoutService.saveWorkout]', error.message);
-    return !error && data === true;
+
+    // 1. Try Supabase RPC save_workout
+    try {
+      const { data, error } = await supabase.rpc('save_workout', { p_workout: payload });
+      if (!error && (data === true || data === null || data === undefined || typeof data === 'object')) {
+        return true;
+      }
+      if (error) {
+        console.warn('[WorkoutService.saveWorkout] RPC error:', error.message);
+      }
+    } catch (rpcEx) {
+      console.warn('[WorkoutService.saveWorkout] RPC exception:', rpcEx);
+    }
+
+    // 2. Direct table upsert fallback
+    try {
+      const { error: directErr } = await supabase.from('workouts').upsert(
+        {
+          id: workout.id,
+          user_id: workout.userId,
+          assigned_by_coach_id: workout.assignedByCoachId || null,
+          title: workout.title || 'Тренування',
+          scheduled_date: workout.scheduledDate,
+          status: workout.status || 'planned',
+          completed_at: workout.completedAt || null,
+          notes: workout.notes || '',
+          duration_minutes: workout.durationMinutes || null,
+          created_at: workout.createdAt || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
+
+      if (!directErr) {
+        const exercises = workout.exercises || [];
+        for (let i = 0; i < exercises.length; i++) {
+          const we = exercises[i];
+          await supabase.from('workout_exercises').upsert(
+            {
+              id: we.id,
+              workout_id: workout.id,
+              exercise_id: we.exerciseId,
+              order_index: we.order ?? (i + 1),
+              set_count: we.sets?.length ?? 3,
+              target_reps_range: we.targetRepsRange || '8-12',
+              notes: this.encodeExerciseMeta(we.exerciseName, we.muscleGroup, we.notes),
+              superset_group_id: we.supersetGroupId || null,
+            },
+            { onConflict: 'id' }
+          );
+
+          for (let sIdx = 0; sIdx < (we.sets || []).length; sIdx++) {
+            const s = we.sets[sIdx];
+            await supabase.from('workout_sets').upsert(
+              {
+                id: s.id,
+                workout_exercise_id: we.id,
+                set_number: s.setNumber ?? (sIdx + 1),
+                target_reps_range: s.targetRepsRange || '8-12',
+                weight: s.weight ?? 0,
+                actual_reps: s.actualReps ?? null,
+                completed_at: s.completedAt || null,
+                notes: s.notes || '',
+                is_warmup: Boolean(s.isWarmup),
+              },
+              { onConflict: 'id' }
+            );
+          }
+        }
+        return true;
+      }
+    } catch (directEx) {
+      console.warn('[WorkoutService.saveWorkout] Direct fallback exception:', directEx);
+    }
+
+    return false;
   }
 
   /**

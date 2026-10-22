@@ -158,6 +158,7 @@ export const WorkoutsScreen: React.FC = () => {
   const [newDate, setNewDate] = useState<string>('');
   const [newNotes, setNewNotes] = useState<string>('');
   const [isCreating, setIsCreating] = useState<boolean>(false);
+  const isCreatingRef = useRef<boolean>(false);
 
   const loadData = useCallback(async () => {
     if (!user) {
@@ -193,17 +194,20 @@ export const WorkoutsScreen: React.FC = () => {
     setNewTitle('');
     setNewDate(today);
     setNewNotes('');
+    isCreatingRef.current = false;
     setIsModalOpen(true);
   };
 
   // Submit new workout
   const handleCreateWorkoutSubmit = async () => {
     if (!user) return;
+    if (isCreatingRef.current) return;
+    isCreatingRef.current = true;
+    setIsCreating(true);
 
     const titleToUse = newTitle.trim() || 'Силове тренування';
     const dateToUse = newDate.trim() || new Date().toISOString().split('T')[0];
 
-    setIsCreating(true);
     try {
       const workoutId = `wo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
       const newWorkout: WorkoutPlan = {
@@ -217,11 +221,22 @@ export const WorkoutsScreen: React.FC = () => {
         exercises: [],
       };
 
+      // 1. Primary write to DB & local cache
       const success = await WorkoutService.saveWorkout(newWorkout);
       if (success) {
-        setWorkouts((prev) => [newWorkout, ...prev]);
+        setWorkouts((prev) => [newWorkout, ...prev.filter((w) => w.id !== newWorkout.id)]);
         setIsModalOpen(false);
-        router.push({ pathname: '/workout/[id]', params: { id: newWorkout.id } });
+
+        // 2. Secondary operations: navigate & background data refresh (handled separately)
+        try {
+          router.push({ pathname: '/workout/[id]', params: { id: newWorkout.id } });
+        } catch (navErr) {
+          console.warn('[WorkoutsScreen] Failed navigating to editor:', navErr);
+        }
+
+        loadData().catch((err) => {
+          console.warn('[WorkoutsScreen] Background refresh failed after create:', err);
+        });
       } else {
         Alert.alert('Помилка', 'Не вдалося зберегти тренування');
       }
@@ -229,6 +244,7 @@ export const WorkoutsScreen: React.FC = () => {
       Alert.alert('Помилка', e?.message || 'Не вдалося створити тренування');
     } finally {
       setIsCreating(false);
+      isCreatingRef.current = false;
     }
   };
 
@@ -771,12 +787,14 @@ export const WorkoutsScreen: React.FC = () => {
               <Button
                 title="Скасувати"
                 variant="outline"
+                disabled={isCreating}
                 onPress={() => setIsModalOpen(false)}
                 style={{ flex: 1 }}
               />
               <Button
                 title="Створити"
                 loading={isCreating}
+                disabled={isCreating}
                 onPress={handleCreateWorkoutSubmit}
                 style={{ flex: 1 }}
               />

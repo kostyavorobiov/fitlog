@@ -75,9 +75,11 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
     };
   }, [user?.id, state.index]);
 
-  // Filter out hidden routes (e.g. href: null, and strictly exclude profile)
+  // Filter out hidden routes (e.g. href: null, strictly exclude profile, and trainees for non-coaches)
+  const isTrainer = user?.role === 'coach' || user?.role === 'admin';
   const visibleRoutes = state.routes.filter((route) => {
     if (route.name === 'profile') return false;
+    if (route.name === 'trainees' && !isTrainer) return false;
     const { options } = descriptors[route.key];
     return options.href !== null;
   });

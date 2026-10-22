@@ -1142,6 +1142,8 @@ export const WorkoutEditorScreen: React.FC = () => {
       } else {
         Alert.alert('Помилка', 'Не вдалося зберегти тренування');
       }
+    } catch (e: any) {
+      Alert.alert('Помилка', e?.message || 'Не вдалося зберегти тренування');
     } finally {
       setIsSaving(false);
     }

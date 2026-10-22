@@ -57,15 +57,23 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
     }
   }, [visible, initialDate]);
 
+  const isSubmittingRef = React.useRef(false);
+
   const handleSubmit = async () => {
+    if (isLoading || isSubmittingRef.current) return;
     const cleanTitle = title.trim();
     if (!cleanTitle) {
       Alert.alert('Помилка', 'Введіть назву тренування');
       return;
     }
 
-    const cleanDate = date.trim() || formatLocalDate();
-    await onSubmit(cleanTitle, cleanDate, notes.trim());
+    isSubmittingRef.current = true;
+    try {
+      const cleanDate = date.trim() || formatLocalDate();
+      await onSubmit(cleanTitle, cleanDate, notes.trim());
+    } finally {
+      isSubmittingRef.current = false;
+    }
   };
 
   const setOffsetDate = (offsetDays: number) => {

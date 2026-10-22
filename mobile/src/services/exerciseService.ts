@@ -252,35 +252,52 @@ export class ExerciseService {
     // 2. Persist to Supabase
     if (isSupabaseConfigured() && supabase) {
       try {
-        // Try RPC save_exercise first
-        const { data: rpcRes, error: rpcError } = await supabase.rpc('save_exercise', {
-          p_id: exercise.id,
-          p_user_id: exercise.isDefault ? null : exercise.userId,
-          p_name: exercise.name,
-          p_muscle_group: exercise.muscleGroup,
-          p_description: exercise.description || '',
-          p_is_default: Boolean(exercise.isDefault),
-        });
+        let effectiveUserId = exercise.isDefault ? null : exercise.userId;
+        if (!effectiveUserId && !exercise.isDefault) {
+          const { data: authData } = await supabase.auth.getUser();
+          effectiveUserId = authData?.user?.id || null;
+        }
 
-        if (!rpcError && rpcRes !== false) {
-          return true;
+        // Try RPC save_exercise first
+        try {
+          const { data: rpcRes, error: rpcError } = await supabase.rpc('save_exercise', {
+            p_id: exercise.id,
+            p_user_id: effectiveUserId,
+            p_name: exercise.name,
+            p_muscle_group: exercise.muscleGroup,
+            p_description: exercise.description || '',
+            p_is_default: Boolean(exercise.isDefault),
+          });
+
+          if (!rpcError && (rpcRes === true || rpcRes === null || rpcRes === undefined || typeof rpcRes === 'object')) {
+            return true;
+          }
+          if (rpcError) {
+            console.warn('[ExerciseService.createExercise] RPC error:', rpcError.message);
+          }
+        } catch (rpcEx) {
+          console.warn('[ExerciseService.createExercise] RPC exception:', rpcEx);
         }
 
         // Direct table upsert fallback
         const { error: upsertErr } = await supabase.from('exercises').upsert(
           {
             id: exercise.id,
-            user_id: exercise.isDefault ? null : exercise.userId,
+            user_id: effectiveUserId,
             name: exercise.name,
             muscle_group: exercise.muscleGroup,
             description: exercise.description || '',
             is_default: Boolean(exercise.isDefault),
-            created_at: exercise.createdAt,
+            created_at: exercise.createdAt || new Date().toISOString(),
           },
           { onConflict: 'id' }
         );
 
-        return !upsertErr;
+        if (!upsertErr) return true;
+        if (upsertErr) {
+          console.warn('[ExerciseService.createExercise] Upsert error:', upsertErr.message);
+        }
+        return false;
       } catch (e) {
         console.warn('[ExerciseService.createExercise] Error:', e);
         return false;

@@ -79,6 +79,13 @@ export default function TabLayout() {
             ),
             href: isTrainer ? '/(tabs)/trainees' : null,
           }}
+          listeners={{
+            tabPress: (e) => {
+              if (!isTrainer) {
+                e.preventDefault();
+              }
+            },
+          }}
         />
         <Tabs.Screen
           name="profile"

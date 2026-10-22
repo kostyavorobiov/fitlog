@@ -14,9 +14,29 @@ export class TraineeService {
 
     const cacheKey = `${TRAINEES_CACHE_KEY}_${coachId}`;
 
-    // 1. Try Supabase cloud
+    // 1. Verify caller has coach or admin role
     if (isSupabaseConfigured() && supabase) {
       try {
+        const { data: authData } = await supabase.auth.getUser();
+        const currentUserId = authData?.user?.id;
+        if (!currentUserId) {
+          const currentUser = await AuthService.getCurrentUser();
+          if (currentUser?.role !== 'coach' && currentUser?.role !== 'admin') {
+            return [];
+          }
+        } else {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', currentUserId)
+            .maybeSingle();
+
+          const role = profile?.role;
+          if (role !== 'coach' && role !== 'admin') {
+            return [];
+          }
+        }
+
         // Direct query: select profiles where coach_id = coachId
         const { data, error } = await supabase
           .from('profiles')
@@ -181,6 +201,27 @@ export class TraineeService {
     const clean = codeOrEmail.trim();
     if (!clean) {
       return { success: false, message: 'Введіть ID, код або email підопічного' };
+    }
+
+    // Verify caller is a coach or admin
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const currentUserId = authData?.user?.id;
+        if (currentUserId) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', currentUserId)
+            .maybeSingle();
+
+          if (profile?.role !== 'coach' && profile?.role !== 'admin') {
+            return { success: false, message: 'Додавати підопічних можуть лише користувачі з роллю тренера' };
+          }
+        }
+      } catch (authErr) {
+        console.warn('[TraineeService.addTraineeByCode] Role check error:', authErr);
+      }
     }
 
     // Find profile

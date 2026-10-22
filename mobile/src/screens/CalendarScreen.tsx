@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
   View,
@@ -42,6 +42,7 @@ export const CalendarScreen: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
+  const isCreatingRef = useRef<boolean>(false);
 
   const year = currentMonthDate.getFullYear();
   const month = currentMonthDate.getMonth();
@@ -161,6 +162,8 @@ export const CalendarScreen: React.FC = () => {
   // Handle create new workout for selected date
   const handleCreateWorkout = async (title: string, scheduledDate: string, notes: string) => {
     if (!user) return;
+    if (isCreatingRef.current) return;
+    isCreatingRef.current = true;
     setIsCreating(true);
 
     try {
@@ -176,13 +179,23 @@ export const CalendarScreen: React.FC = () => {
         exercises: [],
       };
 
+      // 1. Primary write to DB & local cache
       const success = await WorkoutService.saveWorkout(newWorkout);
       if (success) {
-        setWorkouts((prev) => [newWorkout, ...prev]);
+        setWorkouts((prev) => [newWorkout, ...prev.filter((w) => w.id !== newWorkout.id)]);
         setSelectedDateStr(scheduledDate);
         setIsCreateModalOpen(false);
-        // Directly open editor for the new workout
-        router.push({ pathname: '/workout/[id]', params: { id: newWorkout.id } });
+
+        // 2. Secondary operations: navigate & background data refresh (handled separately)
+        try {
+          router.push({ pathname: '/workout/[id]', params: { id: newWorkout.id } });
+        } catch (navErr) {
+          console.warn('[CalendarScreen] Failed navigating to editor:', navErr);
+        }
+
+        loadWorkouts().catch((err) => {
+          console.warn('[CalendarScreen] Background refresh failed after create:', err);
+        });
       } else {
         Alert.alert('Помилка', 'Не вдалося зберегти тренування');
       }
@@ -190,6 +203,7 @@ export const CalendarScreen: React.FC = () => {
       Alert.alert('Помилка', e?.message || 'Не вдалося створити тренування');
     } finally {
       setIsCreating(false);
+      isCreatingRef.current = false;
     }
   };
 

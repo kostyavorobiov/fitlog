@@ -88,6 +88,7 @@ export const ExercisesScreen: React.FC = () => {
   const [createName, setCreateName] = useState('');
   const [createMuscle, setCreateMuscle] = useState<MuscleGroup>('chest');
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
+  const isSubmittingCreateRef = useRef(false);
 
   // Edit Modal State
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
@@ -140,6 +141,8 @@ export const ExercisesScreen: React.FC = () => {
       return;
     }
 
+    if (isSubmittingCreateRef.current) return;
+    isSubmittingCreateRef.current = true;
     setIsSubmittingCreate(true);
     try {
       const newEx: Exercise = {
@@ -152,12 +155,18 @@ export const ExercisesScreen: React.FC = () => {
         createdAt: new Date().toISOString(),
       };
 
+      // 1. Primary write to DB & local cache
       const success = await ExerciseService.createExercise(newEx);
       if (success) {
         setIsCreateOpen(false);
         setCreateName('');
-        await loadExercises();
+        setExercises((prev) => [newEx, ...prev.filter((e) => e.id !== newEx.id)]);
         Alert.alert('Успішно', `Приватну вправу «${cleanName}» створено!`);
+
+        // 2. Secondary operation: background reload without causing creation failure alert
+        loadExercises().catch((loadErr) => {
+          console.warn('[ExercisesScreen] Background refresh failed after create exercise:', loadErr);
+        });
       } else {
         Alert.alert('Помилка', 'Не вдалося створити приватну вправу');
       }
@@ -165,6 +174,7 @@ export const ExercisesScreen: React.FC = () => {
       Alert.alert('Помилка', err?.message || 'Помилка при створенні вправи');
     } finally {
       setIsSubmittingCreate(false);
+      isSubmittingCreateRef.current = false;
     }
   };
 

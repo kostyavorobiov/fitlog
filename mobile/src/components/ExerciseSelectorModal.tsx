@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Modal,
   View,
@@ -51,6 +51,8 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   const [isCreatingCustom, setIsCreatingCustom] = useState<boolean>(false);
   const [customName, setCustomName] = useState<string>('');
   const [customMuscle, setCustomMuscle] = useState<MuscleGroup>('chest');
+  const [isSubmittingCustom, setIsSubmittingCustom] = useState<boolean>(false);
+  const isSubmittingCustomRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (visible) {
@@ -80,29 +82,48 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   }, [exercises, searchQuery, selectedMuscle]);
 
   const handleCreateExercise = async () => {
-    if (!customName.trim()) {
+    const cleanName = customName.trim();
+    if (!cleanName) {
       Alert.alert('Помилка', 'Введіть назву вправи');
       return;
     }
 
-    const newEx: Exercise = {
-      id: `custom_ex_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      userId: userId || null,
-      name: customName.trim(),
-      muscleGroup: customMuscle,
-      description: '',
-      isDefault: false,
-      createdAt: new Date().toISOString(),
-    };
+    if (isSubmittingCustomRef.current) return;
+    isSubmittingCustomRef.current = true;
+    setIsSubmittingCustom(true);
 
-    const ok = await ExerciseService.createExercise(newEx);
-    if (ok) {
-      setExercises((prev) => [newEx, ...prev]);
-      setIsCreatingCustom(false);
-      setCustomName('');
-      onSelectExercise(newEx);
-    } else {
-      Alert.alert('Помилка', 'Не вдалося створити вправу');
+    try {
+      const newEx: Exercise = {
+        id: `custom_ex_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        userId: userId || null,
+        name: cleanName,
+        muscleGroup: customMuscle,
+        description: '',
+        isDefault: false,
+        createdAt: new Date().toISOString(),
+      };
+
+      // 1. Primary write to DB & local cache
+      const ok = await ExerciseService.createExercise(newEx);
+      if (ok) {
+        setExercises((prev) => [newEx, ...prev.filter((e) => e.id !== newEx.id)]);
+        setIsCreatingCustom(false);
+        setCustomName('');
+
+        // 2. Secondary operation: select exercise
+        try {
+          onSelectExercise(newEx);
+        } catch (selectErr) {
+          console.warn('[ExerciseSelectorModal] Failed to select newly created exercise:', selectErr);
+        }
+      } else {
+        Alert.alert('Помилка', 'Не вдалося створити вправу');
+      }
+    } catch (e: any) {
+      Alert.alert('Помилка', e?.message || 'Не вдалося створити вправу');
+    } finally {
+      setIsSubmittingCustom(false);
+      isSubmittingCustomRef.current = false;
     }
   };
 
@@ -175,13 +196,22 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             </View>
 
             <TouchableOpacity
-              style={[styles.saveCustomBtn, isDark ? styles.saveCustomBtnDark : styles.saveCustomBtnLight]}
+              style={[
+                styles.saveCustomBtn,
+                isDark ? styles.saveCustomBtnDark : styles.saveCustomBtnLight,
+                isSubmittingCustom && { opacity: 0.6 },
+              ]}
               activeOpacity={0.8}
+              disabled={isSubmittingCustom}
               onPress={handleCreateExercise}
             >
-              <Text style={[styles.saveCustomBtnText, isDark ? styles.saveCustomBtnTextDark : styles.saveCustomBtnTextLight]}>
-                Додати та обрати
-              </Text>
+              {isSubmittingCustom ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={[styles.saveCustomBtnText, isDark ? styles.saveCustomBtnTextDark : styles.saveCustomBtnTextLight]}>
+                  Додати та обрати
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         ) : (

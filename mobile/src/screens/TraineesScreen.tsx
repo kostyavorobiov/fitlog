@@ -28,7 +28,8 @@ import { formatLocalDate } from '../utils/date';
 export const TraineesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAdmin, isLoading: isAuthLoading } = useAuth();
+  const isTrainer = user?.role === 'coach' || isAdmin;
   const { handleScroll } = useScrollTabBar();
 
   const [trainees, setTrainees] = useState<User[]>([]);
@@ -40,10 +41,18 @@ export const TraineesScreen: React.FC = () => {
   const [addCodeInput, setAddCodeInput] = useState<string>('');
   const [isAddingTrainee, setIsAddingTrainee] = useState<boolean>(false);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
+  const isCreatingWorkoutRef = React.useRef(false);
+
+  // Route protection: redirect athletes away from coach screen
+  useEffect(() => {
+    if (!isAuthLoading && !isTrainer) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthLoading, isTrainer, router]);
 
   // Load trainees for the current coach
   const loadTrainees = useCallback(async () => {
-    if (!user?.id) {
+    if (!user?.id || !isTrainer) {
       setIsLoadingTrainees(false);
       return;
     }
@@ -67,7 +76,7 @@ export const TraineesScreen: React.FC = () => {
       setIsLoadingTrainees(false);
       setIsRefreshing(false);
     }
-  }, [user?.id]);
+  }, [user?.id, isTrainer]);
 
   // Load workouts for selected trainee
   const loadTraineeWorkouts = useCallback(async (traineeId: string) => {
@@ -185,6 +194,8 @@ export const TraineesScreen: React.FC = () => {
   // Create new workout for selected trainee
   const handleCreateWorkoutForTrainee = async () => {
     if (!selectedTrainee || !user) return;
+    if (isCreatingWorkoutRef.current) return;
+    isCreatingWorkoutRef.current = true;
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -204,13 +215,24 @@ export const TraineesScreen: React.FC = () => {
     };
 
     try {
-      await WorkoutService.saveWorkout(newWorkout);
-      router.push({
-        pathname: '/workout/[id]',
-        params: { id: newWorkout.id, traineeId: selectedTrainee.id },
-      });
-    } catch (e) {
-      Alert.alert('Помилка', 'Не вдалося створити тренування');
+      const ok = await WorkoutService.saveWorkout(newWorkout);
+      if (ok) {
+        setTraineeWorkouts((prev) => [newWorkout, ...prev.filter((w) => w.id !== newWorkout.id)]);
+        try {
+          router.push({
+            pathname: '/workout/[id]',
+            params: { id: newWorkout.id, traineeId: selectedTrainee.id },
+          });
+        } catch (navErr) {
+          console.warn('[TraineesScreen] Navigation to editor failed:', navErr);
+        }
+      } else {
+        Alert.alert('Помилка', 'Не вдалося створити тренування');
+      }
+    } catch (e: any) {
+      Alert.alert('Помилка', e?.message || 'Не вдалося створити тренування');
+    } finally {
+      isCreatingWorkoutRef.current = false;
     }
   };
 
@@ -243,7 +265,6 @@ export const TraineesScreen: React.FC = () => {
     );
   };
 
-  const isTrainer = user?.role === 'coach' || user?.role === 'admin';
   const coachCode = user?.profileCode || user?.id || '';
 
   if (!isTrainer) {
