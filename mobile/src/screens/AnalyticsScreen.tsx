@@ -21,7 +21,7 @@ import { WorkoutService } from '../services/workoutService';
 import { WorkoutPlan, MUSCLE_GROUPS } from '../types/workout';
 import { getPeriodRange, PeriodRange, formatLocalDate } from '../utils/date';
 import { WorkoutCalendarView } from '../components/WorkoutCalendarView';
-import { ExerciseDetailModal } from '../components/ExerciseDetailModal';
+import { setSavedActiveTab } from '../components/InstagramTabPager';
 import {
   calculateAnalytics,
   AnalyticsPeriod,
@@ -556,11 +556,13 @@ export const AnalyticsScreen: React.FC = () => {
                             key={item.exerciseId || `ex_${idx}`}
                             activeOpacity={0.7}
                             onPress={() => {
+                              setSavedActiveTab('analytics');
                               router.push({
                                 pathname: `/exercise/${item.exerciseId}` as any,
                                 params: {
                                   name: item.exerciseName,
                                   muscleGroup: item.muscleGroup,
+                                  fromTab: 'analytics',
                                 },
                               });
                             }}

@@ -16,7 +16,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Card } from '../components/Card';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
-import { setSavedActiveTab } from '../components/InstagramTabPager';
+import { setSavedActiveTab, getSavedActiveTab, TabName } from '../components/InstagramTabPager';
 import { useAuth } from '../context/AuthContext';
 import { WorkoutService } from '../services/workoutService';
 import { ExerciseService } from '../services/exerciseService';
@@ -51,11 +51,14 @@ export const ExerciseDetailScreen: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
 
-  const { id: exerciseId, name: initialName, muscleGroup: initialMuscleGroup } = useLocalSearchParams<{
+  const { id: exerciseId, name: initialName, muscleGroup: initialMuscleGroup, fromTab } = useLocalSearchParams<{
     id: string;
     name?: string;
     muscleGroup?: MuscleGroup;
+    fromTab?: TabName;
   }>();
+
+  const sourceTab = (fromTab as TabName) || getSavedActiveTab() || 'exercises';
 
   const [loading, setLoading] = useState(true);
   const [exerciseName, setExerciseName] = useState<string>(initialName || '');
@@ -65,28 +68,28 @@ export const ExerciseDetailScreen: React.FC = () => {
   const [activeTooltipIdx, setActiveTooltipIdx] = useState<number | null>(null);
   const [plotWidth, setPlotWidth] = useState<number>(0);
 
-  // When exiting, guarantee that "База вправ" (exercises tab) opens
+  // When exiting, guarantee that original screen opens
   const handleBack = useCallback(() => {
-    setSavedActiveTab('exercises');
+    setSavedActiveTab(sourceTab);
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.navigate('/(tabs)/exercises');
+      router.navigate(sourceTab === 'index' ? '/(tabs)' : (`/(tabs)/${sourceTab}` as any));
     }
-  }, [router]);
+  }, [router, sourceTab]);
 
-  // Keep exercises tab active when entering or leaving
+  // Keep source tab active when entering or leaving
   useEffect(() => {
-    setSavedActiveTab('exercises');
+    setSavedActiveTab(sourceTab);
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       handleBack();
       return true;
     });
     return () => {
-      setSavedActiveTab('exercises');
+      setSavedActiveTab(sourceTab);
       sub.remove();
     };
-  }, [handleBack]);
+  }, [handleBack, sourceTab]);
 
   // Load exercise details if missing from params
   useEffect(() => {

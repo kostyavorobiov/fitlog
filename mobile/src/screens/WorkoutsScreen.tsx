@@ -185,7 +185,6 @@ export const WorkoutsScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      setSavedActiveTab('index');
       loadData();
     }, [loadData])
   );

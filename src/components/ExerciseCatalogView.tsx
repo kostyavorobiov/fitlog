@@ -4,7 +4,6 @@ import { StorageService } from '../services/storageService';
 import { CreateExerciseModal } from './CreateExerciseModal';
 import { EditExerciseModal } from './EditExerciseModal';
 import { ExerciseHistoryModal } from './ExerciseHistoryModal';
-import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { MobileSwipeableExerciseCard } from './MobileSwipeableExerciseCard';
 import {
   Search,
@@ -54,7 +53,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
     onSwipeLeft: handleNextMuscle,
     onSwipeRight: handlePrevMuscle,
     threshold: 30,
-    disabled: isCreateOpen || Boolean(exerciseToEdit) || Boolean(exerciseToDelete) || Boolean(historyModalExercise),
+    disabled: isCreateOpen || Boolean(exerciseToEdit) || Boolean(historyModalExercise),
   });
 
   useEffect(() => {

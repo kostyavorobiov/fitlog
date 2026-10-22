@@ -20,7 +20,7 @@ import { Button } from '../components/Button';
 import { ExerciseService } from '../services/exerciseService';
 import { useAuth } from '../context/AuthContext';
 import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
-import { setSavedActiveTab } from '../components/InstagramTabPager';
+import { setSavedActiveTab, getSavedActiveTab, TabName } from '../components/InstagramTabPager';
 
 const MUSCLE_ORDER: MuscleGroup[] = [
   'chest',
@@ -37,8 +37,9 @@ export const ExerciseEditScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
   const { user } = useAuth();
-  const params = useLocalSearchParams<{ id?: string; name?: string; muscleGroup?: string }>();
+  const params = useLocalSearchParams<{ id?: string; name?: string; muscleGroup?: string; fromTab?: TabName }>();
 
+  const sourceTab = (params.fromTab as TabName) || getSavedActiveTab() || 'exercises';
   const exerciseId = params.id as string | undefined;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -81,9 +82,9 @@ export const ExerciseEditScreen: React.FC = () => {
   }, [exerciseId, user?.id]);
 
   const handleBack = useCallback(() => {
-    setSavedActiveTab('exercises');
+    setSavedActiveTab(sourceTab);
     router.back();
-  }, [router]);
+  }, [router, sourceTab]);
 
   const handleSave = async () => {
     const cleanName = name.trim();
@@ -111,7 +112,7 @@ export const ExerciseEditScreen: React.FC = () => {
 
       const res = await ExerciseService.updateExercise(updated, user?.id);
       if (res.success) {
-        setSavedActiveTab('exercises');
+        setSavedActiveTab(sourceTab);
         router.back();
       } else {
         Alert.alert('Помилка', res.error || 'Не вдалося оновити вправу');
