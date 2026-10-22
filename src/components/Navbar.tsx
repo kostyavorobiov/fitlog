@@ -260,31 +260,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Right Header Actions: Language + Theme + User Avatar */}
             <div className="flex items-center space-x-1.5 shrink-0">
-              {/* Language Switcher */}
-              <div className="flex items-center rounded-full border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] p-0.5 gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => setLanguage('uk')}
-                  className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${language === 'uk'
-                    ? 'bg-[#2563eb] text-white'
-                    : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
-                    }`}
-                  title="Українська"
-                >
-                  УКР
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLanguage('en')}
-                  className={`h-7 px-2 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${language === 'en'
-                    ? 'bg-[#2563eb] text-white'
-                    : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
-                    }`}
-                  title="English"
-                >
-                  ENG
-                </button>
-              </div>
 
               {/* Theme Toggle Button — round (desktop only, hidden on mobile) */}
               <button

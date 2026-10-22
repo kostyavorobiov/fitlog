@@ -390,479 +390,467 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId, onSelectWo
     <div
       className="space-y-5 max-w-5xl mx-auto animate-fade-in pb-12 touch-pan-y"
     >
-      {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-            Аналітика
-          </h1>
-        </div>
 
-        {/* Period Filter (Flat Segmented Control) */}
-        <div
-          ref={periodSwipeRef}
-          className="w-full sm:w-auto bg-[#f1f5f9] dark:bg-[#1d2939] p-1 rounded-2xl flex items-center gap-1 shrink-0 self-start sm:self-auto touch-pan-y border border-[#e2e8f0] dark:border-[#334155]"
-        >
-          {(
-            [
-              { key: 'day', label: 'День' },
-              { key: 'week', label: 'Тиждень' },
-              { key: 'month', label: 'Місяць' },
-            ] as const
-          ).map((p) => {
-            const isActive = selectedPeriod === p.key;
-            return (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => {
-                  setSelectedPeriod(p.key);
-                  setCurrentDate(new Date());
-                }}
-                className={`flex-1 sm:flex-initial py-2 px-3 text-center text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${isActive
-                  ? 'bg-[#2563eb] text-white font-bold shadow-sm'
-                  : 'text-[#64748b] dark:text-[#94a3b8] font-medium hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
-                  }`}
-              >
-                {p.label}
-              </button>
-            );
-          })}
-        </div>
+      {/* Period Filter (Flat Segmented Control) */}
+      <div
+        ref={periodSwipeRef}
+        className="w-full sm:w-auto bg-[#f1f5f9] dark:bg-[#1d2939] p-1 rounded-2xl flex items-center gap-1 shrink-0 self-start sm:self-auto touch-pan-y border border-[#e2e8f0] dark:border-[#334155]"
+      >
+        {(
+          [
+            { key: 'day', label: 'День' },
+            { key: 'week', label: 'Тиждень' },
+            { key: 'month', label: 'Місяць' },
+          ] as const
+        ).map((p) => {
+          const isActive = selectedPeriod === p.key;
+          return (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => {
+                setSelectedPeriod(p.key);
+                setCurrentDate(new Date());
+              }}
+              className={`flex-1 sm:flex-initial py-2 px-3 text-center text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${isActive
+                ? 'bg-[#2563eb] text-white font-bold shadow-sm'
+                : 'text-[#64748b] dark:text-[#94a3b8] font-medium hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
+                }`}
+            >
+              {p.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* 1. Month Calendar in Analytics (Preserved from WorkoutHistory with Workout Status Dots) */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 shadow-xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={handlePrevMonth}
-              className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-              title="Попередній місяць"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 min-w-[150px] text-center select-none">
-              {ukrainianMonths[calMonth]} {calYear}
-            </h3>
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-              title="Наступний місяць"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+  <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 shadow-xs">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-2">
+        <button
+          type="button"
+          onClick={handlePrevMonth}
+          className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+          title="Попередній місяць"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 min-w-[150px] text-center select-none">
+          {ukrainianMonths[calMonth]} {calYear}
+        </h3>
+        <button
+          type="button"
+          onClick={handleNextMonth}
+          className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+          title="Наступний місяць"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
 
+      <button
+        type="button"
+        onClick={handleCalendarToday}
+        className="rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] px-3 py-1.5 text-xs font-bold text-[#0f172a] dark:text-[#f8fafc] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] transition-colors cursor-pointer"
+      >
+        Сьогодні
+      </button>
+    </div>
+
+    {/* Weekdays header */}
+    <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] sm:text-xs text-[#64748b] dark:text-[#94a3b8] pb-2 border-b border-[#e2e8f0] dark:border-[#334155]">
+      <div>Пн</div>
+      <div>Вт</div>
+      <div>Ср</div>
+      <div>Чт</div>
+      <div>Пт</div>
+      <div className="text-[#2563eb] dark:text-[#60a5fa]">Сб</div>
+      <div className="text-[#2563eb] dark:text-[#60a5fa]">Нд</div>
+    </div>
+
+    {/* Calendar Days Grid */}
+    <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+      {calendarCells.map((dayNum, idx) => {
+        if (dayNum === null) {
+          return <div key={`empty-${idx}`} className="h-12 sm:h-16 rounded bg-transparent" />;
+        }
+        const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+        const isSelected = selectedCalendarDateStr === dateStr;
+        const isToday = dateStr === new Date().toISOString().split('T')[0];
+        const dayWorkouts = workouts.filter((w) => w.scheduledDate === dateStr);
+
+        return (
+          <div
+            key={`day-${dayNum}`}
+            onClick={() => {
+              setSelectedCalendarDateStr(dateStr);
+              const [y, m, d] = dateStr.split('-').map(Number);
+              setCurrentDate(new Date(y, m - 1, d));
+            }}
+            className={`h-12 sm:h-16 rounded-xl border p-1 sm:p-1.5 cursor-pointer transition-colors flex flex-col justify-between ${isSelected
+                ? 'border-[#2563eb] bg-blue-50/70 dark:bg-[#1d2939] ring-2 ring-[#2563eb]'
+                : isToday
+                  ? 'border-[#60a5fa] bg-[#f1f5f9] dark:bg-[#1d2939]'
+                  : dayWorkouts.length > 0
+                    ? 'border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] hover:border-[#60a5fa]'
+                    : 'border-[#f1f5f9] dark:border-[#334155]/60 bg-[#f8fafc]/50 dark:bg-[#1d2939]/40 hover:bg-[#f1f5f9] dark:hover:bg-[#263140]'
+              }`}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className={`text-[11px] sm:text-xs font-bold ${isSelected
+                    ? 'text-[#2563eb] dark:text-[#60a5fa]'
+                    : isToday
+                      ? 'text-[#2563eb] dark:text-[#60a5fa]'
+                      : 'text-[#0f172a] dark:text-[#f8fafc]'
+                  }`}
+              >
+                {dayNum}
+              </span>
+              {dayWorkouts.length > 0 && (
+                <span className="text-[9px] font-semibold text-[#64748b] dark:text-[#94a3b8]">
+                  {dayWorkouts.length}
+                </span>
+              )}
+            </div>
+
+            {/* Workout Status Dots */}
+            <div className="flex items-center gap-1 flex-wrap">
+              {dayWorkouts.slice(0, 3).map((w, wIdx) => {
+                const isDone = w.status === 'completed';
+                const isInProg = w.status === 'in_progress';
+                return (
+                  <span
+                    key={wIdx}
+                    className={`h-1.5 w-1.5 rounded-full ${isDone
+                        ? 'bg-[#22c55e]'
+                        : isInProg
+                          ? 'bg-[#3b82f6]'
+                          : 'bg-[#94a3b8]'
+                      }`}
+                    title={w.title}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Selected Date Workouts Summary */}
+    {selectedDateWorkouts.length > 0 && (
+      <div className="pt-2 border-t border-[#e2e8f0] dark:border-[#334155] space-y-1.5">
+        <div className="text-xs font-semibold text-[#64748b] dark:text-[#94a3b8]">
+          Тренування на {formatDateDDMMYYYY(selectedCalendarDateStr)}:
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {selectedDateWorkouts.map((w) => (
+            <button
+              key={w.id}
+              type="button"
+              onClick={() => onSelectWorkout?.(w)}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 hover:border-[#2563eb] text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-2 cursor-pointer transition-colors"
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${w.status === 'completed'
+                    ? 'bg-[#22c55e]'
+                    : w.status === 'in_progress'
+                      ? 'bg-[#3b82f6]'
+                      : 'bg-[#94a3b8]'
+                  }`}
+              />
+              <span>{w.title}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+
+  {/* Date Navigation & KPI Metrics Section (Supports Swipe Left/Right to change date) */ }
+  <div ref={dateNavSwipeRef} className="space-y-3 touch-pan-y">
+    {/* Date Navigation Bar (Allows switching days, weeks, months) */}
+    <div className="flex items-center justify-between bg-white dark:bg-[#1d2939] border border-[#e2e8f0] dark:border-[#334155] rounded-2xl p-2.5 sm:p-3 shadow-xs">
+      <div className="flex items-center space-x-1.5">
+        <button
+          type="button"
+          onClick={handlePrevDate}
+          className="p-1.5 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#263140] text-[#0f172a] dark:text-[#f8fafc] hover:bg-[#e2e8f0] dark:hover:bg-[#334155] transition-colors cursor-pointer"
+          title="Попередній період"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={handleNextDate}
+          className="p-1.5 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#263140] text-[#0f172a] dark:text-[#f8fafc] hover:bg-[#e2e8f0] dark:hover:bg-[#334155] transition-colors cursor-pointer"
+          title="Наступний період"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Calendar className="h-4 w-4 text-[#2563eb] dark:text-[#60a5fa]" />
+        <span className="text-xs sm:text-sm font-bold text-[#0f172a] dark:text-[#f8fafc] select-none">
+          {periodInfo.titleUk}
+        </span>
+      </div>
+
+      {!periodInfo.isCurrent ? (
+        <button
+          type="button"
+          onClick={handleToday}
+          className="text-xs font-bold text-[#0f172a] dark:text-[#f8fafc] bg-[#f1f5f9] dark:bg-[#263140] hover:bg-[#e2e8f0] dark:hover:bg-[#334155] px-3 py-1.5 rounded-xl transition-colors cursor-pointer border border-[#e2e8f0] dark:border-[#334155]"
+        >
+          Сьогодні
+        </button>
+      ) : (
+        <div className="w-14" />
+      )}
+    </div>
+
+    {/* KPI Metrics Cards - Minimal Flat */}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Completed Sets */}
+      <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 shadow-xs">
+        <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#22c55e] mb-1.5">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Завершено підходів</span>
+        </div>
+        <div className="font-mono text-2xl font-bold text-[#0f172a] dark:text-[#f8fafc]">
+          {stats.periodCompletedSets}
+        </div>
+        <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1">
+          за {periodInfo.titleUk}
+        </div>
+      </div>
+
+      {/* Workouts in Period */}
+      <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 shadow-xs">
+        <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#2563eb] dark:text-[#60a5fa] mb-1.5">
+          <Calendar className="h-4 w-4" />
+          <span>Активних тренувань</span>
+        </div>
+        <div className="font-mono text-2xl font-bold text-[#0f172a] dark:text-[#f8fafc]">
+          {stats.periodWorkoutsCount}
+        </div>
+        <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1">
+          у поточному періоді
+        </div>
+      </div>
+
+      {/* Volume in Period */}
+      <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 shadow-xs">
+        <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#2563eb] dark:text-[#60a5fa] mb-1.5">
+          <Flame className="h-4 w-4" />
+          <span>Тоннаж періоду</span>
+        </div>
+        <div className="font-mono text-2xl font-bold text-[#0f172a] dark:text-[#f8fafc]">
+          {stats.periodTons > 0 ? `${stats.periodTons} т` : `${stats.periodVolumeKg} кг`}
+        </div>
+        <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1 font-mono">
+          {stats.periodVolumeKg.toLocaleString()} кг піднято
+        </div>
+      </div>
+
+      {/* Exercises Tracked */}
+      <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 shadow-xs">
+        <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#2563eb] dark:text-[#60a5fa] mb-1.5">
+          <Trophy className="h-4 w-4" />
+          <span>Задіяних вправ</span>
+        </div>
+        <div className="font-mono text-2xl font-bold text-[#0f172a] dark:text-[#f8fafc]">
+          {stats.allTrackedExercises.length}
+        </div>
+        <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1">
+          з результатами у вибірці
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Muscle Group Distribution */ }
+  <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 sm:p-5 space-y-4 shadow-xs">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e2e8f0] dark:border-[#334155] pb-3">
+      <div>
+        <h3 className="text-sm sm:text-base font-bold text-[#0f172a] dark:text-[#f8fafc] flex items-center space-x-2">
+          <TrendingUp className="h-4 w-4 text-[#2563eb] dark:text-[#60a5fa]" />
+          <span>Кількість завершених підходів на м'язову групу</span>
+        </h3>
+        <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-0.5">
+          Враховуються лише успішно виконані підходи за обраний період ({periodInfo.titleUk})
+        </p>
+      </div>
+
+      <div className="text-xs font-semibold text-[#64748b] dark:text-[#94a3b8] font-mono">
+        Всього: <strong className="text-[#0f172a] dark:text-[#f8fafc]">{stats.periodCompletedSets}</strong> підх.
+      </div>
+    </div>
+
+    {stats.periodCompletedSets === 0 ? (
+      <div className="w-full rounded-[24px] border border-dashed border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939]/50 py-12 px-6 flex flex-col items-center justify-center text-center">
+        <div className="w-12 h-12 rounded-2xl bg-[#f1f5f9] dark:bg-[#263140] flex items-center justify-center">
+          <Layers className="w-5 h-5 text-[#2563eb] dark:text-[#60a5fa] stroke-[1.75]" />
+        </div>
+        <h4 className="mt-3 font-bold text-sm sm:text-base text-[#0f172a] dark:text-[#f8fafc]">
+          За обраний період немає зафіксованих підходів
+        </h4>
+        <p className="mt-1 text-xs text-[#64748b] dark:text-[#94a3b8] max-w-sm">
+          Завершуйте підходи у тренуваннях натисканням галочки ✓, і дані про навантаження відобразяться тут.
+        </p>
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => {
+          const info = MUSCLE_GROUPS[groupKey];
+          const setsCount = stats.muscleSetsMap[groupKey] || 0;
+          const percent =
+            stats.periodCompletedSets > 0
+              ? (setsCount / stats.periodCompletedSets) * 100
+              : 0;
+
+          if (setsCount === 0) return null;
+
+          return (
+            <div key={groupKey} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center space-x-2">
+                  <span className="font-semibold text-[#0f172a] dark:text-[#f8fafc]">{info.nameUk}</span>
+                </div>
+                <div className="font-mono text-xs flex items-center space-x-2">
+                  <span className="text-[#0f172a] dark:text-[#f8fafc] font-bold">
+                    {setsCount}{' '}
+                    {setsCount === 1
+                      ? 'підхід'
+                      : setsCount >= 2 && setsCount <= 4
+                        ? 'підходи'
+                        : 'підходів'}
+                  </span>
+                  <span className="text-[#64748b] dark:text-[#94a3b8]">({Math.round(percent)}%)</span>
+                </div>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-[#f1f5f9] dark:bg-[#263140]">
+                <div
+                  className="h-full rounded-full bg-[#2563eb] transition-all duration-300"
+                  style={{ width: `${Math.max(3, percent)}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+
+  {/* Personal Records & Tracked Exercises (Supports Swipe Left/Right between Top and All) */ }
+  <div
+    ref={recordsSwipeRef}
+    className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 sm:p-5 space-y-4 shadow-xs touch-pan-y"
+  >
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e2e8f0] dark:border-[#334155] pb-3">
+      <div className="flex items-center space-x-2">
+        <Trophy className="h-4 w-4 text-[#2563eb] dark:text-[#60a5fa]" />
+        <h3 className="text-sm sm:text-base font-bold text-[#0f172a] dark:text-[#f8fafc]">
+          Вправи періоду та рекорди
+        </h3>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {/* View Mode Switcher */}
+        <div className="bg-[#f1f5f9] dark:bg-[#263140] p-1 rounded-2xl flex items-center gap-1 text-xs border border-[#e2e8f0] dark:border-[#334155]">
           <button
             type="button"
-            onClick={handleCalendarToday}
-            className="rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] px-3 py-1.5 text-xs font-bold text-[#0f172a] dark:text-[#f8fafc] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] transition-colors cursor-pointer"
+            onClick={() => setViewMode('prs')}
+            className={`rounded-xl px-3 py-1.5 font-semibold transition-all cursor-pointer ${viewMode === 'prs' && !searchQuery
+              ? 'bg-[#2563eb] text-white font-bold shadow-sm'
+              : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
+              }`}
           >
-            Сьогодні
+            Топ ({stats.topPRs.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('all')}
+            className={`rounded-xl px-3 py-1.5 font-semibold transition-all cursor-pointer ${viewMode === 'all' && !searchQuery
+              ? 'bg-[#2563eb] text-white font-bold shadow-sm'
+              : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
+              }`}
+          >
+            Всі ({stats.allTrackedExercises.length})
           </button>
         </div>
 
-        {/* Weekdays header */}
-        <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] sm:text-xs text-[#64748b] dark:text-[#94a3b8] pb-2 border-b border-[#e2e8f0] dark:border-[#334155]">
-          <div>Пн</div>
-          <div>Вт</div>
-          <div>Ср</div>
-          <div>Чт</div>
-          <div>Пт</div>
-          <div className="text-[#2563eb] dark:text-[#60a5fa]">Сб</div>
-          <div className="text-[#2563eb] dark:text-[#60a5fa]">Нд</div>
+        {/* Search Input */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#64748b] dark:text-[#94a3b8]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Пошук вправи..."
+            className="w-36 sm:w-44 h-8 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#0b1220] pl-8 pr-2.5 text-base sm:text-xs text-[#0f172a] dark:text-[#f8fafc] placeholder-[#64748b] dark:placeholder-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#2563eb]"
+          />
         </div>
+      </div>
+    </div>
 
-        {/* Calendar Days Grid */}
-        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-          {calendarCells.map((dayNum, idx) => {
-            if (dayNum === null) {
-              return <div key={`empty-${idx}`} className="h-12 sm:h-16 rounded bg-transparent" />;
-            }
-            const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-            const isSelected = selectedCalendarDateStr === dateStr;
-            const isToday = dateStr === new Date().toISOString().split('T')[0];
-            const dayWorkouts = workouts.filter((w) => w.scheduledDate === dateStr);
-
-            return (
-              <div
-                key={`day-${dayNum}`}
-                onClick={() => {
-                  setSelectedCalendarDateStr(dateStr);
-                  const [y, m, d] = dateStr.split('-').map(Number);
-                  setCurrentDate(new Date(y, m - 1, d));
-                }}
-                className={`h-12 sm:h-16 rounded-xl border p-1 sm:p-1.5 cursor-pointer transition-colors flex flex-col justify-between ${
-                  isSelected
-                    ? 'border-[#2563eb] bg-blue-50/70 dark:bg-[#1d2939] ring-2 ring-[#2563eb]'
-                    : isToday
-                    ? 'border-[#60a5fa] bg-[#f1f5f9] dark:bg-[#1d2939]'
-                    : dayWorkouts.length > 0
-                    ? 'border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] hover:border-[#60a5fa]'
-                    : 'border-[#f1f5f9] dark:border-[#334155]/60 bg-[#f8fafc]/50 dark:bg-[#1d2939]/40 hover:bg-[#f1f5f9] dark:hover:bg-[#263140]'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`text-[11px] sm:text-xs font-bold ${
-                      isSelected
-                        ? 'text-[#2563eb] dark:text-[#60a5fa]'
-                        : isToday
-                        ? 'text-[#2563eb] dark:text-[#60a5fa]'
-                        : 'text-[#0f172a] dark:text-[#f8fafc]'
-                    }`}
-                  >
-                    {dayNum}
+    {displayedExercises.length === 0 ? (
+      <div className="rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800 p-8 text-center text-xs text-slate-500 dark:text-zinc-400">
+        {searchQuery
+          ? 'Вправ за цим запитом не знайдено.'
+          : `У періоді «${periodInfo.titleUk}» ще немає зафіксованих підходів із вагою.`}
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+        {displayedExercises.map((pr, idx) => {
+          const muscle = MUSCLE_GROUPS[pr.muscle] || MUSCLE_GROUPS.full_body;
+          return (
+            <div
+              key={pr.id || idx}
+              onClick={() => setSelectedExercise(pr.exercise)}
+              className="group rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40 p-3.5 flex flex-col justify-between cursor-pointer hover:border-slate-300 dark:hover:border-zinc-700 transition-colors shadow-2xs"
+              title="Натисніть для перегляду динаміки та історії цієї вправи"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:text-zinc-400">
+                    {muscle.nameUk}
                   </span>
-                  {dayWorkouts.length > 0 && (
-                    <span className="text-[9px] font-semibold text-[#64748b] dark:text-[#94a3b8]">
-                      {dayWorkouts.length}
-                    </span>
-                  )}
+                  <span className="font-mono text-xs text-slate-400 dark:text-zinc-500">#{idx + 1}</span>
                 </div>
-
-                {/* Workout Status Dots */}
-                <div className="flex items-center gap-1 flex-wrap">
-                  {dayWorkouts.slice(0, 3).map((w, wIdx) => {
-                    const isDone = w.status === 'completed';
-                    const isInProg = w.status === 'in_progress';
-                    return (
-                      <span
-                        key={wIdx}
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          isDone
-                            ? 'bg-[#22c55e]'
-                            : isInProg
-                            ? 'bg-[#3b82f6]'
-                            : 'bg-[#94a3b8]'
-                        }`}
-                        title={w.title}
-                      />
-                    );
-                  })}
+                <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white line-clamp-1 mb-2 transition-colors">
+                  {pr.name}
                 </div>
               </div>
-            );
-          })}
-        </div>
 
-        {/* Selected Date Workouts Summary */}
-        {selectedDateWorkouts.length > 0 && (
-          <div className="pt-2 border-t border-[#e2e8f0] dark:border-[#334155] space-y-1.5">
-            <div className="text-xs font-semibold text-[#64748b] dark:text-[#94a3b8]">
-              Тренування на {formatDateDDMMYYYY(selectedCalendarDateStr)}:
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {selectedDateWorkouts.map((w) => (
-                <button
-                  key={w.id}
-                  type="button"
-                  onClick={() => onSelectWorkout?.(w)}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 hover:border-[#2563eb] text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <span
-                    className={`h-2 w-2 rounded-full ${
-                      w.status === 'completed'
-                        ? 'bg-[#22c55e]'
-                        : w.status === 'in_progress'
-                        ? 'bg-[#3b82f6]'
-                        : 'bg-[#94a3b8]'
-                    }`}
-                  />
-                  <span>{w.title}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Date Navigation & KPI Metrics Section (Supports Swipe Left/Right to change date) */}
-      <div ref={dateNavSwipeRef} className="space-y-3 touch-pan-y">
-        {/* Date Navigation Bar (Allows switching days, weeks, months) */}
-        <div className="flex items-center justify-between bg-white dark:bg-[#1d2939] border border-[#e2e8f0] dark:border-[#334155] rounded-2xl p-2.5 sm:p-3 shadow-xs">
-          <div className="flex items-center space-x-1.5">
-            <button
-              type="button"
-              onClick={handlePrevDate}
-              className="p-1.5 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#263140] text-[#0f172a] dark:text-[#f8fafc] hover:bg-[#e2e8f0] dark:hover:bg-[#334155] transition-colors cursor-pointer"
-              title="Попередній період"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={handleNextDate}
-              className="p-1.5 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#263140] text-[#0f172a] dark:text-[#f8fafc] hover:bg-[#e2e8f0] dark:hover:bg-[#334155] transition-colors cursor-pointer"
-              title="Наступний період"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-[#2563eb] dark:text-[#60a5fa]" />
-            <span className="text-xs sm:text-sm font-bold text-[#0f172a] dark:text-[#f8fafc] select-none">
-              {periodInfo.titleUk}
-            </span>
-          </div>
-
-          {!periodInfo.isCurrent ? (
-            <button
-              type="button"
-              onClick={handleToday}
-              className="text-xs font-bold text-[#0f172a] dark:text-[#f8fafc] bg-[#f1f5f9] dark:bg-[#263140] hover:bg-[#e2e8f0] dark:hover:bg-[#334155] px-3 py-1.5 rounded-xl transition-colors cursor-pointer border border-[#e2e8f0] dark:border-[#334155]"
-            >
-              Сьогодні
-            </button>
-          ) : (
-            <div className="w-14" />
-          )}
-        </div>
-
-        {/* KPI Metrics Cards - Minimal Flat */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {/* Completed Sets */}
-          <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 shadow-xs">
-            <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#22c55e] mb-1.5">
-              <CheckCircle2 className="h-4 w-4" />
-              <span>Завершено підходів</span>
-            </div>
-            <div className="font-mono text-2xl font-bold text-[#0f172a] dark:text-[#f8fafc]">
-              {stats.periodCompletedSets}
-            </div>
-            <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1">
-              за {periodInfo.titleUk}
-            </div>
-          </div>
-
-          {/* Workouts in Period */}
-          <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 shadow-xs">
-            <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#2563eb] dark:text-[#60a5fa] mb-1.5">
-              <Calendar className="h-4 w-4" />
-              <span>Активних тренувань</span>
-            </div>
-            <div className="font-mono text-2xl font-bold text-[#0f172a] dark:text-[#f8fafc]">
-              {stats.periodWorkoutsCount}
-            </div>
-            <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1">
-              у поточному періоді
-            </div>
-          </div>
-
-          {/* Volume in Period */}
-          <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 shadow-xs">
-            <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#2563eb] dark:text-[#60a5fa] mb-1.5">
-              <Flame className="h-4 w-4" />
-              <span>Тоннаж періоду</span>
-            </div>
-            <div className="font-mono text-2xl font-bold text-[#0f172a] dark:text-[#f8fafc]">
-              {stats.periodTons > 0 ? `${stats.periodTons} т` : `${stats.periodVolumeKg} кг`}
-            </div>
-            <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1 font-mono">
-              {stats.periodVolumeKg.toLocaleString()} кг піднято
-            </div>
-          </div>
-
-          {/* Exercises Tracked */}
-          <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 shadow-xs">
-            <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#2563eb] dark:text-[#60a5fa] mb-1.5">
-              <Trophy className="h-4 w-4" />
-              <span>Задіяних вправ</span>
-            </div>
-            <div className="font-mono text-2xl font-bold text-[#0f172a] dark:text-[#f8fafc]">
-              {stats.allTrackedExercises.length}
-            </div>
-            <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1">
-              з результатами у вибірці
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Muscle Group Distribution */}
-      <div className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 sm:p-5 space-y-4 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e2e8f0] dark:border-[#334155] pb-3">
-          <div>
-            <h3 className="text-sm sm:text-base font-bold text-[#0f172a] dark:text-[#f8fafc] flex items-center space-x-2">
-              <TrendingUp className="h-4 w-4 text-[#2563eb] dark:text-[#60a5fa]" />
-              <span>Кількість завершених підходів на м'язову групу</span>
-            </h3>
-            <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-0.5">
-              Враховуються лише успішно виконані підходи за обраний період ({periodInfo.titleUk})
-            </p>
-          </div>
-
-          <div className="text-xs font-semibold text-[#64748b] dark:text-[#94a3b8] font-mono">
-            Всього: <strong className="text-[#0f172a] dark:text-[#f8fafc]">{stats.periodCompletedSets}</strong> підх.
-          </div>
-        </div>
-
-        {stats.periodCompletedSets === 0 ? (
-          <div className="w-full rounded-[24px] border border-dashed border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939]/50 py-12 px-6 flex flex-col items-center justify-center text-center">
-            <div className="w-12 h-12 rounded-2xl bg-[#f1f5f9] dark:bg-[#263140] flex items-center justify-center">
-              <Layers className="w-5 h-5 text-[#2563eb] dark:text-[#60a5fa] stroke-[1.75]" />
-            </div>
-            <h4 className="mt-3 font-bold text-sm sm:text-base text-[#0f172a] dark:text-[#f8fafc]">
-              За обраний період немає зафіксованих підходів
-            </h4>
-            <p className="mt-1 text-xs text-[#64748b] dark:text-[#94a3b8] max-w-sm">
-              Завершуйте підходи у тренуваннях натисканням галочки ✓, і дані про навантаження відобразяться тут.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => {
-              const info = MUSCLE_GROUPS[groupKey];
-              const setsCount = stats.muscleSetsMap[groupKey] || 0;
-              const percent =
-                stats.periodCompletedSets > 0
-                  ? (setsCount / stats.periodCompletedSets) * 100
-                  : 0;
-
-              if (setsCount === 0) return null;
-
-              return (
-                <div key={groupKey} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-[#0f172a] dark:text-[#f8fafc]">{info.nameUk}</span>
-                    </div>
-                    <div className="font-mono text-xs flex items-center space-x-2">
-                      <span className="text-[#0f172a] dark:text-[#f8fafc] font-bold">
-                        {setsCount}{' '}
-                        {setsCount === 1
-                          ? 'підхід'
-                          : setsCount >= 2 && setsCount <= 4
-                            ? 'підходи'
-                            : 'підходів'}
-                      </span>
-                      <span className="text-[#64748b] dark:text-[#94a3b8]">({Math.round(percent)}%)</span>
-                    </div>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#f1f5f9] dark:bg-[#263140]">
-                    <div
-                      className="h-full rounded-full bg-[#2563eb] transition-all duration-300"
-                      style={{ width: `${Math.max(3, percent)}%` }}
-                    />
-                  </div>
+              <div>
+                <div className="border-t border-slate-200 dark:border-zinc-800/80 pt-2 flex items-baseline justify-between font-mono">
+                  <span className="text-base font-bold text-slate-900 dark:text-zinc-100">
+                    {pr.maxWeight} кг
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-zinc-400">× {pr.reps} повт</span>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Personal Records & Tracked Exercises (Supports Swipe Left/Right between Top and All) */}
-      <div
-        ref={recordsSwipeRef}
-        className="rounded-2xl border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] p-4 sm:p-5 space-y-4 shadow-xs touch-pan-y"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e2e8f0] dark:border-[#334155] pb-3">
-          <div className="flex items-center space-x-2">
-            <Trophy className="h-4 w-4 text-[#2563eb] dark:text-[#60a5fa]" />
-            <h3 className="text-sm sm:text-base font-bold text-[#0f172a] dark:text-[#f8fafc]">
-              Вправи періоду та рекорди
-            </h3>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {/* View Mode Switcher */}
-            <div className="bg-[#f1f5f9] dark:bg-[#263140] p-1 rounded-2xl flex items-center gap-1 text-xs border border-[#e2e8f0] dark:border-[#334155]">
-              <button
-                type="button"
-                onClick={() => setViewMode('prs')}
-                className={`rounded-xl px-3 py-1.5 font-semibold transition-all cursor-pointer ${viewMode === 'prs' && !searchQuery
-                  ? 'bg-[#2563eb] text-white font-bold shadow-sm'
-                  : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
-                  }`}
-              >
-                Топ ({stats.topPRs.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('all')}
-                className={`rounded-xl px-3 py-1.5 font-semibold transition-all cursor-pointer ${viewMode === 'all' && !searchQuery
-                  ? 'bg-[#2563eb] text-white font-bold shadow-sm'
-                  : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc]'
-                  }`}
-              >
-                Всі ({stats.allTrackedExercises.length})
-              </button>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#64748b] dark:text-[#94a3b8]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Пошук вправи..."
-                className="w-36 sm:w-44 h-8 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#0b1220] pl-8 pr-2.5 text-base sm:text-xs text-[#0f172a] dark:text-[#f8fafc] placeholder-[#64748b] dark:placeholder-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#2563eb]"
-              />
-            </div>
-          </div>
-        </div>
-
-        {displayedExercises.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800 p-8 text-center text-xs text-slate-500 dark:text-zinc-400">
-            {searchQuery
-              ? 'Вправ за цим запитом не знайдено.'
-              : `У періоді «${periodInfo.titleUk}» ще немає зафіксованих підходів із вагою.`}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
-            {displayedExercises.map((pr, idx) => {
-              const muscle = MUSCLE_GROUPS[pr.muscle] || MUSCLE_GROUPS.full_body;
-              return (
-                <div
-                  key={pr.id || idx}
-                  onClick={() => setSelectedExercise(pr.exercise)}
-                  className="group rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40 p-3.5 flex flex-col justify-between cursor-pointer hover:border-slate-300 dark:hover:border-zinc-700 transition-colors shadow-2xs"
-                  title="Натисніть для перегляду динаміки та історії цієї вправи"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:text-zinc-400">
-                        {muscle.nameUk}
-                      </span>
-                      <span className="font-mono text-xs text-slate-400 dark:text-zinc-500">#{idx + 1}</span>
-                    </div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white line-clamp-1 mb-2 transition-colors">
-                      {pr.name}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="border-t border-slate-200 dark:border-zinc-800/80 pt-2 flex items-baseline justify-between font-mono">
-                      <span className="text-base font-bold text-slate-900 dark:text-zinc-100">
-                        {pr.maxWeight} кг
-                      </span>
-                      <span className="text-xs text-slate-500 dark:text-zinc-400">× {pr.reps} повт</span>
-                    </div>
-                    <div className="mt-1.5 flex items-center justify-end text-[10px] font-medium text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200 transition-colors">
-                      <span>Історія</span>
-                      <ChevronRight className="h-3 w-3 ml-0.5" />
-                    </div>
-                  </div>
+                <div className="mt-1.5 flex items-center justify-end text-[10px] font-medium text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200 transition-colors">
+                  <span>Історія</span>
+                  <ChevronRight className="h-3 w-3 ml-0.5" />
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            </div>
+          );
+        })}
       </div>
+    )}
+  </div>
 
-      {/* Exercise Details Modal */}
-      <ExerciseHistoryModal
-        exercise={selectedExercise}
-        userId={userId}
-        isOpen={Boolean(selectedExercise)}
-        onClose={() => setSelectedExercise(null)}
-      />
-    </div>
+  {/* Exercise Details Modal */ }
+  <ExerciseHistoryModal
+    exercise={selectedExercise}
+    userId={userId}
+    isOpen={Boolean(selectedExercise)}
+    onClose={() => setSelectedExercise(null)}
+  />
+    </div >
   );
 };

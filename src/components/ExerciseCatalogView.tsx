@@ -90,11 +90,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
     <div className="space-y-5 max-w-5xl mx-auto animate-fade-in pb-12">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-            База вправ
-          </h1>
-        </div>
 
         <button
           type="button"
