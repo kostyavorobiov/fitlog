@@ -77,8 +77,9 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
       e.stopPropagation();
       const base = isOpenRef.current ? -TOTAL_SWIPE_WIDTH : 0;
       const targetX = base + dx;
-      // Clamp between -TOTAL_SWIPE_WIDTH - 25 and 0
-      const clamped = Math.max(-TOTAL_SWIPE_WIDTH - 25, Math.min(0, targetX));
+      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
+      // Clamp between -screenWidth and 0
+      const clamped = Math.max(-screenWidth, Math.min(0, targetX));
       setOffsetX(clamped);
     }
   };
@@ -99,7 +100,15 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
         justSwipedRef.current = false;
       }, 150);
 
-      if (offsetX < -SWIPE_THRESHOLD) {
+      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
+      const pastHalfScreen = -offsetX > screenWidth * 0.5;
+
+      if (pastHalfScreen) {
+        // Fast swipe > 50%: trigger standard delete confirmation
+        isOpenRef.current = false;
+        setOffsetX(0);
+        onDelete();
+      } else if (offsetX < -SWIPE_THRESHOLD) {
         // Snap open revealing actions
         isOpenRef.current = true;
         setOffsetX(-TOTAL_SWIPE_WIDTH);
@@ -117,6 +126,8 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    isOpenRef.current = false;
+    setOffsetX(0);
     onDelete();
   };
 
@@ -139,6 +150,12 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
     }
   };
 
+  const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
+  const halfScreen = screenWidth * 0.5;
+  const isPastHalf = -offsetX > halfScreen;
+  const stretchProgress = Math.max(0, Math.min(1, (-offsetX - TOTAL_SWIPE_WIDTH) / Math.max(1, halfScreen - TOTAL_SWIPE_WIDTH)));
+  const changeBtnOpacity = isPastHalf ? 0 : Math.max(0, 1 - stretchProgress);
+
   return (
     <div
       data-no-swipe="true"
@@ -148,64 +165,53 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
           : 'max-h-[3000px]'
       }`}
     >
-      {/* Background Actions: Change Exercise (Yellow) & Delete Exercise (Red) */}
+      {/* Background Actions: Change Exercise (Blue Pill) & Delete Exercise (Red Pill) */}
       <div
-        className="absolute inset-y-0 right-0 flex items-stretch justify-end z-0 overflow-hidden"
+        className="absolute inset-y-0 right-0 flex items-center justify-end z-0 px-2 gap-2 overflow-hidden bg-rose-600/90 dark:bg-rose-700/90"
         style={{
           width: `${Math.max(TOTAL_SWIPE_WIDTH, -offsetX)}px`,
           opacity: offsetX < -4 ? 1 : 0,
           pointerEvents: offsetX < -4 ? 'auto' : 'none',
           transition: isDragging
             ? 'none'
-            : 'width 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.15s ease',
+            : 'width 0.22s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.15s ease',
         }}
       >
-        {/* Primary Blue Change Exercise Button */}
-        <button
-          type="button"
-          onClick={handleChange}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="w-[76px] h-full flex flex-col items-center justify-center gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-white font-bold text-xs transition-colors cursor-pointer select-none touch-manipulation"
-          title="Змінити вправу"
-          aria-label="Змінити вправу"
-        >
-          <ArrowLeftRight
-            className="h-5 w-5 transition-transform"
+        {/* Blue Pill Change Exercise Button (fades out as user swipes past 50%) */}
+        {onChangeExercise && (
+          <button
+            type="button"
+            onClick={handleChange}
+            onPointerDown={(e) => e.stopPropagation()}
             style={{
-              transform: `scale(${Math.min(1, Math.max(0.7, -offsetX / TOTAL_SWIPE_WIDTH))})`,
+              opacity: changeBtnOpacity,
+              display: isPastHalf ? 'none' : 'flex',
+              transition: 'opacity 0.18s ease',
             }}
-          />
-          <span
-            style={{
-              opacity: Math.min(1, Math.max(0.6, -offsetX / TOTAL_SWIPE_WIDTH)),
-            }}
+            className="h-10 px-3.5 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer select-none touch-manipulation shrink-0"
+            title="Змінити вправу"
+            aria-label="Змінити вправу"
           >
-            Змінити
-          </span>
-        </button>
+            <ArrowLeftRight className="h-4 w-4 shrink-0" />
+            <span className="truncate">Змінити</span>
+          </button>
+        )}
 
-        {/* Red Delete Button */}
+        {/* Red Pill Delete Button (smoothly stretches when past 50%) */}
         <button
           type="button"
           onClick={handleDelete}
           onPointerDown={(e) => e.stopPropagation()}
-          className="w-[76px] h-full flex flex-col items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 dark:bg-rose-600 dark:hover:bg-rose-700 text-white font-bold text-xs transition-colors cursor-pointer select-none touch-manipulation"
+          style={{
+            flex: isPastHalf ? 1 : 'none',
+            transition: 'all 0.22s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          }}
+          className="h-10 px-4 rounded-full bg-rose-700 hover:bg-rose-800 active:bg-rose-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer select-none touch-manipulation shrink-0"
           title="Видалити вправу"
           aria-label="Видалити вправу"
         >
-          <Trash2
-            className="h-5 w-5 transition-transform"
-            style={{
-              transform: `scale(${Math.min(1, Math.max(0.7, -offsetX / TOTAL_SWIPE_WIDTH))})`,
-            }}
-          />
-          <span
-            style={{
-              opacity: Math.min(1, Math.max(0.6, -offsetX / TOTAL_SWIPE_WIDTH)),
-            }}
-          >
-            Видалити
-          </span>
+          <Trash2 className="h-4 w-4 shrink-0" />
+          <span className="truncate">Видалити</span>
         </button>
       </div>
 
@@ -215,7 +221,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
           transform: `translateX(${offsetX}px)`,
           transition: isDragging
             ? 'none'
-            : 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)',
+            : 'transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1)',
           touchAction: 'pan-y',
           userSelect: isDragging ? 'none' : 'auto',
         }}

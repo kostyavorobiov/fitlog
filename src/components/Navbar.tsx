@@ -8,6 +8,8 @@ import {
   Users,
   Sun,
   Moon,
+  Plus,
+  User as UserIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -21,6 +23,9 @@ interface NavbarProps {
   ) => void;
   onOpenAuthModal: () => void;
   hasActiveWorkout?: boolean;
+  isEditingWorkout?: boolean;
+  workoutTitle?: string;
+  onCreateWorkout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -28,6 +33,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectTab,
   onOpenAuthModal,
   hasActiveWorkout = false,
+  isEditingWorkout = false,
+  workoutTitle,
+  onCreateWorkout,
 }) => {
   const { user, isAdmin } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -109,6 +117,28 @@ export const Navbar: React.FC<NavbarProps> = ({
     onSelectTab(tab);
   };
 
+  const currentTabTitle = (() => {
+    if (isEditingWorkout) {
+      return workoutTitle || 'Тренування';
+    }
+    switch (currentTab) {
+      case 'editor':
+        return 'Тренування';
+      case 'analytics':
+        return 'Аналітика';
+      case 'catalog':
+        return 'Вправи';
+      case 'history':
+        return 'Календар';
+      case 'trainees':
+        return 'Підопічні';
+      case 'profile':
+        return 'Профіль';
+      default:
+        return 'Тренування';
+    }
+  })();
+
   return (
     <>
       {/* Top Header - Liquid Glass with Mobile Auto-Hide */}
@@ -121,18 +151,23 @@ export const Navbar: React.FC<NavbarProps> = ({
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
-            {/* Pure Flat Text Logo */}
-            <div
-              className="flex items-center cursor-pointer select-none py-1 shrink-0"
-              onTouchStart={() => handleNavSelect('editor')}
-              onPointerDown={(e) => {
-                if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor');
-              }}
-              onClick={() => handleNavSelect('editor')}
-            >
-              <span className="text-base sm:text-lg font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] hover:text-[#2563eb] dark:hover:text-[#60a5fa] transition-colors">
-                Your workout diary
-              </span>
+            {/* Header Title: Dynamic Tab Title on Mobile, Logo on Desktop */}
+            <div className="flex items-center min-w-0 py-1 shrink-0">
+              <h1 className="md:hidden text-base sm:text-lg font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] truncate">
+                {currentTabTitle}
+              </h1>
+              <div
+                className="hidden md:flex items-center cursor-pointer select-none py-1 shrink-0"
+                onTouchStart={() => handleNavSelect('editor')}
+                onPointerDown={(e) => {
+                  if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor');
+                }}
+                onClick={() => handleNavSelect('editor')}
+              >
+                <span className="text-base sm:text-lg font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] hover:text-[#2563eb] dark:hover:text-[#60a5fa] transition-colors">
+                  FitLog
+                </span>
+              </div>
             </div>
 
             {/* Desktop Navigation Tabs - Flat Style */}
@@ -251,7 +286,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
 
-              {/* Theme Toggle Button — round */}
+              {/* Theme Toggle Button — round (desktop only, hidden on mobile) */}
               <button
                 type="button"
                 onTouchStart={() => {
@@ -265,7 +300,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }
                 }}
                 onClick={toggleTheme}
-                className="h-9 w-9 rounded-full border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] flex items-center justify-center text-[#64748b] dark:text-[#94a3b8] hover:text-[#2563eb] dark:hover:text-[#60a5fa] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] transition-colors cursor-pointer"
+                className="hidden md:flex h-9 w-9 rounded-full border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] items-center justify-center text-[#64748b] dark:text-[#94a3b8] hover:text-[#2563eb] dark:hover:text-[#60a5fa] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] transition-colors cursor-pointer"
                 title={isDark ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
                 aria-label={isDark ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
               >
@@ -330,7 +365,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation Bar — pill style */}
+      {/* Mobile Bottom Navigation Bar — pill style with central '+' button */}
       <nav
         data-no-swipe="true"
         aria-label="Mobile Navigation"
@@ -342,13 +377,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           marginBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
-        {/* Тренування */}
+        {/* 1. Тренування */}
         <button
           type="button"
           onTouchStart={() => handleNavSelect('editor')}
           onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor'); }}
           onClick={() => handleNavSelect('editor')}
-          className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'editor'
+          className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[50px] ${currentTab === 'editor'
             ? 'bg-[#2563eb] text-white shadow-sm font-bold'
             : 'text-[#64748b] dark:text-[#94a3b8]'
             }`}
@@ -360,28 +395,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </button>
 
-        {/* Календар */}
-        <button
-          type="button"
-          onTouchStart={() => handleNavSelect('history')}
-          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history'); }}
-          onClick={() => handleNavSelect('history')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'history'
-            ? 'bg-[#2563eb] text-white shadow-sm font-bold'
-            : 'text-[#64748b] dark:text-[#94a3b8]'
-            }`}
-        >
-          <Calendar className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Календар</span>
-        </button>
-
-        {/* Аналітика */}
+        {/* 2. Аналітика */}
         <button
           type="button"
           onTouchStart={() => handleNavSelect('analytics')}
           onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics'); }}
           onClick={() => handleNavSelect('analytics')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'analytics'
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[50px] ${currentTab === 'analytics'
             ? 'bg-[#2563eb] text-white shadow-sm font-bold'
             : 'text-[#64748b] dark:text-[#94a3b8]'
             }`}
@@ -390,13 +410,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="text-[9px] font-semibold leading-none">Аналітика</span>
         </button>
 
-        {/* Вправи */}
+        {/* Central '+' Create Workout Button (hidden when viewing/editing a workout) */}
+        {!isEditingWorkout && (
+          <button
+            type="button"
+            onClick={onCreateWorkout}
+            className="w-10 h-10 rounded-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform cursor-pointer shrink-0"
+            title="Створити нове тренування"
+            aria-label="Створити нове тренування"
+          >
+            <Plus className="h-5 w-5 stroke-[2.5]" />
+          </button>
+        )}
+
+        {/* 3. Вправи */}
         <button
           type="button"
           onTouchStart={() => handleNavSelect('catalog')}
           onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog'); }}
           onClick={() => handleNavSelect('catalog')}
-          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'catalog'
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[50px] ${currentTab === 'catalog'
             ? 'bg-[#2563eb] text-white shadow-sm font-bold'
             : 'text-[#64748b] dark:text-[#94a3b8]'
             }`}
@@ -405,23 +438,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="text-[9px] font-semibold leading-none">Вправи</span>
         </button>
 
-        {/* Підопічні (тільки для тренерів/адмінів) */}
-        {(user?.role === 'coach' || isAdmin) && (
-          <button
-            type="button"
-            onTouchStart={() => handleNavSelect('trainees')}
-            onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees'); }}
-            onClick={() => handleNavSelect('trainees')}
-            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[52px] ${currentTab === 'trainees'
-              ? 'bg-[#2563eb] text-white shadow-sm font-bold'
-              : 'text-[#64748b] dark:text-[#94a3b8]'
-              }`}
-          >
-            <Users className="h-[18px] w-[18px] shrink-0" />
-            <span className="text-[9px] font-semibold leading-none">Підопічні</span>
-          </button>
-        )}
-      </nav >
+        {/* 4. Профіль */}
+        <button
+          type="button"
+          onTouchStart={() => handleNavSelect('profile')}
+          onPointerDown={(e) => { if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('profile'); }}
+          onClick={() => handleNavSelect('profile')}
+          className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer active:scale-95 min-w-[50px] ${currentTab === 'profile'
+            ? 'bg-[#2563eb] text-white shadow-sm font-bold'
+            : 'text-[#64748b] dark:text-[#94a3b8]'
+            }`}
+        >
+          <UserIcon className="h-[18px] w-[18px] shrink-0" />
+          <span className="text-[9px] font-semibold leading-none">Профіль</span>
+        </button>
+      </nav>
     </>
   );
 };

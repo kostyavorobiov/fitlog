@@ -51,10 +51,48 @@ export const formatLocalDate = (d: Date = new Date()): string => {
 };
 
 /**
+ * Format date string (YYYY-MM-DD) or Date object into Ukrainian standard DD/MM/YYYY format
+ */
+export const formatDateDDMMYYYY = (input?: string | Date | null): string => {
+  if (!input) return '';
+  if (input instanceof Date) {
+    const day = String(input.getDate()).padStart(2, '0');
+    const month = String(input.getMonth() + 1).padStart(2, '0');
+    const year = input.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  if (typeof input === 'string') {
+    if (input.includes('/')) return input;
+    const parts = input.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const [y, m, d] = parts;
+      return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+    }
+  }
+  return String(input);
+};
+
+/**
+ * Parse a DD/MM/YYYY or YYYY-MM-DD string into YYYY-MM-DD standard format
+ */
+export const parseDateToISO = (input: string): string => {
+  if (!input) return formatLocalDate();
+  if (input.includes('/')) {
+    const parts = input.split('/');
+    if (parts.length === 3) {
+      const [d, m, y] = parts;
+      return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+  }
+  return input;
+};
+
+/**
  * Parse a YYYY-MM-DD string into a local Date object
  */
 export const parseLocalDate = (dateStr: string): Date => {
-  const [y, m, d] = dateStr.split('-').map(Number);
+  const iso = parseDateToISO(dateStr);
+  const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, (m || 1) - 1, d || 1);
 };
 

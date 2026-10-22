@@ -1,7 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { StorageService } from '../services/storageService';
-import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
+import { CloudStorageService } from '../services/cloudStorageService';
+import { MUSCLE_GROUPS, MuscleGroup, Exercise, WorkoutPlan } from '../types/workout';
 import { ExerciseHistoryModal } from './ExerciseHistoryModal';
+import { formatDateDDMMYYYY } from './WorkoutListView';
 import {
   Trophy,
   Flame,
@@ -18,11 +20,12 @@ import { useSwipeGesture } from '../utils/useSwipeGesture';
 
 interface AnalyticsViewProps {
   userId: string;
+  onSelectWorkout?: (workout: WorkoutPlan) => void;
 }
 
 export type AnalyticsPeriod = 'day' | 'week' | 'month';
 
-export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
+export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId, onSelectWorkout }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>('week');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -49,7 +52,79 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
     }
   };
 
-  const workouts = useMemo(() => StorageService.getWorkouts(userId), [userId]);
+  const [workouts, setWorkouts] = useState<WorkoutPlan[]>(() => StorageService.getWorkouts(userId));
+
+  useEffect(() => {
+    setWorkouts(StorageService.getWorkouts(userId));
+    let isSubscribed = true;
+    CloudStorageService.fetchWorkouts(userId).then((cloudWorkouts) => {
+      if (!isSubscribed || cloudWorkouts === null) return;
+      StorageService.setWorkoutsForUser(userId, cloudWorkouts);
+      setWorkouts(StorageService.getWorkouts(userId));
+    });
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [userId]);
+
+  // Calendar state in top of Analytics
+  const [calDate, setCalDate] = useState<Date>(new Date());
+  const [selectedCalendarDateStr, setSelectedCalendarDateStr] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
+
+  const calYear = calDate.getFullYear();
+  const calMonth = calDate.getMonth();
+
+  const handlePrevMonth = () => {
+    setCalDate(new Date(calYear, calMonth - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCalDate(new Date(calYear, calMonth + 1, 1));
+  };
+
+  const handleCalendarToday = () => {
+    const today = new Date();
+    setCalDate(today);
+    const dayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    setSelectedCalendarDateStr(dayStr);
+    setCurrentDate(today);
+  };
+
+  const ukrainianMonths = [
+    'Січень',
+    'Лютий',
+    'Березень',
+    'Квітень',
+    'Травень',
+    'Червень',
+    'Липень',
+    'Серпень',
+    'Вересень',
+    'Жовтень',
+    'Листопад',
+    'Грудень',
+  ];
+
+  // Calendar grid cells
+  const firstDayOfMonth = new Date(calYear, calMonth, 1);
+  const lastDayOfMonth = new Date(calYear, calMonth + 1, 0);
+  const daysInMonth = lastDayOfMonth.getDate();
+  const startDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
+
+  const calendarCells: (number | null)[] = [];
+  for (let i = 0; i < startDayOfWeek; i++) {
+    calendarCells.push(null);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    calendarCells.push(day);
+  }
+
+  const selectedDateWorkouts = workouts.filter(
+    (w) => w.scheduledDate === selectedCalendarDateStr
+  );
 
   // Navigate date backwards/forwards for Day, Week, Month
   const handlePrevDate = () => {
@@ -354,6 +429,155 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId }) => {
             );
           })}
         </div>
+      </div>
+
+      {/* 1. Month Calendar in Analytics (Preserved from WorkoutHistory with Workout Status Dots) */}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-4 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+              title="Попередній місяць"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 min-w-[150px] text-center select-none">
+              {ukrainianMonths[calMonth]} {calYear}
+            </h3>
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+              title="Наступний місяць"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCalendarToday}
+            className="rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] px-3 py-1.5 text-xs font-bold text-[#0f172a] dark:text-[#f8fafc] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] transition-colors cursor-pointer"
+          >
+            Сьогодні
+          </button>
+        </div>
+
+        {/* Weekdays header */}
+        <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] sm:text-xs text-[#64748b] dark:text-[#94a3b8] pb-2 border-b border-[#e2e8f0] dark:border-[#334155]">
+          <div>Пн</div>
+          <div>Вт</div>
+          <div>Ср</div>
+          <div>Чт</div>
+          <div>Пт</div>
+          <div className="text-[#2563eb] dark:text-[#60a5fa]">Сб</div>
+          <div className="text-[#2563eb] dark:text-[#60a5fa]">Нд</div>
+        </div>
+
+        {/* Calendar Days Grid */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+          {calendarCells.map((dayNum, idx) => {
+            if (dayNum === null) {
+              return <div key={`empty-${idx}`} className="h-12 sm:h-16 rounded bg-transparent" />;
+            }
+            const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+            const isSelected = selectedCalendarDateStr === dateStr;
+            const isToday = dateStr === new Date().toISOString().split('T')[0];
+            const dayWorkouts = workouts.filter((w) => w.scheduledDate === dateStr);
+
+            return (
+              <div
+                key={`day-${dayNum}`}
+                onClick={() => {
+                  setSelectedCalendarDateStr(dateStr);
+                  const [y, m, d] = dateStr.split('-').map(Number);
+                  setCurrentDate(new Date(y, m - 1, d));
+                }}
+                className={`h-12 sm:h-16 rounded-xl border p-1 sm:p-1.5 cursor-pointer transition-colors flex flex-col justify-between ${
+                  isSelected
+                    ? 'border-[#2563eb] bg-blue-50/70 dark:bg-[#1d2939] ring-2 ring-[#2563eb]'
+                    : isToday
+                    ? 'border-[#60a5fa] bg-[#f1f5f9] dark:bg-[#1d2939]'
+                    : dayWorkouts.length > 0
+                    ? 'border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939] hover:border-[#60a5fa]'
+                    : 'border-[#f1f5f9] dark:border-[#334155]/60 bg-[#f8fafc]/50 dark:bg-[#1d2939]/40 hover:bg-[#f1f5f9] dark:hover:bg-[#263140]'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`text-[11px] sm:text-xs font-bold ${
+                      isSelected
+                        ? 'text-[#2563eb] dark:text-[#60a5fa]'
+                        : isToday
+                        ? 'text-[#2563eb] dark:text-[#60a5fa]'
+                        : 'text-[#0f172a] dark:text-[#f8fafc]'
+                    }`}
+                  >
+                    {dayNum}
+                  </span>
+                  {dayWorkouts.length > 0 && (
+                    <span className="text-[9px] font-semibold text-[#64748b] dark:text-[#94a3b8]">
+                      {dayWorkouts.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* Workout Status Dots */}
+                <div className="flex items-center gap-1 flex-wrap">
+                  {dayWorkouts.slice(0, 3).map((w, wIdx) => {
+                    const isDone = w.status === 'completed';
+                    const isInProg = w.status === 'in_progress';
+                    return (
+                      <span
+                        key={wIdx}
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          isDone
+                            ? 'bg-[#22c55e]'
+                            : isInProg
+                            ? 'bg-[#3b82f6]'
+                            : 'bg-[#94a3b8]'
+                        }`}
+                        title={w.title}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Selected Date Workouts Summary */}
+        {selectedDateWorkouts.length > 0 && (
+          <div className="pt-2 border-t border-[#e2e8f0] dark:border-[#334155] space-y-1.5">
+            <div className="text-xs font-semibold text-[#64748b] dark:text-[#94a3b8]">
+              Тренування на {formatDateDDMMYYYY(selectedCalendarDateStr)}:
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {selectedDateWorkouts.map((w) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  onClick={() => onSelectWorkout?.(w)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 hover:border-[#2563eb] text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      w.status === 'completed'
+                        ? 'bg-[#22c55e]'
+                        : w.status === 'in_progress'
+                        ? 'bg-[#3b82f6]'
+                        : 'bg-[#94a3b8]'
+                    }`}
+                  />
+                  <span>{w.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Date Navigation & KPI Metrics Section (Supports Swipe Left/Right to change date) */}

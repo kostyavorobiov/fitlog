@@ -7,27 +7,28 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { UserAvatar } from './UserAvatar';
 
 export interface WebTopNavbarProps {
+  title?: string;
   onLogoPress?: () => void;
   style?: any;
 }
 
 /**
- * WebTopNavbar: Matches Web version sticky top navbar (src/components/Navbar.tsx)
- * - Left: "Workout diary" text logo
- * - Right: Theme toggle button (Sun/Moon) + UserAvatar (or "Увійти" button)
+ * WebTopNavbar: Matches Ocean Blue top navbar
+ * - Left: Tab / Screen Title (e.g. "Тренування", "Аналітика", "Профіль")
+ * - Right: UserAvatar (or "Увійти" button)
+ * - Removed: "Workout diary / FitLog" brand name & Theme switcher
  */
-export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ onLogoPress, style }) => {
+export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ title, onLogoPress, style }) => {
   const router = useRouter();
   const { user } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
 
-  const handleLogoPress = () => {
+  const handleTitlePress = () => {
     if (onLogoPress) {
       onLogoPress();
     } else {
@@ -52,41 +53,21 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ onLogoPress, style }
         style,
       ]}
     >
-      {/* Left: Pure Flat Text Logo "Workout diary" */}
+      {/* Left: Dynamic Current Tab Title */}
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={handleLogoPress}
-        style={styles.logoButton}
-        accessibilityRole="button"
-        accessibilityLabel="Workout diary - на головну"
+        onPress={handleTitlePress}
+        style={styles.titleButton}
+        accessibilityRole="header"
+        accessibilityLabel={title || 'FitLog'}
       >
-        <Text style={[styles.logoText, isDark ? styles.textDark : styles.textLight]}>
-          Workout diary
+        <Text style={[styles.navTitleText, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
+          {title || 'FitLog'}
         </Text>
       </TouchableOpacity>
 
-      {/* Right Header Actions: Theme Switcher & User Avatar */}
+      {/* Right Header Actions: User Avatar only (Theme toggle removed) */}
       <View style={styles.rightActions}>
-        {/* Theme Toggle Button (Square 36x36 with rounded-lg 8px) */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={toggleTheme}
-          style={[
-            styles.themeToggleBtn,
-            isDark ? styles.themeToggleDark : styles.themeToggleLight,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={isDark ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
-          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-        >
-          {isDark ? (
-            <Ionicons name="sunny-outline" size={17} color="#d4d4d8" />
-          ) : (
-            <Ionicons name="moon-outline" size={17} color="#52525b" />
-          )}
-        </TouchableOpacity>
-
-        {/* User Auth Section */}
         {user ? (
           <TouchableOpacity
             activeOpacity={0.8}
@@ -115,7 +96,7 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ onLogoPress, style }
             accessibilityRole="button"
             accessibilityLabel="Увійти"
           >
-            <Text style={[styles.loginBtnText, isDark ? styles.loginTextDark : styles.loginTextLight]}>
+            <Text style={styles.loginBtnText}>
               Увійти
             </Text>
           </TouchableOpacity>
@@ -126,14 +107,14 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ onLogoPress, style }
 };
 
 export interface SectionHeaderProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   rightAction?: React.ReactNode;
   style?: any;
 }
 
 /**
- * SectionHeader: Matches Web page title row (border-b pb-4)
+ * SectionHeader: Subtitle and action controls row (e.g. period selector or filters)
  */
 export const SectionHeader: React.FC<SectionHeaderProps> = ({
   title,
@@ -143,12 +124,16 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
 }) => {
   const { isDark } = useTheme();
 
+  if (!title && !subtitle && !rightAction) return null;
+
   return (
     <View style={[styles.sectionRow, isDark ? styles.sectionBorderDark : styles.sectionBorderLight, style]}>
       <View style={styles.sectionTitleWrap}>
-        <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
-          {title}
-        </Text>
+        {title ? (
+          <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
+            {title}
+          </Text>
+        ) : null}
         {subtitle ? (
           <Text style={[styles.sectionSubtitle, isDark ? styles.subDark : styles.subLight]}>
             {subtitle}
@@ -170,7 +155,7 @@ export interface HeaderProps {
 }
 
 /**
- * Header: Unified header component providing WebTopNavbar + SectionHeader
+ * Header: Unified header component providing WebTopNavbar with tab title + optional SectionHeader
  */
 export const Header: React.FC<HeaderProps> = ({
   title,
@@ -181,11 +166,10 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <View style={styles.wrapper}>
-      {!hideTopNavbar && <WebTopNavbar onLogoPress={onLogoPress} />}
-      {title ? (
+      {!hideTopNavbar && <WebTopNavbar title={title} onLogoPress={onLogoPress} />}
+      {subtitle || rightAction ? (
         <View style={styles.sectionContainer}>
           <SectionHeader
-            title={title}
             subtitle={subtitle}
             rightAction={rightAction}
           />
@@ -215,11 +199,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(11, 18, 32, 0.95)',
     borderBottomColor: '#334155',
   },
-  logoButton: {
+  titleButton: {
     paddingVertical: 6,
+    maxWidth: '75%',
   },
-  logoText: {
-    fontSize: 18,
+  navTitleText: {
+    fontSize: 20,
     fontWeight: '700',
     letterSpacing: -0.4,
   },
@@ -227,22 +212,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  themeToggleBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  themeToggleLight: {
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F1F5F9',
-  },
-  themeToggleDark: {
-    borderColor: '#334155',
-    backgroundColor: '#263140',
   },
   avatarContainer: {
     borderRadius: 20,
@@ -256,9 +225,10 @@ const styles = StyleSheet.create({
     borderColor: '#334155',
   },
   loginBtn: {
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: '#2563EB',
   },
   loginBtnLight: {
     backgroundColor: '#2563EB',
@@ -267,26 +237,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563EB',
   },
   loginBtnText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
-  },
-  loginTextLight: {
-    color: '#ffffff',
-  },
-  loginTextDark: {
-    color: '#ffffff',
+    color: '#FFFFFF',
   },
   sectionContainer: {
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   sectionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    gap: 12,
+    gap: 8,
   },
   sectionBorderLight: {
     borderBottomColor: '#E2E8F0',
@@ -298,16 +262,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   sectionSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     marginTop: 2,
   },
   sectionAction: {
-    alignItems: 'flex-end',
+    flexShrink: 0,
   },
   textLight: {
     color: '#0F172A',

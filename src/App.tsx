@@ -12,6 +12,7 @@ import { ExerciseCatalogView } from './components/ExerciseCatalogView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { ProfileView } from './components/ProfileView';
 import { TraineesView } from './components/TraineesView';
+import { CreateWorkoutModal } from './components/CreateWorkoutModal';
 import { GoogleAuthModal } from './components/GoogleAuthModal';
 import { PullToRefresh } from './components/PullToRefresh';
 
@@ -31,6 +32,7 @@ const MainContent: React.FC = () => {
     }
   });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Restore trainee reference if activeWorkout belongs to a trainee
   useEffect(() => {
@@ -152,6 +154,9 @@ const MainContent: React.FC = () => {
         }}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         hasActiveWorkout={Boolean(activeWorkout && activeWorkout.status === 'in_progress')}
+        isEditingWorkout={currentTab === 'editor' && workoutViewMode === 'editor' && Boolean(activeWorkout)}
+        workoutTitle={activeWorkout?.title}
+        onCreateWorkout={() => setIsCreateModalOpen(true)}
       />
 
       {/* Main View Container */}
@@ -219,13 +224,28 @@ const MainContent: React.FC = () => {
         )}
 
         {currentTab === 'analytics' && user && (
-          <AnalyticsView userId={user.id} />
+          <AnalyticsView
+            userId={user.id}
+            onSelectWorkout={(workout) => {
+              handleSelectWorkout(workout);
+              setCurrentTab('editor');
+            }}
+          />
         )}
 
         {currentTab === 'profile' && user && (
-          <ProfileView />
+          <ProfileView
+            onOpenTrainees={() => setCurrentTab('trainees')}
+          />
         )}
       </main>
+
+      {/* Create Workout Modal */}
+      <CreateWorkoutModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreateNewWorkout}
+      />
 
 
 

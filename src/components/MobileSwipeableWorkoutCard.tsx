@@ -74,8 +74,9 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
       e.stopPropagation();
       const base = isOpenRef.current ? -BUTTON_WIDTH : 0;
       const targetX = base + dx;
-      // Clamp between -BUTTON_WIDTH - 25 and 0
-      const clamped = Math.max(-BUTTON_WIDTH - 25, Math.min(0, targetX));
+      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
+      // Clamp between -screenWidth and 0
+      const clamped = Math.max(-screenWidth, Math.min(0, targetX));
       setOffsetX(clamped);
     }
   };
@@ -96,7 +97,15 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
         justSwipedRef.current = false;
       }, 150);
 
-      if (offsetX < -SWIPE_THRESHOLD) {
+      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
+      const pastHalfScreen = -offsetX > screenWidth * 0.5;
+
+      if (pastHalfScreen) {
+        // Fast swipe > 50%: trigger standard delete confirmation
+        isOpenRef.current = false;
+        setOffsetX(0);
+        onDelete();
+      } else if (offsetX < -SWIPE_THRESHOLD) {
         isOpenRef.current = true;
         setOffsetX(-BUTTON_WIDTH);
       } else {
@@ -111,6 +120,8 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
+    isOpenRef.current = false;
+    setOffsetX(0);
     onDelete();
   };
 
@@ -125,6 +136,9 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
     }
   };
 
+  const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
+  const isPastHalf = -offsetX > screenWidth * 0.5;
+
   return (
     <div
       data-no-swipe="true"
@@ -134,37 +148,31 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
           : 'max-h-[3000px]'
       }`}
     >
-      {/* Background Delete Action Button */}
+      {/* Background Delete Action Button with Pill-shaped button and smooth stretch */}
       <div
-        className="absolute inset-y-0 right-0 bg-rose-600 dark:bg-rose-600 flex items-center justify-end z-0"
+        className="absolute inset-y-0 right-0 bg-rose-600 dark:bg-rose-600 flex items-center justify-center z-0 px-3"
         style={{
           width: `${Math.max(BUTTON_WIDTH, -offsetX)}px`,
           opacity: offsetX < -4 ? 1 : 0,
           transition: isDragging
             ? 'none'
-            : 'width 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.15s ease',
+            : 'width 0.22s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.15s ease',
         }}
       >
         <button
           type="button"
           onClick={handleDelete}
-          className="w-[88px] h-full flex flex-col items-center justify-center gap-1.5 text-white font-bold text-xs hover:bg-rose-700 active:bg-rose-800 transition-colors cursor-pointer select-none"
+          className="h-10 px-4 rounded-full bg-rose-700 hover:bg-rose-800 active:bg-rose-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer select-none"
+          style={{
+            width: isPastHalf ? 'calc(100% - 24px)' : 'auto',
+            maxWidth: '220px',
+            transition: 'width 0.22s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          }}
           title="Видалити тренування"
           aria-label="Видалити тренування"
         >
-          <Trash2
-            className="h-5 w-5 transition-transform"
-            style={{
-              transform: `scale(${Math.min(1, Math.max(0.7, -offsetX / BUTTON_WIDTH))})`,
-            }}
-          />
-          <span
-            style={{
-              opacity: Math.min(1, Math.max(0.6, -offsetX / BUTTON_WIDTH)),
-            }}
-          >
-            Видалити
-          </span>
+          <Trash2 className="h-4 w-4 shrink-0" />
+          <span className="truncate">Видалити</span>
         </button>
       </div>
 
@@ -174,7 +182,7 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
           transform: `translateX(${offsetX}px)`,
           transition: isDragging
             ? 'none'
-            : 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)',
+            : 'transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1)',
           touchAction: 'pan-y',
           userSelect: isDragging ? 'none' : 'auto',
         }}

@@ -16,6 +16,7 @@ import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { MobileSwipeableExerciseCard } from './MobileSwipeableExerciseCard';
 import { playSuccessChime, playBeep } from '../utils/audio';
 import { getExercise1RM, format1RM, getMinRepsFromRange } from '../utils/workout';
+import { formatDateDDMMYYYY } from './WorkoutListView';
 import {
   Calendar,
   Plus,
@@ -1110,15 +1111,24 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
           {/* Date Picker row */}
           <div className="flex items-center space-x-2 pt-1">
-            <div className="flex items-center space-x-1.5 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] px-2.5 py-1 text-xs text-[#0f172a] dark:text-[#f8fafc]">
-              <Calendar className="h-3.5 w-3.5 text-[#2563eb] dark:text-[#60a5fa]" />
+            <label className="relative flex items-center space-x-1.5 rounded-xl border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] px-2.5 py-1 text-xs text-[#0f172a] dark:text-[#f8fafc] cursor-pointer hover:border-[#2563eb] dark:hover:border-[#60a5fa] transition-colors">
+              <Calendar className="h-3.5 w-3.5 text-[#2563eb] dark:text-[#60a5fa] shrink-0" />
+              <span className="font-mono text-xs select-none">
+                {workout.scheduledDate ? formatDateDDMMYYYY(workout.scheduledDate) : 'Виберіть дату'}
+              </span>
               <input
                 type="date"
-                value={workout.scheduledDate}
+                value={workout.scheduledDate ? workout.scheduledDate.split('T')[0] : ''}
                 onChange={(e) => handleDateChange(e.target.value)}
-                className="bg-transparent text-[#0f172a] dark:text-[#f8fafc] focus:outline-none cursor-pointer text-xs"
+                onClick={(e) => {
+                  try {
+                    (e.target as any).showPicker?.();
+                  } catch {}
+                }}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                tabIndex={-1}
               />
-            </div>
+            </label>
           </div>
         </div>
 

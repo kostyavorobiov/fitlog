@@ -20,7 +20,11 @@ import { StorageService } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
-export const ProfileView: React.FC = () => {
+interface ProfileViewProps {
+  onOpenTrainees?: () => void;
+}
+
+export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
   const { user, updateUserProfile, isAdmin, isCoach, logout } = useAuth();
   const { theme, toggleTheme, setTheme, isDark } = useTheme();
   const [copied, setCopied] = useState(false);
@@ -32,7 +36,6 @@ export const ProfileView: React.FC = () => {
   const [coachInputCode, setCoachInputCode] = useState('');
   const [isLinkingCoach, setIsLinkingCoach] = useState(false);
   const [coachToast, setCoachToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-
 
   if (!user) return null;
 
@@ -432,14 +435,22 @@ export const ProfileView: React.FC = () => {
           </div>
 
           {isCoach ? (
-            <div className="space-y-2 text-xs">
+            <div className="space-y-3 text-xs">
               <p className="text-slate-600 dark:text-zinc-400">
-                Ви зареєстровані як <strong>Тренер</strong>. Ви можете додавати спортсменів за їхнім ID.
+                Ви зареєстровані як <strong>Тренер</strong>. Ви можете додавати спортсменів за їхнім ID та вести їхні плани тренувань.
               </p>
               <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 p-3 flex items-center justify-between">
                 <span className="text-slate-500 dark:text-zinc-400">Прив'язаних підопічних:</span>
                 <span className="font-mono font-bold text-slate-900 dark:text-zinc-100">{traineesCount}</span>
               </div>
+              <button
+                type="button"
+                onClick={onOpenTrainees}
+                className="w-full h-10 inline-flex items-center justify-center space-x-2 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <Users className="h-4 w-4" />
+                <span>Відкрити список підопічних</span>
+              </button>
             </div>
           ) : user.coachId ? (
             coach ? (

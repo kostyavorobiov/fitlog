@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
   View,
@@ -10,6 +10,8 @@ import {
   RefreshControl,
   Alert,
   Share,
+  LayoutAnimation,
+  Platform,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,7 +25,8 @@ import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { TraineeService } from '../services/traineeService';
 import { WorkoutService } from '../services/workoutService';
 import { User, WorkoutPlan } from '../types/workout';
-import { formatLocalDate } from '../utils/date';
+import { formatLocalDate, formatDateDDMMYYYY } from '../utils/date';
+import { MonthGroup, getMonthKeyAndLabel } from './WorkoutsScreen';
 
 export const TraineesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
@@ -42,6 +45,49 @@ export const TraineesScreen: React.FC = () => {
   const [isAddingTrainee, setIsAddingTrainee] = useState<boolean>(false);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const isCreatingWorkoutRef = React.useRef(false);
+  const [openTraineeMonths, setOpenTraineeMonths] = useState<Record<string, boolean>>({});
+
+  // Group trainee workouts by calendar month (YYYY-MM), sorted newest to oldest
+  const sortedTraineeWorkouts = useMemo(() => {
+    return [...traineeWorkouts].sort((a, b) => {
+      const dateA = a.scheduledDate || a.createdAt || '';
+      const dateB = b.scheduledDate || b.createdAt || '';
+      return dateB.localeCompare(dateA);
+    });
+  }, [traineeWorkouts]);
+
+  const traineeMonthGroups: MonthGroup[] = useMemo(() => {
+    const map = new Map<string, { label: string; workouts: WorkoutPlan[] }>();
+    for (const w of sortedTraineeWorkouts) {
+      const { key, label } = getMonthKeyAndLabel(w.scheduledDate);
+      if (!map.has(key)) {
+        map.set(key, { label, workouts: [] });
+      }
+      map.get(key)!.workouts.push(w);
+    }
+    const keys = Array.from(map.keys()).sort((a, b) => b.localeCompare(a));
+    return keys.map((key) => ({
+      key,
+      label: map.get(key)!.label,
+      workouts: map.get(key)!.workouts,
+    }));
+  }, [sortedTraineeWorkouts]);
+
+  useEffect(() => {
+    if (traineeMonthGroups.length > 0 && Object.keys(openTraineeMonths).length === 0) {
+      setOpenTraineeMonths({ [traineeMonthGroups[0].key]: true });
+    }
+  }, [traineeMonthGroups]);
+
+  const toggleTraineeMonth = (key: string) => {
+    if (Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+    setOpenTraineeMonths((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   // Route protection: redirect athletes away from coach screen
   useEffect(() => {
@@ -565,94 +611,135 @@ export const TraineesScreen: React.FC = () => {
                     </Text>
                   </View>
                 ) : (
-                  <View style={styles.workoutsList}>
-                    {traineeWorkouts.map((w) => {
-                      const isCompleted = w.status === 'completed';
-                      const isInProgress = w.status === 'in_progress';
-                      const exerciseCount = w.exercises?.length || 0;
-                      const setsCount = (w.exercises || []).reduce(
-                        (acc, ex) => acc + (ex.sets?.length || 0),
-                        0
-                      );
+                  <View style={styles.accordionContainer}>
+                    {traineeMonthGroups.map((group) => {
+                      const isOpen = Boolean(openTraineeMonths[group.key]);
 
                       return (
-                        <TouchableOpacity
-                          key={w.id}
-                          activeOpacity={0.7}
-                          onPress={() =>
-                            router.push({
-                              pathname: '/workout/[id]',
-                              params: { id: w.id, traineeId: selectedTrainee.id },
-                            })
-                          }
-                          style={[
-                            styles.workoutItem,
-                            isDark ? styles.workoutItemDark : styles.workoutItemLight,
-                          ]}
-                        >
-                          <View style={styles.workoutItemMain}>
-                            <View style={styles.workoutItemHeader}>
-                              <Text
-                                numberOfLines={1}
-                                style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
-                              >
-                                {w.title}
-                              </Text>
-
-                              <View
-                                style={[
-                                  styles.statusBadge,
-                                  isCompleted
-                                    ? styles.statusCompleted
-                                    : isInProgress
-                                    ? styles.statusInProgress
-                                    : styles.statusPlanned,
-                                ]}
-                              >
-                                <Text
-                                  style={[
-                                    styles.statusText,
-                                    isCompleted
-                                      ? styles.statusTextCompleted
-                                      : isInProgress
-                                      ? styles.statusTextInProgress
-                                      : styles.statusTextPlanned,
-                                  ]}
-                                >
-                                  {isCompleted
-                                    ? 'Завершено'
-                                    : isInProgress
-                                    ? 'В процесі'
-                                    : 'Заплановано'}
-                                </Text>
-                              </View>
-                            </View>
-
-                            <View style={styles.workoutMetaRow}>
-                              <View style={styles.metaItem}>
-                                <Ionicons name="calendar-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
-                                <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
-                                  {w.scheduledDate}
-                                </Text>
-                              </View>
-
-                              <View style={styles.metaItem}>
-                                <Ionicons name="barbell-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
-                                <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
-                                  {exerciseCount} {exerciseCount === 1 ? 'вправа' : 'вправ'} ({setsCount} підх.)
-                                </Text>
-                              </View>
-                            </View>
-                          </View>
-
+                        <View key={group.key} style={styles.monthSection}>
+                          {/* Month Accordion Header */}
                           <TouchableOpacity
-                            style={styles.workoutDeleteBtn}
-                            onPress={() => handleDeleteTraineeWorkout(w)}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            activeOpacity={0.7}
+                            onPress={() => toggleTraineeMonth(group.key)}
+                            style={[
+                              styles.monthHeader,
+                              isDark ? styles.monthHeaderDark : styles.monthHeaderLight,
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${group.label}, ${group.workouts.length} тренувань`}
                           >
-                            <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                            <View style={styles.monthHeaderLeft}>
+                              <Text style={[styles.monthTitle, isDark ? styles.textDark : styles.textLight]}>
+                                {group.label}
+                              </Text>
+                              <View style={[styles.monthCountBadge, isDark ? styles.monthCountBadgeDark : styles.monthCountBadgeLight]}>
+                                <Text style={[styles.monthCountText, isDark ? styles.monthCountTextDark : styles.monthCountTextLight]}>
+                                  {group.workouts.length}
+                                </Text>
+                              </View>
+                            </View>
+                            <Ionicons
+                              name={isOpen ? 'chevron-up' : 'chevron-down'}
+                              size={18}
+                              color={isDark ? '#94A3B8' : '#64748B'}
+                            />
                           </TouchableOpacity>
-                        </TouchableOpacity>
+
+                          {/* Month Workouts List */}
+                          {isOpen && (
+                            <View style={styles.monthWorkoutsList}>
+                              {group.workouts.map((w) => {
+                                const isCompleted = w.status === 'completed';
+                                const isInProgress = w.status === 'in_progress';
+                                const exerciseCount = w.exercises?.length || 0;
+                                const setsCount = (w.exercises || []).reduce(
+                                  (acc, ex) => acc + (ex.sets?.length || 0),
+                                  0
+                                );
+
+                                return (
+                                  <TouchableOpacity
+                                    key={w.id}
+                                    activeOpacity={0.7}
+                                    onPress={() =>
+                                      router.push({
+                                        pathname: '/workout/[id]',
+                                        params: { id: w.id, traineeId: selectedTrainee.id },
+                                      })
+                                    }
+                                    style={[
+                                      styles.workoutItem,
+                                      isDark ? styles.workoutItemDark : styles.workoutItemLight,
+                                    ]}
+                                  >
+                                    <View style={styles.workoutItemMain}>
+                                      <View style={styles.workoutItemHeader}>
+                                        <Text
+                                          numberOfLines={1}
+                                          style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
+                                        >
+                                          {w.title}
+                                        </Text>
+
+                                        <View
+                                          style={[
+                                            styles.statusBadge,
+                                            isCompleted
+                                              ? styles.statusCompleted
+                                              : isInProgress
+                                              ? styles.statusInProgress
+                                              : styles.statusPlanned,
+                                          ]}
+                                        >
+                                          <Text
+                                            style={[
+                                              styles.statusText,
+                                              isCompleted
+                                                ? styles.statusTextCompleted
+                                                : isInProgress
+                                                ? styles.statusTextInProgress
+                                                : styles.statusTextPlanned,
+                                            ]}
+                                          >
+                                            {isCompleted
+                                              ? 'Завершено'
+                                              : isInProgress
+                                              ? 'В процесі'
+                                              : 'Заплановано'}
+                                          </Text>
+                                        </View>
+                                      </View>
+
+                                      <View style={styles.workoutMetaRow}>
+                                        <View style={styles.metaItem}>
+                                          <Ionicons name="calendar-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
+                                          <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
+                                            {formatDateDDMMYYYY(w.scheduledDate)}
+                                          </Text>
+                                        </View>
+
+                                        <View style={styles.metaItem}>
+                                          <Ionicons name="barbell-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
+                                          <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
+                                            {exerciseCount} {exerciseCount === 1 ? 'вправа' : 'вправ'} ({setsCount} підх.)
+                                          </Text>
+                                        </View>
+                                      </View>
+                                    </View>
+
+                                    <TouchableOpacity
+                                      style={styles.workoutDeleteBtn}
+                                      onPress={() => handleDeleteTraineeWorkout(w)}
+                                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                    >
+                                      <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                                    </TouchableOpacity>
+                                  </TouchableOpacity>
+                                );
+                              })}
+                            </View>
+                          )}
+                        </View>
                       );
                     })}
                   </View>
@@ -1167,6 +1254,59 @@ const styles = StyleSheet.create({
   },
   subDark: {
     color: '#94a3b8',
+  },
+  accordionContainer: {
+    gap: 14,
+  },
+  monthSection: {
+    gap: 8,
+  },
+  monthHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+  },
+  monthHeaderLight: {
+    backgroundColor: '#F1F5F9',
+  },
+  monthHeaderDark: {
+    backgroundColor: '#263140',
+  },
+  monthHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  monthTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  monthCountBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  monthCountBadgeLight: {
+    backgroundColor: '#FFFFFF',
+  },
+  monthCountBadgeDark: {
+    backgroundColor: '#1D2939',
+  },
+  monthCountText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  monthCountTextLight: {
+    color: '#64748B',
+  },
+  monthCountTextDark: {
+    color: '#94A3B8',
+  },
+  monthWorkoutsList: {
+    gap: 10,
   },
   nonCoachContainer: {
     flex: 1,

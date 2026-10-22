@@ -40,6 +40,8 @@ import { getExercise1RM, format1RM, getMinRepsFromRange } from '../utils/workout
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
 import { useSwipeUndo } from '../context/SwipeUndoContext';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
+import { DatePickerModal } from '../components/DatePickerModal';
+import { formatDateDDMMYYYY } from '../utils/date';
 
 export const computeWorkoutStatus = (exercises: WorkoutExercise[]): 'completed' | 'in_progress' => {
   if (!exercises || exercises.length === 0) return 'in_progress';
@@ -64,6 +66,8 @@ interface SwipeableExerciseCardProps {
   id: string;
   onDelete: () => void;
   onQuickDelete: () => void;
+  confirmTitle?: string;
+  confirmMessage?: string;
   onChangeExercise?: () => void;
   isDark: boolean;
   children: React.ReactNode;
@@ -73,6 +77,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
   id,
   onDelete,
   onQuickDelete,
+  confirmTitle,
+  confirmMessage,
   onChangeExercise,
   isDark,
   children,
@@ -84,6 +90,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
       onEdit={onChangeExercise}
       onDelete={onDelete}
       onQuickDelete={onQuickDelete}
+      confirmTitle={confirmTitle}
+      confirmMessage={confirmMessage}
       editLabel="Змінити"
       deleteLabel="Видалити"
     >
@@ -280,6 +288,7 @@ export const WorkoutEditorScreen: React.FC = () => {
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [exerciseToReplaceId, setExerciseToReplaceId] = useState<string | null>(null);
   const [activeRepsPickerWeId, setActiveRepsPickerWeId] = useState<string | null>(null);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
 
   const handleChangeExercise = (weId: string) => {
     setExerciseToReplaceId(weId);
@@ -1263,7 +1272,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             {workout.title || 'Тренування'}
           </Text>
           <Text style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
-            {workout.scheduledDate} • {isCompleted ? 'Виконано ✓' : 'В процесі ⚡'} ({completedSets}/{totalSets} підходів)
+            {formatDateDDMMYYYY(workout.scheduledDate)} • {isCompleted ? 'Виконано ✓' : 'В процесі ⚡'} ({completedSets}/{totalSets} підходів)
           </Text>
         </View>
 
@@ -1315,20 +1324,38 @@ export const WorkoutEditorScreen: React.FC = () => {
                 />
               </View>
 
-              <View style={{ width: 120 }}>
+              <View style={{ width: 130 }}>
                 <Text style={[styles.labelSmall, isDark ? styles.subDark : styles.subLight]}>
                   Дата
                 </Text>
-                <TextInput
-                  style={[styles.dateInput, isDark ? styles.textDark : styles.textLight]}
-                  value={workout.scheduledDate}
-                  onChangeText={handleUpdateDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
-                  returnKeyType="done"
-                />
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setIsDatePickerOpen(true)}
+                  style={[
+                    styles.dateInput,
+                    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+                    isDark ? styles.borderDark : styles.borderLight,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Вибрати дату тренування"
+                >
+                  <Ionicons name="calendar-outline" size={14} color="#2563EB" />
+                  <Text style={[{ fontSize: 13, fontWeight: '600' }, isDark ? styles.textDark : styles.textLight]}>
+                    {formatDateDDMMYYYY(workout.scheduledDate)}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
+
+            <DatePickerModal
+              visible={isDatePickerOpen}
+              selectedDate={workout.scheduledDate}
+              onClose={() => setIsDatePickerOpen(false)}
+              onSelectDate={(newIso: string) => {
+                handleUpdateDate(newIso);
+                setIsDatePickerOpen(false);
+              }}
+            />
 
             {/* Title Presets Horizontal Chips */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsList}>
@@ -1431,6 +1458,8 @@ export const WorkoutEditorScreen: React.FC = () => {
               >
                 <SwipeableExerciseCard
                   id={ex.id}
+                  confirmTitle="Видалити вправу?"
+                  confirmMessage={`Ви впевнені, що хочете видалити «${ex.exerciseName || 'цю вправу'}»?`}
                   onDelete={() => handleRemoveExercise(ex.id)}
                   onQuickDelete={() => handleQuickDeleteExercise(ex.id)}
                   onChangeExercise={() => handleChangeExercise(ex.id)}

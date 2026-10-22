@@ -5,12 +5,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   useWindowDimensions,
+  Alert,
 } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
+  Easing,
   runOnJS,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -23,16 +24,24 @@ export interface SwipeableActionCardProps {
   isDark: boolean;
   disabled?: boolean;
   onEdit?: () => void;
-  onDelete: () => void;
-  onQuickDelete?: () => void;
+  onDelete: (onCancel?: () => void) => void;
+  onQuickDelete?: (onCancel?: () => void) => void;
+  confirmTitle?: string;
+  confirmMessage?: string;
   editLabel?: string;
   deleteLabel?: string;
   children: React.ReactNode;
 }
 
-const ACTION_BTN_WIDTH = 76;
-const TOTAL_ACTIONS_WIDTH = ACTION_BTN_WIDTH * 2; // 152pt
+const NORMAL_BTN_WIDTH = 88;
+const GAP = 8;
+const PADDING_RIGHT = 12;
 const SNAP_THRESHOLD = -40;
+
+const TIMING_CONFIG = {
+  duration: 220,
+  easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+};
 
 export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
   id,
@@ -41,12 +50,19 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
   onEdit,
   onDelete,
   onQuickDelete,
-  editLabel = 'Редагувати',
+  confirmTitle,
+  confirmMessage,
+  editLabel = 'Змінити',
   deleteLabel = 'Видалити',
   children,
 }) => {
   const { width: screenWidth } = useWindowDimensions();
   const QUICK_DELETE_THRESHOLD = screenWidth * 0.5;
+
+  const hasEdit = Boolean(onEdit);
+  const restingWidth = hasEdit
+    ? NORMAL_BTN_WIDTH * 2 + GAP + PADDING_RIGHT
+    : NORMAL_BTN_WIDTH + PADDING_RIGHT;
 
   const translateX = useSharedValue(0);
   const startX = useSharedValue(0);
@@ -76,26 +92,51 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
     } catch {}
   }, []);
 
-  const handleQuickDelete = useCallback(() => {
-    if (onQuickDelete) {
-      onQuickDelete();
-    } else {
-      onDelete();
-    }
-  }, [onQuickDelete, onDelete]);
-
   const closeSwipe = useCallback(() => {
-    translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
+    translateX.value = withTiming(0, TIMING_CONFIG);
     isOpen.value = false;
     isPastThreshold.value = false;
     syncOpen(false);
   }, [translateX, isOpen, isPastThreshold, syncOpen]);
 
+  const handleDeleteAction = useCallback(() => {
+    if (confirmTitle || confirmMessage) {
+      Alert.alert(
+        confirmTitle || 'Підтвердження видалення',
+        confirmMessage || 'Ви впевнені, що хочете видалити цей елемент?',
+        [
+          {
+            text: 'Скасувати',
+            style: 'cancel',
+            onPress: () => closeSwipe(),
+          },
+          {
+            text: 'Видалити',
+            style: 'destructive',
+            onPress: () => {
+              if (onQuickDelete) {
+                onQuickDelete(closeSwipe);
+              } else {
+                onDelete(closeSwipe);
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      if (onQuickDelete) {
+        onQuickDelete(closeSwipe);
+      } else {
+        onDelete(closeSwipe);
+      }
+    }
+  }, [confirmTitle, confirmMessage, closeSwipe, onQuickDelete, onDelete]);
+
   // Auto-close if another card opens
   useEffect(() => {
     return swipeCardManager.subscribe((activeId) => {
       if (activeId !== id && isOpen.value) {
-        translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
+        translateX.value = withTiming(0, TIMING_CONFIG);
         isOpen.value = false;
         isPastThreshold.value = false;
         setIsOpenState(false);
@@ -137,7 +178,7 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
         // 1. If card is currently open: allow dragging right to close
         if (isOpen.value) {
           if (e.translationX > 0) {
-            translateX.value = Math.min(0, -TOTAL_ACTIONS_WIDTH + e.translationX);
+            translateX.value = Math.min(0, -restingWidth + e.translationX);
           }
           return;
         }
@@ -151,7 +192,7 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
         if (e.translationX < 0) {
           translateX.value = e.translationX;
 
-          // Long swipe: quick delete threshold (> 50% screen width)
+          // Quick delete threshold (> 50% screen width)
           const isOver = Math.abs(e.translationX) >= QUICK_DELETE_THRESHOLD;
           if (isOver !== isPastThreshold.value) {
             isPastThreshold.value = isOver;
@@ -166,13 +207,13 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
         // If card was open and dragged right
         if (isOpen.value) {
           if (e.translationX > 35) {
-            // Snap closed
-            translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
+            // Snap closed smoothly without bounce
+            translateX.value = withTiming(0, TIMING_CONFIG);
             isOpen.value = false;
             runOnJS(syncOpen)(false);
           } else {
-            // Snap back to open
-            translateX.value = withSpring(-TOTAL_ACTIONS_WIDTH, { damping: 20, stiffness: 220 });
+            // Return to resting open position
+            translateX.value = withTiming(-restingWidth, TIMING_CONFIG);
           }
           return;
         }
@@ -182,24 +223,24 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
           return;
         }
 
-        // Quick delete triggered past 50% width threshold
+        // Reached past 50% screen width threshold
         if (isPastThreshold.value) {
-          translateX.value = withTiming(-screenWidth, { duration: 180 }, (finished) => {
-            if (finished) {
-              runOnJS(handleQuickDelete)();
-            }
-          });
+          // Snap to resting width smoothly and trigger standard delete confirmation
+          translateX.value = withTiming(-restingWidth, TIMING_CONFIG);
+          isOpen.value = true;
+          runOnJS(syncOpen)(true);
+          runOnJS(handleDeleteAction)();
           return;
         }
 
         // Short swipe: check snap threshold
         if (translateX.value < SNAP_THRESHOLD) {
-          translateX.value = withSpring(-TOTAL_ACTIONS_WIDTH, { damping: 20, stiffness: 220 });
+          translateX.value = withTiming(-restingWidth, TIMING_CONFIG);
           isOpen.value = true;
           runOnJS(triggerSelectionHaptic)();
           runOnJS(syncOpen)(true);
         } else {
-          translateX.value = withSpring(0, { damping: 20, stiffness: 220 });
+          translateX.value = withTiming(0, TIMING_CONFIG);
           isOpen.value = false;
           runOnJS(syncOpen)(false);
         }
@@ -208,6 +249,7 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
     disabled,
     screenWidth,
     QUICK_DELETE_THRESHOLD,
+    restingWidth,
     translateX,
     startX,
     isPastThreshold,
@@ -215,31 +257,48 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
     triggerMediumHaptic,
     triggerSelectionHaptic,
     syncOpen,
-    handleQuickDelete,
+    handleDeleteAction,
   ]);
 
   const animatedCardStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: translateX.value }],
-      backgroundColor: isPastThreshold.value
-        ? isDark
-          ? '#3A1519'
-          : '#FEE2E2'
-        : isDark
-          ? '#1D2939'
-          : '#FFFFFF',
     };
   });
 
-  const animatedQuickDeleteStyle = useAnimatedStyle(() => {
+  const animatedEditBtnStyle = useAnimatedStyle(() => {
+    const currentPull = -translateX.value;
+    if (currentPull <= restingWidth) {
+      return { opacity: 1, transform: [{ scale: 1 }] };
+    }
+    const progress = Math.min(
+      1,
+      Math.max(0, (currentPull - restingWidth) / Math.max(1, QUICK_DELETE_THRESHOLD - restingWidth))
+    );
     return {
-      opacity: isPastThreshold.value ? 1 : 0,
+      opacity: Math.max(0, 1 - progress),
+      transform: [{ scale: Math.max(0.7, 1 - progress * 0.3) }],
     };
   });
 
-  const animatedNormalActionsStyle = useAnimatedStyle(() => {
+  const animatedDeleteBtnStyle = useAnimatedStyle(() => {
+    const currentPull = -translateX.value;
+    if (currentPull <= restingWidth) {
+      return { width: NORMAL_BTN_WIDTH };
+    }
+    const extra = currentPull - restingWidth;
+    if (hasEdit) {
+      const progress = Math.min(
+        1,
+        Math.max(0, (currentPull - restingWidth) / Math.max(1, QUICK_DELETE_THRESHOLD - restingWidth))
+      );
+      const editSpaceAbsorbed = (NORMAL_BTN_WIDTH + GAP) * progress;
+      return {
+        width: NORMAL_BTN_WIDTH + extra + editSpaceAbsorbed,
+      };
+    }
     return {
-      opacity: isPastThreshold.value ? 0 : 1,
+      width: NORMAL_BTN_WIDTH + extra,
     };
   });
 
@@ -253,44 +312,36 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
         },
       ]}
     >
-      {/* Background Actions Row */}
+      {/* Background Actions Row with Pill-shaped buttons */}
       <View style={styles.swipeActionsBg}>
-        {/* Quick Delete Overlay (> 50% long swipe) */}
-        <Animated.View style={[styles.quickDeleteBar, animatedQuickDeleteStyle]}>
-          <Ionicons name="trash" size={24} color="#FFFFFF" />
-          <Text style={styles.quickDeleteText}>Відпустіть, щоб видалити</Text>
-        </Animated.View>
-
-        {/* Normal Actions: Edit (blue) and Delete (red) */}
-        <Animated.View style={[styles.normalActionsRow, animatedNormalActionsStyle]}>
-          {onEdit && (
+        {hasEdit && (
+          <Animated.View style={animatedEditBtnStyle}>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => {
                 closeSwipe();
-                onEdit();
+                if (onEdit) onEdit();
               }}
               style={styles.actionBtnEdit}
               accessibilityRole="button"
               accessibilityLabel={editLabel}
             >
-              <Ionicons name="pencil" size={18} color="#FFFFFF" />
-              <Text style={styles.actionBtnText}>{editLabel}</Text>
+              <Ionicons name="pencil" size={16} color="#FFFFFF" />
+              <Text style={styles.actionBtnText} numberOfLines={1}>{editLabel}</Text>
             </TouchableOpacity>
-          )}
+          </Animated.View>
+        )}
 
+        <Animated.View style={animatedDeleteBtnStyle}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => {
-              closeSwipe();
-              onDelete();
-            }}
+            onPress={handleDeleteAction}
             style={styles.actionBtnDelete}
             accessibilityRole="button"
             accessibilityLabel={deleteLabel}
           >
-            <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.actionBtnText}>{deleteLabel}</Text>
+            <Ionicons name="trash-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.actionBtnText} numberOfLines={1}>{deleteLabel}</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -302,8 +353,7 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
             styles.swipeForeground,
             animatedCardStyle,
             {
-              borderRightWidth: StyleSheet.hairlineWidth,
-              borderRightColor: isDark ? '#334155' : '#E2E8F0',
+              backgroundColor: isDark ? '#1D2939' : '#FFFFFF',
             },
           ]}
         >
@@ -336,45 +386,36 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    alignItems: 'stretch',
-    backgroundColor: '#EF4444',
-  },
-  quickDeleteBar: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#EF4444',
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingRight: 24,
-    gap: 10,
-  },
-  quickDeleteText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  normalActionsRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    width: TOTAL_ACTIONS_WIDTH,
+    paddingRight: PADDING_RIGHT,
+    gap: GAP,
+    backgroundColor: 'transparent',
   },
   actionBtnEdit: {
-    width: ACTION_BTN_WIDTH,
+    width: NORMAL_BTN_WIDTH,
+    height: 42,
+    borderRadius: 9999,
     backgroundColor: '#2563EB', // Ocean Blue primary
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    paddingHorizontal: 12,
+    gap: 6,
   },
   actionBtnDelete: {
-    width: ACTION_BTN_WIDTH,
+    width: '100%',
+    height: 42,
+    borderRadius: 9999,
     backgroundColor: '#EF4444', // Danger Red
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    paddingHorizontal: 12,
+    gap: 6,
   },
   actionBtnText: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
   },
   swipeForeground: {

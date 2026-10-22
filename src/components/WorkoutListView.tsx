@@ -14,16 +14,19 @@ import {
 
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 
-export function formatDateDDMMYY(dateStr?: string): string {
+export function formatDateDDMMYYYY(dateStr?: string): string {
   if (!dateStr) return '';
   const dateOnly = dateStr.split('T')[0];
   const parts = dateOnly.split('-');
   if (parts.length === 3) {
     const [year, month, day] = parts;
-    const shortYear = year.length === 4 ? year.slice(2) : year;
-    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${shortYear}`;
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
   }
   return dateStr;
+}
+
+export function formatDateDDMMYY(dateStr?: string): string {
+  return formatDateDDMMYYYY(dateStr);
 }
 
 const UKRAINIAN_MONTHS = [
@@ -80,7 +83,7 @@ export function getMonthKeyAndLabel(dateStr?: string): { key: string; label: str
   };
 }
 
-interface MonthGroup {
+export interface MonthGroup {
   key: string;
   label: string;
   workouts: WorkoutPlan[];
@@ -234,11 +237,11 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
       ref={swipeRef}
       className="space-y-3.5 max-w-xl mx-auto animate-fade-in pb-12 touch-pan-y"
     >
-      {/* Top Action Button: "+ Нове тренування" */}
+      {/* Top Action Button: "+ Нове тренування" (hidden on mobile, handled by mobile bottom navbar central button) */}
       <button
         type="button"
         onClick={handleCreateNewDirectly}
-        className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-sm transition-all cursor-pointer"
+        className="hidden md:flex w-full items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-sm transition-all cursor-pointer"
       >
         <Plus className="h-4 w-4 stroke-[3]" />
         <span>Нове тренування</span>

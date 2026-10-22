@@ -32,9 +32,10 @@ const TITLE_PRESETS = [
   'Кардіо + Кор',
 ];
 
-import { formatLocalDate } from '../utils/date';
+import { formatLocalDate, formatDateDDMMYYYY } from '../utils/date';
+import { DatePickerModal } from './DatePickerModal';
 
-export { formatLocalDate };
+export { formatLocalDate, formatDateDDMMYYYY };
 
 export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   visible,
@@ -48,6 +49,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   const [title, setTitle] = useState<string>('');
   const [date, setDate] = useState<string>(initialDate || formatLocalDate());
   const [notes, setNotes] = useState<string>('');
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -155,18 +157,24 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
             </ScrollView>
           </View>
 
-          {/* Date Input with Quick Chips */}
+          {/* Date Input with Interactive Calendar Picker */}
           <View style={styles.inputGroup}>
             <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
-              Дата (РРРР-ММ-ДД)
+              Дата (ДД/ММ/РРРР)
             </Text>
-            <TextInput
-              style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
-              placeholder={formatLocalDate()}
-              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
-              value={date}
-              onChangeText={setDate}
-            />
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setIsDatePickerOpen(true)}
+              style={[styles.input, styles.datePickerBtn, isDark ? styles.inputDark : styles.inputLight]}
+              accessibilityRole="button"
+              accessibilityLabel="Оберіть дату тренування"
+            >
+              <Ionicons name="calendar-outline" size={18} color="#2563EB" style={{ marginRight: 8 }} />
+              <Text style={[styles.dateText, isDark ? styles.textDark : styles.textLight]}>
+                {formatDateDDMMYYYY(date)}
+              </Text>
+            </TouchableOpacity>
+
             <View style={styles.quickDateRow}>
               <TouchableOpacity
                 onPress={() => setOffsetDate(0)}
@@ -193,6 +201,16 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                 </Text>
               </TouchableOpacity>
             </View>
+
+            <DatePickerModal
+              visible={isDatePickerOpen}
+              selectedDate={date}
+              onClose={() => setIsDatePickerOpen(false)}
+              onSelectDate={(newIso: string) => {
+                setDate(newIso);
+                setIsDatePickerOpen(false);
+              }}
+            />
           </View>
 
           {/* Notes Input */}
@@ -299,6 +317,15 @@ const styles = StyleSheet.create({
     height: 60,
     paddingTop: 8,
     textAlignVertical: 'top',
+  },
+  datePickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  dateText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   presetsRow: {
     gap: 6,

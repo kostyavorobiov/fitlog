@@ -11,6 +11,7 @@ import { AuthService } from '../services/authService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider as AppThemeProvider, useTheme as useAppTheme } from '../context/ThemeContext';
 import { SwipeUndoProvider } from '../context/SwipeUndoContext';
+import { CreateWorkoutProvider } from '../context/CreateWorkoutContext';
 
 // Ensure browser session can complete redirect for OAuth flows
 WebBrowser.maybeCompleteAuthSession();
@@ -111,7 +112,9 @@ export default function RootLayout() {
         <AppThemeProvider>
           <AuthProvider>
             <SwipeUndoProvider>
-              <RootNavigator />
+              <CreateWorkoutProvider>
+                <RootNavigator />
+              </CreateWorkoutProvider>
             </SwipeUndoProvider>
           </AuthProvider>
         </AppThemeProvider>

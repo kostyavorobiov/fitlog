@@ -30,6 +30,8 @@ import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutPlan } from '../types/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
 import { useSwipeUndo } from '../context/SwipeUndoContext';
+import { DatePickerModal } from '../components/DatePickerModal';
+import { formatDateDDMMYYYY } from '../utils/date';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -38,15 +40,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 export type WorkoutFilterStatus = 'all' | 'completed' | 'in_progress';
 
 export function formatDateDDMMYY(dateStr?: string): string {
-  if (!dateStr) return '';
-  const dateOnly = dateStr.split('T')[0];
-  const parts = dateOnly.split('-');
-  if (parts.length === 3) {
-    const [year, month, day] = parts;
-    const shortYear = year.length === 4 ? year.slice(2) : year;
-    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${shortYear}`;
-  }
-  return dateStr;
+  return formatDateDDMMYYYY(dateStr);
 }
 
 const UKRAINIAN_MONTHS = [
@@ -111,9 +105,9 @@ export interface MonthGroup {
 
 interface SwipeableWorkoutCardProps {
   id: string;
-  onEdit: () => void;
-  onDelete: () => void;
-  onQuickDelete: () => void;
+  onEdit?: () => void;
+  onDelete: (onCancel?: () => void) => void;
+  onQuickDelete?: (onCancel?: () => void) => void;
   isDark: boolean;
   children: React.ReactNode;
 }
@@ -158,6 +152,7 @@ export const WorkoutsScreen: React.FC = () => {
   const [newDate, setNewDate] = useState<string>('');
   const [newNotes, setNewNotes] = useState<string>('');
   const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [isModalDatePickerOpen, setIsModalDatePickerOpen] = useState<boolean>(false);
   const isCreatingRef = useRef<boolean>(false);
 
   const loadData = useCallback(async () => {
@@ -249,14 +244,20 @@ export const WorkoutsScreen: React.FC = () => {
   };
 
   // Delete workout with alert confirmation
-  const handleDeleteWorkout = (workout: WorkoutPlan) => {
+  const handleDeleteWorkout = (workout: WorkoutPlan, onCancel?: () => void) => {
     if (!user) return;
 
     Alert.alert(
       'Видалити тренування?',
       `Ви впевнені, що хочете видалити «${workout.title || 'це тренування'}»?`,
       [
-        { text: 'Скасувати', style: 'cancel' },
+        {
+          text: 'Скасувати',
+          style: 'cancel',
+          onPress: () => {
+            onCancel?.();
+          },
+        },
         {
           text: 'Видалити',
           style: 'destructive',
@@ -277,33 +278,11 @@ export const WorkoutsScreen: React.FC = () => {
     );
   };
 
-  const { showUndoToast } = useSwipeUndo();
-
   const handleQuickDeleteWorkout = useCallback(
-    (workout: WorkoutPlan) => {
-      if (!user) return;
-
-      // Optimistically remove from state
-      setWorkouts((prev) => prev.filter((w) => w.id !== workout.id));
-
-      // Show Undo Toast with 5s countdown
-      showUndoToast({
-        id: workout.id,
-        title: workout.title || 'Тренування',
-        type: 'workout',
-        onUndo: () => {
-          setWorkouts((prev) => [workout, ...prev]);
-        },
-        onCommit: async () => {
-          try {
-            await WorkoutService.deleteWorkout(user.id, workout.id);
-          } catch (e) {
-            console.error('[WorkoutsScreen] Failed to delete workout permanently:', e);
-          }
-        },
-      });
+    (workout: WorkoutPlan, onCancel?: () => void) => {
+      handleDeleteWorkout(workout, onCancel);
     },
-    [user, showUndoToast]
+    [user]
   );
 
   // Filtered workouts: only 'all' and 'completed'
@@ -424,33 +403,11 @@ export const WorkoutsScreen: React.FC = () => {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      {/* Top WebTopNavbar */}
-      <Header />
+      {/* Top Navbar */}
+      <Header title="Тренування" />
 
-      {/* Top Action & Filter Row (Matches user screenshot) */}
+      {/* Top Filter Row */}
       <View style={styles.topSection}>
-        {/* Full-width "+ Нове тренування" button */}
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={handleOpenCreateModal}
-          style={[
-            styles.bigNewWorkoutBtn,
-            isDark ? styles.bigNewWorkoutBtnDark : styles.bigNewWorkoutBtnLight,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="Нове тренування"
-        >
-          <Ionicons name="add" size={18} color="#ffffff" />
-          <Text
-            style={[
-              styles.bigNewWorkoutBtnText,
-              isDark ? styles.bigNewWorkoutTextDark : styles.bigNewWorkoutTextLight,
-            ]}
-          >
-            Нове тренування
-          </Text>
-        </TouchableOpacity>
-
         {/* Full-width Modern Segmented Pill Bar with 2 tabs: Всі and Завершені */}
         <View style={[styles.filterContainer, isDark ? styles.filterDark : styles.filterLight]}>
           <TouchableOpacity
@@ -584,9 +541,8 @@ export const WorkoutsScreen: React.FC = () => {
                             key={w.id}
                             id={w.id}
                             isDark={isDark}
-                            onEdit={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
-                            onDelete={() => handleDeleteWorkout(w)}
-                            onQuickDelete={() => handleQuickDeleteWorkout(w)}
+                            onDelete={(onCancel) => handleDeleteWorkout(w, onCancel)}
+                            onQuickDelete={(onCancel) => handleQuickDeleteWorkout(w, onCancel)}
                           >
                             <TouchableOpacity
                               activeOpacity={0.7}
@@ -730,18 +686,28 @@ export const WorkoutsScreen: React.FC = () => {
               />
             </View>
 
-            {/* Date Input with Quick Chips */}
+            {/* Date Input with Interactive Calendar */}
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
-                Дата (РРРР-ММ-ДД)
+                Дата (ДД/ММ/РРРР)
               </Text>
-              <TextInput
-                style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
-                placeholder="2026-09-29"
-                placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
-                value={newDate}
-                onChangeText={setNewDate}
-              />
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setIsModalDatePickerOpen(true)}
+                style={[
+                  styles.input,
+                  { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
+                  isDark ? styles.inputDark : styles.inputLight,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Оберіть дату тренування"
+              >
+                <Ionicons name="calendar-outline" size={18} color="#2563EB" style={{ marginRight: 8 }} />
+                <Text style={{ fontSize: 14, color: isDark ? '#F8FAFC' : '#0F172A' }}>
+                  {formatDateDDMMYYYY(newDate)}
+                </Text>
+              </TouchableOpacity>
+
               <View style={styles.quickDateRow}>
                 <TouchableOpacity
                   onPress={() => setNewDate(new Date().toISOString().split('T')[0])}
@@ -764,6 +730,16 @@ export const WorkoutsScreen: React.FC = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              <DatePickerModal
+                visible={isModalDatePickerOpen}
+                selectedDate={newDate}
+                onClose={() => setIsModalDatePickerOpen(false)}
+                onSelectDate={(newIso: string) => {
+                  setNewDate(newIso);
+                  setIsModalDatePickerOpen(false);
+                }}
+              />
             </View>
 
             {/* Notes Input */}

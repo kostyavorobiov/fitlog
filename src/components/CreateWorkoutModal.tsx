@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Dumbbell, Calendar, Plus, AlertCircle } from 'lucide-react';
+import { formatDateDDMMYYYY } from './WorkoutListView';
 
 interface CreateWorkoutModalProps {
   isOpen: boolean;
@@ -157,19 +158,29 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
           </div>
 
           {/* Date Field */}
+          {/* Date Field with Calendar Picker and DD/MM/YYYY display */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">
               Дата тренування
             </label>
-            <div className="flex items-center space-x-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-4 h-11">
-              <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+            <label className="relative flex items-center space-x-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-4 h-11 cursor-pointer hover:border-[#2563EB] transition-colors">
+              <Calendar className="h-4 w-4 text-[#2563EB] dark:text-[#60A5FA] shrink-0" />
+              <span className="text-sm font-mono text-slate-900 dark:text-zinc-100 flex-1 select-none">
+                {date ? formatDateDDMMYYYY(date) : 'Виберіть дату'}
+              </span>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-transparent text-base sm:text-xs text-slate-900 dark:text-zinc-100 font-mono focus:outline-none cursor-pointer"
+                onClick={(e) => {
+                  try {
+                    (e.target as any).showPicker?.();
+                  } catch {}
+                }}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                tabIndex={-1}
               />
-            </div>
+            </label>
           </div>
 
           {/* Actions */}

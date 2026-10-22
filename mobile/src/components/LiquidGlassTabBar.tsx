@@ -9,9 +9,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { useAuth } from '../context/AuthContext';
+import { useCreateWorkout } from '../context/CreateWorkoutContext';
 import { WorkoutService } from '../services/workoutService';
 
 export interface TabBarRoute {
@@ -55,6 +57,7 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const { translateY } = useScrollTabBar();
+  const { openCreateModal } = useCreateWorkout();
   const [hasActiveWorkout, setHasActiveWorkout] = useState(false);
 
   // Check if any in-progress workout exists (matches Web hasActiveWorkout indicator)
@@ -75,16 +78,93 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
     };
   }, [user?.id, state.index]);
 
-  // Filter out hidden routes (e.g. href: null, strictly exclude profile, and trainees for non-coaches)
-  const isTrainer = user?.role === 'coach' || user?.role === 'admin';
+  // Filter out hidden routes (e.g. href: null)
   const visibleRoutes = state.routes.filter((route) => {
-    if (route.name === 'profile') return false;
-    if (route.name === 'trainees' && !isTrainer) return false;
-    const { options } = descriptors[route.key];
-    return options.href !== null;
+    const descriptor = descriptors[route.key];
+    if (!descriptor) return false;
+    return descriptor.options.href !== null;
   });
 
   const hasNativeGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
+
+  const renderTabItem = (route: TabBarRoute) => {
+    const isFocused = state.routes[state.index]?.key === route.key;
+    const { options } = descriptors[route.key];
+
+    const label =
+      options.tabBarLabel !== undefined
+        ? options.tabBarLabel
+        : options.title !== undefined
+        ? options.title
+        : route.name;
+
+    const labelText = typeof label === 'string' ? label : route.name;
+
+    const onPress = () => {
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: route.key,
+        canPreventDefault: true,
+      });
+
+      if (!isFocused && !event.defaultPrevented) {
+        navigation.navigate(route.name, route.params);
+      }
+    };
+
+    const onLongPress = () => {
+      navigation.emit({
+        type: 'tabLongPress',
+        target: route.key,
+      });
+    };
+
+    const activeColor = isDark ? '#60A5FA' : '#2563EB';
+    const inactiveColor = isDark ? '#94A3B8' : '#64748B';
+    const color = isFocused ? activeColor : inactiveColor;
+
+    return (
+      <TouchableOpacity
+        key={route.key}
+        accessibilityRole="button"
+        accessibilityState={isFocused ? { selected: true } : {}}
+        accessibilityLabel={options.tabBarAccessibilityLabel || labelText}
+        testID={options.tabBarButtonTestID}
+        onPress={onPress}
+        onLongPress={onLongPress}
+        activeOpacity={0.7}
+        style={[
+          styles.tabButton,
+          isFocused && (isDark ? styles.tabButtonActiveDark : styles.tabButtonActiveLight),
+        ]}
+        hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+      >
+        <View style={styles.iconWrap}>
+          {options.tabBarIcon?.({
+            focused: isFocused,
+            color,
+            size: 20,
+          })}
+          {route.name === 'index' && hasActiveWorkout && !isFocused && (
+            <View style={styles.amberBadgeDot} />
+          )}
+        </View>
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.tabLabel,
+            { color },
+            isFocused && styles.tabLabelFocused,
+          ]}
+        >
+          {labelText}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const leftRoutes = visibleRoutes.slice(0, 2);
+  const rightRoutes = visibleRoutes.slice(2);
 
   return (
     <Animated.View
@@ -119,83 +199,22 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
           />
         )}
 
-        {/* Tab Items Row */}
+        {/* Tab Items Row with Central '+' Action Button */}
         <View style={styles.tabsRow}>
-          {visibleRoutes.map((route) => {
-            const isFocused = state.routes[state.index].key === route.key;
-            const { options } = descriptors[route.key];
+          {leftRoutes.map(renderTabItem)}
 
-            const label =
-              options.tabBarLabel !== undefined
-                ? options.tabBarLabel
-                : options.title !== undefined
-                ? options.title
-                : route.name;
+          {/* Central '+' Create Workout Button */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => openCreateModal()}
+            style={styles.centerAddBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Створити нове тренування"
+          >
+            <Ionicons name="add" size={26} color="#FFFFFF" />
+          </TouchableOpacity>
 
-            const labelText = typeof label === 'string' ? label : route.name;
-
-            const onPress = () => {
-              const event = navigation.emit({
-                type: 'tabPress',
-                target: route.key,
-                canPreventDefault: true,
-              });
-
-              if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name, route.params);
-              }
-            };
-
-            const onLongPress = () => {
-              navigation.emit({
-                type: 'tabLongPress',
-                target: route.key,
-              });
-            };
-
-            const activeColor = isDark ? '#60A5FA' : '#2563EB';
-            const inactiveColor = isDark ? '#94A3B8' : '#64748B';
-            const color = isFocused ? activeColor : inactiveColor;
-
-            return (
-              <TouchableOpacity
-                key={route.key}
-                accessibilityRole="button"
-                accessibilityState={isFocused ? { selected: true } : {}}
-                accessibilityLabel={options.tabBarAccessibilityLabel || labelText}
-                testID={options.tabBarButtonTestID}
-                onPress={onPress}
-                onLongPress={onLongPress}
-                activeOpacity={0.7}
-                style={[
-                  styles.tabButton,
-                  isFocused && (isDark ? styles.tabButtonActiveDark : styles.tabButtonActiveLight),
-                ]}
-                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-              >
-                <View style={styles.iconWrap}>
-                  {options.tabBarIcon?.({
-                    focused: isFocused,
-                    color,
-                    size: 20,
-                  })}
-                  {route.name === 'index' && hasActiveWorkout && !isFocused && (
-                    <View style={styles.amberBadgeDot} />
-                  )}
-                </View>
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    styles.tabLabel,
-                    { color },
-                    isFocused && styles.tabLabelFocused,
-                  ]}
-                >
-                  {labelText}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          {rightRoutes.map(renderTabItem)}
         </View>
       </View>
     </Animated.View>
@@ -250,6 +269,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 4,
     gap: 3,
+  },
+  centerAddBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
   },
   tabButtonActiveLight: {
     backgroundColor: 'rgba(37, 99, 235, 0.08)',

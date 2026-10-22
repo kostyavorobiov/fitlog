@@ -19,7 +19,8 @@ import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutService } from '../services/workoutService';
 import { WorkoutPlan, MUSCLE_GROUPS } from '../types/workout';
-import { getPeriodRange, PeriodRange } from '../utils/date';
+import { getPeriodRange, PeriodRange, formatLocalDate } from '../utils/date';
+import { WorkoutCalendarView } from '../components/WorkoutCalendarView';
 import {
   calculateAnalytics,
   AnalyticsPeriod,
@@ -205,6 +206,20 @@ export const AnalyticsScreen: React.FC = () => {
           />
         }
       >
+        {/* Interactive Month Calendar with workout dots at the top of Analytics */}
+        <WorkoutCalendarView
+          workouts={workouts}
+          selectedDate={formatLocalDate(currentDate)}
+          onSelectDate={(dateStr) => {
+            const parts = dateStr.split('-').map(Number);
+            if (parts.length === 3) {
+              setCurrentDate(new Date(parts[0], parts[1] - 1, parts[2]));
+              setPeriod('day');
+            }
+          }}
+          isDark={isDark}
+        />
+
         {/* Date Navigation Bar (Allows browsing previous/next day, week, month) */}
         <Card style={styles.dateNavCard}>
           <View style={styles.dateNavRow}>
