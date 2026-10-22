@@ -84,12 +84,12 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
     };
   }, [user?.id, state.index]);
 
-  // Filter out hidden routes (e.g. href: null)
-  const visibleRoutes = state.routes.filter((route) => {
-    const descriptor = descriptors[route.key];
-    if (!descriptor) return false;
-    return descriptor.options.href !== null;
-  });
+  // Strictly filter to the 4 designated bottom navigation tabs in order:
+  // 1. Тренування (index), 2. Аналітика (analytics) -- [+] -- 3. Вправи (exercises), 4. Профіль (profile)
+  const BOTTOM_NAV_TABS = ['index', 'analytics', 'exercises', 'profile'];
+  const visibleRoutes = BOTTOM_NAV_TABS
+    .map((name) => state.routes.find((r) => r.name === name))
+    .filter((r): r is TabBarRoute => Boolean(r && descriptors[r.key]));
 
   const hasNativeGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
 

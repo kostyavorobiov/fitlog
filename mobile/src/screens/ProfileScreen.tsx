@@ -627,15 +627,19 @@ const styles = StyleSheet.create({
   },
   roleBadge: {
     position: 'absolute',
-    bottom: -4,
+    bottom: -6,
+    left: -4,
     right: -4,
-    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 8,
   },
   roleBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
+    textAlign: 'center',
   },
   profileInfoWrap: {
     flex: 1,
