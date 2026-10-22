@@ -12,6 +12,7 @@ export interface ScreenGestureWrapperProps {
   onTabChange?: (tab: string) => void;
   enableTabSwipe?: boolean;
   enableBackSwipe?: boolean;
+  onBack?: () => void;
   children: React.ReactNode;
 }
 
@@ -21,6 +22,7 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
   onTabChange,
   enableTabSwipe = true,
   enableBackSwipe = true,
+  onBack,
   children,
 }) => {
   const router = useRouter();
@@ -36,18 +38,22 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
       return;
     }
     if (isNavigatingRef.current) return;
-    if (!router.canGoBack()) return;
 
     isNavigatingRef.current = true;
     try {
       Haptics.selectionAsync();
     } catch {}
-    router.back();
+
+    if (onBack) {
+      onBack();
+    } else if (router.canGoBack()) {
+      router.back();
+    }
 
     setTimeout(() => {
       isNavigatingRef.current = false;
     }, 450);
-  }, [enableBackSwipe, router]);
+  }, [enableBackSwipe, onBack, router]);
 
   const handleNextTab = useCallback(() => {
     if (!enableTabSwipe) return;

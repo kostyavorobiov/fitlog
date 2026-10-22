@@ -17,8 +17,24 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { LiquidGlassTabBar } from './LiquidGlassTabBar';
 import { swipeCardManager } from '../services/swipeCardManager';
 
-const TAB_ORDER = ['index', 'analytics', 'exercises', 'profile'] as const;
-type TabName = (typeof TAB_ORDER)[number];
+export const TAB_ORDER = ['index', 'analytics', 'exercises', 'profile'] as const;
+export type TabName = (typeof TAB_ORDER)[number];
+
+let savedActiveTab: TabName = 'index';
+const tabChangeListeners = new Set<(tab: TabName) => void>();
+
+export const setSavedActiveTab = (tab: TabName) => {
+  savedActiveTab = tab;
+  tabChangeListeners.forEach((fn) => {
+    try {
+      fn(tab);
+    } catch {}
+  });
+};
+
+export const getSavedActiveTab = (): TabName => {
+  return savedActiveTab;
+};
 
 interface InstagramTabPagerProps {
   initialTab?: string;
@@ -38,24 +54,47 @@ export const InstagramTabPager: React.FC<InstagramTabPagerProps> = ({ initialTab
     return idx >= 0 ? idx : 0;
   };
 
-  const [activeTab, setActiveTab] = useState<TabName>(() => {
-    return TAB_ORDER.includes(initialTab as TabName) ? (initialTab as TabName) : 'index';
-  });
+  const resolveTargetTab = useCallback((inputTab?: string): TabName => {
+    if (inputTab && inputTab !== 'index' && TAB_ORDER.includes(inputTab as TabName)) {
+      savedActiveTab = inputTab as TabName;
+      return inputTab as TabName;
+    }
+    return savedActiveTab;
+  }, []);
 
-  const translateX = useSharedValue(-getTabIndex(initialTab) * screenWidth);
-  const startTranslateX = useSharedValue(-getTabIndex(initialTab) * screenWidth);
-  const activeTabShared = useSharedValue(getTabIndex(initialTab));
+  const [activeTab, setActiveTab] = useState<TabName>(() => resolveTargetTab(initialTab));
+
+  const initialIdx = getTabIndex(resolveTargetTab(initialTab));
+  const translateX = useSharedValue(-initialIdx * screenWidth);
+  const startTranslateX = useSharedValue(-initialIdx * screenWidth);
+  const activeTabShared = useSharedValue(initialIdx);
   const isGestureActive = useSharedValue(false);
+
+  // Subscribe to external tab updates (e.g., returning from exercise detail)
+  useEffect(() => {
+    const handleExternalTabChange = (newTab: TabName) => {
+      const targetIdx = getTabIndex(newTab);
+      setActiveTab(newTab);
+      activeTabShared.value = targetIdx;
+      translateX.value = withTiming(-targetIdx * screenWidth, TIMING_CONFIG);
+    };
+
+    tabChangeListeners.add(handleExternalTabChange);
+    return () => {
+      tabChangeListeners.delete(handleExternalTabChange);
+    };
+  }, [screenWidth, activeTabShared, translateX]);
 
   // Sync state if initialTab changes from outside (e.g. router)
   useEffect(() => {
-    const targetIdx = getTabIndex(initialTab);
+    const resolved = resolveTargetTab(initialTab);
+    const targetIdx = getTabIndex(resolved);
     if (TAB_ORDER[targetIdx] !== activeTab) {
       setActiveTab(TAB_ORDER[targetIdx]);
       activeTabShared.value = targetIdx;
       translateX.value = withTiming(-targetIdx * screenWidth, TIMING_CONFIG);
     }
-  }, [initialTab, screenWidth]);
+  }, [initialTab, screenWidth, resolveTargetTab, activeTab]);
 
   // Adjust on screen dimension change
   useEffect(() => {
@@ -64,6 +103,7 @@ export const InstagramTabPager: React.FC<InstagramTabPagerProps> = ({ initialTab
 
   const onTabSwiped = useCallback((newIndex: number) => {
     const newTabName = TAB_ORDER[newIndex];
+    savedActiveTab = newTabName;
     setActiveTab(newTabName);
     try {
       Haptics.selectionAsync();
@@ -79,13 +119,15 @@ export const InstagramTabPager: React.FC<InstagramTabPagerProps> = ({ initialTab
   const handleSelectTab = useCallback((tabName: string) => {
     closeAnyOpenCard();
     const idx = getTabIndex(tabName);
-    setActiveTab(TAB_ORDER[idx]);
+    const newTab = TAB_ORDER[idx];
+    savedActiveTab = newTab;
+    setActiveTab(newTab);
     activeTabShared.value = idx;
     translateX.value = withTiming(-idx * screenWidth, TIMING_CONFIG);
     try {
       Haptics.selectionAsync();
     } catch {}
-  }, [screenWidth, closeAnyOpenCard]);
+  }, [screenWidth, closeAnyOpenCard, activeTabShared, translateX]);
 
   const isIOS = Platform.OS === 'ios';
 

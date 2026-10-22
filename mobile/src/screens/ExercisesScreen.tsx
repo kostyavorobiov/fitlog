@@ -21,6 +21,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter } from 'expo-router';
+import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { ExerciseService } from '../services/exerciseService';
@@ -100,6 +101,7 @@ export const ExercisesScreen: React.FC = () => {
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   const handleOpenExerciseDetail = (ex: Exercise) => {
+    setSavedActiveTab('exercises');
     router.push({
       pathname: `/exercise/${ex.id}` as any,
       params: {
@@ -120,6 +122,10 @@ export const ExercisesScreen: React.FC = () => {
       setIsLoading(false);
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    setSavedActiveTab('exercises');
+  }, []);
 
   useEffect(() => {
     loadExercises();
