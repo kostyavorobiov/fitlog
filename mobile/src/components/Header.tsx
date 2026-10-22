@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     maxWidth: '75%',
   },
   navTitleText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     letterSpacing: -0.4,
   },

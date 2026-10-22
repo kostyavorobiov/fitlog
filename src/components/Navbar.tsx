@@ -153,7 +153,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
             {/* Header Title: Dynamic Tab Title on Mobile, Logo on Desktop */}
             <div className="flex items-center min-w-0 py-1 shrink-0">
-              <h1 className="md:hidden text-base sm:text-lg font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] truncate">
+              <h1 className="md:hidden text-lg sm:text-xl font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] truncate">
                 {currentTabTitle}
               </h1>
               <div
@@ -164,7 +164,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 onClick={() => handleNavSelect('editor')}
               >
-                <span className="text-base sm:text-lg font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] hover:text-[#2563eb] dark:hover:text-[#60a5fa] transition-colors">
+                <span className="text-lg sm:text-xl font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc] hover:text-[#2563eb] dark:hover:text-[#60a5fa] transition-colors">
                   FitLog
                 </span>
               </div>
@@ -179,7 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('editor');
                 }}
                 onClick={() => handleNavSelect('editor')}
-                className={`relative flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'editor'
+                className={`relative flex items-center space-x-2 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${currentTab === 'editor'
                   ? 'bg-[#2563eb] text-white shadow-sm'
                   : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                   }`}
@@ -198,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('history');
                 }}
                 onClick={() => handleNavSelect('history')}
-                className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'history'
+                className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${currentTab === 'history'
                   ? 'bg-[#2563eb] text-white shadow-sm'
                   : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                   }`}
@@ -214,7 +214,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('analytics');
                 }}
                 onClick={() => handleNavSelect('analytics')}
-                className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'analytics'
+                className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${currentTab === 'analytics'
                   ? 'bg-[#2563eb] text-white shadow-sm'
                   : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                   }`}
@@ -230,7 +230,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('catalog');
                 }}
                 onClick={() => handleNavSelect('catalog')}
-                className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'catalog'
+                className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${currentTab === 'catalog'
                   ? 'bg-[#2563eb] text-white shadow-sm'
                   : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                   }`}
@@ -247,7 +247,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     if (e.button === 0 || e.pointerType === 'touch') handleNavSelect('trainees');
                   }}
                   onClick={() => handleNavSelect('trainees')}
-                  className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${currentTab === 'trainees'
+                  className={`flex items-center space-x-2 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${currentTab === 'trainees'
                     ? 'bg-[#2563eb] text-white shadow-sm'
                     : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-[#f1f5f9] dark:hover:bg-[#1d2939]'
                     }`}
@@ -364,7 +364,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
         >
           <Dumbbell className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Тренування</span>
+          <span className="text-[11px] font-semibold leading-none">Тренування</span>
           {hasActiveWorkout && currentTab !== 'editor' && (
             <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#60a5fa]" />
           )}
@@ -382,7 +382,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
         >
           <BarChart2 className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Аналітика</span>
+          <span className="text-[11px] font-semibold leading-none">Аналітика</span>
         </button>
 
         {/* Central '+' Create Workout Button (accent, circular, Ocean Blue, hidden when viewing/editing a workout) */}
@@ -410,7 +410,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
         >
           <BookOpen className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Вправи</span>
+          <span className="text-[11px] font-semibold leading-none">Вправи</span>
         </button>
 
         {/* 4. Профіль */}
@@ -425,7 +425,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
         >
           <UserIcon className="h-[18px] w-[18px] shrink-0" />
-          <span className="text-[9px] font-semibold leading-none">Профіль</span>
+          <span className="text-[11px] font-semibold leading-none">Профіль</span>
         </button>
       </nav>
     </>

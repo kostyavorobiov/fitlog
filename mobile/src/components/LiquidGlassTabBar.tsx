@@ -416,8 +416,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#60A5FA',
   },
   tabLabel: {
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: 11.5,
+    fontWeight: '600',
     letterSpacing: -0.2,
   },
   tabLabelFocused: {
