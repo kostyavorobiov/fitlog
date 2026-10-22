@@ -48,7 +48,6 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<PastExercisePerformance[]>([]);
   const [activeTooltipIdx, setActiveTooltipIdx] = useState<number | null>(null);
-  const [expandedSessionIdx, setExpandedSessionIdx] = useState<number | null>(null);
 
   const muscleInfo = MUSCLE_GROUPS[muscleGroup] || MUSCLE_GROUPS.full_body;
 
@@ -94,7 +93,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
     return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
-  // Process data from first day to current day (chronologically ascending)
+  // Process data chronologically from first day to current day
   const allPoints: ChartPoint[] = useMemo(() => {
     return history
       .map((h) => {
@@ -143,7 +142,6 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
         personalBest: 0,
         best1RM: 0,
         totalSets: 0,
-        isNewPrInLatest: false,
       };
     }
 
@@ -167,20 +165,16 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
       totalSets += p.setsCount;
     });
 
-    const latest = allPoints[allPoints.length - 1];
-    const isNewPrInLatest = latest.maxWeight >= personalBest && personalBest > 0;
-
     return {
       avgWeight,
       dateRangeText,
       personalBest,
       best1RM,
       totalSets,
-      isNewPrInLatest,
     };
   }, [allPoints]);
 
-  // Last 5 Sessions for table
+  // Last 5 Sessions (newest first)
   const last5Sessions = useMemo(() => {
     return history
       .slice()
@@ -215,7 +209,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
       });
   }, [history]);
 
-  // Chart min/max scaling
+  // Chart math
   const chartHeight = 150;
   const values = allPoints.map((p) => p.maxWeight);
   let minVal = values.length > 0 ? Math.min(...values) : 0;
@@ -230,24 +224,29 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
       <SafeAreaView
         edges={['top', 'bottom']}
         style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}
       >
-        {/* Top Header */}
-        <View style={[styles.header, isDark ? styles.borderDark : styles.borderLight]}>
+        {/* Top Header Bar - Exact Workout Style */}
+        <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
           <TouchableOpacity
-            onPress={onClose}
-            style={[styles.backBtn, isDark ? styles.btnDark : styles.btnLight]}
             activeOpacity={0.7}
+            onPress={onClose}
+            style={styles.backBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="chevron-back" size={20} color={isDark ? '#F8FAFC' : '#0F172A'} />
+            <Ionicons
+              name="arrow-back"
+              size={22}
+              color={isDark ? '#f8fafc' : '#0f172a'}
+            />
           </TouchableOpacity>
 
-          <View style={styles.headerCenter}>
+          <View style={styles.headerTitleWrap}>
             <Text
               numberOfLines={1}
               style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}
@@ -259,41 +258,94 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
             </Text>
           </View>
 
-          <View style={{ width: 36 }} />
+          <View style={{ width: 32 }} />
         </View>
 
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#2563eb" />
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
             <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
-              Завантаження аналітики...
+              Завантаження аналітики вправи...
             </Text>
           </View>
         ) : (
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
-            {/* Average Weight Above Chart */}
-            <View style={styles.avgSection}>
-              <Text style={[styles.avgLabel, isDark ? styles.subDark : styles.subLight]}>
-                Середнє
-              </Text>
-              <View style={styles.avgRow}>
-                <Text style={[styles.avgValue, isDark ? styles.textDark : styles.textLight]}>
-                  {stats.avgWeight}
-                </Text>
-                <Text style={[styles.avgUnit, isDark ? styles.subDark : styles.subLight]}>
-                  кг
-                </Text>
-              </View>
-              <Text style={[styles.dateRangeText, isDark ? styles.subDark : styles.subLight]}>
-                {stats.dateRangeText}
-              </Text>
-            </View>
+            {/* Status & Overview Card - Matching Workout Overview */}
+            <Card style={styles.overviewCard}>
+              <View style={styles.statusRow}>
+                <View style={[styles.statusPill, styles.statusCompleted]}>
+                  <View style={[styles.statusDot, { backgroundColor: '#22c55e' }]} />
+                  <Text style={[styles.statusText, { color: '#22c55e' }]}>
+                    Вправа каталогу
+                  </Text>
+                </View>
 
-            {/* Area Chart (from first day to current day) */}
+                <View style={[styles.badgePill, isDark ? styles.badgePillDark : styles.badgePillLight]}>
+                  <Ionicons name="barbell-outline" size={13} color={isDark ? '#60a5fa' : '#2563eb'} />
+                  <Text style={[styles.badgeText, isDark ? styles.badgeTextDark : styles.badgeTextLight]}>
+                    {muscleInfo.nameUk}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Metrics Summary Row with Dividers */}
+              <View style={styles.metricsSummaryRow}>
+                <View style={styles.metricSummaryItem}>
+                  <Text style={[styles.summaryVal, isDark ? styles.textDark : styles.textLight]}>
+                    {stats.personalBest > 0 ? `${stats.personalBest} кг` : '—'}
+                  </Text>
+                  <Text style={[styles.summaryLbl, isDark ? styles.subDark : styles.subLight]}>
+                    Рекорд (PR)
+                  </Text>
+                </View>
+
+                <View style={[styles.summaryDivider, isDark ? styles.borderDark : styles.borderLight]} />
+
+                <View style={styles.metricSummaryItem}>
+                  <Text style={[styles.summaryVal, isDark ? styles.textDark : styles.textLight]}>
+                    {stats.best1RM > 0 ? `${stats.best1RM} кг` : '—'}
+                  </Text>
+                  <Text style={[styles.summaryLbl, isDark ? styles.subDark : styles.subLight]}>
+                    Розрахунковий 1ПМ
+                  </Text>
+                </View>
+
+                <View style={[styles.summaryDivider, isDark ? styles.borderDark : styles.borderLight]} />
+
+                <View style={styles.metricSummaryItem}>
+                  <Text style={[styles.summaryVal, isDark ? styles.textDark : styles.textLight]}>
+                    {stats.totalSets}
+                  </Text>
+                  <Text style={[styles.summaryLbl, isDark ? styles.subDark : styles.subLight]}>
+                    Підходів
+                  </Text>
+                </View>
+              </View>
+            </Card>
+
+            {/* Chart Card in Workout Card Style */}
             <Card style={styles.chartCard}>
+              <View style={styles.chartHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.chartTitle, isDark ? styles.textDark : styles.textLight]}>
+                    Динаміка максимальної ваги
+                  </Text>
+                  <Text style={[styles.chartSub, isDark ? styles.subDark : styles.subLight]}>
+                    {stats.dateRangeText}
+                  </Text>
+                </View>
+                {stats.avgWeight > 0 && (
+                  <View style={[styles.avgBadge, isDark ? styles.avgBadgeDark : styles.avgBadgeLight]}>
+                    <Text style={[styles.avgBadgeText, isDark ? styles.badgeTextDark : styles.badgeTextLight]}>
+                      Сер: {stats.avgWeight} кг
+                    </Text>
+                  </View>
+                )}
+              </View>
+
               {allPoints.length === 0 ? (
                 <View style={styles.chartEmpty}>
                   <Ionicons name="barbell-outline" size={32} color={isDark ? '#64748b' : '#94a3b8'} />
@@ -302,20 +354,18 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
                   </Text>
                 </View>
               ) : (
-                <View>
-                  {/* Grid container with vertical bars and dots */}
+                <View style={{ marginTop: 12 }}>
+                  {/* Chart Grid and Bars */}
                   <View style={[styles.chartArea, { height: chartHeight }]}>
-                    {/* Horizontal Guideline Lines */}
                     <View style={styles.gridLinesContainer}>
                       <View style={[styles.gridLine, isDark ? styles.lineDark : styles.lineLight]} />
                       <View style={[styles.gridLine, isDark ? styles.lineDark : styles.lineLight]} />
                       <View style={[styles.gridLine, isDark ? styles.lineDark : styles.lineLight]} />
                     </View>
 
-                    {/* Columns representing points */}
                     <View style={styles.pointsRow}>
                       {allPoints.map((p, idx) => {
-                        const ratio = Math.max(0.08, (p.maxWeight - minVal) / valRange);
+                        const ratio = Math.max(0.1, (p.maxWeight - minVal) / valRange);
                         const isSelected = activeTooltipIdx === idx;
 
                         return (
@@ -334,8 +384,8 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
                                     backgroundColor: isSelected
                                       ? '#2563eb'
                                       : isDark
-                                      ? 'rgba(37, 99, 235, 0.4)'
-                                      : 'rgba(37, 99, 235, 0.25)',
+                                      ? 'rgba(96, 165, 250, 0.45)'
+                                      : 'rgba(37, 99, 235, 0.35)',
                                   },
                                 ]}
                               >
@@ -343,6 +393,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
                                   style={[
                                     styles.pointDot,
                                     isSelected && styles.pointDotActive,
+                                    { borderColor: isDark ? '#1d2939' : '#ffffff' },
                                   ]}
                                 />
                               </View>
@@ -352,6 +403,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
                               style={[
                                 styles.pointDateLabel,
                                 isDark ? styles.subDark : styles.subLight,
+                                isSelected && { color: isDark ? '#60a5fa' : '#2563eb', fontWeight: '700' },
                               ]}
                             >
                               {p.displayDate}
@@ -362,16 +414,19 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
                     </View>
                   </View>
 
-                  {/* Active Tooltip Details */}
+                  {/* Active Tooltip Popover */}
                   {activeTooltipIdx !== null && allPoints[activeTooltipIdx] && (
                     <View style={[styles.tooltipBox, isDark ? styles.tooltipDark : styles.tooltipLight]}>
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.tooltipDate, isDark ? styles.textDark : styles.textLight]}>
-                          {allPoints[activeTooltipIdx].displayDate} — {allPoints[activeTooltipIdx].workoutTitle}
+                          {allPoints[activeTooltipIdx].workoutTitle}
+                        </Text>
+                        <Text style={[styles.tooltipSub, isDark ? styles.subDark : styles.subLight]}>
+                          {allPoints[activeTooltipIdx].displayDate} • {allPoints[activeTooltipIdx].setsCount} підходів
                         </Text>
                       </View>
                       <Text style={styles.tooltipVal}>
-                        {allPoints[activeTooltipIdx].maxWeight} кг ({allPoints[activeTooltipIdx].setsCount} підх.)
+                        {allPoints[activeTooltipIdx].maxWeight} кг
                       </Text>
                     </View>
                   )}
@@ -379,195 +434,116 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
               )}
             </Card>
 
-            {/* 3 Metric Summary Cards in a Row */}
-            <View style={styles.kpiRow}>
-              {/* Personal Best */}
-              <Card style={styles.kpiCard}>
-                <Ionicons name="trophy" size={16} color="#f59e0b" style={{ alignSelf: 'center' }} />
-                <Text
-                  numberOfLines={1}
-                  style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}
-                >
-                  {stats.personalBest > 0 ? `${stats.personalBest} кг` : '—'}
-                </Text>
-                <Text style={[styles.kpiLabel, isDark ? styles.subDark : styles.subLight]}>
-                  Рекорд (PR)
-                </Text>
-              </Card>
-
-              {/* Est. 1RM */}
-              <Card style={styles.kpiCard}>
-                <Ionicons
-                  name="trending-up"
-                  size={16}
-                  color={isDark ? '#60a5fa' : '#2563eb'}
-                  style={{ alignSelf: 'center' }}
-                />
-                <Text
-                  numberOfLines={1}
-                  style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}
-                >
-                  {stats.best1RM > 0 ? `${stats.best1RM} кг` : '—'}
-                </Text>
-                <Text style={[styles.kpiLabel, isDark ? styles.subDark : styles.subLight]}>
-                  Розрахунковий 1ПМ
-                </Text>
-              </Card>
-
-              {/* Total Sets */}
-              <Card style={styles.kpiCard}>
-                <Ionicons name="barbell" size={16} color="#22c55e" style={{ alignSelf: 'center' }} />
-                <Text
-                  numberOfLines={1}
-                  style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}
-                >
-                  {stats.totalSets}
-                </Text>
-                <Text style={[styles.kpiLabel, isDark ? styles.subDark : styles.subLight]}>
-                  Всього підходів
-                </Text>
-              </Card>
+            {/* Workout History Sessions Section Header */}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionHeading, isDark ? styles.textDark : styles.textLight]}>
+                Останні тренування ({last5Sessions.length})
+              </Text>
             </View>
 
-            {/* Progress / Insights Section */}
-            <View style={styles.insightsSection}>
-              <Text style={[styles.sectionTitle, isDark ? styles.subDark : styles.subLight]}>
-                АНАЛІТИКА ПРОГРЕСУ
-              </Text>
-
-              <Card style={styles.progressCard}>
-                <View style={styles.progressHeader}>
-                  <Ionicons
-                    name="fitness-outline"
-                    size={18}
-                    color={isDark ? '#60a5fa' : '#2563eb'}
-                  />
-                  <Text style={[styles.progressTitle, isDark ? styles.textDark : styles.textLight]}>
-                    Прогрес
-                  </Text>
-                </View>
-
-                <Text style={[styles.progressSub, isDark ? styles.subDark : styles.subLight]}>
-                  Ви тренували цю вправу{' '}
-                  <Text style={{ fontWeight: '700', color: isDark ? '#f8fafc' : '#0f172a' }}>
-                    {allPoints.length}
-                  </Text>{' '}
-                  {allPoints.length === 1
-                    ? 'раз'
-                    : allPoints.length >= 2 && allPoints.length <= 4
-                    ? 'рази'
-                    : 'разів'}{' '}
-                  за весь час.
+            {/* List of Sessions in Exact Workout ExerciseCard Style */}
+            {last5Sessions.length === 0 ? (
+              <Card style={styles.emptyExercisesCard}>
+                <Ionicons name="barbell-outline" size={36} color={isDark ? '#334155' : '#94a3b8'} />
+                <Text style={[styles.emptyExercisesTitle, isDark ? styles.textDark : styles.textLight]}>
+                  У вас ще немає збережених підходів
                 </Text>
-
-                {/* Last 5 Sessions Table */}
-                <View style={styles.tableWrapper}>
-                  <Text style={[styles.tableTitle, isDark ? styles.textDark : styles.textLight]}>
-                    Останні 5 тренувань
-                  </Text>
-
-                  {last5Sessions.length === 0 ? (
-                    <Text style={[styles.emptySub, isDark ? styles.subDark : styles.subLight]}>
-                      Ще немає записів
-                    </Text>
-                  ) : (
-                    <View style={styles.sessionsList}>
-                      {/* Header row */}
-                      <View style={[styles.tableHeaderRow, isDark ? styles.borderDark : styles.borderLight]}>
-                        <Text style={[styles.thCol, { flex: 1.2 }, isDark ? styles.subDark : styles.subLight]}>
-                          Дата
+                <Text style={[styles.emptyExercisesDesc, isDark ? styles.subDark : styles.subLight]}>
+                  Додайте цю вправу до тренування та запишіть підходи, щоб відстежувати прогрес.
+                </Text>
+              </Card>
+            ) : (
+              last5Sessions.map((session, sIndex) => (
+                <Card key={session.workoutId || `sess_${sIndex}`} style={styles.exerciseCard}>
+                  {/* Workout Session Header */}
+                  <View style={styles.exHeader}>
+                    <View
+                      style={[
+                        styles.exIndexCircle,
+                        isDark ? styles.exIndexCircleDark : styles.exIndexCircleLight,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.exIndexText,
+                          isDark ? styles.textPrimaryDark : styles.textPrimaryLight,
+                        ]}
+                      >
+                        {sIndex + 1}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}>
+                        {session.workoutTitle}
+                      </Text>
+                      <View style={styles.sessionMetaRow}>
+                        <Text style={[styles.sessionDate, isDark ? styles.subDark : styles.subLight]}>
+                          {formatLongDateUk(parseDate(session.date))}
                         </Text>
-                        <Text style={[styles.thCol, { textAlign: 'center' }, isDark ? styles.subDark : styles.subLight]}>
-                          Підходи
-                        </Text>
-                        <Text style={[styles.thCol, { textAlign: 'right' }, isDark ? styles.subDark : styles.subLight]}>
-                          Макс. вага
-                        </Text>
-                        <Text style={[styles.thCol, { textAlign: 'right' }, isDark ? styles.subDark : styles.subLight]}>
-                          Тоннаж
+                        <Text style={[styles.sessionDot, isDark ? styles.subDark : styles.subLight]}>•</Text>
+                        <Text style={[styles.sessionMaxWeight, { color: isDark ? '#60a5fa' : '#2563eb' }]}>
+                          Макс: {session.maxWeight} кг
                         </Text>
                       </View>
+                    </View>
+                    <View style={[styles.setsCountPill, isDark ? styles.setsCountPillDark : styles.setsCountPillLight]}>
+                      <Text style={[styles.setsCountText, isDark ? styles.textDark : styles.textLight]}>
+                        {session.setsCount} {session.setsCount === 1 ? 'підхід' : session.setsCount >= 2 && session.setsCount <= 4 ? 'підходи' : 'підходів'}
+                      </Text>
+                    </View>
+                  </View>
 
-                      {/* Sessions Rows */}
-                      {last5Sessions.map((session, sIdx) => {
-                        const isExpanded = expandedSessionIdx === sIdx;
+                  {/* Sets Table - EXACTLY matching WorkoutDetailScreen */}
+                  {session.sets && session.sets.length > 0 && (
+                    <View style={styles.setsTable}>
+                      <View style={[styles.setsTableHeader, isDark ? styles.rowBorderDark : styles.rowBorderLight]}>
+                        <Text style={[styles.colHeader, styles.colSet, isDark ? styles.subDark : styles.subLight]}>Сет</Text>
+                        <Text style={[styles.colHeader, styles.colWeight, isDark ? styles.subDark : styles.subLight]}>Вага</Text>
+                        <Text style={[styles.colHeader, styles.colReps, isDark ? styles.subDark : styles.subLight]}>Повт.</Text>
+                        <Text style={[styles.colHeader, styles.colStatus, isDark ? styles.subDark : styles.subLight]}>Статус</Text>
+                      </View>
+
+                      {session.sets.map((s, sIndex) => {
                         return (
-                          <View key={sIdx} style={styles.sessionRowWrap}>
-                            <TouchableOpacity
-                              activeOpacity={0.7}
-                              onPress={() =>
-                                setExpandedSessionIdx(isExpanded ? null : sIdx)
-                              }
-                              style={[
-                                styles.sessionRow,
-                                sIdx > 0 && (isDark ? styles.borderDark : styles.borderLight),
-                              ]}
-                            >
-                              <View style={[styles.tdCol, { flex: 1.2, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
-                                <Text style={[styles.dateText, isDark ? styles.textDark : styles.textLight]}>
-                                  {session.displayDate}
-                                </Text>
-                                <Ionicons
-                                  name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                                  size={12}
-                                  color={isDark ? '#94a3b8' : '#64748b'}
-                                />
-                              </View>
-                              <Text style={[styles.tdCol, styles.centerCol, isDark ? styles.textDark : styles.textLight]}>
-                                {session.setsCount}
+                          <View
+                            key={`set_${s.setNumber || sIndex}`}
+                            style={[
+                              styles.setRow,
+                              sIndex > 0 && (isDark ? styles.rowBorderDark : styles.rowBorderLight),
+                            ]}
+                          >
+                            <View style={styles.colSet}>
+                              <Text style={[styles.setNum, isDark ? styles.textDark : styles.textLight]}>
+                                {s.setNumber || sIndex + 1}
                               </Text>
-                              <Text style={[styles.tdCol, styles.rightCol, isDark ? styles.textDark : styles.textLight]}>
-                                {session.maxWeight > 0 ? `${session.maxWeight} кг` : '—'}
+                            </View>
+                            <View style={styles.colWeight}>
+                              <Text style={[styles.setVal, isDark ? styles.textDark : styles.textLight]}>
+                                {s.weight ? `${s.weight} кг` : '—'}
                               </Text>
-                              <Text style={[styles.tdCol, styles.rightCol, isDark ? styles.subDark : styles.subLight]}>
-                                {session.volumeTons > 0 ? `${session.volumeTons} т` : '0'}
+                            </View>
+                            <View style={styles.colReps}>
+                              <Text style={[styles.setVal, isDark ? styles.textDark : styles.textLight]}>
+                                {s.actualReps !== null && s.actualReps !== undefined
+                                  ? s.actualReps
+                                  : s.targetRepsRange || '—'}
                               </Text>
-                            </TouchableOpacity>
-
-                            {/* Expanded sets */}
-                            {isExpanded && session.sets.length > 0 && (
-                              <View style={[styles.expandedSetsBox, isDark ? styles.expandedDark : styles.expandedLight]}>
-                                <Text style={[styles.setsHeader, isDark ? styles.subDark : styles.subLight]}>
-                                  Виконані підходи:
-                                </Text>
-                                <View style={styles.setsGrid}>
-                                  {session.sets.map((set, setIdx) => (
-                                    <View
-                                      key={setIdx}
-                                      style={[styles.setCard, isDark ? styles.setCardDark : styles.setCardLight]}
-                                    >
-                                      <Text style={[styles.setNumText, isDark ? styles.subDark : styles.subLight]}>
-                                        Сет {set.setNumber || setIdx + 1}
-                                      </Text>
-                                      <Text style={[styles.setValText, isDark ? styles.textDark : styles.textLight]}>
-                                        {set.weight} кг × {set.actualReps}
-                                      </Text>
-                                    </View>
-                                  ))}
-                                </View>
-                              </View>
-                            )}
+                            </View>
+                            <View style={styles.colStatus}>
+                              <Ionicons
+                                name="checkmark-circle"
+                                size={18}
+                                color="#22c55e"
+                              />
+                            </View>
                           </View>
                         );
                       })}
                     </View>
                   )}
-                </View>
-              </Card>
-
-              {/* Achievement Badge */}
-              {stats.isNewPrInLatest && (
-                <View style={[styles.prBadgeBox, isDark ? styles.prBadgeDark : styles.prBadgeLight]}>
-                  <Ionicons name="trophy" size={18} color="#f59e0b" />
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={styles.prBadgeTitle}>Особистий рекорд!</Text>
-                    <Text style={[styles.prBadgeSub, isDark ? styles.subDark : styles.subLight]}>
-                      Ви встановили новий рекорд у цій вправі на останньому тренуванні!
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </View>
+                </Card>
+              ))
+            )}
           </ScrollView>
         )}
       </SafeAreaView>
@@ -585,107 +561,160 @@ const styles = StyleSheet.create({
   bgDark: {
     backgroundColor: '#0b1220',
   },
-  borderLight: {
-    borderColor: '#e2e8f0',
-  },
-  borderDark: {
-    borderColor: '#334155',
-  },
-  textLight: {
-    color: '#0f172a',
-  },
-  textDark: {
-    color: '#f8fafc',
-  },
-  subLight: {
-    color: '#64748b',
-  },
-  subDark: {
-    color: '#94a3b8',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  btnLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-  },
-  btnDark: {
-    backgroundColor: '#1d2939',
-    borderColor: '#334155',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  headerSub: {
-    fontSize: 11,
-    marginTop: 2,
-    fontWeight: '600',
-  },
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 24,
     gap: 8,
   },
   loadingText: {
     fontSize: 13,
+    marginTop: 8,
   },
-  scrollContent: {
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
+  backBtn: {
+    padding: 4,
+  },
+  headerTitleWrap: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  headerSub: {
+    fontSize: 12,
+    marginTop: 1,
+  },
+  content: {
     padding: 16,
-    gap: 14,
+    gap: 16,
     paddingBottom: 40,
   },
-  avgSection: {
-    paddingTop: 4,
+  overviewCard: {
+    padding: 16,
+    gap: 14,
   },
-  avgLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  avgRow: {
+  statusRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-    marginTop: 2,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  avgValue: {
-    fontSize: 30,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  avgUnit: {
-    fontSize: 14,
+  statusCompleted: {
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontSize: 12,
     fontWeight: '600',
   },
-  dateRangeText: {
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  badgePillLight: {
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+    borderColor: 'rgba(37, 99, 235, 0.2)',
+  },
+  badgePillDark: {
+    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+    borderColor: 'rgba(37, 99, 235, 0.35)',
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  badgeTextLight: {
+    color: '#2563eb',
+  },
+  badgeTextDark: {
+    color: '#60a5fa',
+  },
+  metricsSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 8,
+  },
+  metricSummaryItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  summaryVal: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  summaryLbl: {
     fontSize: 11,
     marginTop: 2,
   },
+  summaryDivider: {
+    width: 1,
+    height: 24,
+    borderRightWidth: 1,
+  },
   chartCard: {
-    padding: 14,
-    borderRadius: 20,
+    padding: 16,
+    gap: 10,
+  },
+  chartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  chartTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  chartSub: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  avgBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  avgBadgeLight: {
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+    borderColor: 'rgba(37, 99, 235, 0.2)',
+  },
+  avgBadgeDark: {
+    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+    borderColor: 'rgba(37, 99, 235, 0.35)',
+  },
+  avgBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   chartEmpty: {
-    height: 140,
+    padding: 24,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
@@ -694,6 +723,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   chartArea: {
+    width: '100%',
     position: 'relative',
     justifyContent: 'flex-end',
   },
@@ -745,7 +775,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563eb',
     marginTop: -4,
     borderWidth: 1.5,
-    borderColor: '#ffffff',
   },
   pointDotActive: {
     width: 12,
@@ -753,6 +782,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginTop: -6,
     borderWidth: 2,
+    backgroundColor: '#2563eb',
   },
   pointDateLabel: {
     fontSize: 9,
@@ -777,178 +807,176 @@ const styles = StyleSheet.create({
     borderColor: '#334155',
   },
   tooltipDate: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  tooltipVal: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#2563eb',
-    fontFamily: 'monospace',
   },
-  kpiRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  kpiCard: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 18,
-    alignItems: 'center',
-    gap: 3,
-  },
-  kpiValue: {
-    fontSize: 15,
-    fontWeight: '800',
-    marginTop: 2,
-  },
-  kpiLabel: {
-    fontSize: 10,
-    textAlign: 'center',
-  },
-  insightsSection: {
-    gap: 8,
-  },
-  sectionTitle: {
+  tooltipSub: {
     fontSize: 11,
+    marginTop: 1,
+  },
+  tooltipVal: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#2563eb',
+  },
+  sectionHeaderRow: {
+    marginTop: 4,
+  },
+  sectionHeading: {
+    fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.5,
-    paddingHorizontal: 4,
   },
-  progressCard: {
-    padding: 14,
-    borderRadius: 20,
-    gap: 10,
+  emptyExercisesCard: {
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderStyle: 'dashed',
   },
-  progressHeader: {
+  emptyExercisesTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  emptyExercisesDesc: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    maxWidth: 280,
+  },
+  exerciseCard: {
+    padding: 16,
+    gap: 12,
+  },
+  exHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  exIndexCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  exIndexCircleLight: {
+    backgroundColor: '#2563eb',
+  },
+  exIndexCircleDark: {
+    backgroundColor: '#60a5fa',
+  },
+  exIndexText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  textPrimaryLight: {
+    color: '#ffffff',
+  },
+  textPrimaryDark: {
+    color: '#0b1220',
+  },
+  exTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  sessionMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginTop: 2,
   },
-  progressTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  progressSub: {
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  tableWrapper: {
-    marginTop: 6,
-  },
-  tableTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  emptySub: {
+  sessionDate: {
     fontSize: 12,
   },
-  sessionsList: {
-    gap: 2,
+  sessionDot: {
+    fontSize: 12,
   },
-  tableHeaderRow: {
+  sessionMaxWeight: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  setsCountPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  setsCountPillLight: {
+    backgroundColor: '#f1f5f9',
+  },
+  setsCountPillDark: {
+    backgroundColor: '#263140',
+  },
+  setsCountText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  setsTable: {
+    marginTop: 4,
+  },
+  setsTableHeader: {
     flexDirection: 'row',
     paddingBottom: 6,
     borderBottomWidth: 1,
   },
-  thCol: {
-    flex: 1,
-    fontSize: 10,
+  colHeader: {
+    fontSize: 11,
     fontWeight: '600',
+    textTransform: 'uppercase',
   },
-  sessionRowWrap: {
-    gap: 4,
+  colSet: {
+    width: 50,
   },
-  sessionRow: {
+  colWeight: {
+    flex: 1,
+  },
+  colReps: {
+    width: 70,
+  },
+  colStatus: {
+    width: 40,
+    alignItems: 'center',
+  },
+  setRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
   },
-  tdCol: {
-    flex: 1,
-    fontSize: 11,
-    fontFamily: 'monospace',
+  rowBorderLight: {
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
   },
-  centerCol: {
-    textAlign: 'center',
-    fontWeight: '700',
+  rowBorderDark: {
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
   },
-  rightCol: {
-    textAlign: 'right',
-    fontWeight: '700',
-  },
-  dateText: {
-    fontSize: 11,
+  setNum: {
+    fontSize: 13,
     fontWeight: '600',
   },
-  expandedSetsBox: {
-    padding: 8,
-    borderRadius: 12,
-    gap: 6,
-    marginBottom: 4,
-  },
-  expandedLight: {
-    backgroundColor: '#f1f5f9',
-  },
-  expandedDark: {
-    backgroundColor: '#263140',
-  },
-  setsHeader: {
+  warmupTag: {
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    color: '#60a5fa',
   },
-  setsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  setVal: {
+    fontSize: 13,
   },
-  setCard: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
+  textLight: {
+    color: '#0f172a',
   },
-  setCardLight: {
-    backgroundColor: '#ffffff',
+  textDark: {
+    color: '#f8fafc',
+  },
+  subLight: {
+    color: '#64748b',
+  },
+  subDark: {
+    color: '#94a3b8',
+  },
+  borderLight: {
     borderColor: '#e2e8f0',
   },
-  setCardDark: {
-    backgroundColor: '#1d2939',
+  borderDark: {
     borderColor: '#334155',
-  },
-  setNumText: {
-    fontSize: 9,
-  },
-  setValText: {
-    fontSize: 11,
-    fontWeight: '700',
-    marginTop: 1,
-  },
-  prBadgeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  prBadgeLight: {
-    backgroundColor: 'rgba(245, 158, 11, 0.08)',
-    borderColor: 'rgba(245, 158, 11, 0.25)',
-  },
-  prBadgeDark: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    borderColor: 'rgba(245, 158, 11, 0.3)',
-  },
-  prBadgeTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#f59e0b',
-  },
-  prBadgeSub: {
-    fontSize: 11,
   },
 });
