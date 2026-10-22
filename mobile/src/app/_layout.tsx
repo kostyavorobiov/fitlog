@@ -8,6 +8,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { AuthService } from '../services/authService';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider as AppThemeProvider, useTheme as useAppTheme } from '../context/ThemeContext';
 import { SwipeUndoProvider } from '../context/SwipeUndoContext';
 
@@ -105,15 +106,17 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <AppThemeProvider>
-        <AuthProvider>
-          <SwipeUndoProvider>
-            <RootNavigator />
-          </SwipeUndoProvider>
-        </AuthProvider>
-      </AppThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AppThemeProvider>
+          <AuthProvider>
+            <SwipeUndoProvider>
+              <RootNavigator />
+            </SwipeUndoProvider>
+          </AuthProvider>
+        </AppThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

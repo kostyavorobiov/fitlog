@@ -1,6 +1,8 @@
-import React, { useRef, useMemo } from 'react';
-import { View, StyleSheet, PanResponder, useWindowDimensions, Platform } from 'react-native';
+import React, { useRef, useMemo, useCallback } from 'react';
+import { View, StyleSheet, useWindowDimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useSharedValue, runOnJS } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { swipeCardManager } from '../services/swipeCardManager';
 
@@ -25,156 +27,142 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
   const { width: screenWidth } = useWindowDimensions();
 
   const isNavigatingRef = useRef(false);
+  const startX = useSharedValue(0);
 
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onStartShouldSetPanResponderCapture: () => false,
+  const handleBackNavigation = useCallback(() => {
+    if (!enableBackSwipe) return;
+    if (isNavigatingRef.current) return;
+    if (!router.canGoBack()) return;
 
-        onMoveShouldSetPanResponderCapture: () => false,
+    isNavigatingRef.current = true;
+    try {
+      Haptics.selectionAsync();
+    } catch {}
+    router.back();
 
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (isNavigatingRef.current) return false;
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 450);
+  }, [enableBackSwipe, router]);
 
-          // Do not switch tabs if any card is currently swiped open
+  const handleNextTab = useCallback(() => {
+    if (!enableTabSwipe) return;
+    if (swipeCardManager.hasActiveCard()) return;
+    if (isNavigatingRef.current) return;
+
+    const currentIndex = tabOrder.indexOf(currentTab || 'index');
+    if (currentIndex === -1 || currentIndex >= tabOrder.length - 1) return;
+
+    const nextTab = tabOrder[currentIndex + 1];
+    isNavigatingRef.current = true;
+    try {
+      Haptics.selectionAsync();
+    } catch {}
+
+    if (onTabChange) {
+      onTabChange(nextTab);
+    } else {
+      router.navigate(nextTab === 'index' ? '/(tabs)' : (`/(tabs)/${nextTab}` as any));
+    }
+
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 380);
+  }, [enableTabSwipe, currentTab, tabOrder, onTabChange, router]);
+
+  const handlePrevTab = useCallback(() => {
+    if (!enableTabSwipe) return;
+    if (swipeCardManager.hasActiveCard()) return;
+    if (isNavigatingRef.current) return;
+
+    const currentIndex = tabOrder.indexOf(currentTab || 'index');
+    if (currentIndex <= 0) return;
+
+    const prevTab = tabOrder[currentIndex - 1];
+    isNavigatingRef.current = true;
+    try {
+      Haptics.selectionAsync();
+    } catch {}
+
+    if (onTabChange) {
+      onTabChange(prevTab);
+    } else {
+      router.navigate(prevTab === 'index' ? '/(tabs)' : (`/(tabs)/${prevTab}` as any));
+    }
+
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 380);
+  }, [enableTabSwipe, currentTab, tabOrder, onTabChange, router]);
+
+  const panGesture = useMemo(() => {
+    return Gesture.Pan()
+      .activeOffsetX([-18, 18])
+      .failOffsetY([-16, 16])
+      .onTouchesDown((e, stateManager) => {
+        'worklet';
+        const touch = e.allTouches[0];
+        if (touch) {
+          startX.value = touch.absoluteX;
+          // Right 20%: strictly fail so cards have 100% exclusive control
+          if (touch.absoluteX > screenWidth * 0.8) {
+            stateManager.fail();
+            return;
+          }
+          // If any card is swiped open, do not switch tabs
           if (swipeCardManager.hasActiveCard()) {
-            return false;
+            stateManager.fail();
+            return;
           }
+        }
+      })
+      .onBegin((e) => {
+        'worklet';
+        startX.value = e.absoluteX;
+      })
+      .onEnd((e) => {
+        'worklet';
+        const sX = startX.value;
+        const dx = e.translationX;
+        const vx = e.velocityX;
 
-          const startX = gestureState.x0;
-          const isLeft20 = startX < screenWidth * 0.2;
-          const isCenter60 = startX >= screenWidth * 0.2 && startX <= screenWidth * 0.8;
-          const isRight20 = startX > screenWidth * 0.8;
+        // 1. Right 20%: Strictly ignore so cards handle their own gestures
+        if (sX > screenWidth * 0.8) {
+          return;
+        }
 
-          // Right 20% strictly belongs to card actions - NEVER intercept here
-          if (isRight20) {
-            return false;
-          }
-
-          // Strict horizontal intent check (avoid interfering with vertical scroll)
-          const isHorizontal = Math.abs(gestureState.dx) > 16;
-          const dominatesVertical = Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 2.0;
-
-          if (!isHorizontal || !dominatesVertical) {
-            return false;
-          }
-
-          // Left 20%: Back navigation
-          if (isLeft20 && enableBackSwipe) {
-            // Must be swiping right to go back
-            if (gestureState.dx > 15 && router.canGoBack()) {
-              // On iOS, system edge gesture handles extreme edge (0-24pt).
-              // We handle touches between 24pt and 20% width to prevent double firing.
-              if (Platform.OS === 'ios' && startX < 24) {
-                return false;
-              }
-              return true;
-            }
-            return false;
-          }
-
-          // Center 60%: Tab navigation
-          if (isCenter60 && enableTabSwipe && currentTab && tabOrder.length > 0) {
-            const currentIndex = tabOrder.indexOf(currentTab);
-            if (currentIndex === -1) return false;
-
-            // Swiping left (next tab)
-            if (gestureState.dx < -15 && currentIndex < tabOrder.length - 1) {
-              return true;
-            }
-            // Swiping right (prev tab)
-            if (gestureState.dx > 15 && currentIndex > 0) {
-              return true;
-            }
-          }
-
-          return false;
-        },
-
-        onPanResponderTerminationRequest: () => true,
-
-        onPanResponderRelease: (_, gestureState) => {
-          if (isNavigatingRef.current) return;
-
-          const startX = gestureState.x0;
-          const isLeft20 = startX < screenWidth * 0.2;
-          const isCenter60 = startX >= screenWidth * 0.2 && startX <= screenWidth * 0.8;
-
-          // 1. Back navigation in left 20%
-          if (isLeft20 && enableBackSwipe && gestureState.dx > 45) {
-            if (router.canGoBack()) {
-              isNavigatingRef.current = true;
-              try {
-                Haptics.selectionAsync();
-              } catch {}
-              router.back();
-              setTimeout(() => {
-                isNavigatingRef.current = false;
-              }, 500);
+        // 2. Left 20%: Back navigation on right swipe
+        if (sX < screenWidth * 0.2) {
+          if (dx > 35) {
+            // On iOS, system edge swipe handles extreme edge (0-24pt)
+            if (Platform.OS === 'ios' && sX < 24) {
               return;
             }
+            runOnJS(handleBackNavigation)();
           }
+          return;
+        }
 
-          // 2. Tab navigation in central 60%
-          if (isCenter60 && enableTabSwipe && currentTab && tabOrder.length > 0) {
-            const currentIndex = tabOrder.indexOf(currentTab);
-            if (currentIndex === -1) return;
+        // 3. Central 60%: Tab navigation on horizontal swipe
+        if (sX >= screenWidth * 0.2 && sX <= screenWidth * 0.8) {
+          const isSwipeLeft = dx < -45 || vx < -350;
+          const isSwipeRight = dx > 45 || vx > 350;
 
-            const isSwipeLeft = gestureState.dx < -50 || gestureState.vx < -0.4;
-            const isSwipeRight = gestureState.dx > 50 || gestureState.vx > 0.4;
-
-            if (isSwipeLeft && currentIndex < tabOrder.length - 1) {
-              // Next tab
-              const nextTab = tabOrder[currentIndex + 1];
-              isNavigatingRef.current = true;
-              try {
-                Haptics.selectionAsync();
-              } catch {}
-              if (onTabChange) {
-                onTabChange(nextTab);
-              } else {
-                router.replace(nextTab === 'index' ? '/(tabs)' : (`/(tabs)/${nextTab}` as any));
-              }
-              setTimeout(() => {
-                isNavigatingRef.current = false;
-              }, 400);
-            } else if (isSwipeRight && currentIndex > 0) {
-              // Previous tab
-              const prevTab = tabOrder[currentIndex - 1];
-              isNavigatingRef.current = true;
-              try {
-                Haptics.selectionAsync();
-              } catch {}
-              if (onTabChange) {
-                onTabChange(prevTab);
-              } else {
-                router.replace(prevTab === 'index' ? '/(tabs)' : (`/(tabs)/${prevTab}` as any));
-              }
-              setTimeout(() => {
-                isNavigatingRef.current = false;
-              }, 400);
-            }
+          if (isSwipeLeft) {
+            runOnJS(handleNextTab)();
+          } else if (isSwipeRight) {
+            runOnJS(handlePrevTab)();
           }
-        },
-
-        onPanResponderTerminate: () => {},
-      }),
-    [
-      screenWidth,
-      currentTab,
-      tabOrder,
-      enableBackSwipe,
-      enableTabSwipe,
-      onTabChange,
-      router,
-    ]
-  );
+        }
+      });
+  }, [screenWidth, handleBackNavigation, handleNextTab, handlePrevTab, startX]);
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
-      {children}
-    </View>
+    <GestureDetector gesture={panGesture}>
+      <View style={styles.container}>
+        {children}
+      </View>
+    </GestureDetector>
   );
 };
 

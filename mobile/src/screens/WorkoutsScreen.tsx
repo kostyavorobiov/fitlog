@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { ScrollView } from 'react-native-gesture-handler';
 import {
-  ScrollView,
   View,
   Text,
   TextInput,
