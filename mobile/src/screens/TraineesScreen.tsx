@@ -35,7 +35,6 @@ import { MonthGroup, getMonthKeyAndLabel } from './WorkoutsScreen';
 import { CreateWorkoutModal } from '../components/CreateWorkoutModal';
 import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
-import { useSwipeUndo } from '../context/SwipeUndoContext';
 
 export const TraineesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
@@ -44,7 +43,6 @@ export const TraineesScreen: React.FC = () => {
   const { user, isAdmin, isCoach, isLoading: isAuthLoading } = useAuth();
   const isTrainer = isCoach || isAdmin || user?.role === 'coach';
   const { handleScroll } = useScrollTabBar();
-  const { showUndoToast } = useSwipeUndo();
 
   const [trainees, setTrainees] = useState<User[]>([]);
   const [selectedTrainee, setSelectedTrainee] = useState<User | null>(null);
@@ -433,30 +431,6 @@ export const TraineesScreen: React.FC = () => {
     }));
   };
 
-  // Quick delete trainee workout with undo toast (swipe all the way)
-  const handleQuickDeleteTraineeWorkout = useCallback(
-    (workout: WorkoutPlan) => {
-      if (!selectedTrainee) return;
-      setTraineeWorkouts((prev) => prev.filter((w) => w.id !== workout.id));
-      showUndoToast({
-        id: workout.id,
-        title: workout.title || 'Тренування',
-        type: 'workout',
-        onUndo: () => {
-          setTraineeWorkouts((prev) => [workout, ...prev]);
-        },
-        onCommit: async () => {
-          try {
-            await WorkoutService.deleteWorkout(selectedTrainee.id, workout.id, user?.id);
-          } catch (e) {
-            console.error('[TraineesScreen] Failed to delete trainee workout permanently:', e);
-          }
-        },
-      });
-    },
-    [selectedTrainee, showUndoToast, user?.id]
-  );
-
   // Normal delete workout of trainee with alert confirmation
   const handleDeleteTraineeWorkout = useCallback(
     (workout: WorkoutPlan, onCancel?: () => void) => {
@@ -496,6 +470,14 @@ export const TraineesScreen: React.FC = () => {
       );
     },
     [selectedTrainee, user?.id]
+  );
+
+  // Quick delete trainee workout (swipe > 50%) delegates to single confirmation
+  const handleQuickDeleteTraineeWorkout = useCallback(
+    (workout: WorkoutPlan, onCancel?: () => void) => {
+      handleDeleteTraineeWorkout(workout, onCancel);
+    },
+    [handleDeleteTraineeWorkout]
   );
 
   if (isAuthLoading) {
@@ -936,9 +918,7 @@ export const TraineesScreen: React.FC = () => {
                                     id={w.id}
                                     isDark={isDark}
                                     onDelete={(onCancel) => handleDeleteTraineeWorkout(w, onCancel)}
-                                    onQuickDelete={() => handleQuickDeleteTraineeWorkout(w)}
-                                    confirmTitle="Видалити тренування?"
-                                    confirmMessage={`Видалити «${w.title || 'це тренування'}» для підопічного ${selectedTrainee.name}?`}
+                                    onQuickDelete={(onCancel) => handleQuickDeleteTraineeWorkout(w, onCancel)}
                                   >
                                     <View
                                       style={[

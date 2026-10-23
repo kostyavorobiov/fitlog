@@ -31,7 +31,6 @@ import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutPlan, WorkoutExercise, WorkoutSet } from '../types/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
-import { useSwipeUndo } from '../context/SwipeUndoContext';
 import { DatePickerModal } from '../components/DatePickerModal';
 import { formatDateDDMMYYYY } from '../utils/date';
 
@@ -497,8 +496,6 @@ export const WorkoutsScreen: React.FC = () => {
                             onCopy={() => handleCopyWorkout(w)}
                             onDelete={(onCancel) => handleDeleteWorkout(w, onCancel)}
                             onQuickDelete={(onCancel) => handleQuickDeleteWorkout(w, onCancel)}
-                            confirmTitle="Видалити тренування?"
-                            confirmMessage={`Ви впевнені, що хочете видалити тренування «${w.title || 'це тренування'}»?`}
                           >
                             <TouchableOpacity
                               activeOpacity={0.7}

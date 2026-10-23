@@ -42,7 +42,6 @@ import {
 import { SupersetPalette, SUPERSET_PALETTES } from '../constants/supersets';
 import { getExercise1RM, format1RM, getMinRepsFromRange } from '../utils/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
-import { useSwipeUndo } from '../context/SwipeUndoContext';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 import { DatePickerModal } from '../components/DatePickerModal';
 import { formatDateDDMMYYYY } from '../utils/date';
@@ -69,8 +68,8 @@ const TITLE_PRESETS = [
 
 interface SwipeableExerciseCardProps {
   id: string;
-  onDelete: () => void;
-  onQuickDelete: () => void;
+  onDelete: (onCancel?: () => void) => void;
+  onQuickDelete?: (onCancel?: () => void) => void;
   confirmTitle?: string;
   confirmMessage?: string;
   onChangeExercise?: () => void;
@@ -734,103 +733,86 @@ export const WorkoutEditorScreen: React.FC = () => {
     }, 150);
   };
 
-  // Remove exercise
-  const handleRemoveExercise = (weId: string) => {
-    if (!workout) return;
-    if (expandedExerciseId === weId) {
-      setExpandedExerciseId(null);
-    }
-    const currentExercises = workout.exercises || [];
-    const exerciseIndex = currentExercises.findIndex((e) => e.id === weId);
-    if (exerciseIndex === -1) return;
-
-    const exerciseToRemove = currentExercises[exerciseIndex];
-
-    // Determine target exercise to scroll to:
-    // If deleted is not first -> previous exercise (exerciseIndex - 1)
-    // If deleted is first -> next exercise (exerciseIndex + 1)
-    const targetExercise = exerciseIndex > 0
-      ? currentExercises[exerciseIndex - 1]
-      : currentExercises[exerciseIndex + 1];
-
-    const targetY = targetExercise ? exerciseLayoutsRef.current[targetExercise.id] : undefined;
-
-    let updatedExercises = currentExercises
-      .filter((e) => e.id !== weId)
-      .map((e, idx) => ({ ...e, order: idx + 1 }));
-
-    // If removed exercise was in a superset, clean up any orphan
-    if (exerciseToRemove?.supersetGroupId) {
-      const remainingInGroup = updatedExercises.filter(
-        (e) => e.supersetGroupId === exerciseToRemove.supersetGroupId
-      );
-      if (remainingInGroup.length <= 1) {
-        updatedExercises = updatedExercises.map((e) =>
-          e.supersetGroupId === exerciseToRemove.supersetGroupId
-            ? { ...e, supersetGroupId: null }
-            : e
-        );
-      }
-    }
-
-    delete exerciseLayoutsRef.current[weId];
-
-    updateAndSave({ ...workout, exercises: updatedExercises }, true);
-
-    // Smoothly scroll to previous or next exercise without jarring jump
-    if (typeof targetY === 'number') {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({ y: Math.max(0, targetY - 16), animated: true });
-      }, 100);
-    }
-  };
-
-  const { showUndoToast } = useSwipeUndo();
-
-  const handleQuickDeleteExercise = useCallback(
-    (weId: string) => {
+  // Remove exercise with confirmation Alert
+  const handleRemoveExercise = useCallback(
+    (weId: string, onCancel?: () => void) => {
       if (!workout) return;
       const currentExercises = workout.exercises || [];
       const exerciseIndex = currentExercises.findIndex((e) => e.id === weId);
       if (exerciseIndex === -1) return;
 
       const exerciseToRemove = currentExercises[exerciseIndex];
-      const previousWorkoutState = { ...workout };
+      const exerciseName = exerciseToRemove.exerciseName || 'цю вправу';
 
-      // Optimistically remove from state
-      let updatedExercises = currentExercises
-        .filter((e) => e.id !== weId)
-        .map((e, idx) => ({ ...e, order: idx + 1 }));
+      Alert.alert(
+        'Видалити вправу?',
+        `Ви впевнені, що хочете видалити «${exerciseName}»?`,
+        [
+          {
+            text: 'Скасувати',
+            style: 'cancel',
+            onPress: () => {
+              onCancel?.();
+            },
+          },
+          {
+            text: 'Видалити',
+            style: 'destructive',
+            onPress: () => {
+              if (expandedExerciseId === weId) {
+                setExpandedExerciseId(null);
+              }
 
-      if (exerciseToRemove?.supersetGroupId) {
-        const remainingInGroup = updatedExercises.filter(
-          (e) => e.supersetGroupId === exerciseToRemove.supersetGroupId
-        );
-        if (remainingInGroup.length <= 1) {
-          updatedExercises = updatedExercises.map((e) =>
-            e.supersetGroupId === exerciseToRemove.supersetGroupId
-              ? { ...e, supersetGroupId: null }
-              : e
-          );
-        }
-      }
+              // Determine target exercise to scroll to:
+              // If deleted is not first -> previous exercise (exerciseIndex - 1)
+              // If deleted is first -> next exercise (exerciseIndex + 1)
+              const targetExercise = exerciseIndex > 0
+                ? currentExercises[exerciseIndex - 1]
+                : currentExercises[exerciseIndex + 1];
 
-      setWorkout((prev) => (prev ? { ...prev, exercises: updatedExercises } : prev));
+              const targetY = targetExercise ? exerciseLayoutsRef.current[targetExercise.id] : undefined;
 
-      showUndoToast({
-        id: weId,
-        title: exerciseToRemove.exerciseName || 'Вправа',
-        type: 'exercise',
-        onUndo: () => {
-          setWorkout(previousWorkoutState);
-          updateAndSave(previousWorkoutState, true);
-        },
-        onCommit: async () => {
-          updateAndSave({ ...workout, exercises: updatedExercises }, true);
-        },
-      });
+              let updatedExercises = currentExercises
+                .filter((e) => e.id !== weId)
+                .map((e, idx) => ({ ...e, order: idx + 1 }));
+
+              // If removed exercise was in a superset, clean up any orphan
+              if (exerciseToRemove?.supersetGroupId) {
+                const remainingInGroup = updatedExercises.filter(
+                  (e) => e.supersetGroupId === exerciseToRemove.supersetGroupId
+                );
+                if (remainingInGroup.length <= 1) {
+                  updatedExercises = updatedExercises.map((e) =>
+                    e.supersetGroupId === exerciseToRemove.supersetGroupId
+                      ? { ...e, supersetGroupId: null }
+                      : e
+                  );
+                }
+              }
+
+              delete exerciseLayoutsRef.current[weId];
+
+              updateAndSave({ ...workout, exercises: updatedExercises }, true);
+
+              // Smoothly scroll to previous or next exercise without jarring jump
+              if (typeof targetY === 'number') {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ y: Math.max(0, targetY - 16), animated: true });
+                }, 100);
+              }
+            },
+          },
+        ]
+      );
     },
-    [workout, updateAndSave, showUndoToast]
+    [workout, expandedExerciseId, updateAndSave]
+  );
+
+  const handleQuickDeleteExercise = useCallback(
+    (weId: string, onCancel?: () => void) => {
+      handleRemoveExercise(weId, onCancel);
+    },
+    [handleRemoveExercise]
   );
 
   // Move exercise Up / Down
@@ -1546,10 +1528,8 @@ export const WorkoutEditorScreen: React.FC = () => {
               >
                 <SwipeableExerciseCard
                   id={ex.id}
-                  confirmTitle="Видалити вправу?"
-                  confirmMessage={`Ви впевнені, що хочете видалити «${ex.exerciseName || 'цю вправу'}»?`}
-                  onDelete={() => handleRemoveExercise(ex.id)}
-                  onQuickDelete={() => handleQuickDeleteExercise(ex.id)}
+                  onDelete={(onCancel) => handleRemoveExercise(ex.id, onCancel)}
+                  onQuickDelete={(onCancel) => handleQuickDeleteExercise(ex.id, onCancel)}
                   onChangeExercise={() => handleChangeExercise(ex.id)}
                   isDark={isDark}
                 >

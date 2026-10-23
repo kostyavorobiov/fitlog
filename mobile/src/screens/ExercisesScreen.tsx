@@ -29,7 +29,6 @@ import { ExerciseService } from '../services/exerciseService';
 import { ExerciseDetailModal } from '../components/ExerciseDetailModal';
 import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
-import { useSwipeUndo } from '../context/SwipeUndoContext';
 
 const MUSCLE_ORDER: MuscleGroup[] = [
   'chest',
@@ -45,8 +44,8 @@ const MUSCLE_ORDER: MuscleGroup[] = [
 interface SwipeableExerciseCardProps {
   id: string;
   onEdit?: () => void;
-  onDelete: () => void;
-  onQuickDelete?: () => void;
+  onDelete: (onCancel?: () => void) => void;
+  onQuickDelete?: (onCancel?: () => void) => void;
   confirmTitle?: string;
   confirmMessage?: string;
   isDark: boolean;
@@ -215,7 +214,6 @@ export const ExercisesScreen: React.FC = () => {
         setIsCreateOpen(false);
         setCreateName('');
         setExercises((prev) => [newEx, ...prev.filter((e) => e.id !== newEx.id)]);
-        Alert.alert('Успішно', `Приватну вправу «${cleanName}» створено!`);
 
         // 2. Secondary operation: background reload without causing creation failure alert
         loadExercises().catch((loadErr) => {
@@ -232,56 +230,53 @@ export const ExercisesScreen: React.FC = () => {
     }
   };
 
-
-
-  // Delete exercise directly without popup
-  const handleDeleteExercise = async (ex: Exercise) => {
-    const isOwner = ex.userId === user?.id;
-    if (!isOwner && !isAdmin) {
-      Alert.alert('Заборонено', 'Ви можете видаляти лише власні вправи');
-      return;
-    }
-
-    setExercises((prev) => prev.filter((item) => item.id !== ex.id));
-    try {
-      const ok = await ExerciseService.deleteExercise(ex.id, user?.id, isAdmin);
-      if (!ok) {
-        await loadExercises();
+  // Delete exercise with confirmation alert
+  const handleDeleteExercise = useCallback(
+    (ex: Exercise, onCancel?: () => void) => {
+      const isOwner = ex.userId === user?.id;
+      if (!isOwner && !isAdmin) {
+        Alert.alert('Заборонено', 'Ви можете видаляти лише власні вправи');
+        onCancel?.();
+        return;
       }
-    } catch {
-      await loadExercises();
-    }
-  };
 
-  const { showUndoToast } = useSwipeUndo();
+      Alert.alert(
+        'Видалити вправу?',
+        `Ви впевнені, що хочете видалити «${ex.name}»?`,
+        [
+          {
+            text: 'Скасувати',
+            style: 'cancel',
+            onPress: () => {
+              onCancel?.();
+            },
+          },
+          {
+            text: 'Видалити',
+            style: 'destructive',
+            onPress: async () => {
+              setExercises((prev) => prev.filter((item) => item.id !== ex.id));
+              try {
+                const ok = await ExerciseService.deleteExercise(ex.id, user?.id, isAdmin);
+                if (!ok) {
+                  await loadExercises();
+                }
+              } catch {
+                await loadExercises();
+              }
+            },
+          },
+        ]
+      );
+    },
+    [user?.id, isAdmin, loadExercises]
+  );
 
   const handleQuickDeleteExercise = useCallback(
-    (ex: Exercise) => {
-      if (!user) return;
-      const isOwner = ex.userId === user.id;
-      if (!isOwner && !isAdmin) return;
-
-      // Optimistic removal from state
-      setExercises((prev) => prev.filter((item) => item.id !== ex.id));
-
-      // Show Undo Toast with 5s countdown
-      showUndoToast({
-        id: ex.id,
-        title: ex.name,
-        type: 'exercise',
-        onUndo: () => {
-          setExercises((prev) => [ex, ...prev]);
-        },
-        onCommit: async () => {
-          try {
-            await ExerciseService.deleteExercise(ex.id, user.id, isAdmin);
-          } catch (e) {
-            console.error('[ExercisesScreen] Failed to delete exercise permanently:', e);
-          }
-        },
-      });
+    (ex: Exercise, onCancel?: () => void) => {
+      handleDeleteExercise(ex, onCancel);
     },
-    [user, isAdmin, showUndoToast]
+    [handleDeleteExercise]
   );
 
   return (
@@ -468,8 +463,8 @@ export const ExercisesScreen: React.FC = () => {
                   isDark={isDark}
                   disabled={!canEdit}
                   onEdit={canEdit ? () => handleOpenEdit(ex) : undefined}
-                  onDelete={() => handleDeleteExercise(ex)}
-                  onQuickDelete={() => handleQuickDeleteExercise(ex)}
+                  onDelete={(onCancel) => handleDeleteExercise(ex, onCancel)}
+                  onQuickDelete={(onCancel) => handleQuickDeleteExercise(ex, onCancel)}
                 >
                   <TouchableOpacity
                     activeOpacity={0.7}

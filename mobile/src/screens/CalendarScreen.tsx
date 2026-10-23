@@ -24,7 +24,6 @@ import { WorkoutService } from '../services/workoutService';
 import { TemplateService, WorkoutTemplate } from '../services/templateService';
 import { WorkoutPlan } from '../types/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
-import { useSwipeUndo } from '../context/SwipeUndoContext';
 import {
   UKRAINIAN_MONTHS,
   UKRAINIAN_WEEKDAYS_SHORT,
@@ -226,15 +225,19 @@ export const CalendarScreen: React.FC = () => {
     }
   };
 
-  const { showUndoToast } = useSwipeUndo();
-
-  const handleDeleteWorkout = (workout: WorkoutPlan) => {
+  const handleDeleteWorkout = (workout: WorkoutPlan, onCancel?: () => void) => {
     if (!user) return;
     Alert.alert(
       'Видалити тренування?',
       `Ви впевнені, що хочете видалити «${workout.title || 'це тренування'}»?`,
       [
-        { text: 'Скасувати', style: 'cancel' },
+        {
+          text: 'Скасувати',
+          style: 'cancel',
+          onPress: () => {
+            onCancel?.();
+          },
+        },
         {
           text: 'Видалити',
           style: 'destructive',
@@ -251,24 +254,8 @@ export const CalendarScreen: React.FC = () => {
     );
   };
 
-  const handleQuickDeleteWorkout = (workout: WorkoutPlan) => {
-    if (!user) return;
-    setWorkouts((prev) => prev.filter((w) => w.id !== workout.id));
-    showUndoToast({
-      id: workout.id,
-      title: workout.title || 'Тренування',
-      type: 'workout',
-      onUndo: () => {
-        setWorkouts((prev) => [workout, ...prev]);
-      },
-      onCommit: async () => {
-        try {
-          await WorkoutService.deleteWorkout(user.id, workout.id);
-        } catch (e) {
-          console.error('[CalendarScreen] Failed to delete workout permanently:', e);
-        }
-      },
-    });
+  const handleQuickDeleteWorkout = (workout: WorkoutPlan, onCancel?: () => void) => {
+    handleDeleteWorkout(workout, onCancel);
   };
 
   const handleBackToWorkouts = useCallback(() => {
@@ -526,10 +513,8 @@ export const CalendarScreen: React.FC = () => {
                     id={w.id}
                     isDark={isDark}
                     onEdit={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
-                    onDelete={() => handleDeleteWorkout(w)}
-                    onQuickDelete={() => handleQuickDeleteWorkout(w)}
-                    confirmTitle="Видалити тренування?"
-                    confirmMessage={`Ви впевнені, що хочете видалити тренування «${w.title || 'це тренування'}»?`}
+                    onDelete={(onCancel) => handleDeleteWorkout(w, onCancel)}
+                    onQuickDelete={(onCancel) => handleQuickDeleteWorkout(w, onCancel)}
                     editLabel="Редагувати"
                     deleteLabel="Видалити"
                   >
