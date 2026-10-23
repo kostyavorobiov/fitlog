@@ -34,6 +34,8 @@ import { formatLocalDate, formatDateDDMMYYYY } from '../utils/date';
 import { MonthGroup, getMonthKeyAndLabel } from './WorkoutsScreen';
 import { CreateWorkoutModal } from '../components/CreateWorkoutModal';
 import { WorkoutTemplate, TemplateService } from '../services/templateService';
+import { SwipeableActionCard } from '../components/SwipeableActionCard';
+import { useSwipeUndo } from '../context/SwipeUndoContext';
 
 export const TraineesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
@@ -42,6 +44,7 @@ export const TraineesScreen: React.FC = () => {
   const { user, isAdmin, isCoach, isLoading: isAuthLoading } = useAuth();
   const isTrainer = isCoach || isAdmin || user?.role === 'coach';
   const { handleScroll } = useScrollTabBar();
+  const { showUndoToast } = useSwipeUndo();
 
   const [trainees, setTrainees] = useState<User[]>([]);
   const [selectedTrainee, setSelectedTrainee] = useState<User | null>(null);
@@ -56,6 +59,14 @@ export const TraineesScreen: React.FC = () => {
   const [isCreatingWorkout, setIsCreatingWorkout] = useState<boolean>(false);
   const isCreatingWorkoutRef = React.useRef(false);
   const [openTraineeMonths, setOpenTraineeMonths] = useState<Record<string, boolean>>({});
+  const [expandedWorkoutIds, setExpandedWorkoutIds] = useState<Record<string, boolean>>({});
+
+  const traineeWorkoutsRef = useRef<WorkoutPlan[]>([]);
+  traineeWorkoutsRef.current = traineeWorkouts;
+  const selectedTraineeRef = useRef<User | null>(null);
+  selectedTraineeRef.current = selectedTrainee;
+  const isInitialLoadRef = useRef(true);
+  const currentTraineeIdRef = useRef<string | null>(null);
 
   const topBarAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
@@ -189,7 +200,13 @@ export const TraineesScreen: React.FC = () => {
         }
         if (prev) {
           const found = list.find((t) => t.id === prev.id);
-          return found || list[0] || null;
+          if (found) {
+            if (prev.id === found.id && prev.name === found.name && prev.email === found.email) {
+              return prev;
+            }
+            return found;
+          }
+          return list[0] || null;
         }
         return list[0] || null;
       });
@@ -202,13 +219,20 @@ export const TraineesScreen: React.FC = () => {
   }, [user?.id, isTrainer, paramTraineeId]);
 
   // Load workouts for selected trainee
-  const loadTraineeWorkouts = useCallback(async (traineeId: string) => {
+  const loadTraineeWorkouts = useCallback(async (traineeId: string, silent = false) => {
     if (!traineeId) {
       setTraineeWorkouts([]);
+      currentTraineeIdRef.current = null;
       return;
     }
 
-    setIsLoadingWorkouts(true);
+    const isDifferentTrainee = currentTraineeIdRef.current !== traineeId;
+    currentTraineeIdRef.current = traineeId;
+
+    // Only show full loading indicator if switching trainees or initial empty state with non-silent call
+    if (!silent && (isDifferentTrainee || traineeWorkoutsRef.current.length === 0)) {
+      setIsLoadingWorkouts(true);
+    }
     try {
       const data = await WorkoutService.getWorkouts(traineeId);
       setTraineeWorkouts(data);
@@ -221,17 +245,25 @@ export const TraineesScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      loadTrainees();
-    }, [loadTrainees])
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
+        loadTrainees();
+      } else {
+        // Silently refresh workouts in the background on return without any spinners or layout effects
+        if (selectedTraineeRef.current?.id) {
+          loadTraineeWorkouts(selectedTraineeRef.current.id, true);
+        }
+      }
+    }, [loadTrainees, loadTraineeWorkouts])
   );
 
   useEffect(() => {
-    if (selectedTrainee) {
+    if (selectedTrainee?.id) {
       loadTraineeWorkouts(selectedTrainee.id);
     } else {
       setTraineeWorkouts([]);
     }
-  }, [selectedTrainee, loadTraineeWorkouts]);
+  }, [selectedTrainee?.id, loadTraineeWorkouts]);
 
   useEffect(() => {
     if (paramTraineeId && trainees.length > 0) {
@@ -245,11 +277,11 @@ export const TraineesScreen: React.FC = () => {
   const onRefresh = useCallback(() => {
     setIsRefreshing(true);
     loadTrainees().then(() => {
-      if (selectedTrainee) {
-        loadTraineeWorkouts(selectedTrainee.id);
+      if (selectedTraineeRef.current) {
+        loadTraineeWorkouts(selectedTraineeRef.current.id, true);
       }
     });
-  }, [loadTrainees, selectedTrainee, loadTraineeWorkouts]);
+  }, [loadTrainees, loadTraineeWorkouts]);
 
   // Copy coach code to clipboard
   const handleCopyCoachCode = async () => {
@@ -391,34 +423,80 @@ export const TraineesScreen: React.FC = () => {
     }
   };
 
-  // Delete workout of trainee
-  const handleDeleteTraineeWorkout = (workout: WorkoutPlan) => {
-    if (!selectedTrainee) return;
-
-    Alert.alert(
-      'Видалити тренування?',
-      `Видалити «${workout.title || 'це тренування'}» для підопічного ${selectedTrainee.name}?`,
-      [
-        { text: 'Скасувати', style: 'cancel' },
-        {
-          text: 'Видалити',
-          style: 'destructive',
-          onPress: async () => {
-            const ok = await WorkoutService.deleteWorkout(
-              selectedTrainee.id,
-              workout.id,
-              user?.id
-            );
-            if (ok) {
-              await loadTraineeWorkouts(selectedTrainee.id);
-            } else {
-              Alert.alert('Помилка', 'Не вдалося видалити тренування');
-            }
-          },
-        },
-      ]
-    );
+  const toggleWorkoutExpand = (workoutId: string) => {
+    if (Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+    setExpandedWorkoutIds((prev) => ({
+      ...prev,
+      [workoutId]: !prev[workoutId],
+    }));
   };
+
+  // Quick delete trainee workout with undo toast (swipe all the way)
+  const handleQuickDeleteTraineeWorkout = useCallback(
+    (workout: WorkoutPlan) => {
+      if (!selectedTrainee) return;
+      setTraineeWorkouts((prev) => prev.filter((w) => w.id !== workout.id));
+      showUndoToast({
+        id: workout.id,
+        title: workout.title || 'Тренування',
+        type: 'workout',
+        onUndo: () => {
+          setTraineeWorkouts((prev) => [workout, ...prev]);
+        },
+        onCommit: async () => {
+          try {
+            await WorkoutService.deleteWorkout(selectedTrainee.id, workout.id, user?.id);
+          } catch (e) {
+            console.error('[TraineesScreen] Failed to delete trainee workout permanently:', e);
+          }
+        },
+      });
+    },
+    [selectedTrainee, showUndoToast, user?.id]
+  );
+
+  // Normal delete workout of trainee with alert confirmation
+  const handleDeleteTraineeWorkout = useCallback(
+    (workout: WorkoutPlan, onCancel?: () => void) => {
+      if (!selectedTrainee) return;
+
+      Alert.alert(
+        'Видалити тренування?',
+        `Видалити «${workout.title || 'це тренування'}» для підопічного ${selectedTrainee.name}?`,
+        [
+          {
+            text: 'Скасувати',
+            style: 'cancel',
+            onPress: () => onCancel?.(),
+          },
+          {
+            text: 'Видалити',
+            style: 'destructive',
+            onPress: async () => {
+              setTraineeWorkouts((prev) => prev.filter((w) => w.id !== workout.id));
+              try {
+                const ok = await WorkoutService.deleteWorkout(
+                  selectedTrainee.id,
+                  workout.id,
+                  user?.id
+                );
+                if (!ok) {
+                  setTraineeWorkouts((prev) => [workout, ...prev]);
+                  Alert.alert('Помилка', 'Не вдалося видалити тренування');
+                }
+              } catch (e) {
+                setTraineeWorkouts((prev) => [workout, ...prev]);
+                Alert.alert('Помилка', 'Помилка видалення');
+              }
+            },
+          },
+        ]
+      );
+    },
+    [selectedTrainee, user?.id]
+  );
 
   if (isAuthLoading) {
     return (
@@ -850,85 +928,138 @@ export const TraineesScreen: React.FC = () => {
                                   (acc, ex) => acc + (ex.sets?.length || 0),
                                   0
                                 );
+                                const isExpanded = Boolean(expandedWorkoutIds[w.id]);
 
                                 return (
-                                  <TouchableOpacity
+                                  <SwipeableActionCard
                                     key={w.id}
-                                    activeOpacity={0.7}
-                                    onPress={() =>
-                                      router.push({
-                                        pathname: '/workout/[id]',
-                                        params: { id: w.id, traineeId: selectedTrainee.id },
-                                      })
-                                    }
-                                    style={[
-                                      styles.workoutItem,
-                                      isDark ? styles.workoutItemDark : styles.workoutItemLight,
-                                    ]}
+                                    id={w.id}
+                                    isDark={isDark}
+                                    onDelete={(onCancel) => handleDeleteTraineeWorkout(w, onCancel)}
+                                    onQuickDelete={() => handleQuickDeleteTraineeWorkout(w)}
+                                    confirmTitle="Видалити тренування?"
+                                    confirmMessage={`Видалити «${w.title || 'це тренування'}» для підопічного ${selectedTrainee.name}?`}
                                   >
-                                    <View style={styles.workoutItemMain}>
-                                      <View style={styles.workoutItemHeader}>
-                                        <Text
-                                          numberOfLines={1}
-                                          style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
-                                        >
-                                          {w.title}
-                                        </Text>
-
-                                        <View
-                                          style={[
-                                            styles.statusBadge,
-                                            isCompleted
-                                              ? styles.statusCompleted
-                                              : isInProgress
-                                              ? styles.statusInProgress
-                                              : styles.statusPlanned,
-                                          ]}
-                                        >
-                                          <Text
-                                            style={[
-                                              styles.statusText,
-                                              isCompleted
-                                                ? styles.statusTextCompleted
-                                                : isInProgress
-                                                ? styles.statusTextInProgress
-                                                : styles.statusTextPlanned,
-                                            ]}
-                                          >
-                                            {isCompleted
-                                              ? 'Завершено'
-                                              : isInProgress
-                                              ? 'В процесі'
-                                              : 'Заплановано'}
-                                          </Text>
-                                        </View>
-                                      </View>
-
-                                      <View style={styles.workoutMetaRow}>
-                                        <View style={styles.metaItem}>
-                                          <Ionicons name="calendar-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
-                                          <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
-                                            {formatDateDDMMYYYY(w.scheduledDate)}
-                                          </Text>
-                                        </View>
-
-                                        <View style={styles.metaItem}>
-                                          <Ionicons name="barbell-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
-                                          <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
-                                            {exerciseCount} {exerciseCount === 1 ? 'вправа' : 'вправ'} ({setsCount} підх.)
-                                          </Text>
-                                        </View>
-                                      </View>
-                                    </View>
-
-                                    <TouchableOpacity
-                                      style={styles.workoutDeleteBtn}
-                                      onPress={() => handleDeleteTraineeWorkout(w)}
-                                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                    <View
+                                      style={[
+                                        styles.workoutItem,
+                                        isDark ? styles.workoutItemDark : styles.workoutItemLight,
+                                      ]}
                                     >
-                                      <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                                    </TouchableOpacity>
-                                  </TouchableOpacity>
+                                      <View style={styles.workoutItemTopRow}>
+                                        <TouchableOpacity
+                                          activeOpacity={0.7}
+                                          onPress={() =>
+                                            router.push({
+                                              pathname: '/workout/[id]',
+                                              params: { id: w.id, traineeId: selectedTrainee.id },
+                                            })
+                                          }
+                                          style={styles.workoutItemClickable}
+                                        >
+                                          <View style={styles.workoutItemMain}>
+                                            <View style={styles.workoutItemHeader}>
+                                              <Text
+                                                numberOfLines={1}
+                                                style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
+                                              >
+                                                {w.title}
+                                              </Text>
+
+                                              <View
+                                                style={[
+                                                  styles.statusBadge,
+                                                  isCompleted
+                                                    ? styles.statusCompleted
+                                                    : isInProgress
+                                                    ? styles.statusInProgress
+                                                    : styles.statusPlanned,
+                                                ]}
+                                              >
+                                                <Text
+                                                  style={[
+                                                    styles.statusText,
+                                                    isCompleted
+                                                      ? styles.statusTextCompleted
+                                                      : isInProgress
+                                                      ? styles.statusTextInProgress
+                                                      : styles.statusTextPlanned,
+                                                  ]}
+                                                >
+                                                  {isCompleted
+                                                    ? 'Завершено'
+                                                    : isInProgress
+                                                    ? 'В процесі'
+                                                    : 'Заплановано'}
+                                                </Text>
+                                              </View>
+                                            </View>
+
+                                            <View style={styles.workoutMetaRow}>
+                                              <View style={styles.metaItem}>
+                                                <Ionicons name="calendar-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
+                                                <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
+                                                  {formatDateDDMMYYYY(w.scheduledDate)}
+                                                </Text>
+                                              </View>
+
+                                              <View style={styles.metaItem}>
+                                                <Ionicons name="barbell-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
+                                                <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
+                                                  {exerciseCount} {exerciseCount === 1 ? 'вправа' : 'вправ'} ({setsCount} підх.)
+                                                </Text>
+                                              </View>
+                                            </View>
+                                          </View>
+                                        </TouchableOpacity>
+
+                                        {/* Expand Exercises Button (replaces delete trash icon) */}
+                                        {exerciseCount > 0 && (
+                                          <TouchableOpacity
+                                            style={styles.workoutExpandBtn}
+                                            onPress={() => toggleWorkoutExpand(w.id)}
+                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                            accessibilityRole="button"
+                                            accessibilityLabel={isExpanded ? 'Згорнути перелік вправ' : 'Розгорнути перелік вправ'}
+                                          >
+                                            <Ionicons
+                                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                                              size={18}
+                                              color={isDark ? '#94A3B8' : '#64748B'}
+                                            />
+                                          </TouchableOpacity>
+                                        )}
+                                      </View>
+
+                                      {/* Expanded Exercise Badges List matching user screenshot */}
+                                      {isExpanded && (w.exercises || []).length > 0 && (
+                                        <View style={styles.exerciseBadgesWrap}>
+                                          {(w.exercises || []).map((we, idx) => {
+                                            const exName = we.exerciseName || 'Вправа';
+                                            const setCount = we.sets?.length || 0;
+                                            return (
+                                              <View
+                                                key={we.id || `${w.id}-ex-${idx}`}
+                                                style={[
+                                                  styles.exerciseBadge,
+                                                  isDark ? styles.exerciseBadgeDark : styles.exerciseBadgeLight,
+                                                ]}
+                                              >
+                                                <Text
+                                                  style={[
+                                                    styles.exerciseBadgeText,
+                                                    isDark ? styles.exerciseBadgeTextDark : styles.exerciseBadgeTextLight,
+                                                  ]}
+                                                >
+                                                  {exName} ({setCount})
+                                                </Text>
+                                              </View>
+                                            );
+                                          })}
+                                        </View>
+                                      )}
+                                    </View>
+                                  </SwipeableActionCard>
                                 );
                               })}
                             </View>
@@ -1353,12 +1484,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   workoutItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 14,
     borderRadius: 18,
     borderWidth: 1,
-    gap: 10,
+    marginBottom: 8,
   },
   workoutItemLight: {
     backgroundColor: '#ffffff',
@@ -1368,8 +1497,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#1d2939',
     borderColor: '#334155',
   },
-  workoutItemMain: {
+  workoutItemTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  workoutItemClickable: {
     flex: 1,
+    minWidth: 0,
+  },
+  workoutItemMain: {
     gap: 4,
   },
   workoutItemHeader: {
@@ -1423,8 +1560,45 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 11,
   },
-  workoutDeleteBtn: {
+  workoutExpandBtn: {
     padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  exerciseBadgesWrap: {
+    width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingTop: 10,
+    marginTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(148, 163, 184, 0.25)',
+  },
+  exerciseBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+  },
+  exerciseBadgeLight: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
+  },
+  exerciseBadgeDark: {
+    backgroundColor: '#1E293B',
+    borderColor: '#334155',
+  },
+  exerciseBadgeText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  exerciseBadgeTextLight: {
+    color: '#0F172A',
+  },
+  exerciseBadgeTextDark: {
+    color: '#F8FAFC',
   },
   centerContainer: {
     padding: 30,

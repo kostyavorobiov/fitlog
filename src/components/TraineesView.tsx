@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 import { getMonthKeyAndLabel, formatDateDDMMYY, MonthGroup } from './WorkoutListView';
+import { MobileSwipeableWorkoutCard } from './MobileSwipeableWorkoutCard';
 
 interface TraineesViewProps {
   coach: User;
@@ -50,6 +51,15 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
   const [traineeToRemove, setTraineeToRemove] = useState<User | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [expandedWorkoutIds, setExpandedWorkoutIds] = useState<Record<string, boolean>>({});
+
+  const toggleWorkoutExpand = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setExpandedWorkoutIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const handlePrevTrainee = () => {
     if (!selectedTrainee || trainees.length <= 1) return;
@@ -593,48 +603,87 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                   0
                                 );
 
+                                const isExpanded = Boolean(expandedWorkoutIds[w.id]);
+
                                 return (
-                                  <div
+                                  <MobileSwipeableWorkoutCard
                                     key={w.id}
-                                    className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-950/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+                                    workoutId={w.id}
+                                    onDelete={() => setWorkoutToDelete(w)}
                                   >
-                                    <div className="space-y-1 min-w-0 flex-1">
-                                      <div className="flex items-center space-x-2 text-xs">
-                                        <span
-                                          className={`font-semibold ${
-                                            isCompleted
-                                              ? 'text-[#22C55E]'
-                                              : w.status === 'in_progress'
-                                              ? 'text-[#60A5FA]'
-                                              : 'text-slate-500 dark:text-zinc-400'
-                                          }`}
+                                    <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-[#1d2939] p-4 flex flex-col gap-2.5 shadow-xs transition-colors">
+                                      <div className="flex items-center justify-between gap-3">
+                                        <div
+                                          onClick={() => onOpenWorkoutEditor(w, selectedTrainee)}
+                                          className="space-y-1 min-w-0 flex-1 cursor-pointer"
                                         >
-                                          {isCompleted
-                                            ? 'Завершено'
-                                            : w.status === 'in_progress'
-                                            ? 'У процесі'
-                                            : 'Заплановано'}
-                                        </span>
-                                        <span className="text-slate-300 dark:text-zinc-700">·</span>
-                                        <span className="flex items-center space-x-1 text-slate-500 dark:text-zinc-400 font-mono text-xs">
-                                          <Calendar className="h-3 w-3" />
-                                          <span>{formatDateDDMMYY(w.scheduledDate)}</span>
-                                        </span>
+                                          <div className="flex items-center space-x-2 text-xs">
+                                            <span
+                                              className={`font-semibold ${
+                                                isCompleted
+                                                  ? 'text-[#22C55E]'
+                                                  : w.status === 'in_progress'
+                                                  ? 'text-[#60A5FA]'
+                                                  : 'text-slate-500 dark:text-zinc-400'
+                                              }`}
+                                            >
+                                              {isCompleted
+                                                ? 'Завершено'
+                                                : w.status === 'in_progress'
+                                                ? 'У процесі'
+                                                : 'Заплановано'}
+                                            </span>
+                                            <span className="text-slate-300 dark:text-zinc-700">·</span>
+                                            <span className="flex items-center space-x-1 text-slate-500 dark:text-zinc-400 font-mono text-xs">
+                                              <Calendar className="h-3 w-3" />
+                                              <span>{formatDateDDMMYY(w.scheduledDate)}</span>
+                                            </span>
+                                          </div>
+
+                                          <h4 className="text-sm font-bold text-slate-900 dark:text-zinc-100 truncate">
+                                            {w.title || 'Тренування без назви'}
+                                          </h4>
+
+                                          <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-zinc-400">
+                                            <span>{exercisesCount} вправ</span>
+                                            <span className="text-slate-300 dark:text-zinc-700">·</span>
+                                            <span>{setsCount} підходів</span>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center space-x-2 shrink-0">
+                                          {/* Expand / Collapse Exercises Button */}
+                                          {exercisesCount > 0 && (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => toggleWorkoutExpand(w.id, e)}
+                                              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                                              title={isExpanded ? 'Згорнути перелік вправ' : 'Розгорнути перелік вправ'}
+                                              aria-label={isExpanded ? 'Згорнути перелік вправ' : 'Розгорнути перелік вправ'}
+                                            >
+                                              <ChevronDown
+                                                className={`h-4 w-4 transition-transform duration-200 ${
+                                                  isExpanded ? 'rotate-180' : ''
+                                                }`}
+                                              />
+                                            </button>
+                                          )}
+
+                                          {/* Open WorkoutEditor with this trainee's workout */}
+                                          <button
+                                            type="button"
+                                            onClick={() => onOpenWorkoutEditor(w, selectedTrainee)}
+                                            className="inline-flex items-center space-x-1.5 rounded-xl bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-200/80 dark:border-zinc-700/60 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-zinc-200 transition-colors shadow-xs cursor-pointer"
+                                          >
+                                            <Edit3 className="h-3.5 w-3.5" />
+                                            <span className="hidden sm:inline">Редагувати план</span>
+                                          </button>
+                                        </div>
                                       </div>
 
-                                      <h4 className="text-sm font-bold text-slate-900 dark:text-zinc-100 truncate">
-                                        {w.title || 'Тренування без назви'}
-                                      </h4>
-
-                                      <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-zinc-400">
-                                        <span>{exercisesCount} вправ</span>
-                                        <span className="text-slate-300 dark:text-zinc-700">·</span>
-                                        <span>{setsCount} підходів</span>
-                                      </div>
-
-                                      {/* Exercises Names Preview */}
-                                      {(w.exercises || []).length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 pt-1">
+                                      {/* Expandable Exercise Badges matching screenshot */}
+                                      {isExpanded && (w.exercises || []).length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 pt-2.5 border-t border-slate-200/80 dark:border-zinc-800 animate-fade-in">
                                           {(w.exercises || []).map((we, idx) => {
                                             const ex = StorageService.getExerciseById(we.exerciseId);
                                             const exName = (we.exerciseName && we.exerciseName !== 'Вправа')
@@ -643,7 +692,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                             return (
                                               <span
                                                 key={idx}
-                                                className="rounded-md border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-800/80 px-2 py-0.5 text-[11px] text-slate-700 dark:text-zinc-300 font-medium"
+                                                className="rounded-[10px] border border-slate-200 dark:border-slate-700 bg-[#f1f5f9] dark:bg-[#1e293b] px-2.5 py-1 text-xs text-slate-900 dark:text-slate-100 font-medium"
                                               >
                                                 {exName} ({we.sets?.length || 0})
                                               </span>
@@ -652,28 +701,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                         </div>
                                       )}
                                     </div>
-
-                                    <div className="flex items-center space-x-2 shrink-0">
-                                      <button
-                                        type="button"
-                                        onClick={() => setWorkoutToDelete(w)}
-                                        className="p-2 rounded-2xl text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                                        title="Видалити тренування"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-
-                                      {/* Open WorkoutEditor with this trainee's workout */}
-                                      <button
-                                        type="button"
-                                        onClick={() => onOpenWorkoutEditor(w, selectedTrainee)}
-                                        className="inline-flex items-center space-x-1.5 rounded-xl bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-200/80 dark:border-zinc-700/60 px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-zinc-200 transition-colors shadow-xs cursor-pointer"
-                                      >
-                                        <Edit3 className="h-3.5 w-3.5" />
-                                        <span>Редагувати план</span>
-                                      </button>
-                                    </div>
-                                  </div>
+                                  </MobileSwipeableWorkoutCard>
                                 );
                               })}
                             </div>
