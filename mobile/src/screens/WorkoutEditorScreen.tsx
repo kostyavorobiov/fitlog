@@ -1553,7 +1553,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                   onChangeExercise={() => handleChangeExercise(ex.id)}
                   isDark={isDark}
                 >
-                  <Card style={[styles.exerciseCard, { overflow: 'hidden' }]}>
+                  <View style={[styles.exerciseCard, { overflow: 'hidden' }]}>
                     {/* Superset Full Height Left Stripe */}
                     {isSuperset && palette && (
                       <View
@@ -1870,7 +1870,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                         </TouchableOpacity>
                       </>
                     )}
-                  </Card>
+                  </View>
                 </SwipeableExerciseCard>
               </View>
             );
@@ -2430,7 +2430,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   exerciseCardWrap: {
-    borderRadius: 18,
+    borderRadius: 20,
   },
   swipeContainer: {
     position: 'relative',
@@ -2479,8 +2479,9 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   exerciseCard: {
-    padding: 12,
+    padding: 14,
     gap: 10,
+    borderRadius: 19,
   },
   exHeader: {
     gap: 6,
