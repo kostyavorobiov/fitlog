@@ -12,6 +12,7 @@ import {
   Platform,
   Modal,
   Animated,
+  Easing,
   PanResponder,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -402,60 +403,82 @@ export const WorkoutEditorScreen: React.FC = () => {
 
   const topBarAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
-  const [isTopBarVisible, setIsTopBarVisible] = useState(true);
+  const isTopBarVisibleRef = useRef(true);
+  const accumulatedDown = useRef(0);
+  const accumulatedUp = useRef(0);
   const [topBarHeight, setTopBarHeight] = useState(56);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const currentY = event.nativeEvent.contentOffset.y;
+      const contentHeight = event.nativeEvent.contentSize?.height || 0;
+      const layoutHeight = event.nativeEvent.layoutMeasurement?.height || 0;
       const diff = currentY - lastScrollY.current;
+      lastScrollY.current = currentY;
 
-      // Always show when near the top
-      if (currentY <= 15) {
-        if (!isTopBarVisible) {
-          setIsTopBarVisible(true);
-          Animated.spring(topBarAnim, {
+      // Always show when near the top (and ignore top overscroll bounce)
+      if (currentY <= 25) {
+        accumulatedDown.current = 0;
+        accumulatedUp.current = 0;
+        if (!isTopBarVisibleRef.current) {
+          isTopBarVisibleRef.current = true;
+          Animated.timing(topBarAnim, {
             toValue: 0,
-            tension: 85,
-            friction: 14,
-            overshootClamping: true,
-            useNativeDriver: false,
+            duration: 200,
+            easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+            useNativeDriver: Platform.OS !== 'web',
           }).start();
         }
-        lastScrollY.current = currentY;
         return;
       }
 
-      // Scrolling down -> hide top bar on minimal swipe
-      if ((diff > 8 || diff > 2) && currentY > 15) {
-        if (isTopBarVisible) {
-          setIsTopBarVisible(false);
-          Animated.spring(topBarAnim, {
-            toValue: 1,
-            tension: 85,
-            friction: 14,
-            overshootClamping: true,
-            useNativeDriver: false,
-          }).start();
-        }
-      }
-      // Scrolling up -> show top bar immediately
-      else if (diff < -6) {
-        if (!isTopBarVisible) {
-          setIsTopBarVisible(true);
-          Animated.spring(topBarAnim, {
-            toValue: 0,
-            tension: 85,
-            friction: 14,
-            overshootClamping: true,
-            useNativeDriver: false,
-          }).start();
-        }
+      // Check if past or at bottom overscroll on iOS
+      const maxScrollY = contentHeight > layoutHeight ? contentHeight - layoutHeight : 0;
+      const isPastBottom = maxScrollY > 0 && currentY >= maxScrollY;
+      if (isPastBottom) {
+        accumulatedDown.current = 0;
+        accumulatedUp.current = 0;
+        return;
       }
 
-      lastScrollY.current = currentY;
+      // Hysteresis calculation to prevent rapid flickering / jumping:
+      if (diff > 0) {
+        // Scrolling down (finger swiping up)
+        accumulatedUp.current = 0;
+        accumulatedDown.current += diff;
+
+        if (accumulatedDown.current > 12 && currentY > 25) {
+          if (isTopBarVisibleRef.current) {
+            isTopBarVisibleRef.current = false;
+            Animated.timing(topBarAnim, {
+              toValue: 1,
+              duration: 200,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+              useNativeDriver: Platform.OS !== 'web',
+            }).start();
+          }
+          accumulatedDown.current = 0;
+        }
+      } else if (diff < 0) {
+        // Scrolling up (finger swiping down)
+        accumulatedDown.current = 0;
+        accumulatedUp.current += Math.abs(diff);
+
+        if (accumulatedUp.current > 16) {
+          if (!isTopBarVisibleRef.current) {
+            isTopBarVisibleRef.current = true;
+            Animated.timing(topBarAnim, {
+              toValue: 0,
+              duration: 200,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+              useNativeDriver: Platform.OS !== 'web',
+            }).start();
+          }
+          accumulatedUp.current = 0;
+        }
+      }
     },
-    [isTopBarVisible, topBarAnim]
+    [topBarAnim]
   );
 
   // Load workout details
@@ -1396,94 +1419,6 @@ export const WorkoutEditorScreen: React.FC = () => {
   return (
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBack}>
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      {/* Top Header Bar */}
-      <Animated.View
-        style={{
-          width: '100%',
-          height: topBarAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [topBarHeight, 0],
-          }),
-          overflow: 'hidden',
-        }}
-      >
-        <Animated.View
-          onLayout={(e) => {
-            const h = e.nativeEvent.layout.height;
-            if (h > 0 && Math.abs(h - topBarHeight) > 2) {
-              setTopBarHeight(h);
-            }
-          }}
-          style={[
-            styles.topBar,
-            isDark ? styles.borderDark : styles.borderLight,
-            {
-              transform: [{
-                translateY: topBarAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -topBarHeight],
-                }),
-              }],
-            },
-          ]}
-        >
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={handleBack}
-            style={styles.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Назад"
-          >
-            <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
-          </TouchableOpacity>
-
-          <View style={styles.headerCenter}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                setEditTitleValue(workout.title || 'Тренування');
-                setIsEditTitleModalOpen(true);
-              }}
-              style={styles.headerTitleRow}
-              accessibilityRole="button"
-              accessibilityLabel="Редагувати назву тренування"
-            >
-              <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
-                {workout.title || 'Тренування'}
-              </Text>
-              <Ionicons name="pencil" size={13} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 5 }} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => setIsDatePickerOpen(true)}
-              style={styles.headerDateRow}
-              accessibilityRole="button"
-              accessibilityLabel="Вибрати дату тренування"
-            >
-              <Text style={[styles.topBarDateText, isDark ? styles.subDark : styles.subLight]}>
-                {formatDateDDMMYYYY(workout.scheduledDate)}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.headerRightActions}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                setTemplateName(workout.title || 'Моє тренування');
-                setIsTemplateModalOpen(true);
-              }}
-              style={styles.iconBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Зберегти як шаблон"
-            >
-              <Ionicons name="bookmark-outline" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </Animated.View>
-
       <DatePickerModal
         visible={isDatePickerOpen}
         selectedDate={workout.scheduledDate}
@@ -1505,7 +1440,7 @@ export const WorkoutEditorScreen: React.FC = () => {
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.contentScroll,
-            { paddingBottom: 40 + Math.max(insets.bottom, 16) },
+            { paddingTop: topBarHeight + 10, paddingBottom: 40 + Math.max(insets.bottom, 16) },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -2115,6 +2050,86 @@ export const WorkoutEditorScreen: React.FC = () => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Instagram-style Floating Top Header Bar */}
+      <Animated.View
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          if (h > 0 && Math.abs(h - topBarHeight) > 2) {
+            setTopBarHeight(h);
+          }
+        }}
+        style={[
+          styles.topBar,
+          isDark ? styles.borderDark : styles.borderLight,
+          isDark ? styles.topBarDark : styles.topBarLight,
+          Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
+          {
+            transform: [{
+              translateY: topBarAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, -topBarHeight],
+                extrapolate: 'clamp',
+              }),
+            }],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleBack}
+          style={styles.iconBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Назад"
+        >
+          <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              setEditTitleValue(workout.title || 'Тренування');
+              setIsEditTitleModalOpen(true);
+            }}
+            style={styles.headerTitleRow}
+            accessibilityRole="button"
+            accessibilityLabel="Редагувати назву тренування"
+          >
+            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+              {workout.title || 'Тренування'}
+            </Text>
+            <Ionicons name="pencil" size={13} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 5 }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setIsDatePickerOpen(true)}
+            style={styles.headerDateRow}
+            accessibilityRole="button"
+            accessibilityLabel="Вибрати дату тренування"
+          >
+            <Text style={[styles.topBarDateText, isDark ? styles.subDark : styles.subLight]}>
+              {formatDateDDMMYYYY(workout.scheduledDate)}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              setTemplateName(workout.title || 'Моє тренування');
+              setIsTemplateModalOpen(true);
+            }}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Зберегти як шаблон"
+          >
+            <Ionicons name="bookmark-outline" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
       </SafeAreaView>
     </ScreenGestureWrapper>
   );
@@ -2147,12 +2162,25 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
+  },
+  topBarLight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderBottomColor: '#E2E8F0',
+  },
+  topBarDark: {
+    backgroundColor: 'rgba(11, 18, 32, 0.95)',
+    borderBottomColor: '#334155',
   },
   iconBtn: {
     padding: 6,

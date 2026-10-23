@@ -284,22 +284,6 @@ export const ExercisesScreen: React.FC = () => {
       edges={['top']}
       style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}
     >
-      <Header
-        title="База вправ"
-        rightAction={
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleOpenCreateModal}
-            style={styles.webAddBtn}
-          >
-            <Ionicons name="add" size={16} color="#ffffff" />
-            <Text style={styles.webAddBtnText}>
-              Додати
-            </Text>
-          </TouchableOpacity>
-        }
-      />
-
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -500,6 +484,23 @@ export const ExercisesScreen: React.FC = () => {
         )}
       </ScrollView>
 
+      {/* Floating Header */}
+      <Header
+        title="База вправ"
+        rightAction={
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleOpenCreateModal}
+            style={styles.webAddBtn}
+          >
+            <Ionicons name="add" size={16} color="#ffffff" />
+            <Text style={styles.webAddBtnText}>
+              Додати
+            </Text>
+          </TouchableOpacity>
+        }
+      />
+
       {/* CREATE MODAL */}
       <Modal
         visible={isCreateOpen}
@@ -629,6 +630,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingTop: 68,
     gap: 14,
     paddingBottom: 110,
   },

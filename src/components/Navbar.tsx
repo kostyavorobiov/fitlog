@@ -51,6 +51,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   useEffect(() => {
     let ticking = false;
     let suppressHideUntil = 0;
+    let accumulatedDown = 0;
+    let accumulatedUp = 0;
 
     const handleScroll = () => {
       if (!ticking) {
@@ -65,7 +67,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               isNavVisibleRef.current = true;
               setIsNavVisible(true);
             }
-            accumulatedDelta = 0;
+            accumulatedDown = 0;
+            accumulatedUp = 0;
             lastScrollY.current = Math.max(0, currentScrollY);
             ticking = false;
             return;
@@ -73,19 +76,34 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           // Prevent rubber-band bounce at bottom in iOS Safari / Chrome from showing navbar
           const isNearBottomBounce = maxScrollY > 0 && currentScrollY >= maxScrollY - 5;
+          if (isNearBottomBounce) {
+            accumulatedDown = 0;
+            accumulatedUp = 0;
+            lastScrollY.current = currentScrollY;
+            ticking = false;
+            return;
+          }
 
           const now = Date.now();
-          if (diff > 2) {
-            // Scrolling down the page (swiping up) -> hide navbar on minimal swipe
-            if (isNavVisibleRef.current && now >= suppressHideUntil) {
+          if (diff > 0) {
+            // Scrolling down the page (swiping up)
+            accumulatedUp = 0;
+            accumulatedDown += diff;
+            if (accumulatedDown > 12 && isNavVisibleRef.current && now >= suppressHideUntil) {
               isNavVisibleRef.current = false;
               setIsNavVisible(false);
+              accumulatedDown = 0;
             }
-          } else if (diff < -6 && !isNearBottomBounce) {
-            // Scrolling up the page (swiping down) -> show navbar immediately
-            if (!isNavVisibleRef.current) {
-              isNavVisibleRef.current = true;
-              setIsNavVisible(true);
+          } else if (diff < 0) {
+            // Scrolling up the page (swiping down)
+            accumulatedDown = 0;
+            accumulatedUp += Math.abs(diff);
+            if (accumulatedUp > 16) {
+              if (!isNavVisibleRef.current) {
+                isNavVisibleRef.current = true;
+                setIsNavVisible(true);
+              }
+              accumulatedUp = 0;
             }
           }
 

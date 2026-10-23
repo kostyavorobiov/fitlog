@@ -162,74 +162,73 @@ export const Header: React.FC<HeaderProps> = ({
   showBack = false,
   onBack,
 }) => {
+  const { isDark } = useTheme();
   const { headerAnim } = useScrollTabBar();
   const [measuredHeight, setMeasuredHeight] = useState(subtitle ? 100 : 56);
 
-  // Instagram-style animation:
-  // 1. Container smoothly collapses height so page content glides upward without jumps
-  // 2. Inner header translates vertically (translateY) as one solid piece without squishing
-  const containerHeight = headerAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [measuredHeight, 0],
-  });
-
+  // Pure Instagram-style translation:
+  // Runs 100% on native driver without modifying layout dimensions or causing ScrollView frame resizing
   const translateY = headerAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, -measuredHeight],
+    extrapolate: 'clamp',
   });
 
   return (
     <Animated.View
+      onLayout={(e) => {
+        const h = e.nativeEvent.layout.height;
+        if (h > 0 && Math.abs(h - measuredHeight) > 2) {
+          setMeasuredHeight(h);
+        }
+      }}
       style={[
         styles.wrapper,
+        isDark ? styles.wrapperDark : styles.wrapperLight,
+        Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
         {
-          height: containerHeight,
-          overflow: 'hidden',
+          transform: [{ translateY }],
         },
       ]}
     >
-      <Animated.View
-        onLayout={(e) => {
-          const h = e.nativeEvent.layout.height;
-          if (h > 0 && Math.abs(h - measuredHeight) > 2) {
-            setMeasuredHeight(h);
-          }
-        }}
-        style={[
-          styles.innerContainer,
-          {
-            transform: [{ translateY }],
-          },
-        ]}
-      >
-        {!hideTopNavbar && (
-          <WebTopNavbar
-            title={title}
-            onLogoPress={onLogoPress}
-            rightAction={!subtitle ? rightAction : undefined}
-            showBack={showBack}
-            onBack={onBack}
+      {!hideTopNavbar && (
+        <WebTopNavbar
+          title={title}
+          onLogoPress={onLogoPress}
+          rightAction={!subtitle ? rightAction : undefined}
+          showBack={showBack}
+          onBack={onBack}
+        />
+      )}
+      {subtitle ? (
+        <View style={styles.sectionContainer}>
+          <SectionHeader
+            subtitle={subtitle}
+            rightAction={rightAction}
           />
-        )}
-        {subtitle ? (
-          <View style={styles.sectionContainer}>
-            <SectionHeader
-              subtitle={subtitle}
-              rightAction={rightAction}
-            />
-          </View>
-        ) : null}
-      </Animated.View>
+        </View>
+      ) : null}
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   wrapper: {
-    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
   },
-  innerContainer: {
-    width: '100%',
+  wrapperLight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  wrapperDark: {
+    backgroundColor: 'rgba(11, 18, 32, 0.95)',
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
   },
   topNavbar: {
     height: 56,
@@ -237,15 +236,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomWidth: 1,
   },
   topNavbarLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderBottomColor: '#E2E8F0',
+    backgroundColor: 'transparent',
   },
   topNavbarDark: {
-    backgroundColor: 'rgba(11, 18, 32, 0.95)',
-    borderBottomColor: '#334155',
+    backgroundColor: 'transparent',
   },
   navLeft: {
     flexDirection: 'row',

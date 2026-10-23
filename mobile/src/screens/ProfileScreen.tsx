@@ -230,18 +230,11 @@ export const ProfileScreen: React.FC = () => {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      <Header
-        title="Профіль"
-        subtitle="Обліковий запис та налаштування"
-        showAvatar={false}
-      />
-
       <ScrollView
-        contentContainerStyle={[styles.content, { minHeight: '101%', paddingBottom: 130 }]}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        alwaysBounceVertical={true}
       >
         {/* 1. Main Profile Card */}
         <Card style={styles.profileCard}>
@@ -592,6 +585,13 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.logoutBtnText}>Вийти з акаунта</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Floating Header */}
+      <Header
+        title="Профіль"
+        subtitle="Обліковий запис та налаштування"
+        showAvatar={false}
+      />
     </SafeAreaView>
   );
 };
@@ -602,8 +602,9 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingTop: 112,
     gap: 16,
-    paddingBottom: 110,
+    paddingBottom: 130,
   },
   centerContainer: {
     flex: 1,

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useRef, useState, useCallback } from 'react';
+import React, { createContext, useContext, useRef, useCallback } from 'react';
 import {
   Animated,
+  Easing,
   NativeSyntheticEvent,
   NativeScrollEvent,
   Platform,
@@ -17,30 +18,29 @@ interface ScrollTabBarContextType {
 const ScrollTabBarContext = createContext<ScrollTabBarContextType | undefined>(undefined);
 
 export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isTabBarVisible, setIsTabBarVisibleState] = useState(true);
   const isTabBarVisibleRef = useRef(true);
   const translateY = useRef(new Animated.Value(0)).current;
   const headerAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
+  const accumulatedDown = useRef(0);
+  const accumulatedUp = useRef(0);
 
   const setTabBarVisible = useCallback((visible: boolean) => {
+    if (isTabBarVisibleRef.current === visible) return;
     isTabBarVisibleRef.current = visible;
-    setIsTabBarVisibleState(visible);
 
-    Animated.spring(translateY, {
+    Animated.timing(translateY, {
       toValue: visible ? 0 : 120,
+      duration: 200,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       useNativeDriver: Platform.OS !== 'web',
-      overshootClamping: true,
-      tension: 85,
-      friction: 14,
     }).start();
 
-    Animated.spring(headerAnim, {
+    Animated.timing(headerAnim, {
       toValue: visible ? 0 : 1,
-      tension: 85,
-      friction: 14,
-      overshootClamping: true,
-      useNativeDriver: false,
+      duration: 200,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      useNativeDriver: Platform.OS !== 'web',
     }).start();
   }, [translateY, headerAnim]);
 
@@ -50,34 +50,51 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const contentHeight = event.nativeEvent.contentSize?.height || 0;
       const layoutHeight = event.nativeEvent.layoutMeasurement?.height || 0;
       const diff = currentY - lastScrollY.current;
+      lastScrollY.current = currentY;
 
       // Always show when near the top (and ignore top overscroll bounce)
-      if (currentY <= 15) {
+      if (currentY <= 25) {
+        accumulatedDown.current = 0;
+        accumulatedUp.current = 0;
         if (!isTabBarVisibleRef.current) {
           setTabBarVisible(true);
         }
-        lastScrollY.current = Math.max(0, currentY);
         return;
       }
 
       // Check if past or at bottom overscroll on iOS
       const maxScrollY = contentHeight > layoutHeight ? contentHeight - layoutHeight : 0;
       const isPastBottom = maxScrollY > 0 && currentY >= maxScrollY;
-
-      // Scrolling down -> hide tab bar and top navbar on minimal swipe
-      if ((diff > 8 || diff > 2) && currentY > 15) {
-        if (isTabBarVisibleRef.current) {
-          setTabBarVisible(false);
-        }
-      }
-      // Scrolling up -> show tab bar and top navbar immediately (ignore rubber-band bounce from past bottom)
-      else if (diff < -6 && !isPastBottom) {
-        if (!isTabBarVisibleRef.current) {
-          setTabBarVisible(true);
-        }
+      if (isPastBottom) {
+        accumulatedDown.current = 0;
+        accumulatedUp.current = 0;
+        return;
       }
 
-      lastScrollY.current = currentY;
+      // Hysteresis calculation to prevent rapid flickering / jumping:
+      if (diff > 0) {
+        // Scrolling down (finger swiping up)
+        accumulatedUp.current = 0;
+        accumulatedDown.current += diff;
+
+        if (accumulatedDown.current > 12 && currentY > 25) {
+          if (isTabBarVisibleRef.current) {
+            setTabBarVisible(false);
+          }
+          accumulatedDown.current = 0;
+        }
+      } else if (diff < 0) {
+        // Scrolling up (finger swiping down)
+        accumulatedDown.current = 0;
+        accumulatedUp.current += Math.abs(diff);
+
+        if (accumulatedUp.current > 16) {
+          if (!isTabBarVisibleRef.current) {
+            setTabBarVisible(true);
+          }
+          accumulatedUp.current = 0;
+        }
+      }
     },
     [setTabBarVisible]
   );
@@ -85,7 +102,7 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
   return (
     <ScrollTabBarContext.Provider
       value={{
-        isTabBarVisible,
+        isTabBarVisible: isTabBarVisibleRef.current,
         setTabBarVisible,
         translateY,
         headerAnim,
