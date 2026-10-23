@@ -197,7 +197,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                     if (Date.now() < blockHistoryModalUntilRef.current) return;
                     setHistoryModalExercise(ex);
                   }}
-                  className="group rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 hover:border-slate-300 dark:hover:border-zinc-700 transition-colors cursor-pointer flex flex-col justify-between h-full shadow-xs"
+                  className="group bg-white dark:bg-zinc-900 p-4 transition-colors cursor-pointer flex flex-col justify-between h-full"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-1.5">

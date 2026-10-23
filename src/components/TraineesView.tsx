@@ -611,7 +611,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                     workoutId={w.id}
                                     onDelete={() => setWorkoutToDelete(w)}
                                   >
-                                    <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-[#1d2939] p-4 flex flex-col gap-2.5 shadow-xs transition-colors">
+                                    <div className="p-4 flex flex-col gap-2.5 transition-colors bg-white dark:bg-[#1d2939]">
                                       <div className="flex items-center justify-between gap-3">
                                         <div
                                           onClick={() => onOpenWorkoutEditor(w, selectedTrainee)}
