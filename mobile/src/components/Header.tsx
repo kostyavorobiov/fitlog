@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
@@ -164,7 +165,9 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { isDark } = useTheme();
   const { headerAnim } = useScrollTabBar();
-  const [measuredHeight, setMeasuredHeight] = useState(subtitle ? 100 : 56);
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, 0);
+  const [measuredHeight, setMeasuredHeight] = useState((subtitle ? 100 : 56) + topInset);
 
   // Pure Instagram-style translation:
   // Runs 100% on native driver without modifying layout dimensions or causing ScrollView frame resizing
@@ -187,6 +190,7 @@ export const Header: React.FC<HeaderProps> = ({
         isDark ? styles.wrapperDark : styles.wrapperLight,
         Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
         {
+          paddingTop: topInset,
           transform: [{ translateY }],
         },
       ]}

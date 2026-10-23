@@ -14,7 +14,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -82,12 +82,13 @@ export const ExerciseDetailScreen: React.FC = () => {
     }
   }, [router, sourceTab]);
 
+  const insets = useSafeAreaInsets();
   const topBarAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
   const isTopBarVisibleRef = useRef(true);
   const accumulatedDown = useRef(0);
   const accumulatedUp = useRef(0);
-  const [topBarHeight, setTopBarHeight] = useState(56);
+  const [topBarHeight, setTopBarHeight] = useState(56 + Math.max(insets.top, 0));
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -805,6 +806,7 @@ export const ExerciseDetailScreen: React.FC = () => {
             isDark ? styles.topBarDark : styles.topBarLight,
             Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
             {
+              paddingTop: Math.max(insets.top, 0),
               transform: [{
                 translateY: topBarAnim.interpolate({
                   inputRange: [0, 1],

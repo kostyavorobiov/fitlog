@@ -19,7 +19,7 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
@@ -67,12 +67,13 @@ export const TraineesScreen: React.FC = () => {
   const isInitialLoadRef = useRef(true);
   const currentTraineeIdRef = useRef<string | null>(null);
 
+  const insets = useSafeAreaInsets();
   const topBarAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
   const isTopBarVisibleRef = useRef(true);
   const accumulatedDown = useRef(0);
   const accumulatedUp = useRef(0);
-  const [topBarHeight, setTopBarHeight] = useState(56);
+  const [topBarHeight, setTopBarHeight] = useState(56 + Math.max(insets.top, 0));
 
   const handleBackToProfile = useCallback(() => {
     setSavedActiveTab('profile');
@@ -578,7 +579,7 @@ export const TraineesScreen: React.FC = () => {
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBackToProfile}>
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: topBarHeight + 10 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: 68 }]}
         showsVerticalScrollIndicator={false}
         onScroll={handleCombinedScroll}
         scrollEventThrottle={16}
@@ -1077,6 +1078,7 @@ export const TraineesScreen: React.FC = () => {
           isDark ? styles.topBarDark : styles.topBarLight,
           Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
           {
+            paddingTop: Math.max(insets.top, 0),
             transform: [{
               translateY: topBarAnim.interpolate({
                 inputRange: [0, 1],

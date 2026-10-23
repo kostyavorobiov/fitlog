@@ -1440,7 +1440,7 @@ export const WorkoutEditorScreen: React.FC = () => {
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.contentScroll,
-            { paddingTop: topBarHeight + 10, paddingBottom: 40 + Math.max(insets.bottom, 16) },
+            { paddingTop: 68, paddingBottom: 40 + Math.max(insets.bottom, 16) },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -2065,6 +2065,7 @@ export const WorkoutEditorScreen: React.FC = () => {
           isDark ? styles.topBarDark : styles.topBarLight,
           Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
           {
+            paddingTop: Math.max(insets.top, 0),
             transform: [{
               translateY: topBarAnim.interpolate({
                 inputRange: [0, 1],
