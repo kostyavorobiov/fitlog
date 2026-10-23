@@ -32,6 +32,8 @@ import { WorkoutService } from '../services/workoutService';
 import { User, WorkoutPlan } from '../types/workout';
 import { formatLocalDate, formatDateDDMMYYYY } from '../utils/date';
 import { MonthGroup, getMonthKeyAndLabel } from './WorkoutsScreen';
+import { CreateWorkoutModal } from '../components/CreateWorkoutModal';
+import { WorkoutTemplate, TemplateService } from '../services/templateService';
 
 export const TraineesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
@@ -50,6 +52,8 @@ export const TraineesScreen: React.FC = () => {
   const [addCodeInput, setAddCodeInput] = useState<string>('');
   const [isAddingTrainee, setIsAddingTrainee] = useState<boolean>(false);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
+  const [isCreateWorkoutModalVisible, setIsCreateWorkoutModalVisible] = useState<boolean>(false);
+  const [isCreatingWorkout, setIsCreatingWorkout] = useState<boolean>(false);
   const isCreatingWorkoutRef = React.useRef(false);
   const [openTraineeMonths, setOpenTraineeMonths] = useState<Record<string, boolean>>({});
 
@@ -319,33 +323,56 @@ export const TraineesScreen: React.FC = () => {
     );
   };
 
-  // Create new workout for selected trainee
-  const handleCreateWorkoutForTrainee = async () => {
+  // Open create workout modal for selected trainee
+  const handleCreateWorkoutForTrainee = () => {
+    if (!selectedTrainee || !user) {
+      Alert.alert('Помилка', 'Оберіть підопічного для створення тренування');
+      return;
+    }
+    setIsCreateWorkoutModalVisible(true);
+  };
+
+  // Submit new workout for selected trainee (custom title + date OR from coach template)
+  const handleCreateWorkoutSubmit = async (
+    title: string,
+    scheduledDate: string,
+    notes: string,
+    template?: WorkoutTemplate
+  ) => {
     if (!selectedTrainee || !user) return;
-    if (isCreatingWorkoutRef.current) return;
-    isCreatingWorkoutRef.current = true;
-
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = formatLocalDate(tomorrow);
-
-    const newWorkout: WorkoutPlan = {
-      id: `w_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      userId: selectedTrainee.id,
-      assignedByCoachId: user.id,
-      title: `Тренування для ${selectedTrainee.firstName || selectedTrainee.name}`,
-      scheduledDate: tomorrowStr,
-      status: 'planned',
-      completedAt: null,
-      notes: '',
-      createdAt: new Date().toISOString(),
-      exercises: [],
-    };
+    setIsCreatingWorkout(true);
 
     try {
+      let newWorkout: WorkoutPlan;
+      if (template) {
+        newWorkout = TemplateService.createWorkoutFromTemplate(
+          template,
+          selectedTrainee.id,
+          scheduledDate || formatLocalDate()
+        );
+        newWorkout.assignedByCoachId = user.id;
+        if (title.trim()) newWorkout.title = title.trim();
+        if (notes.trim()) newWorkout.notes = notes.trim();
+      } else {
+        const workoutId = `wo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        newWorkout = {
+          id: workoutId,
+          userId: selectedTrainee.id,
+          assignedByCoachId: user.id,
+          title: title.trim() || `Тренування для ${selectedTrainee.firstName || selectedTrainee.name}`,
+          scheduledDate: scheduledDate || formatLocalDate(),
+          status: 'planned',
+          completedAt: null,
+          notes: notes.trim(),
+          createdAt: new Date().toISOString(),
+          exercises: [],
+        };
+      }
+
       const ok = await WorkoutService.saveWorkout(newWorkout);
       if (ok) {
         setTraineeWorkouts((prev) => [newWorkout, ...prev.filter((w) => w.id !== newWorkout.id)]);
+        setIsCreateWorkoutModalVisible(false);
         try {
           router.push({
             pathname: '/workout/[id]',
@@ -355,12 +382,12 @@ export const TraineesScreen: React.FC = () => {
           console.warn('[TraineesScreen] Navigation to editor failed:', navErr);
         }
       } else {
-        Alert.alert('Помилка', 'Не вдалося створити тренування');
+        Alert.alert('Помилка', 'Не вдалося зберегти тренування');
       }
     } catch (e: any) {
       Alert.alert('Помилка', e?.message || 'Не вдалося створити тренування');
     } finally {
-      isCreatingWorkoutRef.current = false;
+      setIsCreatingWorkout(false);
     }
   };
 
@@ -766,6 +793,16 @@ export const TraineesScreen: React.FC = () => {
                     <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
                       У підопічного немає запланованих тренувань. Натисніть «Додати тренування», щоб скласти перший план.
                     </Text>
+                    <TouchableOpacity
+                      style={styles.firstWorkoutBtn}
+                      activeOpacity={0.8}
+                      onPress={handleCreateWorkoutForTrainee}
+                    >
+                      <Ionicons name="add-circle" size={16} color="#ffffff" />
+                      <Text style={styles.firstWorkoutBtnText}>
+                        Скласти перше тренування
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 ) : (
                   <View style={styles.accordionContainer}>
@@ -906,6 +943,18 @@ export const TraineesScreen: React.FC = () => {
           </>
         )}
       </ScrollView>
+
+      {/* Modal for creating workout for trainee */}
+      <CreateWorkoutModal
+        visible={isCreateWorkoutModalVisible}
+        initialDate={formatLocalDate()}
+        onClose={() => setIsCreateWorkoutModalVisible(false)}
+        onSubmit={handleCreateWorkoutSubmit}
+        isLoading={isCreatingWorkout}
+        modalTitle={selectedTrainee ? `Тренування: ${selectedTrainee.name}` : 'Нове тренування'}
+        modalSub="Створіть порожнє або з вашого збереженого шаблону"
+        templateUserId={user?.id}
+      />
     </SafeAreaView>
   </ScreenGestureWrapper>
   );
@@ -1277,6 +1326,22 @@ const styles = StyleSheet.create({
   noWorkoutsDark: {
     backgroundColor: '#1d2939',
     borderColor: '#334155',
+  },
+  firstWorkoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#2563eb',
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginTop: 6,
+  },
+  firstWorkoutBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
   },
   noWorkoutsText: {
     fontSize: 12,

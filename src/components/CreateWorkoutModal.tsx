@@ -11,6 +11,8 @@ interface CreateWorkoutModalProps {
   onCreate: (title: string, scheduledDate: string, template?: WorkoutTemplate) => void;
   initialDate?: string;
   userId?: string;
+  modalTitle?: string;
+  modalSub?: string;
 }
 
 export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
@@ -19,6 +21,8 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   onCreate,
   initialDate,
   userId,
+  modalTitle,
+  modalSub,
 }) => {
   const [mode, setMode] = useState<'empty' | 'template'>('empty');
   const [title, setTitle] = useState('');
@@ -114,8 +118,8 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
               <Dumbbell className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100">Нове тренування</h3>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400">Створіть порожнє або з збереженого шаблону</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100">{modalTitle || 'Нове тренування'}</h3>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400">{modalSub || 'Створіть порожнє або з збереженого шаблону'}</p>
             </div>
           </div>
           <button

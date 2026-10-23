@@ -3,6 +3,8 @@ import { User, WorkoutPlan } from '../types/workout';
 import { StorageService, generateId } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { CreateWorkoutModal } from './CreateWorkoutModal';
+import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { UserAvatar } from './UserAvatar';
 import {
   Users,
@@ -46,6 +48,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
   const [isAdding, setIsAdding] = useState(false);
   const [workoutToDelete, setWorkoutToDelete] = useState<WorkoutPlan | null>(null);
   const [traineeToRemove, setTraineeToRemove] = useState<User | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handlePrevTrainee = () => {
@@ -251,30 +254,49 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     }));
   };
 
-  // Create new plan for selected trainee using the unified workout editor
-  const handleCreatePlanForTrainee = async () => {
+  // Open create workout modal for selected trainee
+  const handleOpenCreateModal = () => {
     if (!selectedTrainee) return;
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    setIsCreateModalOpen(true);
+  };
 
-    const newWorkout: WorkoutPlan = {
-      id: generateId('workout'),
-      userId: selectedTrainee.id,
-      assignedByCoachId: coach.id,
-      title: `Тренування для ${selectedTrainee.firstName || selectedTrainee.name}`,
-      scheduledDate: tomorrowStr,
-      status: 'planned',
-      completedAt: null,
-      notes: '',
-      createdAt: new Date().toISOString(),
-      exercises: [],
-    };
+  // Submit new plan for selected trainee (either custom title + date or from coach template)
+  const handleCreateWorkoutSubmit = async (
+    title: string,
+    scheduledDate: string,
+    template?: WorkoutTemplate
+  ) => {
+    if (!selectedTrainee) return;
+
+    let newWorkout: WorkoutPlan;
+    if (template) {
+      newWorkout = TemplateService.createWorkoutFromTemplate(
+        template,
+        selectedTrainee.id,
+        scheduledDate
+      );
+      newWorkout.assignedByCoachId = coach.id;
+      if (title.trim()) newWorkout.title = title.trim();
+    } else {
+      newWorkout = {
+        id: generateId('workout'),
+        userId: selectedTrainee.id,
+        assignedByCoachId: coach.id,
+        title: title.trim() || `Тренування для ${selectedTrainee.firstName || selectedTrainee.name}`,
+        scheduledDate: scheduledDate || new Date().toISOString().split('T')[0],
+        status: 'planned',
+        completedAt: null,
+        notes: '',
+        createdAt: new Date().toISOString(),
+        exercises: [],
+      };
+    }
 
     StorageService.saveWorkout(newWorkout);
     // Explicitly await cloud save to guarantee it's in Supabase
     await CloudStorageService.saveWorkout(newWorkout);
     setRefreshKey((k) => k + 1);
+    setIsCreateModalOpen(false);
     onOpenWorkoutEditor(newWorkout, selectedTrainee);
   };
 
@@ -494,10 +516,10 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                     Відкріпити
                   </button>
 
-                  {/* CREATE PLAN BUTTON: Opens the SAME unified WorkoutEditor UI */}
+                  {/* CREATE PLAN BUTTON: Opens the SAME unified CreateWorkoutModal UI */}
                   <button
                     type="button"
-                    onClick={handleCreatePlanForTrainee}
+                    onClick={handleOpenCreateModal}
                     className="h-9 inline-flex items-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -524,7 +546,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                     </p>
                     <button
                       type="button"
-                      onClick={handleCreatePlanForTrainee}
+                      onClick={handleOpenCreateModal}
                       className="inline-flex items-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 py-2 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
@@ -687,6 +709,16 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
         confirmLabel="Відкріпити"
         onConfirm={handleConfirmRemoveTrainee}
         onClose={() => setTraineeToRemove(null)}
+      />
+
+      {/* Create Workout Modal for Trainee (Custom name + date or Coach's saved templates) */}
+      <CreateWorkoutModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreateWorkoutSubmit}
+        userId={coach.id}
+        modalTitle={selectedTrainee ? `Тренування: ${selectedTrainee.name}` : 'Нове тренування'}
+        modalSub="Створіть порожнє або з вашого збереженого шаблону"
       />
     </div>
   );

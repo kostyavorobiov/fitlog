@@ -28,6 +28,9 @@ interface CreateWorkoutModalProps {
   onClose: () => void;
   onSubmit: (title: string, scheduledDate: string, notes: string, template?: WorkoutTemplate) => Promise<void> | void;
   isLoading?: boolean;
+  modalTitle?: string;
+  modalSub?: string;
+  templateUserId?: string;
 }
 
 export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
@@ -36,6 +39,9 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   onClose,
   onSubmit,
   isLoading = false,
+  modalTitle,
+  modalSub,
+  templateUserId,
 }) => {
   const isDark = useColorScheme() === 'dark';
   const { user } = useAuth();
@@ -56,9 +62,10 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
       setMode('empty');
       setSelectedTemplate(null);
 
-      if (user?.id) {
+      const effectiveUserId = templateUserId || user?.id;
+      if (effectiveUserId) {
         setIsLoadingTemplates(true);
-        TemplateService.getTemplates(user.id)
+        TemplateService.getTemplates(effectiveUserId)
           .then((tpls) => {
             setTemplates(tpls);
           })
@@ -70,7 +77,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
           });
       }
     }
-  }, [visible, initialDate, user?.id]);
+  }, [visible, initialDate, user?.id, templateUserId]);
 
   const isSubmittingRef = useRef(false);
 
@@ -139,10 +146,10 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     </View>
                     <View style={styles.headerTextWrap}>
                       <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
-                        Нове тренування
+                        {modalTitle || 'Нове тренування'}
                       </Text>
                       <Text style={[styles.modalSub, isDark ? styles.subDark : styles.subLight]}>
-                        Створіть порожнє або з збереженого шаблону
+                        {modalSub || 'Створіть порожнє або з збереженого шаблону'}
                       </Text>
                     </View>
                   </View>
