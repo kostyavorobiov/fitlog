@@ -375,11 +375,11 @@ export const WorkoutEditorScreen: React.FC = () => {
       } else {
         try {
           router.replace({
-            pathname: '/(tabs)/trainees',
+            pathname: '/trainees',
             params: effectiveTraineeId ? { traineeId: effectiveTraineeId } : undefined,
           });
         } catch {
-          router.replace('/(tabs)/trainees');
+          router.replace('/trainees');
         }
       }
       return;

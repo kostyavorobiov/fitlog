@@ -24,6 +24,7 @@ import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { Card } from '../components/Card';
 import { UserAvatar } from '../components/UserAvatar';
+import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { TraineeService } from '../services/traineeService';
@@ -59,7 +60,11 @@ export const TraineesScreen: React.FC = () => {
 
   const handleBackToProfile = useCallback(() => {
     setSavedActiveTab('profile');
-    router.replace('/(tabs)/profile');
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
   }, [router]);
 
   useEffect(() => {
@@ -447,7 +452,8 @@ export const TraineesScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+    <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBackToProfile}>
+      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Top Header Bar matching WorkoutEditorScreen */}
       <Animated.View
         onLayout={(e) => {
@@ -894,6 +900,7 @@ export const TraineesScreen: React.FC = () => {
         )}
       </ScrollView>
     </SafeAreaView>
+  </ScreenGestureWrapper>
   );
 };
 

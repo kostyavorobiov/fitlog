@@ -18,10 +18,18 @@ export default function TabLayout() {
   const handleNestedBack = () => {
     if (routeTab === 'trainees') {
       setSavedActiveTab('profile');
-      router.replace('/(tabs)/profile');
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)');
+      }
     } else if (routeTab === 'calendar') {
       setSavedActiveTab('index');
-      router.replace('/(tabs)');
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)');
+      }
     } else if (router.canGoBack()) {
       router.back();
     } else {

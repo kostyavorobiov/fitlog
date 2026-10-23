@@ -1,6 +1,6 @@
 import React from 'react';
-import { TraineesScreen } from '../../screens/TraineesScreen';
+import { Redirect } from 'expo-router';
 
 export default function TraineesRoute() {
-  return <TraineesScreen />;
+  return <Redirect href="/trainees" />;
 }

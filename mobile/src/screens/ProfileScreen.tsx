@@ -518,7 +518,7 @@ export const ProfileScreen: React.FC = () => {
 
               <TouchableOpacity
                 style={styles.goToTraineesBtn}
-                onPress={() => router.push('/(tabs)/trainees')}
+                onPress={() => router.push('/trainees')}
                 activeOpacity={0.8}
               >
                 <Ionicons name="list-outline" size={16} color="#ffffff" />
