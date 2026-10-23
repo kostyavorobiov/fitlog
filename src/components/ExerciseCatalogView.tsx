@@ -123,7 +123,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         </div>
 
         {/* Muscle group tabs */}
-        <div className="flex space-x-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+        <div className="flex flex-wrap gap-1.5 pb-1 text-xs">
           <button
             type="button"
             onClick={() => setSelectedMuscle('all')}

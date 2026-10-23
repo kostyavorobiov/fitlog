@@ -5,6 +5,8 @@ import {
   StyleSheet,
   useWindowDimensions,
   Alert,
+  StyleProp,
+  ViewStyle,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -22,6 +24,7 @@ export interface SwipeableActionCardProps {
   id: string;
   isDark: boolean;
   disabled?: boolean;
+  containerStyle?: StyleProp<ViewStyle>;
   onEdit?: () => void;
   onCopy?: () => void;
   onDelete: (onCancel?: () => void) => void;
@@ -48,6 +51,7 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
   id,
   isDark,
   disabled = false,
+  containerStyle,
   onEdit,
   onCopy,
   onDelete,
@@ -310,6 +314,7 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
           borderColor: isDark ? '#334155' : '#E2E8F0',
           backgroundColor: isDark ? '#1D2939' : '#FFFFFF',
         },
+        containerStyle,
       ]}
     >
       {/* Background Actions Row with full-height rounded buttons */}

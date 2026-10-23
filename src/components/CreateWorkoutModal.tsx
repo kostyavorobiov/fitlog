@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Dumbbell, Calendar, Plus, AlertCircle, Bookmark, Check } from 'lucide-react';
+import { X, Dumbbell, Calendar, Plus, AlertCircle, Bookmark, Check, Trash2 } from 'lucide-react';
 import { formatDateDDMMYYYY } from './WorkoutListView';
 import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { StorageService } from '../services/storageService';
+import { MobileSwipeableWorkoutCard } from './MobileSwipeableWorkoutCard';
 
 interface CreateWorkoutModalProps {
   isOpen: boolean;
@@ -87,6 +88,22 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
     onClose();
   };
 
+  const handleDeleteTemplate = async (templateId: string) => {
+    const effectiveUserId = userId || StorageService.getActiveUserId() || '';
+    if (!effectiveUserId) return;
+    if (!window.confirm('Видалити цей шаблон тренування?')) return;
+    try {
+      await TemplateService.deleteTemplate(effectiveUserId, templateId);
+      setTemplates((prev) => prev.filter((t) => t.id !== templateId));
+      if (selectedTemplate?.id === templateId) {
+        setSelectedTemplate(null);
+        setTitle('');
+      }
+    } catch (e: any) {
+      alert(e?.message || 'Не вдалося видалити шаблон');
+    }
+  };
+
   const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     backdropMouseDownRef.current = e.target === e.currentTarget;
   };
@@ -100,7 +117,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pb-10 sm:pb-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fade-in"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
     >
@@ -108,7 +125,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
         role="dialog"
         aria-modal="true"
         data-no-swipe="true"
-        className="relative w-full max-w-md my-auto rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl"
+        className="relative w-full max-w-md my-auto mb-8 sm:mb-auto rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -192,39 +209,57 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                   <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">
                     Оберіть шаблон *
                   </label>
-                  <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
                     {templates.map((tpl) => {
                       const isSelected = selectedTemplate?.id === tpl.id;
                       return (
-                        <div
+                        <MobileSwipeableWorkoutCard
                           key={tpl.id}
-                          onClick={() => {
-                            setSelectedTemplate(tpl);
-                            setTitle(tpl.title);
-                            setError('');
-                          }}
-                          className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${isSelected
-                            ? 'border-[#2563EB] bg-blue-50/50 dark:bg-blue-950/30 ring-1 ring-[#2563EB]'
-                            : 'border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50 dark:bg-zinc-950'
-                            }`}
+                          workoutId={tpl.id}
+                          onDelete={() => handleDeleteTemplate(tpl.id)}
                         >
-                          <div className="min-w-0 flex-1 pr-2">
-                            <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
-                              {tpl.title}
-                            </h4>
-                            <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5 truncate">
-                              {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
-                            </p>
-                          </div>
                           <div
-                            className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 border ${isSelected
-                              ? 'bg-[#2563EB] border-[#2563EB] text-white'
-                              : 'border-slate-300 dark:border-zinc-700'
+                            onClick={() => {
+                              setSelectedTemplate(tpl);
+                              setTitle(tpl.title);
+                              setError('');
+                            }}
+                            className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${isSelected
+                              ? 'border-[#2563EB] bg-blue-50/50 dark:bg-blue-950/30 ring-1 ring-[#2563EB]'
+                              : 'border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50 dark:bg-zinc-950'
                               }`}
                           >
-                            {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                            <div className="min-w-0 flex-1 pr-2">
+                              <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
+                                {tpl.title}
+                              </h4>
+                              <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5 truncate">
+                                {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-1.5 shrink-0">
+                              <div
+                                className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 border ${isSelected
+                                  ? 'bg-[#2563EB] border-[#2563EB] text-white'
+                                  : 'border-slate-300 dark:border-zinc-700'
+                                  }`}
+                              >
+                                {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteTemplate(tpl.id);
+                                }}
+                                title="Видалити шаблон"
+                                className="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        </MobileSwipeableWorkoutCard>
                       );
                     })}
                   </div>

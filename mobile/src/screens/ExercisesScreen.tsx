@@ -105,8 +105,10 @@ export const ExercisesScreen: React.FC = () => {
     router.push({
       pathname: `/exercise/${ex.id}` as any,
       params: {
+        id: ex.id,
         name: ex.name,
         muscleGroup: ex.muscleGroup,
+        fromTab: 'exercises',
       },
     });
   };
@@ -124,6 +126,7 @@ export const ExercisesScreen: React.FC = () => {
         id: ex.id,
         name: ex.name,
         muscleGroup: ex.muscleGroup,
+        fromTab: 'exercises',
       },
     });
   };
@@ -330,11 +333,7 @@ export const ExercisesScreen: React.FC = () => {
           М'язові групи
         </Text>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabsContainer}
-        >
+        <View style={styles.tabsContainer}>
           <TouchableOpacity
             onPress={() => setSelectedMuscle('all')}
             style={[
@@ -399,7 +398,7 @@ export const ExercisesScreen: React.FC = () => {
               </TouchableOpacity>
             );
           })}
-        </ScrollView>
+        </View>
 
         {/* Exercises List */}
         {isLoading ? (
@@ -669,8 +668,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   tabsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
-    paddingVertical: 2,
+    paddingVertical: 4,
   },
   tabChip: {
     paddingHorizontal: 12,

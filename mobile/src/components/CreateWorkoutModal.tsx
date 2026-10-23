@@ -21,6 +21,7 @@ import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { useAuth } from '../context/AuthContext';
 import { formatLocalDate, formatDateDDMMYYYY } from '../utils/date';
 import { DatePickerModal } from './DatePickerModal';
+import { SwipeableActionCard } from './SwipeableActionCard';
 
 export { formatLocalDate, formatDateDDMMYYYY };
 
@@ -117,6 +118,22 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   }, [visible, initialDate, user?.id, templateUserId]);
 
   const isSubmittingRef = useRef(false);
+
+  const handleDeleteTemplate = async (templateId: string, onCancel?: () => void) => {
+    const effectiveUserId = templateUserId || user?.id;
+    if (!effectiveUserId) return;
+    try {
+      await TemplateService.deleteTemplate(effectiveUserId, templateId);
+      setTemplates((prev) => prev.filter((t) => t.id !== templateId));
+      if (selectedTemplate?.id === templateId) {
+        setSelectedTemplate(null);
+        setTitle('');
+      }
+    } catch (e: any) {
+      Alert.alert('Помилка', e?.message || 'Не вдалося видалити шаблон');
+      onCancel?.();
+    }
+  };
 
   const handleSubmit = async () => {
     if (isLoading || isSubmittingRef.current) return;
@@ -290,37 +307,49 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                         <Text style={[styles.inputLabel, isDark ? styles.labelDark : styles.labelLight]}>
                           Оберіть шаблон *
                         </Text>
-                        <ScrollView style={{ maxHeight: 160 }} showsVerticalScrollIndicator={false}>
+                        <ScrollView style={{ maxHeight: 180 }} showsVerticalScrollIndicator={false}>
                           {templates.map((tpl) => {
                             const isSelected = selectedTemplate?.id === tpl.id;
                             return (
-                              <TouchableOpacity
+                              <SwipeableActionCard
                                 key={tpl.id}
-                                activeOpacity={0.7}
-                                onPress={() => {
-                                  setSelectedTemplate(tpl);
-                                  setTitle(tpl.title);
-                                }}
-                                style={[
-                                  styles.templateCard,
-                                  isDark ? styles.templateCardDark : styles.templateCardLight,
+                                id={tpl.id}
+                                isDark={isDark}
+                                confirmTitle="Видалити шаблон"
+                                confirmMessage={`Ви дійсно бажаєте видалити шаблон "${tpl.title}"?`}
+                                onDelete={(onCancel) => handleDeleteTemplate(tpl.id, onCancel)}
+                                deleteLabel="Видалити"
+                                containerStyle={[
+                                  styles.templateSwipeContainer,
                                   isSelected && styles.templateCardSelected,
                                 ]}
                               >
-                                <View style={{ flex: 1, paddingRight: 8 }}>
-                                  <Text style={[styles.templateCardTitle, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
-                                    {tpl.title}
-                                  </Text>
-                                  <Text style={[styles.templateCardSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
-                                    {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
-                                  </Text>
-                                </View>
-                                <Ionicons
-                                  name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
-                                  size={20}
-                                  color={isSelected ? '#2563EB' : (isDark ? '#64748b' : '#cbd5e1')}
-                                />
-                              </TouchableOpacity>
+                                <TouchableOpacity
+                                  activeOpacity={0.7}
+                                  onPress={() => {
+                                    setSelectedTemplate(tpl);
+                                    setTitle(tpl.title);
+                                  }}
+                                  style={[
+                                    styles.templateCardInner,
+                                    isSelected && styles.templateCardSelectedInner,
+                                  ]}
+                                >
+                                  <View style={{ flex: 1, paddingRight: 8 }}>
+                                    <Text style={[styles.templateCardTitle, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
+                                      {tpl.title}
+                                    </Text>
+                                    <Text style={[styles.templateCardSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
+                                      {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
+                                    </Text>
+                                  </View>
+                                  <Ionicons
+                                    name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
+                                    size={20}
+                                    color={isSelected ? '#2563EB' : (isDark ? '#64748b' : '#cbd5e1')}
+                                  />
+                                </TouchableOpacity>
+                              </SwipeableActionCard>
                             );
                           })}
                         </ScrollView>
@@ -659,25 +688,21 @@ const styles = StyleSheet.create({
   templateListWrap: {
     gap: 8,
   },
-  templateCard: {
+  templateSwipeContainer: {
+    borderRadius: 14,
+    marginBottom: 8,
+  },
+  templateCardInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    marginBottom: 8,
-  },
-  templateCardLight: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
-  },
-  templateCardDark: {
-    backgroundColor: '#0F172A',
-    borderColor: '#243247',
   },
   templateCardSelected: {
     borderColor: '#2563EB',
+    borderWidth: 1.5,
+  },
+  templateCardSelectedInner: {
     backgroundColor: 'rgba(37, 99, 235, 0.08)',
   },
   templateCardTitle: {
