@@ -12,6 +12,8 @@ import {
   Alert,
   ActivityIndicator,
   TouchableWithoutFeedback,
+  Keyboard,
+  LayoutAnimation,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,6 +56,41 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<WorkoutTemplate | null>(null);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState<boolean>(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState<boolean>(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      if (Platform.OS === 'ios') {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      }
+      setIsKeyboardVisible(true);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      if (Platform.OS === 'ios') {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      }
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!visible) {
+      setIsKeyboardVisible(false);
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    Keyboard.dismiss();
+    onClose();
+  };
 
   useEffect(() => {
     if (visible) {
@@ -124,16 +161,22 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
       visible={visible}
       animationType="fade"
       transparent={true}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.modalOverlay}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.keyboardWrap}
           >
-            <TouchableWithoutFeedback onPress={() => {}}>
-              <View style={[styles.modalCard, isDark ? styles.cardDark : styles.cardLight]}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View
+                style={[
+                  styles.modalCard,
+                  isDark ? styles.cardDark : styles.cardLight,
+                  isKeyboardVisible && styles.modalCardKeyboardOpen,
+                ]}
+              >
                 {/* Header */}
                 <View style={styles.headerRow}>
                   <View style={styles.headerLeft}>
@@ -154,7 +197,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     </View>
                   </View>
                   <TouchableOpacity
-                    onPress={onClose}
+                    onPress={handleClose}
                     style={styles.closeBtn}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     accessibilityRole="button"
@@ -329,7 +372,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                 <View style={styles.actionsRow}>
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={onClose}
+                    onPress={handleClose}
                     disabled={isLoading}
                     style={[styles.actionBtn, isDark ? styles.cancelBtnDark : styles.cancelBtnLight]}
                   >
@@ -399,6 +442,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 20,
     elevation: 10,
+  },
+  modalCardKeyboardOpen: {
+    marginBottom: 28,
   },
   cardLight: {
     backgroundColor: '#ffffff',
