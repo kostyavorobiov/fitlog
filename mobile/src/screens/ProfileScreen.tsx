@@ -237,10 +237,11 @@ export const ProfileScreen: React.FC = () => {
       />
 
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { minHeight: '101%', paddingBottom: 130 }]}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        alwaysBounceVertical={true}
       >
         {/* 1. Main Profile Card */}
         <Card style={styles.profileCard}>

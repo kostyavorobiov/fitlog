@@ -414,9 +414,11 @@ export const WorkoutEditorScreen: React.FC = () => {
       if (currentY <= 15) {
         if (!isTopBarVisible) {
           setIsTopBarVisible(true);
-          Animated.timing(topBarAnim, {
+          Animated.spring(topBarAnim, {
             toValue: 0,
-            duration: 200,
+            tension: 85,
+            friction: 14,
+            overshootClamping: true,
             useNativeDriver: false,
           }).start();
         }
@@ -424,13 +426,15 @@ export const WorkoutEditorScreen: React.FC = () => {
         return;
       }
 
-      // Scrolling down -> hide top bar
-      if (diff > 8 && currentY > 30) {
+      // Scrolling down -> hide top bar on minimal swipe
+      if ((diff > 8 || diff > 2) && currentY > 15) {
         if (isTopBarVisible) {
           setIsTopBarVisible(false);
-          Animated.timing(topBarAnim, {
+          Animated.spring(topBarAnim, {
             toValue: 1,
-            duration: 200,
+            tension: 85,
+            friction: 14,
+            overshootClamping: true,
             useNativeDriver: false,
           }).start();
         }
@@ -439,9 +443,11 @@ export const WorkoutEditorScreen: React.FC = () => {
       else if (diff < -6) {
         if (!isTopBarVisible) {
           setIsTopBarVisible(true);
-          Animated.timing(topBarAnim, {
+          Animated.spring(topBarAnim, {
             toValue: 0,
-            duration: 200,
+            tension: 85,
+            friction: 14,
+            overshootClamping: true,
             useNativeDriver: false,
           }).start();
         }
@@ -1392,82 +1398,90 @@ export const WorkoutEditorScreen: React.FC = () => {
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Top Header Bar */}
       <Animated.View
-        onLayout={(e) => {
-          const h = e.nativeEvent.layout.height;
-          if (h > 0 && Math.abs(h - topBarHeight) > 2) {
-            setTopBarHeight(h);
-          }
+        style={{
+          width: '100%',
+          height: topBarAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [topBarHeight, 0],
+          }),
+          overflow: 'hidden',
         }}
-        style={[
-          styles.topBar,
-          isDark ? styles.borderDark : styles.borderLight,
-          {
-            marginTop: topBarAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, -topBarHeight],
-            }),
-            opacity: topBarAnim.interpolate({
-              inputRange: [0, 0.7, 1],
-              outputRange: [1, 0.2, 0],
-            }),
-            overflow: 'hidden',
-          },
-        ]}
       >
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={handleBack}
-          style={styles.iconBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Назад"
+        <Animated.View
+          onLayout={(e) => {
+            const h = e.nativeEvent.layout.height;
+            if (h > 0 && Math.abs(h - topBarHeight) > 2) {
+              setTopBarHeight(h);
+            }
+          }}
+          style={[
+            styles.topBar,
+            isDark ? styles.borderDark : styles.borderLight,
+            {
+              transform: [{
+                translateY: topBarAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -topBarHeight],
+                }),
+              }],
+            },
+          ]}
         >
-          <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => {
-              setEditTitleValue(workout.title || 'Тренування');
-              setIsEditTitleModalOpen(true);
-            }}
-            style={styles.headerTitleRow}
-            accessibilityRole="button"
-            accessibilityLabel="Редагувати назву тренування"
-          >
-            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
-              {workout.title || 'Тренування'}
-            </Text>
-            <Ionicons name="pencil" size={13} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 5 }} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setIsDatePickerOpen(true)}
-            style={styles.headerDateRow}
-            accessibilityRole="button"
-            accessibilityLabel="Вибрати дату тренування"
-          >
-            <Text style={[styles.topBarDateText, isDark ? styles.subDark : styles.subLight]}>
-              {formatDateDDMMYYYY(workout.scheduledDate)}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.headerRightActions}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => {
-              setTemplateName(workout.title || 'Моє тренування');
-              setIsTemplateModalOpen(true);
-            }}
+            onPress={handleBack}
             style={styles.iconBtn}
             accessibilityRole="button"
-            accessibilityLabel="Зберегти як шаблон"
+            accessibilityLabel="Назад"
           >
-            <Ionicons name="bookmark-outline" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
+            <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
           </TouchableOpacity>
-        </View>
+
+          <View style={styles.headerCenter}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                setEditTitleValue(workout.title || 'Тренування');
+                setIsEditTitleModalOpen(true);
+              }}
+              style={styles.headerTitleRow}
+              accessibilityRole="button"
+              accessibilityLabel="Редагувати назву тренування"
+            >
+              <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+                {workout.title || 'Тренування'}
+              </Text>
+              <Ionicons name="pencil" size={13} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 5 }} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setIsDatePickerOpen(true)}
+              style={styles.headerDateRow}
+              accessibilityRole="button"
+              accessibilityLabel="Вибрати дату тренування"
+            >
+              <Text style={[styles.topBarDateText, isDark ? styles.subDark : styles.subLight]}>
+                {formatDateDDMMYYYY(workout.scheduledDate)}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.headerRightActions}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                setTemplateName(workout.title || 'Моє тренування');
+                setIsTemplateModalOpen(true);
+              }}
+              style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Зберегти як шаблон"
+            >
+              <Ionicons name="bookmark-outline" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       </Animated.View>
 
       <DatePickerModal

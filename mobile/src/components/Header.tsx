@@ -165,56 +165,70 @@ export const Header: React.FC<HeaderProps> = ({
   const { headerAnim } = useScrollTabBar();
   const [measuredHeight, setMeasuredHeight] = useState(subtitle ? 100 : 56);
 
-  const marginTop = headerAnim.interpolate({
+  // Instagram-style animation:
+  // 1. Container smoothly collapses height so page content glides upward without jumps
+  // 2. Inner header translates vertically (translateY) as one solid piece without squishing
+  const containerHeight = headerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [measuredHeight, 0],
+  });
+
+  const translateY = headerAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, -measuredHeight],
   });
 
-  const opacity = headerAnim.interpolate({
-    inputRange: [0, 0.7, 1],
-    outputRange: [1, 0.2, 0],
-  });
-
   return (
     <Animated.View
-      onLayout={(e) => {
-        const h = e.nativeEvent.layout.height;
-        if (h > 0 && Math.abs(h - measuredHeight) > 2) {
-          setMeasuredHeight(h);
-        }
-      }}
       style={[
         styles.wrapper,
         {
-          marginTop,
-          opacity,
+          height: containerHeight,
           overflow: 'hidden',
         },
       ]}
     >
-      {!hideTopNavbar && (
-        <WebTopNavbar
-          title={title}
-          onLogoPress={onLogoPress}
-          rightAction={!subtitle ? rightAction : undefined}
-          showBack={showBack}
-          onBack={onBack}
-        />
-      )}
-      {subtitle ? (
-        <View style={styles.sectionContainer}>
-          <SectionHeader
-            subtitle={subtitle}
-            rightAction={rightAction}
+      <Animated.View
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          if (h > 0 && Math.abs(h - measuredHeight) > 2) {
+            setMeasuredHeight(h);
+          }
+        }}
+        style={[
+          styles.innerContainer,
+          {
+            transform: [{ translateY }],
+          },
+        ]}
+      >
+        {!hideTopNavbar && (
+          <WebTopNavbar
+            title={title}
+            onLogoPress={onLogoPress}
+            rightAction={!subtitle ? rightAction : undefined}
+            showBack={showBack}
+            onBack={onBack}
           />
-        </View>
-      ) : null}
+        )}
+        {subtitle ? (
+          <View style={styles.sectionContainer}>
+            <SectionHeader
+              subtitle={subtitle}
+              rightAction={rightAction}
+            />
+          </View>
+        ) : null}
+      </Animated.View>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   wrapper: {
+    width: '100%',
+  },
+  innerContainer: {
     width: '100%',
   },
   topNavbar: {

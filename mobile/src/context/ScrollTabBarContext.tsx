@@ -35,9 +35,11 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
       friction: 14,
     }).start();
 
-    Animated.timing(headerAnim, {
+    Animated.spring(headerAnim, {
       toValue: visible ? 0 : 1,
-      duration: 180,
+      tension: 85,
+      friction: 14,
+      overshootClamping: true,
       useNativeDriver: false,
     }).start();
   }, [translateY, headerAnim]);
@@ -58,11 +60,9 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      // Avoid rubber-band bounce near the bottom on iOS from showing navbar
-      if (contentHeight > 0 && layoutHeight > 0 && currentY >= contentHeight - layoutHeight - 8) {
-        lastScrollY.current = currentY;
-        return;
-      }
+      // Check if past or at bottom overscroll on iOS
+      const maxScrollY = contentHeight > layoutHeight ? contentHeight - layoutHeight : 0;
+      const isPastBottom = maxScrollY > 0 && currentY >= maxScrollY;
 
       // Scrolling down -> hide tab bar and top navbar on minimal swipe
       if ((diff > 8 || diff > 2) && currentY > 15) {
@@ -70,8 +70,8 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
           setTabBarVisible(false);
         }
       }
-      // Scrolling up -> show tab bar and top navbar immediately
-      else if (diff < -6) {
+      // Scrolling up -> show tab bar and top navbar immediately (ignore rubber-band bounce from past bottom)
+      else if (diff < -6 && !isPastBottom) {
         if (!isTabBarVisibleRef.current) {
           setTabBarVisible(true);
         }

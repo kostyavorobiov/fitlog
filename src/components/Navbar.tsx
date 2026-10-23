@@ -72,11 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }
 
           // Prevent rubber-band bounce at bottom in iOS Safari / Chrome from showing navbar
-          if (maxScrollY > 0 && currentScrollY >= maxScrollY - 15) {
-            lastScrollY.current = currentScrollY;
-            ticking = false;
-            return;
-          }
+          const isNearBottomBounce = maxScrollY > 0 && currentScrollY >= maxScrollY - 5;
 
           const now = Date.now();
           if (diff > 2) {
@@ -85,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               isNavVisibleRef.current = false;
               setIsNavVisible(false);
             }
-          } else if (diff < -6) {
+          } else if (diff < -6 && !isNearBottomBounce) {
             // Scrolling up the page (swiping down) -> show navbar immediately
             if (!isNavVisibleRef.current) {
               isNavVisibleRef.current = true;
