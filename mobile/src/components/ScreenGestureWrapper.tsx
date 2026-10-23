@@ -16,6 +16,8 @@ export interface ScreenGestureWrapperProps {
   children: React.ReactNode;
 }
 
+let globalLastBackNavTime = 0;
+
 export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
   currentTab,
   tabOrder = ['index', 'calendar', 'analytics', 'exercises'],
@@ -37,8 +39,11 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
       swipeCardManager.closeAll();
       return;
     }
+    const now = Date.now();
+    if (now - globalLastBackNavTime < 500) return;
     if (isNavigatingRef.current) return;
 
+    globalLastBackNavTime = now;
     isNavigatingRef.current = true;
     try {
       Haptics.selectionAsync();
@@ -48,6 +53,8 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
       onBack();
     } else if (router.canGoBack()) {
       router.back();
+    } else {
+      router.replace('/(tabs)');
     }
 
     setTimeout(() => {

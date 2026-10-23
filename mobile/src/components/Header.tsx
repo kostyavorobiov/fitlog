@@ -7,6 +7,7 @@ import {
   Platform,
   Animated,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -17,6 +18,8 @@ export interface WebTopNavbarProps {
   title?: string;
   onLogoPress?: () => void;
   rightAction?: React.ReactNode;
+  showBack?: boolean;
+  onBack?: () => void;
   style?: any;
 }
 
@@ -25,7 +28,14 @@ export interface WebTopNavbarProps {
  * - Left: Tab / Screen Title (e.g. "Тренування", "Аналітика", "Вправи", "Профіль")
  * - Profile button moved into bottom navbar (old button removed from top)
  */
-export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ title, onLogoPress, rightAction, style }) => {
+export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
+  title,
+  onLogoPress,
+  rightAction,
+  showBack = false,
+  onBack,
+  style,
+}) => {
   const router = useRouter();
   const { isDark } = useTheme();
 
@@ -34,6 +44,16 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ title, onLogoPress, 
       onLogoPress();
     } else {
       router.push('/(tabs)');
+    }
+  };
+
+  const handleBackPress = () => {
+    if (onBack) {
+      onBack();
+    } else if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
     }
   };
 
@@ -46,18 +66,31 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({ title, onLogoPress, 
         style,
       ]}
     >
-      {/* Left: Dynamic Current Tab Title */}
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={handleTitlePress}
-        style={styles.titleButton}
-        accessibilityRole="header"
-        accessibilityLabel={title || 'FitLog'}
-      >
-        <Text style={[styles.navTitleText, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
-          {title || 'FitLog'}
-        </Text>
-      </TouchableOpacity>
+      {/* Left: Dynamic Current Tab Title + optional Back button */}
+      <View style={styles.navLeft}>
+        {showBack && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleBackPress}
+            style={styles.navBackBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Назад"
+          >
+            <Ionicons name="arrow-back" size={24} color={isDark ? '#F8FAFC' : '#0F172A'} />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleTitlePress}
+          style={styles.titleButton}
+          accessibilityRole="header"
+          accessibilityLabel={title || 'FitLog'}
+        >
+          <Text style={[styles.navTitleText, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
+            {title || 'FitLog'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Right Header Actions: Custom action if passed (Profile moved to bottom navbar) */}
       <View style={styles.rightActions}>
@@ -113,6 +146,8 @@ export interface HeaderProps {
   showAvatar?: boolean;
   onLogoPress?: () => void;
   hideTopNavbar?: boolean;
+  showBack?: boolean;
+  onBack?: () => void;
 }
 
 /**
@@ -124,6 +159,8 @@ export const Header: React.FC<HeaderProps> = ({
   rightAction,
   onLogoPress,
   hideTopNavbar = false,
+  showBack = false,
+  onBack,
 }) => {
   const { headerAnim } = useScrollTabBar();
   const [measuredHeight, setMeasuredHeight] = useState(subtitle ? 100 : 56);
@@ -155,7 +192,15 @@ export const Header: React.FC<HeaderProps> = ({
         },
       ]}
     >
-      {!hideTopNavbar && <WebTopNavbar title={title} onLogoPress={onLogoPress} rightAction={!subtitle ? rightAction : undefined} />}
+      {!hideTopNavbar && (
+        <WebTopNavbar
+          title={title}
+          onLogoPress={onLogoPress}
+          rightAction={!subtitle ? rightAction : undefined}
+          showBack={showBack}
+          onBack={onBack}
+        />
+      )}
       {subtitle ? (
         <View style={styles.sectionContainer}>
           <SectionHeader
@@ -188,9 +233,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(11, 18, 32, 0.95)',
     borderBottomColor: '#334155',
   },
+  navLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  navBackBtn: {
+    padding: 6,
+    marginLeft: -6,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   titleButton: {
     paddingVertical: 4,
-    maxWidth: '75%',
+    maxWidth: '85%',
   },
   navTitleText: {
     fontSize: 26,

@@ -12,11 +12,13 @@ import {
   Share,
   LayoutAnimation,
   Platform,
+  BackHandler,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { UserAvatar } from '../components/UserAvatar';
@@ -31,6 +33,7 @@ import { MonthGroup, getMonthKeyAndLabel } from './WorkoutsScreen';
 export const TraineesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
+  const { traineeId: paramTraineeId } = useLocalSearchParams<{ traineeId?: string }>();
   const { user, isAdmin, isLoading: isAuthLoading } = useAuth();
   const isTrainer = user?.role === 'coach' || isAdmin;
   const { handleScroll } = useScrollTabBar();
@@ -46,6 +49,19 @@ export const TraineesScreen: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const isCreatingWorkoutRef = React.useRef(false);
   const [openTraineeMonths, setOpenTraineeMonths] = useState<Record<string, boolean>>({});
+
+  const handleBackToProfile = useCallback(() => {
+    setSavedActiveTab('profile');
+    router.replace('/(tabs)/profile');
+  }, [router]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBackToProfile();
+      return true;
+    });
+    return () => sub.remove();
+  }, [handleBackToProfile]);
 
   // Group trainee workouts by calendar month (YYYY-MM), sorted newest to oldest
   const sortedTraineeWorkouts = useMemo(() => {
@@ -107,14 +123,17 @@ export const TraineesScreen: React.FC = () => {
       const list = await TraineeService.getTrainees(user.id);
       setTrainees(list);
 
-      // Select first trainee or keep currently selected if still in list
+      // Select by paramTraineeId if provided, or keep currently selected, or fallback to first
       setSelectedTrainee((prev) => {
-        if (!prev && list.length > 0) return list[0];
+        if (paramTraineeId) {
+          const matchParam = list.find((t) => t.id === paramTraineeId);
+          if (matchParam) return matchParam;
+        }
         if (prev) {
           const found = list.find((t) => t.id === prev.id);
           return found || list[0] || null;
         }
-        return null;
+        return list[0] || null;
       });
     } catch (e) {
       console.warn('[TraineesScreen.loadTrainees] Error:', e);
@@ -122,7 +141,7 @@ export const TraineesScreen: React.FC = () => {
       setIsLoadingTrainees(false);
       setIsRefreshing(false);
     }
-  }, [user?.id, isTrainer]);
+  }, [user?.id, isTrainer, paramTraineeId]);
 
   // Load workouts for selected trainee
   const loadTraineeWorkouts = useCallback(async (traineeId: string) => {
@@ -155,6 +174,15 @@ export const TraineesScreen: React.FC = () => {
       setTraineeWorkouts([]);
     }
   }, [selectedTrainee, loadTraineeWorkouts]);
+
+  useEffect(() => {
+    if (paramTraineeId && trainees.length > 0) {
+      const match = trainees.find((t) => t.id === paramTraineeId);
+      if (match && selectedTrainee?.id !== match.id) {
+        setSelectedTrainee(match);
+      }
+    }
+  }, [paramTraineeId, trainees, selectedTrainee?.id]);
 
   const onRefresh = useCallback(() => {
     setIsRefreshing(true);
@@ -348,6 +376,8 @@ export const TraineesScreen: React.FC = () => {
       <Header
         title="Підопічні"
         subtitle="Складання планів та контроль прогресу"
+        showBack={true}
+        onBack={handleBackToProfile}
       />
 
       <ScrollView

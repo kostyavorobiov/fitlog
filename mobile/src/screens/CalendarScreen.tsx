@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
   View,
@@ -8,11 +8,13 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  BackHandler,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { CreateWorkoutModal } from '../components/CreateWorkoutModal';
@@ -269,10 +271,27 @@ export const CalendarScreen: React.FC = () => {
     });
   };
 
+  const handleBackToWorkouts = useCallback(() => {
+    setSavedActiveTab('index');
+    router.replace('/(tabs)');
+  }, [router]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBackToWorkouts();
+      return true;
+    });
+    return () => sub.remove();
+  }, [handleBackToWorkouts]);
+
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Header */}
-      <Header title="Календар" />
+      <Header
+        title="Календар"
+        showBack={true}
+        onBack={handleBackToWorkouts}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

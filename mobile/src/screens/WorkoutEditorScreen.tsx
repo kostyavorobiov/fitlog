@@ -15,6 +15,7 @@ import {
   PanResponder,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  BackHandler,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -359,14 +360,41 @@ export const WorkoutEditorScreen: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const exerciseLayoutsRef = useRef<{ [weId: string]: number }>({});
 
+  const isTraineeWorkout = Boolean(
+    traineeId ||
+    (workout && workout.userId && user && workout.userId !== user.id) ||
+    (workout && workout.assignedByCoachId)
+  );
+  const effectiveTraineeId = traineeId || (workout && user && workout.userId !== user.id ? workout.userId : undefined);
+
   const handleBack = useCallback(() => {
+    if (isTraineeWorkout) {
+      try {
+        router.replace({
+          pathname: '/(tabs)/trainees',
+          params: effectiveTraineeId ? { traineeId: effectiveTraineeId } : undefined,
+        });
+      } catch {
+        router.replace('/(tabs)/trainees');
+      }
+      return;
+    }
+
     setSavedActiveTab('index');
     if (router.canGoBack()) {
       router.back();
     } else {
       router.replace('/(tabs)');
     }
-  }, [router]);
+  }, [router, isTraineeWorkout, effectiveTraineeId]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBack();
+      return true;
+    });
+    return () => sub.remove();
+  }, [handleBack]);
 
   const topBarAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
