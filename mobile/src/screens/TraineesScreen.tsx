@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
   View,
@@ -13,13 +13,16 @@ import {
   LayoutAnimation,
   Platform,
   BackHandler,
+  Animated,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
-import { Header } from '../components/Header';
+import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 import { Card } from '../components/Card';
 import { UserAvatar } from '../components/UserAvatar';
 import { useAuth } from '../context/AuthContext';
@@ -50,6 +53,11 @@ export const TraineesScreen: React.FC = () => {
   const isCreatingWorkoutRef = React.useRef(false);
   const [openTraineeMonths, setOpenTraineeMonths] = useState<Record<string, boolean>>({});
 
+  const topBarAnim = useRef(new Animated.Value(0)).current;
+  const lastScrollY = useRef(0);
+  const [isTopBarVisible, setIsTopBarVisible] = useState(true);
+  const [topBarHeight, setTopBarHeight] = useState(56);
+
   const handleBackToProfile = useCallback(() => {
     setSavedActiveTab('profile');
     router.replace('/(tabs)/profile');
@@ -62,6 +70,54 @@ export const TraineesScreen: React.FC = () => {
     });
     return () => sub.remove();
   }, [handleBackToProfile]);
+
+  const handleCombinedScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      handleScroll(event);
+      const currentY = event.nativeEvent.contentOffset.y;
+      const diff = currentY - lastScrollY.current;
+
+      // Always show when near the top
+      if (currentY <= 15) {
+        if (!isTopBarVisible) {
+          setIsTopBarVisible(true);
+          Animated.timing(topBarAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: false,
+          }).start();
+        }
+        lastScrollY.current = currentY;
+        return;
+      }
+
+      // Scrolling down -> hide top bar
+      if (diff > 8 && currentY > 30) {
+        if (isTopBarVisible) {
+          setIsTopBarVisible(false);
+          Animated.timing(topBarAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: false,
+          }).start();
+        }
+      }
+      // Scrolling up -> show top bar immediately
+      else if (diff < -6) {
+        if (!isTopBarVisible) {
+          setIsTopBarVisible(true);
+          Animated.timing(topBarAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: false,
+          }).start();
+        }
+      }
+
+      lastScrollY.current = currentY;
+    },
+    [handleScroll, isTopBarVisible, topBarAnim]
+  );
 
   // Group trainee workouts by calendar month (YYYY-MM), sorted newest to oldest
   const sortedTraineeWorkouts = useMemo(() => {
@@ -343,48 +399,124 @@ export const TraineesScreen: React.FC = () => {
 
   if (!isTrainer) {
     return (
-      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-        <Header title="Підопічні" subtitle="Розділ для тренерів" />
-        <View style={styles.nonCoachContainer}>
-          <View style={styles.nonCoachIconWrap}>
-            <Ionicons name="shield-outline" size={48} color="#2563eb" />
+      <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBackToProfile}>
+        <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+          <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handleBackToProfile}
+              style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Назад"
+            >
+              <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
+            </TouchableOpacity>
+
+            <View style={styles.headerCenter}>
+              <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+                Підопічні
+              </Text>
+              <Text numberOfLines={1} style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
+                Розділ для тренерів
+              </Text>
+            </View>
+
+            <View style={styles.headerRightActions} />
           </View>
-          <Text style={[styles.nonCoachTitle, isDark ? styles.textDark : styles.textLight]}>
-            Доступ лише для тренерів
-          </Text>
-          <Text style={[styles.nonCoachDesc, isDark ? styles.subDark : styles.subLight]}>
-            Цей розділ призначений для перегляду та складання тренувальних планів ваших спортсменів.
-          </Text>
-          <TouchableOpacity
-            style={styles.goToProfileBtn}
-            onPress={() => router.push('/(tabs)/profile')}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="person-outline" size={18} color="#ffffff" />
-            <Text style={styles.goToProfileBtnText}>
-              Перейти у профіль
+          <View style={styles.nonCoachContainer}>
+            <View style={styles.nonCoachIconWrap}>
+              <Ionicons name="shield-outline" size={48} color="#2563eb" />
+            </View>
+            <Text style={[styles.nonCoachTitle, isDark ? styles.textDark : styles.textLight]}>
+              Доступ лише для тренерів
             </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+            <Text style={[styles.nonCoachDesc, isDark ? styles.subDark : styles.subLight]}>
+              Цей розділ призначений для перегляду та складання тренувальних планів ваших спортсменів.
+            </Text>
+            <TouchableOpacity
+              style={styles.goToProfileBtn}
+              onPress={handleBackToProfile}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="person-outline" size={18} color="#ffffff" />
+              <Text style={styles.goToProfileBtnText}>
+                Перейти у профіль
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </ScreenGestureWrapper>
     );
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      {/* Header */}
-      <Header
-        title="Підопічні"
-        subtitle="Складання планів та контроль прогресу"
-        showBack={true}
-        onBack={handleBackToProfile}
-      />
+    <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBackToProfile}>
+      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+        {/* Top Header Bar matching WorkoutEditorScreen */}
+        <Animated.View
+          onLayout={(e) => {
+            const h = e.nativeEvent.layout.height;
+            if (h > 0 && Math.abs(h - topBarHeight) > 2) {
+              setTopBarHeight(h);
+            }
+          }}
+          style={[
+            styles.topBar,
+            isDark ? styles.borderDark : styles.borderLight,
+            {
+              marginTop: topBarAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, -topBarHeight],
+              }),
+              opacity: topBarAnim.interpolate({
+                inputRange: [0, 0.7, 1],
+                outputRange: [1, 0.2, 0],
+              }),
+              overflow: 'hidden',
+            },
+          ]}
+        >
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleBackToProfile}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Назад"
+          >
+            <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
+          </TouchableOpacity>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
+          <View style={styles.headerCenter}>
+            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+              Підопічні
+            </Text>
+            <Text numberOfLines={1} style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
+              {selectedTrainee ? `Обрано: ${selectedTrainee.name || selectedTrainee.email}` : 'Складання планів та контроль прогресу'}
+            </Text>
+          </View>
+
+          <View style={styles.headerRightActions}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handleCopyCoachCode}
+              style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Копіювати код тренера"
+            >
+              <Ionicons
+                name={copiedCode ? 'checkmark' : 'key-outline'}
+                size={20}
+                color={copiedCode ? '#22c55e' : (isDark ? '#94A3B8' : '#64748B')}
+              />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleCombinedScroll}
+          scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -780,12 +912,51 @@ export const TraineesScreen: React.FC = () => {
         )}
       </ScrollView>
     </SafeAreaView>
+  </ScreenGestureWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  iconBtn: {
+    padding: 6,
+  },
+  headerCenter: {
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  topBarTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  topBarSub: {
+    fontSize: 11,
+    marginTop: 1,
+  },
+  topBarDateText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  borderDark: {
+    borderBottomColor: '#1e293b',
+  },
+  borderLight: {
+    borderBottomColor: '#e2e8f0',
   },
   bgLight: {
     backgroundColor: '#f8fafc',

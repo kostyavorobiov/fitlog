@@ -13,6 +13,7 @@ import {
   Platform,
   Animated,
   PanResponder,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -128,27 +129,42 @@ export const ExercisesScreen: React.FC = () => {
     });
   };
 
-  const loadExercises = useCallback(async () => {
-    setIsLoading(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  const loadExercises = useCallback(async (showLoader = false) => {
+    if (showLoader) {
+      setIsLoading(true);
+    }
     try {
       const list = await ExerciseService.getExercises(user?.id);
       setExercises(list);
     } catch (e) {
       console.warn('[ExercisesScreen.loadExercises] Error:', e);
     } finally {
-      setIsLoading(false);
+      if (showLoader) {
+        setIsLoading(false);
+      }
+      setIsRefreshing(false);
     }
   }, [user?.id]);
 
   useEffect(() => {
-    loadExercises();
+    loadExercises(true);
   }, [loadExercises]);
 
   useFocusEffect(
     useCallback(() => {
-      loadExercises();
-    }, [loadExercises])
+      // Do not automatically refresh exercises when returning from exercise detail / stats
+      if (exercises.length === 0) {
+        loadExercises(true);
+      }
+    }, [loadExercises, exercises.length])
   );
+
+  const onRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    loadExercises(false);
+  }, [loadExercises]);
 
   const filteredExercises = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -295,6 +311,14 @@ export const ExercisesScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={isDark ? '#38bdf8' : '#2563eb'}
+            colors={['#2563eb']}
+          />
+        }
       >
         {/* Search Bar */}
         <View style={styles.filterBarContainer}>
