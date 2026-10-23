@@ -43,31 +43,66 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isDark = theme === 'dark';
 
   const [isNavVisible, setIsNavVisible] = useState(true);
+  const isNavVisibleRef = useRef(true);
   const lastScrollY = useRef(0);
   const lastNavSelectTime = useRef(0);
 
-  // Handle mobile navbar auto-hide on scroll
+  // Handle mobile navbar auto-hide on scroll with hysteresis and jitter suppression
   useEffect(() => {
     let ticking = false;
     let suppressHideUntil = 0;
+    let accumulatedDelta = 0;
+    let lastToggleTime = 0;
 
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
           const diff = currentScrollY - lastScrollY.current;
+          const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
 
           // Always visible at the very top of page
           if (currentScrollY <= 25) {
-            setIsNavVisible(true);
-          } else if (diff > 8) {
+            if (!isNavVisibleRef.current) {
+              isNavVisibleRef.current = true;
+              setIsNavVisible(true);
+            }
+            accumulatedDelta = 0;
+            lastScrollY.current = Math.max(0, currentScrollY);
+            ticking = false;
+            return;
+          }
+
+          // Prevent rubber-band bounce at bottom in iOS Safari / Chrome from showing navbar
+          if (maxScrollY > 0 && currentScrollY >= maxScrollY - 15) {
+            lastScrollY.current = currentScrollY;
+            ticking = false;
+            return;
+          }
+
+          const now = Date.now();
+          const canToggle = now - lastToggleTime >= 220;
+
+          if (diff > 8) {
             // Scrolling down the page (swiping up) -> hide navbar
-            if (Date.now() >= suppressHideUntil) {
+            if (accumulatedDelta < 0) accumulatedDelta = 0;
+            accumulatedDelta += diff;
+
+            if (isNavVisibleRef.current && canToggle && accumulatedDelta >= 22 && now >= suppressHideUntil) {
+              isNavVisibleRef.current = false;
               setIsNavVisible(false);
+              lastToggleTime = now;
             }
           } else if (diff < -8) {
-            // Scrolling up the page (swiping down) -> immediately show navbar
-            setIsNavVisible(true);
+            // Scrolling up the page (swiping down) -> show navbar
+            if (accumulatedDelta > 0) accumulatedDelta = 0;
+            accumulatedDelta += diff;
+
+            if (!isNavVisibleRef.current && canToggle && accumulatedDelta <= -18) {
+              isNavVisibleRef.current = true;
+              setIsNavVisible(true);
+              lastToggleTime = now;
+            }
           }
 
           lastScrollY.current = Math.max(0, currentScrollY);
@@ -78,11 +113,13 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
 
     const handleShowNavbar = () => {
+      isNavVisibleRef.current = true;
       setIsNavVisible(true);
       suppressHideUntil = Date.now() + 800;
     };
 
     const handleFocusChange = () => {
+      isNavVisibleRef.current = true;
       setIsNavVisible(true);
       suppressHideUntil = Date.now() + 1000;
     };

@@ -72,6 +72,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
     // Do not initiate swipe on input fields, buttons, or select dropdowns
     const target = e.target as HTMLElement | null;
     if (target?.closest('input, textarea, select, button, a, [data-interactive]')) {
+      hasMovedRef.current = false;
       return;
     }
 
@@ -163,6 +164,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
       justSwipedRef.current = true;
       setTimeout(() => {
         justSwipedRef.current = false;
+        hasMovedRef.current = false;
       }, 150);
 
       const dx = e.clientX - startXRef.current;
@@ -206,6 +208,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
     } else {
       setIsDragging(false);
       isMovingHorizontallyRef.current = null;
+      hasMovedRef.current = false;
     }
   };
 
@@ -234,14 +237,26 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    if (justSwipedRef.current || hasMovedRef.current || isOpenRef.current) {
+    const target = e.target as HTMLElement | null;
+    const isInteractive = Boolean(target?.closest('input, textarea, select, button, a, [data-interactive]'));
+
+    if (isOpenRef.current) {
       e.stopPropagation();
       e.preventDefault();
-      if (isOpenRef.current) {
-        isOpenRef.current = false;
-        setOffsetX(0);
-        webSwipeCardManager.setActive(null);
-      }
+      isOpenRef.current = false;
+      setOffsetX(0);
+      webSwipeCardManager.setActive(null);
+      return;
+    }
+
+    if (justSwipedRef.current || hasMovedRef.current) {
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+
+    if (isInteractive) {
+      return;
     }
   };
 

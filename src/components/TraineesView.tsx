@@ -21,6 +21,7 @@ import {
   Loader2,
   ArrowLeft,
   Key,
+  Layers,
 } from 'lucide-react';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 import { getMonthKeyAndLabel, formatDateDDMMYY, MonthGroup } from './WorkoutListView';
@@ -611,79 +612,81 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                     workoutId={w.id}
                                     onDelete={() => setWorkoutToDelete(w)}
                                   >
-                                    <div className="p-4 flex flex-col gap-2.5 transition-colors bg-white dark:bg-[#1d2939]">
-                                      <div className="flex items-center justify-between gap-3">
-                                        <div
-                                          onClick={() => onOpenWorkoutEditor(w, selectedTrainee)}
-                                          className="space-y-1 min-w-0 flex-1 cursor-pointer"
-                                        >
-                                          <div className="flex items-center space-x-2 text-xs">
-                                            <span
-                                              className={`font-semibold ${
-                                                isCompleted
-                                                  ? 'text-[#22C55E]'
-                                                  : w.status === 'in_progress'
-                                                  ? 'text-[#60A5FA]'
-                                                  : 'text-slate-500 dark:text-zinc-400'
-                                              }`}
-                                            >
-                                              {isCompleted
-                                                ? 'Завершено'
+                                    <div
+                                      onClick={() => onOpenWorkoutEditor(w, selectedTrainee)}
+                                      className="group bg-white dark:bg-[#1d2939] px-4 py-3.5 transition-colors cursor-pointer space-y-1.5"
+                                    >
+                                      {/* Row 1: Status on left, Expand/Collapse button on right */}
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
+                                          <span
+                                            className={`font-semibold ${
+                                              isCompleted
+                                                ? 'text-[#22c55e]'
                                                 : w.status === 'in_progress'
-                                                ? 'У процесі'
-                                                : 'Заплановано'}
-                                            </span>
-                                            <span className="text-slate-300 dark:text-zinc-700">·</span>
-                                            <span className="flex items-center space-x-1 text-slate-500 dark:text-zinc-400 font-mono text-xs">
-                                              <Calendar className="h-3 w-3" />
-                                              <span>{formatDateDDMMYY(w.scheduledDate)}</span>
-                                            </span>
-                                          </div>
-
-                                          <h4 className="text-sm font-bold text-slate-900 dark:text-zinc-100 truncate">
-                                            {w.title || 'Тренування без назви'}
-                                          </h4>
-
-                                          <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-zinc-400">
-                                            <span>{exercisesCount} вправ</span>
-                                            <span className="text-slate-300 dark:text-zinc-700">·</span>
-                                            <span>{setsCount} підходів</span>
-                                          </div>
+                                                ? 'text-[#60a5fa]'
+                                                : 'text-[#64748b] dark:text-[#94a3b8]'
+                                            }`}
+                                          >
+                                            {isCompleted
+                                              ? 'Завершено'
+                                              : w.status === 'in_progress'
+                                              ? 'У процесі'
+                                              : 'Заплановано'}
+                                          </span>
                                         </div>
 
-                                        <div className="flex items-center space-x-2 shrink-0">
-                                          {/* Expand / Collapse Exercises Button */}
-                                          {exercisesCount > 0 && (
-                                            <button
-                                              type="button"
-                                              onClick={(e) => toggleWorkoutExpand(w.id, e)}
-                                              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                                              title={isExpanded ? 'Згорнути перелік вправ' : 'Розгорнути перелік вправ'}
-                                              aria-label={isExpanded ? 'Згорнути перелік вправ' : 'Розгорнути перелік вправ'}
-                                            >
-                                              <ChevronDown
-                                                className={`h-4 w-4 transition-transform duration-200 ${
-                                                  isExpanded ? 'rotate-180' : ''
-                                                }`}
-                                              />
-                                            </button>
-                                          )}
-
-                                          {/* Open WorkoutEditor with this trainee's workout */}
+                                        {/* Expand / Collapse Exercises Button */}
+                                        {exercisesCount > 0 && (
                                           <button
                                             type="button"
-                                            onClick={() => onOpenWorkoutEditor(w, selectedTrainee)}
-                                            className="inline-flex items-center space-x-1.5 rounded-xl bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-200/80 dark:border-zinc-700/60 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-zinc-200 transition-colors shadow-xs cursor-pointer"
+                                            data-interactive="true"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              toggleWorkoutExpand(w.id, e);
+                                            }}
+                                            className="p-1 -mr-1 rounded-lg text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-[#f8fafc] hover:bg-slate-100 dark:hover:bg-[#334155] transition-colors cursor-pointer"
+                                            title={isExpanded ? 'Згорнути перелік вправ' : 'Розгорнути перелік вправ'}
+                                            aria-label={isExpanded ? 'Згорнути перелік вправ' : 'Розгорнути перелік вправ'}
                                           >
-                                            <Edit3 className="h-3.5 w-3.5" />
-                                            <span className="hidden sm:inline">Редагувати план</span>
+                                            <ChevronDown
+                                              className={`h-4 w-4 transition-transform duration-200 ${
+                                                isExpanded ? 'rotate-180' : ''
+                                              }`}
+                                            />
                                           </button>
+                                        )}
+                                      </div>
+
+                                      {/* Row 2: Title & Exercise count */}
+                                      <div className="flex items-center justify-between gap-2">
+                                        <h3 className="font-bold text-sm sm:text-base text-[#0f172a] dark:text-[#f8fafc] truncate">
+                                          {w.title || 'Тренування'}
+                                        </h3>
+                                        <span className="text-xs text-[#64748b] dark:text-[#94a3b8] shrink-0 font-medium">
+                                          {exercisesCount} вправ
+                                        </span>
+                                      </div>
+
+                                      {/* Row 3: Date & Sets info */}
+                                      <div className="flex items-center justify-between text-xs text-[#64748b] dark:text-[#94a3b8]">
+                                        <span className="font-mono text-[11px] sm:text-xs">
+                                          {formatDateDDMMYY(w.scheduledDate)}
+                                        </span>
+
+                                        <div className="flex items-center gap-1 text-[11px] sm:text-xs">
+                                          <Layers className="h-3 w-3" />
+                                          <span>{setsCount} підходів</span>
                                         </div>
                                       </div>
 
-                                      {/* Expandable Exercise Badges matching screenshot */}
+                                      {/* Expandable Exercise Badges List matching user screenshot */}
                                       {isExpanded && (w.exercises || []).length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 pt-2.5 border-t border-slate-200/80 dark:border-zinc-800 animate-fade-in">
+                                        <div
+                                          data-interactive="true"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="flex flex-wrap gap-1.5 pt-2.5 mt-1 border-t border-[#e2e8f0]/80 dark:border-[#334155]/80 animate-fade-in"
+                                        >
                                           {(w.exercises || []).map((we, idx) => {
                                             const ex = StorageService.getExerciseById(we.exerciseId);
                                             const exName = (we.exerciseName && we.exerciseName !== 'Вправа')
@@ -692,7 +695,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                             return (
                                               <span
                                                 key={idx}
-                                                className="rounded-[10px] border border-slate-200 dark:border-slate-700 bg-[#f1f5f9] dark:bg-[#1e293b] px-2.5 py-1 text-xs text-slate-900 dark:text-slate-100 font-medium"
+                                                className="rounded-[10px] border border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1e293b] px-2.5 py-1 text-xs text-[#0f172a] dark:text-[#f8fafc] font-medium"
                                               >
                                                 {exName} ({we.sets?.length || 0})
                                               </span>

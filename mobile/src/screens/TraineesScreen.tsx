@@ -926,118 +926,131 @@ export const TraineesScreen: React.FC = () => {
                                         isDark ? styles.workoutItemDark : styles.workoutItemLight,
                                       ]}
                                     >
-                                      <View style={styles.workoutItemTopRow}>
-                                        <TouchableOpacity
-                                          activeOpacity={0.7}
-                                          onPress={() =>
-                                            router.push({
-                                              pathname: '/workout/[id]',
-                                              params: { id: w.id, traineeId: selectedTrainee.id },
-                                            })
-                                          }
-                                          style={styles.workoutItemClickable}
-                                        >
-                                          <View style={styles.workoutItemMain}>
-                                            <View style={styles.workoutItemHeader}>
+                                      <TouchableOpacity
+                                        activeOpacity={0.7}
+                                        onPress={() =>
+                                          router.push({
+                                            pathname: '/workout/[id]',
+                                            params: { id: w.id, traineeId: selectedTrainee.id },
+                                          })
+                                        }
+                                      >
+                                        <View style={styles.workoutCard}>
+                                          {/* Top Row: Status, Expand Chevron */}
+                                          <View style={styles.cardTopRow}>
+                                            <View style={styles.cardBadgesRow}>
                                               <Text
-                                                numberOfLines={1}
-                                                style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
-                                              >
-                                                {w.title}
-                                              </Text>
-
-                                              <View
                                                 style={[
-                                                  styles.statusBadge,
-                                                  isCompleted
-                                                    ? styles.statusCompleted
-                                                    : isInProgress
-                                                    ? styles.statusInProgress
-                                                    : styles.statusPlanned,
+                                                  styles.statusText,
+                                                  {
+                                                    color: isCompleted
+                                                      ? '#22C55E'
+                                                      : isInProgress
+                                                      ? '#60A5FA'
+                                                      : (isDark ? '#94A3B8' : '#64748B'),
+                                                  },
                                                 ]}
                                               >
-                                                <Text
-                                                  style={[
-                                                    styles.statusText,
-                                                    isCompleted
-                                                      ? styles.statusTextCompleted
-                                                      : isInProgress
-                                                      ? styles.statusTextInProgress
-                                                      : styles.statusTextPlanned,
-                                                  ]}
-                                                >
-                                                  {isCompleted
-                                                    ? 'Завершено'
-                                                    : isInProgress
-                                                    ? 'В процесі'
-                                                    : 'Заплановано'}
-                                                </Text>
-                                              </View>
+                                                {isCompleted ? 'Завершено' : isInProgress ? 'У процесі' : 'Заплановано'}
+                                              </Text>
                                             </View>
 
-                                            <View style={styles.workoutMetaRow}>
-                                              <View style={styles.metaItem}>
-                                                <Ionicons name="calendar-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
-                                                <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
-                                                  {formatDateDDMMYYYY(w.scheduledDate)}
-                                                </Text>
-                                              </View>
+                                            {/* Expand Exercises Button */}
+                                            {exerciseCount > 0 && (
+                                              <TouchableOpacity
+                                                style={styles.workoutExpandBtn}
+                                                onPress={() => toggleWorkoutExpand(w.id)}
+                                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                                accessibilityRole="button"
+                                                accessibilityLabel={isExpanded ? 'Згорнути перелік вправ' : 'Розгорнути перелік вправ'}
+                                              >
+                                                <Ionicons
+                                                  name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                                                  size={18}
+                                                  color={isDark ? '#94A3B8' : '#64748B'}
+                                                />
+                                              </TouchableOpacity>
+                                            )}
+                                          </View>
 
-                                              <View style={styles.metaItem}>
-                                                <Ionicons name="barbell-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
-                                                <Text style={[styles.metaText, isDark ? styles.subDark : styles.subLight]}>
-                                                  {exerciseCount} {exerciseCount === 1 ? 'вправа' : 'вправ'} ({setsCount} підх.)
-                                                </Text>
-                                              </View>
+                                          {/* Workout Title */}
+                                          <Text
+                                            numberOfLines={1}
+                                            style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
+                                          >
+                                            {w.title || 'Тренування без назви'}
+                                          </Text>
+
+                                          {/* Metrics Row: Date · Exercises · Sets */}
+                                          <View style={styles.cardMetricsRow}>
+                                            <View style={styles.metricItem}>
+                                              <Ionicons
+                                                name="calendar-outline"
+                                                size={13}
+                                                color={isDark ? '#94A3B8' : '#64748B'}
+                                              />
+                                              <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                                                {formatDateDDMMYYYY(w.scheduledDate)}
+                                              </Text>
+                                            </View>
+
+                                            <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+
+                                            <View style={styles.metricItem}>
+                                              <Ionicons
+                                                name="layers-outline"
+                                                size={14}
+                                                color={isDark ? '#94A3B8' : '#64748B'}
+                                              />
+                                              <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                                                <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                                                  {exerciseCount}
+                                                </Text>{' '}
+                                                {exerciseCount === 1 ? 'вправа' : 'вправ'}
+                                              </Text>
+                                            </View>
+
+                                            <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+
+                                            <View style={styles.metricItem}>
+                                              <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                                                <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                                                  {setsCount}
+                                                </Text>{' '}
+                                                підходів
+                                              </Text>
                                             </View>
                                           </View>
-                                        </TouchableOpacity>
 
-                                        {/* Expand Exercises Button (replaces delete trash icon) */}
-                                        {exerciseCount > 0 && (
-                                          <TouchableOpacity
-                                            style={styles.workoutExpandBtn}
-                                            onPress={() => toggleWorkoutExpand(w.id)}
-                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                            accessibilityRole="button"
-                                            accessibilityLabel={isExpanded ? 'Згорнути перелік вправ' : 'Розгорнути перелік вправ'}
-                                          >
-                                            <Ionicons
-                                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                                              size={18}
-                                              color={isDark ? '#94A3B8' : '#64748B'}
-                                            />
-                                          </TouchableOpacity>
-                                        )}
-                                      </View>
-
-                                      {/* Expanded Exercise Badges List matching user screenshot */}
-                                      {isExpanded && (w.exercises || []).length > 0 && (
-                                        <View style={styles.exerciseBadgesWrap}>
-                                          {(w.exercises || []).map((we, idx) => {
-                                            const exName = we.exerciseName || 'Вправа';
-                                            const setCount = we.sets?.length || 0;
-                                            return (
-                                              <View
-                                                key={we.id || `${w.id}-ex-${idx}`}
-                                                style={[
-                                                  styles.exerciseBadge,
-                                                  isDark ? styles.exerciseBadgeDark : styles.exerciseBadgeLight,
-                                                ]}
-                                              >
-                                                <Text
-                                                  style={[
-                                                    styles.exerciseBadgeText,
-                                                    isDark ? styles.exerciseBadgeTextDark : styles.exerciseBadgeTextLight,
-                                                  ]}
-                                                >
-                                                  {exName} ({setCount})
-                                                </Text>
-                                              </View>
-                                            );
-                                          })}
+                                          {/* Expanded Exercise Badges List matching user screenshot */}
+                                          {isExpanded && (w.exercises || []).length > 0 && (
+                                            <View style={styles.exerciseBadgesWrap}>
+                                              {(w.exercises || []).map((we, idx) => {
+                                                const exName = we.exerciseName || 'Вправа';
+                                                const setCount = we.sets?.length || 0;
+                                                return (
+                                                  <View
+                                                    key={we.id || `${w.id}-ex-${idx}`}
+                                                    style={[
+                                                      styles.exerciseBadge,
+                                                      isDark ? styles.exerciseBadgeDark : styles.exerciseBadgeLight,
+                                                    ]}
+                                                  >
+                                                    <Text
+                                                      style={[
+                                                        styles.exerciseBadgeText,
+                                                        isDark ? styles.exerciseBadgeTextDark : styles.exerciseBadgeTextLight,
+                                                      ]}
+                                                    >
+                                                      {exName} ({setCount})
+                                                    </Text>
+                                                  </View>
+                                                );
+                                              })}
+                                            </View>
+                                          )}
                                         </View>
-                                      )}
+                                      </TouchableOpacity>
                                     </View>
                                   </SwipeableActionCard>
                                 );
@@ -1464,10 +1477,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   workoutItem: {
-    padding: 14,
     borderRadius: 18,
     borderWidth: 1,
     marginBottom: 8,
+    overflow: 'hidden',
   },
   workoutItemLight: {
     backgroundColor: '#ffffff',
@@ -1477,71 +1490,52 @@ const styles = StyleSheet.create({
     backgroundColor: '#1d2939',
     borderColor: '#334155',
   },
-  workoutItemTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  workoutCard: {
+    padding: 14,
     gap: 8,
   },
-  workoutItemClickable: {
-    flex: 1,
-    minWidth: 0,
-  },
-  workoutItemMain: {
-    gap: 4,
-  },
-  workoutItemHeader: {
+  cardTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 6,
   },
-  workoutTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    flex: 1,
-  },
-  statusBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  statusCompleted: {
-    backgroundColor: 'rgba(34, 197, 94, 0.15)',
-  },
-  statusInProgress: {
-    backgroundColor: 'rgba(96, 165, 250, 0.15)',
-  },
-  statusPlanned: {
-    backgroundColor: 'rgba(100, 116, 139, 0.12)',
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  statusTextCompleted: {
-    color: '#22c55e',
-  },
-  statusTextInProgress: {
-    color: '#60a5fa',
-  },
-  statusTextPlanned: {
-    color: '#64748b',
-  },
-  workoutMetaRow: {
+  cardBadgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+    flexWrap: 'wrap',
   },
-  metaItem: {
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  workoutTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  cardMetricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  metricItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  metaText: {
-    fontSize: 11,
+  metricText: {
+    fontSize: 12,
+  },
+  metricVal: {
+    fontWeight: '600',
+  },
+  dotSep: {
+    fontSize: 12,
   },
   workoutExpandBtn: {
-    padding: 6,
+    padding: 4,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
