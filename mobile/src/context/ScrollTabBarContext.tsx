@@ -86,19 +86,17 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
   );
 };
 
+const fallbackTranslateY = new Animated.Value(0);
+const fallbackHeaderAnim = new Animated.Value(0);
+const defaultScrollTabBarFallback: ScrollTabBarContextType = {
+  isTabBarVisible: true,
+  setTabBarVisible: () => {},
+  translateY: fallbackTranslateY,
+  headerAnim: fallbackHeaderAnim,
+  handleScroll: () => {},
+};
+
 export const useScrollTabBar = (): ScrollTabBarContextType => {
   const context = useContext(ScrollTabBarContext);
-  if (!context) {
-    // Return safe fallback if used outside provider
-    const fallbackTranslateY = new Animated.Value(0);
-    const fallbackHeaderAnim = new Animated.Value(0);
-    return {
-      isTabBarVisible: true,
-      setTabBarVisible: () => {},
-      translateY: fallbackTranslateY,
-      headerAnim: fallbackHeaderAnim,
-      handleScroll: () => {},
-    };
-  }
-  return context;
+  return context || defaultScrollTabBarFallback;
 };

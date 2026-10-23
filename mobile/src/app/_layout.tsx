@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider as AppThemeProvider, useTheme as useAppTheme } from '../context/ThemeContext';
 import { SwipeUndoProvider } from '../context/SwipeUndoContext';
 import { CreateWorkoutProvider } from '../context/CreateWorkoutContext';
+import { ScrollTabBarProvider } from '../context/ScrollTabBarContext';
 
 // Ensure browser session can complete redirect for OAuth flows
 WebBrowser.maybeCompleteAuthSession();
@@ -114,11 +115,13 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AppThemeProvider>
           <AuthProvider>
-            <SwipeUndoProvider>
-              <CreateWorkoutProvider>
-                <RootNavigator />
-              </CreateWorkoutProvider>
-            </SwipeUndoProvider>
+            <ScrollTabBarProvider>
+              <SwipeUndoProvider>
+                <CreateWorkoutProvider>
+                  <RootNavigator />
+                </CreateWorkoutProvider>
+              </SwipeUndoProvider>
+            </ScrollTabBarProvider>
           </AuthProvider>
         </AppThemeProvider>
       </SafeAreaProvider>

@@ -37,8 +37,8 @@ export const TraineesScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
   const { traineeId: paramTraineeId } = useLocalSearchParams<{ traineeId?: string }>();
-  const { user, isAdmin, isLoading: isAuthLoading } = useAuth();
-  const isTrainer = user?.role === 'coach' || isAdmin;
+  const { user, isAdmin, isCoach, isLoading: isAuthLoading } = useAuth();
+  const isTrainer = isCoach || isAdmin || user?.role === 'coach';
   const { handleScroll } = useScrollTabBar();
 
   const [trainees, setTrainees] = useState<User[]>([]);
@@ -165,12 +165,6 @@ export const TraineesScreen: React.FC = () => {
     }));
   };
 
-  // Route protection: redirect athletes away from coach screen
-  useEffect(() => {
-    if (!isAuthLoading && !isTrainer) {
-      router.replace('/(tabs)');
-    }
-  }, [isAuthLoading, isTrainer, router]);
 
   // Load trainees for the current coach
   const loadTrainees = useCallback(async () => {
@@ -399,7 +393,18 @@ export const TraineesScreen: React.FC = () => {
     );
   };
 
-  const coachCode = user?.profileCode || user?.id || '';
+  if (isAuthLoading) {
+    return (
+      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="small" color="#2563eb" />
+          <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+            Завантаження...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!isTrainer) {
     return (
@@ -450,6 +455,8 @@ export const TraineesScreen: React.FC = () => {
       </SafeAreaView>
     );
   }
+
+  const coachCode = user?.profileCode || user?.id || '';
 
   return (
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBackToProfile}>
