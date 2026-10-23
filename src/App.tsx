@@ -213,6 +213,7 @@ const MainContent: React.FC = () => {
         {currentTab === 'trainees' && user && (user.role === 'coach' || isAdmin) && (
           <TraineesView
             coach={user}
+            onBack={() => setCurrentTab('profile')}
             selectedTraineeId={selectedTraineeId}
             onSelectTraineeId={(id) => {
               setSelectedTraineeId(id);

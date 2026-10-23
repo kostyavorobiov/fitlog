@@ -189,6 +189,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
                 key={ex.id}
                 exerciseId={ex.id}
                 disabled={!canEdit}
+                onEdit={() => setExerciseToEdit(ex)}
                 onDelete={() => handleDeleteExercise(ex.id)}
               >
                 <div

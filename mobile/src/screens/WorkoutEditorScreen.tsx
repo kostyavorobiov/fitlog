@@ -369,13 +369,18 @@ export const WorkoutEditorScreen: React.FC = () => {
 
   const handleBack = useCallback(() => {
     if (isTraineeWorkout) {
-      try {
-        router.replace({
-          pathname: '/(tabs)/trainees',
-          params: effectiveTraineeId ? { traineeId: effectiveTraineeId } : undefined,
-        });
-      } catch {
-        router.replace('/(tabs)/trainees');
+      setSavedActiveTab('profile');
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        try {
+          router.replace({
+            pathname: '/(tabs)/trainees',
+            params: effectiveTraineeId ? { traineeId: effectiveTraineeId } : undefined,
+          });
+        } catch {
+          router.replace('/(tabs)/trainees');
+        }
       }
       return;
     }

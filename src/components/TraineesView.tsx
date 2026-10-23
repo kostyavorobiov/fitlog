@@ -17,6 +17,8 @@ import {
   Check,
   Edit3,
   Loader2,
+  ArrowLeft,
+  Key,
 } from 'lucide-react';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 import { getMonthKeyAndLabel, formatDateDDMMYY, MonthGroup } from './WorkoutListView';
@@ -26,6 +28,7 @@ interface TraineesViewProps {
   onOpenWorkoutEditor: (workout: WorkoutPlan, trainee: User) => void;
   selectedTraineeId?: string | null;
   onSelectTraineeId?: (traineeId: string | null) => void;
+  onBack?: () => void;
 }
 
 export const TraineesView: React.FC<TraineesViewProps> = ({
@@ -33,6 +36,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
   onOpenWorkoutEditor,
   selectedTraineeId: externalSelectedTraineeId,
   onSelectTraineeId: externalOnSelectTraineeId,
+  onBack,
 }) => {
   const [trainees, setTrainees] = useState<User[]>([]);
   const [selectedTrainee, setSelectedTrainee] = useState<User | null>(null);
@@ -298,32 +302,69 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-zinc-800 pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">
-            Підопічні (Тренер)
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-            Управління підопічними, складання тренувальних планів та контроль прогресу
-          </p>
+      {/* Top Navbar matching WorkoutEditor and mobile app */}
+      <div className="flex items-center justify-between gap-3 px-1 sm:px-2 py-2 sm:py-3 border-b border-zinc-200 dark:border-[#334155] -mt-2 mb-3 sm:mb-5">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="p-1 -ml-1 text-zinc-700 dark:text-zinc-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer shrink-0"
+              title="Назад у профіль"
+              aria-label="Назад у профіль"
+            >
+              <ArrowLeft className="h-6 w-6 stroke-[2]" />
+            </button>
+          ) : null}
+
+          <div className="min-w-0 flex flex-col items-start text-left">
+            <h1 className="font-bold text-[17px] sm:text-lg text-zinc-900 dark:text-white truncate">
+              Підопічні
+            </h1>
+            <p className="text-[11px] text-zinc-500 dark:text-[#94A3B8] truncate mt-0.5">
+              {selectedTrainee ? `Обрано: ${selectedTrainee.name || selectedTrainee.email}` : 'Складання планів та контроль прогресу'}
+            </p>
+          </div>
         </div>
 
-        {/* Coach ID Share Box */}
-        <div className="flex items-center space-x-2 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 text-xs shadow-xs self-start sm:self-auto">
-          <div className="text-[11px] text-slate-500 dark:text-zinc-400">Мій код тренера:</div>
-          <span className="font-mono font-bold text-slate-900 dark:text-zinc-100 select-all">
-            {coach.profileCode || coach.id}
-          </span>
-          <button
-            type="button"
-            onClick={handleCopyCoachCode}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-            title="Скопіювати код"
-          >
-            {copiedCode ? <Check className="h-3.5 w-3.5 text-[#22C55E]" /> : <Copy className="h-3.5 w-3.5" />}
-          </button>
+        {/* Empty right container for balanced layout */}
+        <div className="w-8 shrink-0" />
+      </div>
+
+      {/* Coach Code Sharing Box */}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex items-center justify-between gap-3">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA] shrink-0">
+            <Key className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400">Ваш код тренера</p>
+            <p className="text-sm font-mono font-bold text-slate-900 dark:text-zinc-100 truncate select-all">
+              {coach.profileCode || coach.id}
+            </p>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={handleCopyCoachCode}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 border ${
+            copiedCode
+              ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
+              : 'border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/60 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300'
+          }`}
+        >
+          {copiedCode ? (
+            <>
+              <Check className="h-4 w-4 text-[#22C55E]" />
+              <span>Скопійовано</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4" />
+              <span>Копіювати</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Add Trainee Bar */}

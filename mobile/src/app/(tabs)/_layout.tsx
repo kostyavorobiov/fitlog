@@ -3,21 +3,23 @@ import { View, StyleSheet } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { ScrollTabBarProvider } from '../../context/ScrollTabBarContext';
 import { ScreenGestureWrapper } from '../../components/ScreenGestureWrapper';
-import { InstagramTabPager, getSavedActiveTab, setSavedActiveTab } from '../../components/InstagramTabPager';
+import { InstagramTabPager, TAB_ORDER, TabName, getSavedActiveTab, setSavedActiveTab } from '../../components/InstagramTabPager';
 
 export default function TabLayout() {
   const router = useRouter();
   const segments = useSegments();
   const routeTab = segments[1] as string | undefined;
-  const currentTab = routeTab || getSavedActiveTab() || 'index';
 
-  const isNestedScreen = currentTab === 'trainees' || currentTab === 'calendar';
+  const isNestedScreen = routeTab === 'trainees' || routeTab === 'calendar';
+  const activeTab = (routeTab && routeTab !== 'index' && TAB_ORDER.includes(routeTab as any))
+    ? (routeTab as TabName)
+    : getSavedActiveTab();
 
   const handleNestedBack = () => {
-    if (currentTab === 'trainees') {
+    if (routeTab === 'trainees') {
       setSavedActiveTab('profile');
       router.replace('/(tabs)/profile');
-    } else if (currentTab === 'calendar') {
+    } else if (routeTab === 'calendar') {
       setSavedActiveTab('index');
       router.replace('/(tabs)');
     } else if (router.canGoBack()) {
@@ -31,7 +33,7 @@ export default function TabLayout() {
     <ScrollTabBarProvider>
       {isNestedScreen ? (
         <ScreenGestureWrapper
-          currentTab={currentTab}
+          currentTab={routeTab}
           enableTabSwipe={false}
           enableBackSwipe={true}
           onBack={handleNestedBack}
@@ -41,7 +43,7 @@ export default function TabLayout() {
           </View>
         </ScreenGestureWrapper>
       ) : (
-        <InstagramTabPager initialTab={currentTab} />
+        <InstagramTabPager initialTab={activeTab} />
       )}
     </ScrollTabBarProvider>
   );

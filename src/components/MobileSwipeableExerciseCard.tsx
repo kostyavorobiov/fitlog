@@ -1,26 +1,29 @@
 import React, { useState, useRef } from 'react';
-import { Trash2, ArrowLeftRight } from 'lucide-react';
+import { Trash2, ArrowLeftRight, Pencil } from 'lucide-react';
 
 interface MobileSwipeableExerciseCardProps {
   exerciseId?: string;
   onDelete: () => void;
   onChangeExercise?: () => void;
+  onEdit?: () => void;
   disabled?: boolean;
   stripeColor?: string;
   children: React.ReactNode;
 }
 
 const ACTION_BTN_WIDTH = 54;
-const TOTAL_SWIPE_WIDTH = 120; // 54 * 2 + gap + padding
 const SWIPE_THRESHOLD = 32;
 
 export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardProps> = ({
   onDelete,
   onChangeExercise,
+  onEdit,
   disabled = false,
   stripeColor,
   children,
 }) => {
+  const hasSecondaryAction = Boolean(onChangeExercise || onEdit);
+  const totalSwipeWidth = hasSecondaryAction ? 120 : 64;
   const [offsetX, setOffsetX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -77,7 +80,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
 
     if (isMovingHorizontallyRef.current === true) {
       e.stopPropagation();
-      const base = isOpenRef.current ? -TOTAL_SWIPE_WIDTH : 0;
+      const base = isOpenRef.current ? -totalSwipeWidth : 0;
       const targetX = base + dx;
       const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
       // Clamp between -screenWidth and 0
@@ -112,7 +115,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
         onDelete();
       } else if (offsetX < -SWIPE_THRESHOLD) {
         isOpenRef.current = true;
-        setOffsetX(-TOTAL_SWIPE_WIDTH);
+        setOffsetX(-totalSwipeWidth);
       } else {
         isOpenRef.current = false;
         setOffsetX(0);
@@ -128,6 +131,13 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
     isOpenRef.current = false;
     setOffsetX(0);
     if (onChangeExercise) onChangeExercise();
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    isOpenRef.current = false;
+    setOffsetX(0);
+    if (onEdit) onEdit();
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -151,7 +161,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
   const halfScreen = screenWidth * 0.5;
   const isPastHalf = -offsetX > halfScreen;
-  const stretchProgress = Math.max(0, Math.min(1, (-offsetX - TOTAL_SWIPE_WIDTH) / Math.max(1, halfScreen - TOTAL_SWIPE_WIDTH)));
+  const stretchProgress = Math.max(0, Math.min(1, (-offsetX - totalSwipeWidth) / Math.max(1, halfScreen - totalSwipeWidth)));
   const changeBtnOpacity = isPastHalf ? 0 : Math.max(0, 1 - stretchProgress);
 
   return (
@@ -163,11 +173,11 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
           : 'max-h-[3000px]'
       }`}
     >
-      {/* Background Actions: Change Exercise (Blue) & Delete Exercise (Red) without extra underlay */}
+      {/* Background Actions: Change/Edit Exercise (Blue) & Delete Exercise (Red) without extra underlay */}
       <div
         className="absolute inset-y-0 right-0 flex items-center justify-end z-0 p-1.5 gap-1.5 overflow-hidden bg-transparent"
         style={{
-          width: `${Math.max(TOTAL_SWIPE_WIDTH, -offsetX)}px`,
+          width: `${Math.max(totalSwipeWidth, -offsetX)}px`,
           opacity: offsetX < -4 ? 1 : 0,
           pointerEvents: offsetX < -4 ? 'auto' : 'none',
           transition: isDragging
@@ -191,6 +201,25 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
             aria-label="Змінити вправу"
           >
             <ArrowLeftRight className="h-5 w-5 shrink-0" />
+          </button>
+        )}
+
+        {/* Blue Edit Exercise Button (icons only, full height) */}
+        {onEdit && (
+          <button
+            type="button"
+            onClick={handleEdit}
+            onPointerDown={(e) => e.stopPropagation()}
+            style={{
+              opacity: changeBtnOpacity,
+              display: isPastHalf ? 'none' : 'flex',
+              transition: 'opacity 0.18s ease',
+            }}
+            className="w-[52px] h-full rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer select-none touch-manipulation shrink-0"
+            title="Редагувати вправу"
+            aria-label="Редагувати вправу"
+          >
+            <Pencil className="h-5 w-5 shrink-0" />
           </button>
         )}
 
