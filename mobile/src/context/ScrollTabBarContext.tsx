@@ -22,25 +22,22 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const translateY = useRef(new Animated.Value(0)).current;
   const headerAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
-  const accumulatedDelta = useRef(0);
-  const lastToggleTime = useRef(0);
 
   const setTabBarVisible = useCallback((visible: boolean) => {
     isTabBarVisibleRef.current = visible;
     setIsTabBarVisibleState(visible);
-    lastToggleTime.current = Date.now();
 
     Animated.spring(translateY, {
       toValue: visible ? 0 : 120,
       useNativeDriver: Platform.OS !== 'web',
       overshootClamping: true,
-      tension: 80,
+      tension: 85,
       friction: 14,
     }).start();
 
     Animated.timing(headerAnim, {
       toValue: visible ? 0 : 1,
-      duration: 200,
+      duration: 180,
       useNativeDriver: false,
     }).start();
   }, [translateY, headerAnim]);
@@ -57,35 +54,25 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (!isTabBarVisibleRef.current) {
           setTabBarVisible(true);
         }
-        accumulatedDelta.current = 0;
         lastScrollY.current = Math.max(0, currentY);
         return;
       }
 
-      // Avoid rubber-band bounce near the bottom on iOS
-      if (contentHeight > 0 && layoutHeight > 0 && currentY >= contentHeight - layoutHeight - 10) {
+      // Avoid rubber-band bounce near the bottom on iOS from showing navbar
+      if (contentHeight > 0 && layoutHeight > 0 && currentY >= contentHeight - layoutHeight - 8) {
         lastScrollY.current = currentY;
         return;
       }
 
-      const now = Date.now();
-      const canToggle = now - lastToggleTime.current >= 200;
-
-      // Scrolling down -> hide tab bar and top navbar
-      if (diff > 8 && currentY > 30) {
-        if (accumulatedDelta.current < 0) accumulatedDelta.current = 0;
-        accumulatedDelta.current += diff;
-
-        if (isTabBarVisibleRef.current && canToggle && accumulatedDelta.current >= 20) {
+      // Scrolling down -> hide tab bar and top navbar on minimal swipe
+      if ((diff > 8 || diff > 2) && currentY > 15) {
+        if (isTabBarVisibleRef.current) {
           setTabBarVisible(false);
         }
       }
       // Scrolling up -> show tab bar and top navbar immediately
       else if (diff < -6) {
-        if (accumulatedDelta.current > 0) accumulatedDelta.current = 0;
-        accumulatedDelta.current += diff;
-
-        if (!isTabBarVisibleRef.current && canToggle && accumulatedDelta.current <= -16) {
+        if (!isTabBarVisibleRef.current) {
           setTabBarVisible(true);
         }
       }

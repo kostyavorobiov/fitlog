@@ -47,12 +47,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   const lastScrollY = useRef(0);
   const lastNavSelectTime = useRef(0);
 
-  // Handle mobile navbar auto-hide on scroll with hysteresis and jitter suppression
+  // Handle mobile navbar auto-hide on scroll
   useEffect(() => {
     let ticking = false;
     let suppressHideUntil = 0;
-    let accumulatedDelta = 0;
-    let lastToggleTime = 0;
 
     const handleScroll = () => {
       if (!ticking) {
@@ -81,27 +79,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           }
 
           const now = Date.now();
-          const canToggle = now - lastToggleTime >= 220;
-
-          if (diff > 8) {
-            // Scrolling down the page (swiping up) -> hide navbar
-            if (accumulatedDelta < 0) accumulatedDelta = 0;
-            accumulatedDelta += diff;
-
-            if (isNavVisibleRef.current && canToggle && accumulatedDelta >= 22 && now >= suppressHideUntil) {
+          if (diff > 2) {
+            // Scrolling down the page (swiping up) -> hide navbar on minimal swipe
+            if (isNavVisibleRef.current && now >= suppressHideUntil) {
               isNavVisibleRef.current = false;
               setIsNavVisible(false);
-              lastToggleTime = now;
             }
-          } else if (diff < -8) {
-            // Scrolling up the page (swiping down) -> show navbar
-            if (accumulatedDelta > 0) accumulatedDelta = 0;
-            accumulatedDelta += diff;
-
-            if (!isNavVisibleRef.current && canToggle && accumulatedDelta <= -18) {
+          } else if (diff < -6) {
+            // Scrolling up the page (swiping down) -> show navbar immediately
+            if (!isNavVisibleRef.current) {
               isNavVisibleRef.current = true;
               setIsNavVisible(true);
-              lastToggleTime = now;
             }
           }
 
