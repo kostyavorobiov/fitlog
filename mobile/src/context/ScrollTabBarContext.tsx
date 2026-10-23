@@ -10,6 +10,7 @@ interface ScrollTabBarContextType {
   isTabBarVisible: boolean;
   setTabBarVisible: (visible: boolean) => void;
   translateY: Animated.Value;
+  headerAnim: Animated.Value;
   handleScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
@@ -18,6 +19,7 @@ const ScrollTabBarContext = createContext<ScrollTabBarContextType | undefined>(u
 export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isTabBarVisible, setIsTabBarVisibleState] = useState(true);
   const translateY = useRef(new Animated.Value(0)).current;
+  const headerAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
   const isAnimating = useRef(false);
 
@@ -29,7 +31,13 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
       tension: 80,
       friction: 12,
     }).start();
-  }, [translateY]);
+
+    Animated.timing(headerAnim, {
+      toValue: visible ? 0 : 1,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [translateY, headerAnim]);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -45,13 +53,13 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      // Scrolling down -> hide tab bar
+      // Scrolling down -> hide tab bar and top navbar
       if (diff > 8 && currentY > 30) {
         if (isTabBarVisible) {
           setTabBarVisible(false);
         }
       }
-      // Scrolling up -> show tab bar immediately
+      // Scrolling up -> show tab bar and top navbar immediately
       else if (diff < -6) {
         if (!isTabBarVisible) {
           setTabBarVisible(true);
@@ -69,6 +77,7 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
         isTabBarVisible,
         setTabBarVisible,
         translateY,
+        headerAnim,
         handleScroll,
       }}
     >
@@ -82,10 +91,12 @@ export const useScrollTabBar = (): ScrollTabBarContextType => {
   if (!context) {
     // Return safe fallback if used outside provider
     const fallbackTranslateY = new Animated.Value(0);
+    const fallbackHeaderAnim = new Animated.Value(0);
     return {
       isTabBarVisible: true,
       setTabBarVisible: () => {},
       translateY: fallbackTranslateY,
+      headerAnim: fallbackHeaderAnim,
       handleScroll: () => {},
     };
   }

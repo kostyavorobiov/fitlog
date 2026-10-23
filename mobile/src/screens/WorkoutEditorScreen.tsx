@@ -13,6 +13,8 @@ import {
   Modal,
   Animated,
   PanResponder,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -365,6 +367,58 @@ export const WorkoutEditorScreen: React.FC = () => {
       router.replace('/(tabs)');
     }
   }, [router]);
+
+  const topBarAnim = useRef(new Animated.Value(0)).current;
+  const lastScrollY = useRef(0);
+  const [isTopBarVisible, setIsTopBarVisible] = useState(true);
+  const [topBarHeight, setTopBarHeight] = useState(56);
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const currentY = event.nativeEvent.contentOffset.y;
+      const diff = currentY - lastScrollY.current;
+
+      // Always show when near the top
+      if (currentY <= 15) {
+        if (!isTopBarVisible) {
+          setIsTopBarVisible(true);
+          Animated.timing(topBarAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: false,
+          }).start();
+        }
+        lastScrollY.current = currentY;
+        return;
+      }
+
+      // Scrolling down -> hide top bar
+      if (diff > 8 && currentY > 30) {
+        if (isTopBarVisible) {
+          setIsTopBarVisible(false);
+          Animated.timing(topBarAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: false,
+          }).start();
+        }
+      }
+      // Scrolling up -> show top bar immediately
+      else if (diff < -6) {
+        if (!isTopBarVisible) {
+          setIsTopBarVisible(true);
+          Animated.timing(topBarAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: false,
+          }).start();
+        }
+      }
+
+      lastScrollY.current = currentY;
+    },
+    [isTopBarVisible, topBarAnim]
+  );
 
   // Load workout details
   const loadWorkout = useCallback(async () => {
@@ -1322,7 +1376,29 @@ export const WorkoutEditorScreen: React.FC = () => {
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBack}>
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Top Header Bar */}
-      <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
+      <Animated.View
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          if (h > 0 && Math.abs(h - topBarHeight) > 2) {
+            setTopBarHeight(h);
+          }
+        }}
+        style={[
+          styles.topBar,
+          isDark ? styles.borderDark : styles.borderLight,
+          {
+            marginTop: topBarAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -topBarHeight],
+            }),
+            opacity: topBarAnim.interpolate({
+              inputRange: [0, 0.7, 1],
+              outputRange: [1, 0.2, 0],
+            }),
+            overflow: 'hidden',
+          },
+        ]}
+      >
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={handleBack}
@@ -1377,7 +1453,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             <Ionicons name="bookmark-outline" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
 
       <DatePickerModal
         visible={isDatePickerOpen}
@@ -1396,6 +1472,8 @@ export const WorkoutEditorScreen: React.FC = () => {
       >
         <ScrollView
           ref={scrollViewRef}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           contentContainerStyle={[
             styles.contentScroll,
             { paddingBottom: 40 + Math.max(insets.bottom, 16) },

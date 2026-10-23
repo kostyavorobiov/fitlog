@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Platform,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { UserAvatar } from './UserAvatar';
 
 export interface WebTopNavbarProps {
@@ -123,8 +125,36 @@ export const Header: React.FC<HeaderProps> = ({
   onLogoPress,
   hideTopNavbar = false,
 }) => {
+  const { headerAnim } = useScrollTabBar();
+  const [measuredHeight, setMeasuredHeight] = useState(subtitle ? 100 : 56);
+
+  const marginTop = headerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -measuredHeight],
+  });
+
+  const opacity = headerAnim.interpolate({
+    inputRange: [0, 0.7, 1],
+    outputRange: [1, 0.2, 0],
+  });
+
   return (
-    <View style={styles.wrapper}>
+    <Animated.View
+      onLayout={(e) => {
+        const h = e.nativeEvent.layout.height;
+        if (h > 0 && Math.abs(h - measuredHeight) > 2) {
+          setMeasuredHeight(h);
+        }
+      }}
+      style={[
+        styles.wrapper,
+        {
+          marginTop,
+          opacity,
+          overflow: 'hidden',
+        },
+      ]}
+    >
       {!hideTopNavbar && <WebTopNavbar title={title} onLogoPress={onLogoPress} rightAction={!subtitle ? rightAction : undefined} />}
       {subtitle ? (
         <View style={styles.sectionContainer}>
@@ -134,7 +164,7 @@ export const Header: React.FC<HeaderProps> = ({
           />
         </View>
       ) : null}
-    </View>
+    </Animated.View>
   );
 };
 
