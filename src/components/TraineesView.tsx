@@ -320,6 +320,51 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     showToast('Тренування видалено', 'success');
   };
 
+  const handleCopyWorkout = async (source: WorkoutPlan) => {
+    if (!selectedTrainee) return;
+    try {
+      const newWorkoutId = generateId('workout');
+      const today = new Date().toISOString().split('T')[0];
+
+      const clonedExercises = (source.exercises || []).map((ex) => {
+        const weId = generateId('workoutexercise');
+        const clonedSets = (ex.sets || []).map((s) => ({
+          ...s,
+          id: generateId('set'),
+          completed: false,
+          workoutExerciseId: weId,
+          completedAt: null,
+        }));
+        return {
+          ...ex,
+          id: weId,
+          workoutPlanId: newWorkoutId,
+          sets: clonedSets,
+        };
+      });
+
+      const copied: WorkoutPlan = {
+        ...source,
+        id: newWorkoutId,
+        userId: selectedTrainee.id,
+        assignedByCoachId: coach.id,
+        title: `${source.title || 'Тренування'} (Копія)`,
+        scheduledDate: today,
+        status: 'planned',
+        createdAt: new Date().toISOString(),
+        completedAt: null,
+        exercises: clonedExercises,
+      };
+
+      StorageService.saveWorkout(copied);
+      await CloudStorageService.saveWorkout(copied);
+      setRefreshKey((k) => k + 1);
+      showToast('Тренування скопійовано', 'success');
+    } catch (e: any) {
+      showToast(e?.message || 'Не вдалося скопіювати тренування', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-fade-in pb-16">
       {/* Toast Alert */}
@@ -493,55 +538,57 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
             </div>
           </div>
 
-          {/* Selected Trainee Workouts & Management Panel (Supports Swipe Left/Right between trainees) */}
+          {/* Selected Trainee Card & Workouts */}
           {selectedTrainee && (
-            <div
-              ref={traineeSwipeRef}
-              className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-6 space-y-5 shadow-xs touch-pan-y"
-            >
-              {/* Trainee Subheader */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
-                <div className="flex items-center space-x-3">
-                  <UserAvatar src={selectedTrainee.image} alt={selectedTrainee.name} size="md" />
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
-                        {selectedTrainee.firstName || selectedTrainee.name} {selectedTrainee.lastName || ''}
-                      </h2>
-                      <span className="rounded-md border border-[#2563EB]/30 bg-[#2563EB]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#2563EB] dark:text-[#60A5FA]">
-                        Атлет
-                      </span>
+            <div className="space-y-4">
+              {/* Trainee Profile Card */}
+              <div
+                ref={traineeSwipeRef}
+                className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-xs touch-pan-y"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center space-x-3">
+                    <UserAvatar src={selectedTrainee.image} alt={selectedTrainee.name} size="md" />
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
+                          {selectedTrainee.firstName || selectedTrainee.name} {selectedTrainee.lastName || ''}
+                        </h2>
+                        <span className="rounded-md border border-[#2563EB]/30 bg-[#2563EB]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#2563EB] dark:text-[#60A5FA]">
+                          Атлет
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                        {selectedTrainee.email} · ID: {selectedTrainee.profileCode || selectedTrainee.id}
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                      {selectedTrainee.email} · ID: {selectedTrainee.profileCode || selectedTrainee.id}
-                    </p>
                   </div>
-                </div>
 
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setTraineeToRemove(selectedTrainee)}
-                    className="h-9 px-3 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
-                  >
-                    Відкріпити
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setTraineeToRemove(selectedTrainee)}
+                      className="h-9 px-3 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
+                    >
+                      Відкріпити
+                    </button>
 
-                  {/* CREATE PLAN BUTTON: Opens the SAME unified CreateWorkoutModal UI */}
-                  <button
-                    type="button"
-                    onClick={handleOpenCreateModal}
-                    className="h-9 inline-flex items-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    <span>Створити план тренування</span>
-                  </button>
+                    {/* CREATE PLAN BUTTON: Opens the SAME unified CreateWorkoutModal UI */}
+                    <button
+                      type="button"
+                      onClick={handleOpenCreateModal}
+                      className="h-9 inline-flex items-center space-x-1.5 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Створити план тренування</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Trainee Workouts List */}
+              {/* Trainee Workouts Section */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-xs px-0.5">
                   <span className="font-semibold text-slate-700 dark:text-zinc-300">
                     Тренування підопічного ({traineeWorkouts.length})
                   </span>
@@ -610,6 +657,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                                   <MobileSwipeableWorkoutCard
                                     key={w.id}
                                     workoutId={w.id}
+                                    onCopy={() => handleCopyWorkout(w)}
                                     onDelete={() => setWorkoutToDelete(w)}
                                   >
                                     <div
