@@ -39,6 +39,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   const isOpenRef = useRef(false);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
+  const cardWidthRef = useRef<number>(380);
   const isMovingHorizontallyRef = useRef<boolean | null>(null);
   const pointerIdRef = useRef<number | null>(null);
   const hasMovedRef = useRef(false);
@@ -77,12 +78,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
     }
 
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const touchX = e.clientX;
-
-    // Mobile logic: closed card swipe MUST start in the right 25% of the card/screen
-    if (!isOpenRef.current && touchX < rect.right - rect.width * 0.25) {
-      return;
-    }
+    cardWidthRef.current = rect.width;
 
     startXRef.current = e.clientX;
     startYRef.current = e.clientY;
@@ -120,8 +116,8 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
     if (isMovingHorizontallyRef.current === true) {
       e.stopPropagation();
 
-      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
-      const quickDeleteThreshold = screenWidth * 0.5;
+      const cardWidth = cardWidthRef.current || (typeof window !== 'undefined' ? window.innerWidth : 380);
+      const quickDeleteThreshold = cardWidth * 0.55;
 
       // 1. If card is currently open: allow dragging right to close
       if (isOpenRef.current) {
@@ -134,7 +130,7 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
 
       // 2. Closed card: swiping left
       if (dx < 0) {
-        const clamped = Math.max(-screenWidth, dx);
+        const clamped = Math.max(-cardWidth, dx);
         setOffsetX(clamped);
 
         const isOver = Math.abs(clamped) >= quickDeleteThreshold;
@@ -168,8 +164,8 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
       }, 150);
 
       const dx = e.clientX - startXRef.current;
-      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
-      const quickDeleteThreshold = screenWidth * 0.5;
+      const cardWidth = cardWidthRef.current || (typeof window !== 'undefined' ? window.innerWidth : 380);
+      const quickDeleteThreshold = cardWidth * 0.55;
 
       // 1. If card was already open
       if (isOpenRef.current) {
@@ -186,10 +182,10 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
       }
 
       // 2. Closed card swipe ending
-      const pastHalfScreen = -offsetX >= quickDeleteThreshold;
+      const pastHalfCard = -offsetX >= quickDeleteThreshold;
 
-      if (pastHalfScreen) {
-        // Full swipe > 50%: snap to resting width smoothly and trigger single delete confirmation
+      if (pastHalfCard) {
+        // Full swipe > 55%: snap to resting width smoothly and trigger single delete confirmation
         isOpenRef.current = false;
         setOffsetX(0);
         webSwipeCardManager.setActive(null);
@@ -260,8 +256,8 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
     }
   };
 
-  const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
-  const quickDeleteThreshold = screenWidth * 0.5;
+  const cardWidth = cardWidthRef.current || (typeof window !== 'undefined' ? window.innerWidth : 380);
+  const quickDeleteThreshold = cardWidth * 0.55;
   const currentPull = -offsetX;
   const isPastHalf = currentPull >= quickDeleteThreshold;
 
@@ -282,10 +278,12 @@ export const MobileSwipeableExerciseCard: React.FC<MobileSwipeableExerciseCardPr
   return (
     <div
       data-no-swipe="true"
+      data-swipe-card="true"
+      style={{ touchAction: 'pan-y' }}
       className={`no-swipe relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-[#1d2939] shadow-xs transition-all duration-200 hover:border-slate-300 dark:hover:border-zinc-700 ${
         isDeleting
           ? 'max-h-0 opacity-0 -translate-x-full my-0 py-0 border-transparent overflow-hidden'
-          : 'max-h-[3000px]'
+          : ''
       }`}
     >
       {/* Background Actions Row with full-height rounded buttons */}

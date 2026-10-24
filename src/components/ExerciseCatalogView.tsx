@@ -13,7 +13,6 @@ import {
   ChevronRight,
   Pencil,
 } from 'lucide-react';
-import { useSwipeGesture } from '../utils/useSwipeGesture';
 
 export { isCustomExercise };
 
@@ -49,12 +48,6 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
     }
   };
 
-  const catalogSwipeRef = useSwipeGesture<HTMLDivElement>({
-    onSwipeLeft: handleNextMuscle,
-    onSwipeRight: handlePrevMuscle,
-    threshold: 30,
-    disabled: isCreateOpen || Boolean(exerciseToEdit) || Boolean(historyModalExercise),
-  });
 
   useEffect(() => {
     StorageService.syncExercises().then(() => {
@@ -155,8 +148,8 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
         </div>
       </div>
 
-      {/* Grid of exercises (Supports Swipe Left/Right to change muscle group) */}
-      <div ref={catalogSwipeRef} className="grid grid-cols-1 md:grid-cols-2 gap-3 touch-pan-y">
+      {/* Grid of exercises */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 touch-pan-y">
         {filtered.length === 0 ? (
           <div className="col-span-full rounded-[28px] border border-dashed border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1d2939]/50 py-12 px-6 flex flex-col items-center justify-center text-center">
             <div className="w-14 h-14 rounded-2xl bg-[#f1f5f9] dark:bg-[#263140] flex items-center justify-center">

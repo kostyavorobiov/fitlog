@@ -64,8 +64,8 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
         return true;
       }
 
-      // Explicitly marked no-swipe containers or buttons
-      if (target.closest('[data-no-swipe], .no-swipe')) {
+      // Explicitly marked no-swipe containers or buttons, or swipeable item cards
+      if (target.closest('[data-no-swipe], .no-swipe, [data-swipe-card], [data-swipeable]')) {
         return true;
       }
 
@@ -104,6 +104,13 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       }
 
       const touch = e.touches[0];
+      const edgeThreshold = optionsRef.current.edgeThreshold ?? 25;
+      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 380;
+      if (edgeThreshold > 0 && (touch.clientX < edgeThreshold || touch.clientX > screenWidth - edgeThreshold)) {
+        isTracking = false;
+        return;
+      }
+
       startX = touch.clientX;
       startY = touch.clientY;
       currentX = startX;
@@ -137,8 +144,8 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
         return;
       }
 
-      // Lock horizontal gesture: prevent iOS Chrome/Safari and Android from taking over with native navigation
-      if (absX > absY && absX > 7) {
+      // Lock horizontal gesture only when clearly horizontal movement is observed
+      if (absX > 12 && absX > absY * 1.5) {
         if (e.cancelable) {
           e.preventDefault();
         }

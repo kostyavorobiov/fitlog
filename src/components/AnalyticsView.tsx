@@ -423,7 +423,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userId, onSelectWo
   const tabSwipeRef = useSwipeGesture<HTMLDivElement>({
     onSwipeLeft: () => setViewTab('exercises'),
     onSwipeRight: () => setViewTab('muscles'),
-    threshold: 30,
+    threshold: 40,
     disabled: Boolean(selectedExercise) || Boolean(searchQuery.trim()),
   });
 
