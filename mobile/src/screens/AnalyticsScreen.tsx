@@ -556,13 +556,13 @@ export const AnalyticsScreen: React.FC = () => {
                             key={item.exerciseId || `ex_${idx}`}
                             activeOpacity={0.7}
                             onPress={() => {
-                              setSavedActiveTab('exercises');
+                              setSavedActiveTab('analytics');
                               router.push({
                                 pathname: `/exercise/${item.exerciseId}` as any,
                                 params: {
                                   name: item.exerciseName,
                                   muscleGroup: item.muscleGroup,
-                                  fromTab: 'exercises',
+                                  fromTab: 'analytics',
                                 },
                               });
                             }}

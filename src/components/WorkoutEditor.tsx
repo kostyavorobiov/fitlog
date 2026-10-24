@@ -6,7 +6,9 @@ import {
   Exercise,
   MUSCLE_GROUPS,
   PastExercisePerformance,
+  DEFAULT_REPS_RANGES,
 } from '../types/workout';
+import { useAuth } from '../context/AuthContext';
 import { StorageService, generateId } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { ExerciseSelectorModal } from './ExerciseSelectorModal';
@@ -209,6 +211,13 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
       exercises: normalizedExercises,
     };
   });
+  const { user } = useAuth();
+  const availableRepRanges = useMemo(() => {
+    return user?.customRepRanges && user.customRepRanges.length > 0
+      ? user.customRepRanges
+      : [...DEFAULT_REPS_RANGES];
+  }, [user?.customRepRanges]);
+
   const workoutRef = useRef<WorkoutPlan>(workout);
   workoutRef.current = workout;
 
@@ -1380,7 +1389,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                               onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
                               className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
                             >
-                              {(['4-6', '6-8', '6-10', '8-10', '8-12', '10-15'] as const).map((range) => (
+                              {Array.from(new Set([...availableRepRanges, weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'])).map((range) => (
                                 <option key={range} value={range}>
                                   {range}
                                 </option>
@@ -1714,7 +1723,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           onChange={(e) => handleTargetRepsRangeChange(weItem.id, e.target.value)}
                           className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 cursor-pointer"
                         >
-                          {(['4-6', '6-8', '6-10', '8-10', '8-12', '10-15'] as const).map((range) => (
+                          {Array.from(new Set([...availableRepRanges, weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'])).map((range) => (
                             <option key={range} value={range}>
                               {range}
                             </option>

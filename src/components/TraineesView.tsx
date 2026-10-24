@@ -4,6 +4,7 @@ import { StorageService, generateId } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateWorkoutModal } from './CreateWorkoutModal';
+import { TraineeAnalyticsModal } from './TraineeAnalyticsModal';
 import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { UserAvatar } from './UserAvatar';
 import {
@@ -22,6 +23,7 @@ import {
   ArrowLeft,
   Key,
   Layers,
+  BarChart2,
 } from 'lucide-react';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 import { getMonthKeyAndLabel, formatDateDDMMYY, MonthGroup } from './WorkoutListView';
@@ -52,6 +54,7 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
   const [workoutToDelete, setWorkoutToDelete] = useState<WorkoutPlan | null>(null);
   const [traineeToRemove, setTraineeToRemove] = useState<User | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [expandedWorkoutIds, setExpandedWorkoutIds] = useState<Record<string, boolean>>({});
 
@@ -83,11 +86,11 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     onSwipeLeft: handleNextTrainee,
     onSwipeRight: handlePrevTrainee,
     threshold: 30,
-    disabled: trainees.length <= 1 || Boolean(workoutToDelete) || Boolean(traineeToRemove),
+    disabled: trainees.length <= 1 || Boolean(workoutToDelete) || Boolean(traineeToRemove) || isAnalyticsModalOpen,
   });
 
   // Mobile edge-swipe right to navigate back to profile
-  const isAnyModalOpen = Boolean(workoutToDelete || traineeToRemove || isCreateModalOpen);
+  const isAnyModalOpen = Boolean(workoutToDelete || traineeToRemove || isCreateModalOpen || isAnalyticsModalOpen);
   useEdgeSwipeBack({
     onBack,
     disabled: !onBack || isAnyModalOpen,
@@ -572,7 +575,16 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsAnalyticsModalOpen(true)}
+                      className="h-9 inline-flex items-center space-x-1.5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 hover:bg-slate-50 dark:hover:bg-zinc-700/80 text-slate-800 dark:text-zinc-200 px-3 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+                    >
+                      <BarChart2 className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
+                      <span>Аналітика</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => setTraineeToRemove(selectedTrainee)}
@@ -806,6 +818,13 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
         userId={coach.id}
         modalTitle={selectedTrainee ? `Тренування: ${selectedTrainee.name}` : 'Нове тренування'}
         modalSub="Створіть порожнє або з вашого збереженого шаблону"
+      />
+
+      {/* Trainee Analytics Modal */}
+      <TraineeAnalyticsModal
+        isOpen={isAnalyticsModalOpen}
+        onClose={() => setIsAnalyticsModalOpen(false)}
+        trainee={selectedTrainee}
       />
     </div>
   );

@@ -20,7 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { TraineeService } from '../services/traineeService';
-import { User, UserRole } from '../types/workout';
+import { User, UserRole, DEFAULT_REPS_RANGES } from '../types/workout';
 
 export const ProfileScreen: React.FC = () => {
   const router = useRouter();
@@ -42,14 +42,54 @@ export const ProfileScreen: React.FC = () => {
   const [isLinkingCoach, setIsLinkingCoach] = useState(false);
   const [traineesCount, setTraineesCount] = useState<number>(0);
 
+  // Rep ranges state
+  const [repRanges, setRepRanges] = useState<string[]>(() => {
+    return user?.customRepRanges && user.customRepRanges.length > 0
+      ? user.customRepRanges
+      : [...DEFAULT_REPS_RANGES];
+  });
+  const [newRepRangeInput, setNewRepRangeInput] = useState('');
+
   // Synchronize form when user loads/changes
   useEffect(() => {
     if (user) {
       setFirstName(user.firstName || '');
       setLastName(user.lastName || '');
       setSelectedRole(user.role);
+      if (user.customRepRanges && user.customRepRanges.length > 0) {
+        setRepRanges(user.customRepRanges);
+      }
     }
   }, [user]);
+
+  const handleAddRepRange = async () => {
+    const trimmed = newRepRangeInput.trim().replace(/\s+/g, '');
+    if (!trimmed) return;
+    if (repRanges.includes(trimmed)) {
+      Alert.alert('Увага', 'Цей діапазон повторень вже існує у списку');
+      return;
+    }
+    const updated = [...repRanges, trimmed];
+    setRepRanges(updated);
+    setNewRepRangeInput('');
+    await updateUserProfile({ customRepRanges: updated });
+  };
+
+  const handleRemoveRepRange = async (rangeToRemove: string) => {
+    if (repRanges.length <= 1) {
+      Alert.alert('Увага', 'Потрібно залишити щонайменше один діапазон повторень');
+      return;
+    }
+    const updated = repRanges.filter((r) => r !== rangeToRemove);
+    setRepRanges(updated);
+    await updateUserProfile({ customRepRanges: updated });
+  };
+
+  const handleResetRepRanges = async () => {
+    const defaults = [...DEFAULT_REPS_RANGES];
+    setRepRanges(defaults);
+    await updateUserProfile({ customRepRanges: defaults });
+  };
 
   // Load coach profile or trainees count
   const loadCoachOrTrainees = useCallback(async () => {
@@ -209,21 +249,30 @@ export const ProfileScreen: React.FC = () => {
   }
 
   // Role info styling
-  const roleMeta: Record<UserRole, { title: string; color: string; bg: string }> = {
+  const roleMeta: Record<
+    UserRole,
+    { title: string; color: string; bg: string; border: string; icon: keyof typeof Ionicons.glyphMap }
+  > = {
     admin: {
       title: 'Адміністратор',
       color: '#ef4444',
-      bg: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)',
+      bg: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.08)',
+      border: isDark ? 'rgba(239, 68, 68, 0.35)' : 'rgba(239, 68, 68, 0.25)',
+      icon: 'shield-checkmark',
     },
     coach: {
       title: 'Тренер',
       color: isDark ? '#60a5fa' : '#2563eb',
-      bg: isDark ? 'rgba(37, 99, 235, 0.25)' : 'rgba(37, 99, 235, 0.1)',
+      bg: isDark ? 'rgba(37, 99, 235, 0.2)' : 'rgba(37, 99, 235, 0.08)',
+      border: isDark ? 'rgba(96, 165, 250, 0.35)' : 'rgba(37, 99, 235, 0.25)',
+      icon: 'ribbon-outline',
     },
     athlete: {
       title: 'Атлет',
-      color: isDark ? '#60a5fa' : '#2563eb',
-      bg: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(37, 99, 235, 0.08)',
+      color: isDark ? '#34d399' : '#059669',
+      bg: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
+      border: isDark ? 'rgba(52, 211, 153, 0.35)' : 'rgba(16, 185, 129, 0.25)',
+      icon: 'fitness-outline',
     },
   };
   const currentRole = roleMeta[user.role] || roleMeta.athlete;
@@ -232,7 +281,6 @@ export const ProfileScreen: React.FC = () => {
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       <Header
         title="Профіль"
-        subtitle="Обліковий запис та налаштування"
         showAvatar={false}
       />
 
@@ -245,27 +293,31 @@ export const ProfileScreen: React.FC = () => {
         {/* 1. Main Profile Card */}
         <Card style={styles.profileCard}>
           <View style={styles.profileHeaderRow}>
-            {/* UserAvatar with WD theme fallback */}
+            {/* Clean prominent UserAvatar */}
             <View style={styles.avatarWrap}>
               <UserAvatar
                 image={user.image}
                 name={user.name}
                 size="xl"
               />
-              <View style={[styles.roleBadge, { backgroundColor: currentRole.bg }]}>
-                <Text style={[styles.roleBadgeText, { color: currentRole.color }]}>
-                  {currentRole.title}
-                </Text>
-              </View>
             </View>
 
-            {/* Basic user info: Name, email */}
+            {/* Basic user info: Name, role badge, email */}
             <View style={styles.profileInfoWrap}>
-              <Text style={[styles.userName, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
-                {user.firstName || user.name} {user.lastName || ''}
-              </Text>
+              <View style={styles.nameAndRoleWrap}>
+                <Text style={[styles.userName, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
+                  {user.firstName || user.name} {user.lastName || ''}
+                </Text>
+                <View style={[styles.rolePillBadge, { backgroundColor: currentRole.bg, borderColor: currentRole.border }]}>
+                  <Ionicons name={currentRole.icon} size={13} color={currentRole.color} />
+                  <Text style={[styles.rolePillText, { color: currentRole.color }]}>
+                    {currentRole.title}
+                  </Text>
+                </View>
+              </View>
+
               <View style={styles.emailRow}>
-                <Ionicons name="mail-outline" size={14} color={isDark ? '#94A3B8' : '#64748B'} />
+                <Ionicons name="mail-outline" size={13} color={isDark ? '#94A3B8' : '#64748B'} />
                 <Text style={[styles.userEmail, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
                   {user.email || 'Немає email'}
                 </Text>
@@ -585,7 +637,86 @@ export const ProfileScreen: React.FC = () => {
           )}
         </Card>
 
-        {/* 4. Logout Button */}
+        {/* 4. Rep Ranges Settings Card */}
+        <Card style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionTitleWrap}>
+              <View style={styles.sectionIconRow}>
+                <Ionicons
+                  name="repeat-outline"
+                  size={18}
+                  color={isDark ? '#60a5fa' : '#2563eb'}
+                />
+                <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
+                  Діапазони повторень
+                </Text>
+              </View>
+              <Text style={[styles.sectionSubtitle, isDark ? styles.subDark : styles.subLight]}>
+                Власні діапазони підходів для швидкого вибору під час тренувань
+              </Text>
+            </View>
+          </View>
+
+          {/* Current Ranges Pills */}
+          <View style={styles.rangesPillsContainer}>
+            {repRanges.map((rng) => (
+              <View
+                key={rng}
+                style={[styles.rangePill, isDark ? styles.rangePillDark : styles.rangePillLight]}
+              >
+                <Text style={[styles.rangePillText, isDark ? styles.textDark : styles.textLight]}>
+                  {rng}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => handleRemoveRepRange(rng)}
+                  hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                  style={styles.rangeDeleteBtn}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close-circle" size={16} color={isDark ? '#94a3b8' : '#64748b'} />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+
+          {/* Add New Range Row */}
+          <View style={styles.addRangeRow}>
+            <TextInput
+              style={[styles.addRangeInput, isDark ? styles.inputDark : styles.inputLight]}
+              placeholder="Напр. 12-15 або 20+"
+              placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+              value={newRepRangeInput}
+              onChangeText={setNewRepRangeInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="done"
+              onSubmitEditing={handleAddRepRange}
+            />
+            <TouchableOpacity
+              style={[styles.addRangeBtn, !newRepRangeInput.trim() && styles.btnDisabled]}
+              onPress={handleAddRepRange}
+              disabled={!newRepRangeInput.trim()}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add" size={18} color="#ffffff" />
+              <Text style={styles.addRangeBtnText}>Додати</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Reset to Defaults */}
+          <TouchableOpacity
+            style={styles.resetRangesBtn}
+            onPress={handleResetRepRanges}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="refresh-outline" size={14} color={isDark ? '#94a3b8' : '#64748b'} />
+            <Text style={[styles.resetRangesBtnText, isDark ? styles.subDark : styles.subLight]}>
+              Скинути до стандартних
+            </Text>
+          </TouchableOpacity>
+        </Card>
+
+        {/* 5. Logout Button */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
           <Ionicons name="log-out-outline" size={18} color="#f43f5e" />
           <Text style={styles.logoutBtnText}>Вийти з акаунта</Text>
@@ -624,26 +755,34 @@ const styles = StyleSheet.create({
   },
   avatarWrap: {
     position: 'relative',
+    alignSelf: 'center',
+  },
+  nameAndRoleWrap: {
+    gap: 6,
+    alignItems: 'flex-start',
+  },
+  rolePillBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  rolePillText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   roleBadge: {
-    position: 'absolute',
-    bottom: -6,
-    left: -4,
-    right: -4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 8,
+    display: 'none',
   },
   roleBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    textAlign: 'center',
+    display: 'none',
   },
   profileInfoWrap: {
     flex: 1,
-    gap: 4,
+    gap: 6,
   },
   userName: {
     fontSize: 20,
@@ -1042,5 +1181,75 @@ const styles = StyleSheet.create({
   },
   subDark: {
     color: '#94a3b8',
+  },
+  rangesPillsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  rangePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  rangePillLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  rangePillDark: {
+    backgroundColor: '#1e293b',
+    borderColor: '#334155',
+  },
+  rangePillText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  rangeDeleteBtn: {
+    padding: 1,
+  },
+  addRangeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+  },
+  addRangeInput: {
+    flex: 1,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    fontSize: 14,
+  },
+  addRangeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 16,
+    height: 44,
+    borderRadius: 14,
+  },
+  addRangeBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  resetRangesBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    marginTop: 2,
+  },
+  resetRangesBtnText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });

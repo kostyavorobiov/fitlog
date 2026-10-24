@@ -14,8 +14,14 @@ import {
   Moon,
   Loader2,
   LogOut,
+  Repeat,
+  ShieldCheck,
+  Dumbbell,
+  Plus,
+  X,
+  RotateCcw,
 } from 'lucide-react';
-import { User, UserRole, MuscleGroup } from '../types/workout';
+import { User, UserRole, MuscleGroup, DEFAULT_REPS_RANGES } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -36,6 +42,43 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
   const [coachInputCode, setCoachInputCode] = useState('');
   const [isLinkingCoach, setIsLinkingCoach] = useState(false);
   const [coachToast, setCoachToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Rep ranges state
+  const [repRanges, setRepRanges] = useState<string[]>(() => {
+    return user?.customRepRanges && user.customRepRanges.length > 0
+      ? user.customRepRanges
+      : [...DEFAULT_REPS_RANGES];
+  });
+  const [newRepRangeInput, setNewRepRangeInput] = useState('');
+
+  useEffect(() => {
+    if (user?.customRepRanges && user.customRepRanges.length > 0) {
+      setRepRanges(user.customRepRanges);
+    }
+  }, [user?.customRepRanges]);
+
+  const handleAddRepRange = () => {
+    const trimmed = newRepRangeInput.trim().replace(/\s+/g, '');
+    if (!trimmed) return;
+    if (repRanges.includes(trimmed)) return;
+    const updated = [...repRanges, trimmed];
+    setRepRanges(updated);
+    setNewRepRangeInput('');
+    updateUserProfile({ customRepRanges: updated });
+  };
+
+  const handleRemoveRepRange = (rangeToRemove: string) => {
+    if (repRanges.length <= 1) return;
+    const updated = repRanges.filter((r) => r !== rangeToRemove);
+    setRepRanges(updated);
+    updateUserProfile({ customRepRanges: updated });
+  };
+
+  const handleResetRepRanges = () => {
+    const defaults = [...DEFAULT_REPS_RANGES];
+    setRepRanges(defaults);
+    updateUserProfile({ customRepRanges: defaults });
+  };
 
   if (!user) return null;
 
@@ -178,9 +221,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
     },
     athlete: {
       title: 'Атлет',
-      color: 'text-[#2563EB] dark:text-[#60A5FA]',
-      bg: 'bg-[#2563EB]/10',
-      border: 'border-[#2563EB]/30',
+      color: 'text-emerald-700 dark:text-emerald-400',
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+      border: 'border-emerald-200 dark:border-emerald-800',
     },
   };
 
@@ -199,26 +242,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
       {/* Main Profile Card - Minimal Functional Flat */}
       <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 space-y-4 shadow-xs">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-          {/* Avatar with Role Badge */}
-          <div className="relative shrink-0">
+          {/* Avatar without overlapping badge */}
+          <div className="shrink-0">
             <UserAvatar
               src={user.image}
               alt={user.name}
               size="xl"
             />
-            <div className={`absolute -bottom-1.5 -right-1.5 rounded-xl border px-2 py-0.5 text-[10px] font-bold ${currentRoleInfo.bg} ${currentRoleInfo.border} ${currentRoleInfo.color}`}>
-              {currentRoleInfo.title}
-            </div>
           </div>
 
           {/* User Details */}
           <div className="flex-1 text-center sm:text-left space-y-2 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">
-                  {user.firstName || user.name} {user.lastName || ''}
-                </h2>
-                <div className="flex items-center justify-center sm:justify-start space-x-1.5 text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">
+                    {user.firstName || user.name} {user.lastName || ''}
+                  </h2>
+                  <span className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-xs font-bold ${currentRoleInfo.bg} ${currentRoleInfo.border} ${currentRoleInfo.color}`}>
+                    {user.role === 'admin' ? (
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                    ) : user.role === 'coach' ? (
+                      <Award className="h-3.5 w-3.5" />
+                    ) : (
+                      <Dumbbell className="h-3.5 w-3.5" />
+                    )}
+                    <span>{currentRoleInfo.title}</span>
+                  </span>
+                </div>
+                <div className="flex items-center justify-center sm:justify-start space-x-1.5 text-xs text-slate-500 dark:text-zinc-400 mt-1">
                   <Mail className="h-3.5 w-3.5" />
                   <span>{user.email}</span>
                 </div>
@@ -548,6 +600,81 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Rep Ranges Settings Card */}
+        <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 space-y-4 shadow-xs sm:col-span-2">
+          <div className="flex items-center space-x-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA]">
+              <Repeat className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                Діапазони повторень
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
+                Власні діапазони підходів для швидкого вибору під час тренувань
+              </p>
+            </div>
+          </div>
+
+          {/* Current ranges */}
+          <div className="flex flex-wrap gap-2 pt-1">
+            {repRanges.map((rng) => (
+              <span
+                key={rng}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/80 text-xs font-semibold text-slate-800 dark:text-zinc-200 shadow-2xs"
+              >
+                <span>{rng}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveRepRange(rng)}
+                  className="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                  title="Видалити діапазон"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {/* Add new range row */}
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <input
+              type="text"
+              placeholder="Напр. 12-15 або 20+"
+              value={newRepRangeInput}
+              onChange={(e) => setNewRepRangeInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddRepRange();
+                }
+              }}
+              className="flex-1 h-9 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3.5 text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
+            />
+            <button
+              type="button"
+              onClick={handleAddRepRange}
+              disabled={!newRepRangeInput.trim()}
+              className="h-9 px-4 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center justify-center space-x-1"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Додати</span>
+            </button>
+          </div>
+
+          {/* Reset button */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleResetRepRanges}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+            >
+              <RotateCcw className="h-3 w-3" />
+              <span>Скинути до стандартних</span>
+            </button>
+          </div>
         </div>
 
         {/* Logout Button */}

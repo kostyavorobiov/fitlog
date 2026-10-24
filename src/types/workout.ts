@@ -97,6 +97,7 @@ export interface User {
   role: UserRole;
   coachId?: string | null;
   traineeIds?: string[];
+  customRepRanges?: string[];
   createdAt: string;
 }
 
@@ -174,6 +175,7 @@ export interface PastExercisePerformance {
   totalVolume: number;
 }
 
-export const REPS_RANGES = ['6-8', '8-12', '10-15'] as const;
-export type RepsRangeOption = (typeof REPS_RANGES)[number];
+export const DEFAULT_REPS_RANGES = ['4-6', '6-8', '8-10', '8-12', '10-15', '12-15'] as const;
+export const REPS_RANGES = DEFAULT_REPS_RANGES;
+export type RepsRangeOption = string;
 

@@ -38,6 +38,7 @@ import {
   MUSCLE_GROUPS,
   PastExercisePerformance,
   REPS_RANGES,
+  DEFAULT_REPS_RANGES,
 } from '../types/workout';
 
 import { SupersetPalette, SUPERSET_PALETTES } from '../constants/supersets';
@@ -1968,45 +1969,54 @@ export const WorkoutEditorScreen: React.FC = () => {
             </View>
 
             <View style={styles.repsModalList}>
-              {REPS_RANGES.map((rng) => {
+              {(() => {
+                const list = user?.customRepRanges && user.customRepRanges.length > 0
+                  ? [...user.customRepRanges]
+                  : [...DEFAULT_REPS_RANGES];
                 const currentEx = exercises.find((e) => e.id === activeRepsPickerWeId);
-                const isSelected = (currentEx?.targetRepsRange || currentEx?.sets?.[0]?.targetRepsRange || '8-12') === rng;
+                const currentVal = currentEx?.targetRepsRange || currentEx?.sets?.[0]?.targetRepsRange;
+                if (currentVal && !list.includes(currentVal)) {
+                  list.push(currentVal);
+                }
+                return list.map((rng) => {
+                  const isSelected = (currentVal || '8-12') === rng;
 
-                return (
-                  <TouchableOpacity
-                    key={rng}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      if (activeRepsPickerWeId) {
-                        handleTargetRepsRangeChange(activeRepsPickerWeId, rng);
-                      }
-                      setActiveRepsPickerWeId(null);
-                    }}
-                    style={[
-                      styles.repsModalItem,
-                      isSelected && (isDark ? styles.repsModalItemActiveDark : styles.repsModalItemActiveLight),
-                    ]}
-                  >
-                    <Text
+                  return (
+                    <TouchableOpacity
+                      key={rng}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        if (activeRepsPickerWeId) {
+                          handleTargetRepsRangeChange(activeRepsPickerWeId, rng);
+                        }
+                        setActiveRepsPickerWeId(null);
+                      }}
                       style={[
-                        styles.repsModalItemText,
-                        isSelected
-                          ? (isDark ? styles.repsModalItemTextActiveDark : styles.repsModalItemTextActiveLight)
-                          : (isDark ? styles.textDark : styles.textLight),
+                        styles.repsModalItem,
+                        isSelected && (isDark ? styles.repsModalItemActiveDark : styles.repsModalItemActiveLight),
                       ]}
                     >
-                      {rng}
-                    </Text>
-                    {isSelected && (
-                      <Ionicons
-                        name="checkmark"
-                        size={18}
-                        color={isDark ? '#F8FAFC' : '#0F172A'}
-                      />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
+                      <Text
+                        style={[
+                          styles.repsModalItemText,
+                          isSelected
+                            ? (isDark ? styles.repsModalItemTextActiveDark : styles.repsModalItemTextActiveLight)
+                            : (isDark ? styles.textDark : styles.textLight),
+                        ]}
+                      >
+                        {rng}
+                      </Text>
+                      {isSelected && (
+                        <Ionicons
+                          name="checkmark"
+                          size={18}
+                          color={isDark ? '#F8FAFC' : '#0F172A'}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  );
+                });
+              })()}
             </View>
           </View>
         </TouchableOpacity>

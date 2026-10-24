@@ -62,7 +62,7 @@ export const ExerciseDetailScreen: React.FC = () => {
     fromTab?: TabName;
   }>();
 
-  const sourceTab: TabName = 'exercises';
+  const sourceTab: TabName = fromTab || 'exercises';
 
   const [loading, setLoading] = useState(true);
   const [exerciseName, setExerciseName] = useState<string>(initialName || '');
@@ -72,15 +72,15 @@ export const ExerciseDetailScreen: React.FC = () => {
   const [activeTooltipIdx, setActiveTooltipIdx] = useState<number | null>(null);
   const [plotWidth, setPlotWidth] = useState<number>(0);
 
-  // When exiting, guarantee that exercises screen opens
+  // When exiting, guarantee that source tab (e.g. analytics or exercises) opens
   const handleBack = useCallback(() => {
-    setSavedActiveTab('exercises');
+    setSavedActiveTab(sourceTab);
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)/exercises');
+      router.replace(sourceTab === 'analytics' ? '/(tabs)/analytics' : '/(tabs)/exercises');
     }
-  }, [router]);
+  }, [router, sourceTab]);
 
   const insets = useSafeAreaInsets();
   const topBarAnim = useRef(new Animated.Value(0)).current;

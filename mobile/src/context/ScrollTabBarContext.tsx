@@ -62,11 +62,10 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      // Check if past or at bottom overscroll on iOS
+      // Ignore rubber-band bounce rebound when overscrolled at bottom on iOS
       const maxScrollY = contentHeight > layoutHeight ? contentHeight - layoutHeight : 0;
       const isPastBottom = maxScrollY > 0 && currentY >= maxScrollY;
-      if (isPastBottom) {
-        accumulatedDown.current = 0;
+      if (isPastBottom && diff < 0) {
         accumulatedUp.current = 0;
         return;
       }

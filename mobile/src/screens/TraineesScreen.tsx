@@ -35,6 +35,7 @@ import { User, WorkoutPlan, WorkoutExercise, WorkoutSet } from '../types/workout
 import { formatLocalDate, formatDateDDMMYYYY } from '../utils/date';
 import { MonthGroup, getMonthKeyAndLabel, formatDateDDMMYY } from './WorkoutsScreen';
 import { CreateWorkoutModal } from '../components/CreateWorkoutModal';
+import { TraineeAnalyticsModal } from '../components/TraineeAnalyticsModal';
 import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
 
@@ -56,6 +57,7 @@ export const TraineesScreen: React.FC = () => {
   const [isAddingTrainee, setIsAddingTrainee] = useState<boolean>(false);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [isCreateWorkoutModalVisible, setIsCreateWorkoutModalVisible] = useState<boolean>(false);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState<boolean>(false);
   const [isCreatingWorkout, setIsCreatingWorkout] = useState<boolean>(false);
   const isCreatingWorkoutRef = React.useRef(false);
   const [openTraineeMonths, setOpenTraineeMonths] = useState<Record<string, boolean>>({});
@@ -906,15 +908,7 @@ export const TraineesScreen: React.FC = () => {
                   <TouchableOpacity
                     style={[styles.analyticsBtn, isDark ? styles.analyticsBtnDark : styles.analyticsBtnLight]}
                     activeOpacity={0.8}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/(tabs)/analytics',
-                        params: {
-                          traineeId: selectedTrainee.id,
-                          traineeName: selectedTrainee.name,
-                        },
-                      })
-                    }
+                    onPress={() => setIsAnalyticsModalOpen(true)}
                   >
                     <Ionicons name="stats-chart-outline" size={16} color={isDark ? '#f8fafc' : '#0f172a'} />
                     <Text style={[styles.analyticsBtnText, isDark ? styles.textDark : styles.textLight]}>
@@ -1169,6 +1163,13 @@ export const TraineesScreen: React.FC = () => {
         modalTitle={selectedTrainee ? `Тренування: ${selectedTrainee.name}` : 'Нове тренування'}
         modalSub="Створіть порожнє або з вашого збереженого шаблону"
         templateUserId={user?.id}
+      />
+
+      {/* Dedicated separate window with trainee analytics */}
+      <TraineeAnalyticsModal
+        visible={isAnalyticsModalOpen}
+        onClose={() => setIsAnalyticsModalOpen(false)}
+        trainee={selectedTrainee}
       />
     </SafeAreaView>
   </ScreenGestureWrapper>
