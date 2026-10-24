@@ -37,7 +37,7 @@ let savedActiveTab: TabName = (() => {
 
 const tabChangeListeners = new Set<(tab: TabName) => void>();
 
-export const setSavedActiveTab = (tab: TabName) => {
+export const setSavedActiveTab = (tab: TabName, notifyListeners = true) => {
   if (!TAB_ORDER.includes(tab)) return;
   savedActiveTab = tab;
   try {
@@ -46,14 +46,23 @@ export const setSavedActiveTab = (tab: TabName) => {
     }
     AsyncStorage.setItem(ACTIVE_TAB_STORAGE_KEY, tab).catch(() => {});
   } catch {}
-  tabChangeListeners.forEach((fn) => {
-    try {
-      fn(tab);
-    } catch {}
-  });
+  if (notifyListeners) {
+    tabChangeListeners.forEach((fn) => {
+      try {
+        fn(tab);
+      } catch {}
+    });
+  }
 };
 
 export const getSavedActiveTab = (): TabName => {
+  return savedActiveTab;
+};
+
+const resolveTargetTab = (inputTab?: string): TabName => {
+  if (inputTab && TAB_ORDER.includes(inputTab as TabName)) {
+    return inputTab as TabName;
+  }
   return savedActiveTab;
 };
 
@@ -75,17 +84,12 @@ export const InstagramTabPager: React.FC<InstagramTabPagerProps> = ({ initialTab
     return idx >= 0 ? idx : 0;
   };
 
-  const resolveTargetTab = useCallback((inputTab?: string): TabName => {
-    if (inputTab && TAB_ORDER.includes(inputTab as TabName)) {
-      setSavedActiveTab(inputTab as TabName);
-      return inputTab as TabName;
-    }
-    return savedActiveTab;
-  }, []);
+  const initialTarget = useMemo(() => resolveTargetTab(initialTab), []);
+  const [activeTab, setActiveTab] = useState<TabName>(initialTarget);
+  const activeTabRef = useRef<TabName>(initialTarget);
+  activeTabRef.current = activeTab;
 
-  const [activeTab, setActiveTab] = useState<TabName>(() => resolveTargetTab(initialTab || savedActiveTab));
-
-  const initialIdx = getTabIndex(resolveTargetTab(initialTab || savedActiveTab));
+  const initialIdx = getTabIndex(initialTarget);
   const translateX = useSharedValue(-initialIdx * screenWidth);
   const startTranslateX = useSharedValue(-initialIdx * screenWidth);
   const activeTabShared = useSharedValue(initialIdx);
@@ -95,16 +99,27 @@ export const InstagramTabPager: React.FC<InstagramTabPagerProps> = ({ initialTab
   useEffect(() => {
     AsyncStorage.getItem(ACTIVE_TAB_STORAGE_KEY)
       .then((stored) => {
-        if (stored && TAB_ORDER.includes(stored as TabName) && stored !== savedActiveTab) {
-          setSavedActiveTab(stored as TabName);
+        if (stored && TAB_ORDER.includes(stored as TabName)) {
+          savedActiveTab = stored as TabName;
+          if (stored !== activeTabRef.current) {
+            const targetIdx = getTabIndex(stored);
+            activeTabRef.current = stored as TabName;
+            setActiveTab(stored as TabName);
+            activeTabShared.value = targetIdx;
+            translateX.value = withTiming(-targetIdx * screenWidth, TIMING_CONFIG);
+          }
         }
       })
       .catch(() => {});
-  }, []);
+  }, [screenWidth, activeTabShared, translateX]);
 
   // Subscribe to external tab updates (e.g., returning from exercise detail)
   useEffect(() => {
     const handleExternalTabChange = (newTab: TabName) => {
+      if (!TAB_ORDER.includes(newTab)) return;
+      if (newTab === activeTabRef.current) return;
+
+      activeTabRef.current = newTab;
       const targetIdx = getTabIndex(newTab);
       setActiveTab(newTab);
       activeTabShared.value = targetIdx;
@@ -124,23 +139,33 @@ export const InstagramTabPager: React.FC<InstagramTabPagerProps> = ({ initialTab
     if (initialTab && initialTab !== prevInitialTabRef.current) {
       prevInitialTabRef.current = initialTab;
       const resolved = resolveTargetTab(initialTab);
+      if (resolved === activeTabRef.current) return;
+
       const targetIdx = getTabIndex(resolved);
       const targetTab = TAB_ORDER[targetIdx];
-      setSavedActiveTab(targetTab);
+      activeTabRef.current = targetTab;
+      setSavedActiveTab(targetTab, false);
       setActiveTab(targetTab);
       activeTabShared.value = targetIdx;
       translateX.value = withTiming(-targetIdx * screenWidth, TIMING_CONFIG);
     }
-  }, [initialTab, screenWidth, resolveTargetTab, activeTabShared, translateX]);
+  }, [initialTab, screenWidth, activeTabShared, translateX]);
 
-  // Adjust on screen dimension change
+  // Adjust on screen dimension change (e.g., orientation change)
+  const prevWidthRef = useRef(screenWidth);
   useEffect(() => {
-    translateX.value = -getTabIndex(activeTab) * screenWidth;
-  }, [screenWidth, activeTab]);
+    if (prevWidthRef.current !== screenWidth) {
+      prevWidthRef.current = screenWidth;
+      translateX.value = -getTabIndex(activeTabRef.current) * screenWidth;
+    }
+  }, [screenWidth, translateX]);
 
   const onTabSwiped = useCallback((newIndex: number) => {
     const newTabName = TAB_ORDER[newIndex];
-    setSavedActiveTab(newTabName);
+    if (newTabName === activeTabRef.current) return;
+
+    activeTabRef.current = newTabName;
+    setSavedActiveTab(newTabName, false);
     setActiveTab(newTabName);
     try {
       Haptics.selectionAsync();
@@ -157,7 +182,10 @@ export const InstagramTabPager: React.FC<InstagramTabPagerProps> = ({ initialTab
     closeAnyOpenCard();
     const idx = getTabIndex(tabName);
     const newTab = TAB_ORDER[idx];
-    setSavedActiveTab(newTab);
+    if (newTab === activeTabRef.current) return;
+
+    activeTabRef.current = newTab;
+    setSavedActiveTab(newTab, false);
     setActiveTab(newTab);
     activeTabShared.value = idx;
     translateX.value = withTiming(-idx * screenWidth, TIMING_CONFIG);
