@@ -31,6 +31,7 @@ import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { TraineeService } from '../services/traineeService';
 import { WorkoutService } from '../services/workoutService';
 import * as Haptics from 'expo-haptics';
+import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import { User, WorkoutPlan, WorkoutExercise, WorkoutSet } from '../types/workout';
 import { formatLocalDate, formatDateDDMMYYYY } from '../utils/date';
 import { MonthGroup, getMonthKeyAndLabel, formatDateDDMMYY } from './WorkoutsScreen';
@@ -308,13 +309,19 @@ export const TraineesScreen: React.FC = () => {
     }
   }, [paramTraineeId, trainees, selectedTrainee?.id]);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    loadTrainees().then(() => {
+    try {
+      await loadTrainees();
       if (selectedTraineeRef.current) {
-        loadTraineeWorkouts(selectedTraineeRef.current.id, true);
+        await loadTraineeWorkouts(selectedTraineeRef.current.id, true);
       }
-    });
+    } catch (e) {
+      console.warn('[TraineesScreen.onRefresh] Error:', e);
+    } finally {
+      setIsRefreshing(false);
+      await triggerRefreshSuccessHaptic();
+    }
   }, [loadTrainees, loadTraineeWorkouts]);
 
   // Copy coach code to clipboard

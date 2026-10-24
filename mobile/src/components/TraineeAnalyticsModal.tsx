@@ -22,6 +22,7 @@ import { ScreenGestureWrapper } from './ScreenGestureWrapper';
 import { WorkoutCalendarView } from './WorkoutCalendarView';
 import { ExerciseDetailContent } from './ExerciseDetailModal';
 import { WorkoutService } from '../services/workoutService';
+import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import { User, WorkoutPlan, MUSCLE_GROUPS } from '../types/workout';
 import { getPeriodRange, PeriodRange, formatLocalDate } from '../utils/date';
 import {
@@ -113,10 +114,22 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
     }
   }, [visible, trainee?.id, loadData]);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    loadData();
-  }, [loadData]);
+    try {
+      if (trainee?.id) {
+        setHasError(false);
+        const data = await WorkoutService.getWorkouts(trainee.id);
+        setWorkouts(data);
+      }
+    } catch (e) {
+      console.warn('[TraineeAnalyticsModal.onRefresh] Error:', e);
+      setHasError(true);
+    } finally {
+      setIsRefreshing(false);
+      await triggerRefreshSuccessHaptic();
+    }
+  }, [trainee?.id]);
 
   // Navigate backward / forward for selected period
   const handlePrevPeriod = () => {

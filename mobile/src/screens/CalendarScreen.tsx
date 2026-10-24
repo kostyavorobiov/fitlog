@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
+import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { CreateWorkoutModal } from '../components/CreateWorkoutModal';
@@ -76,9 +77,16 @@ export const CalendarScreen: React.FC = () => {
     }, [loadWorkouts])
   );
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    loadWorkouts();
+    try {
+      await loadWorkouts();
+    } catch (e) {
+      console.warn('[CalendarScreen.onRefresh] Error:', e);
+    } finally {
+      setIsRefreshing(false);
+      await triggerRefreshSuccessHaptic();
+    }
   }, [loadWorkouts]);
 
   // Month navigation

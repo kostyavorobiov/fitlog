@@ -23,6 +23,7 @@ import { Button } from '../components/Button';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
+import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { ExerciseService } from '../services/exerciseService';
@@ -163,10 +164,19 @@ export const ExercisesScreen: React.FC = () => {
     }, [loadExercises, exercises.length])
   );
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    loadExercises(false);
-  }, [loadExercises]);
+    setSavedActiveTab('exercises');
+    try {
+      const list = await ExerciseService.getExercises(user?.id);
+      setExercises(list);
+    } catch (e) {
+      console.warn('[ExercisesScreen.onRefresh] Error:', e);
+    } finally {
+      setIsRefreshing(false);
+      await triggerRefreshSuccessHaptic();
+    }
+  }, [user?.id]);
 
   const filteredExercises = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();

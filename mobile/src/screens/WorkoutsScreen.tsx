@@ -22,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -188,10 +189,21 @@ export const WorkoutsScreen: React.FC = () => {
     }, [loadData])
   );
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    loadData();
-  }, [loadData]);
+    setSavedActiveTab('index');
+    try {
+      if (user) {
+        const data = await WorkoutService.getWorkouts(user.id);
+        setWorkouts(data);
+      }
+    } catch (e) {
+      console.warn('[WorkoutsScreen.onRefresh] Error:', e);
+    } finally {
+      setIsRefreshing(false);
+      await triggerRefreshSuccessHaptic();
+    }
+  }, [user]);
 
   // Open modal with defaults
   const handleOpenCreateModal = () => {

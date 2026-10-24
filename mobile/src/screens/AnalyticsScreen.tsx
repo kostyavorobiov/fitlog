@@ -22,6 +22,7 @@ import { WorkoutPlan, MUSCLE_GROUPS } from '../types/workout';
 import { getPeriodRange, PeriodRange, formatLocalDate } from '../utils/date';
 import { WorkoutCalendarView } from '../components/WorkoutCalendarView';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
+import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import {
   calculateAnalytics,
   AnalyticsPeriod,
@@ -80,10 +81,23 @@ export const AnalyticsScreen: React.FC = () => {
     }, [loadData])
   );
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    loadData();
-  }, [loadData]);
+    setSavedActiveTab('analytics');
+    try {
+      if (targetUserId) {
+        setHasError(false);
+        const data = await WorkoutService.getWorkouts(targetUserId);
+        setWorkouts(data);
+      }
+    } catch (e) {
+      console.warn('[AnalyticsScreen.onRefresh] Error:', e);
+      setHasError(true);
+    } finally {
+      setIsRefreshing(false);
+      await triggerRefreshSuccessHaptic();
+    }
+  }, [targetUserId]);
 
   // Navigate backward / forward for selected period
   const handlePrevPeriod = () => {

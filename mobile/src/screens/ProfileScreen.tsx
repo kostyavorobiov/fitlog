@@ -11,10 +11,11 @@ import {
   Share,
   Modal,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { UserAvatar } from '../components/UserAvatar';
@@ -23,6 +24,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { TraineeService } from '../services/traineeService';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
+import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import {
   User,
   UserRole,
@@ -58,12 +60,7 @@ export const ProfileScreen: React.FC = () => {
   const { theme, isDark, setTheme } = useTheme();
   const { handleScroll } = useScrollTabBar();
 
-  // Keep active tab on profile whenever this screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      setSavedActiveTab('profile');
-    }, [])
-  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Coach modal state
   const [isCoachModalVisible, setIsCoachModalVisible] = useState(false);
@@ -218,6 +215,22 @@ export const ProfileScreen: React.FC = () => {
   useEffect(() => {
     loadCoachOrTrainees();
   }, [loadCoachOrTrainees]);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setSavedActiveTab('profile');
+    try {
+      await Promise.all([
+        refreshUser(),
+        loadCoachOrTrainees(),
+      ]);
+    } catch (e) {
+      console.warn('[ProfileScreen.onRefresh] Error:', e);
+    } finally {
+      setIsRefreshing(false);
+      await triggerRefreshSuccessHaptic();
+    }
+  }, [refreshUser, loadCoachOrTrainees]);
 
   // Copy unique ID to clipboard / share
   const handleCopyCode = async () => {
@@ -418,6 +431,14 @@ export const ProfileScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor="#2563EB"
+            colors={['#2563EB']}
+          />
+        }
       >
         {/* 1. Main Profile Card (Email removed) */}
         <Card style={styles.profileCard}>
