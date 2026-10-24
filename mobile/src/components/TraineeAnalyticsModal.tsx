@@ -20,6 +20,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Card } from './Card';
 import { ScreenGestureWrapper } from './ScreenGestureWrapper';
 import { WorkoutCalendarView } from './WorkoutCalendarView';
+import { ExerciseDetailContent } from './ExerciseDetailModal';
 import { WorkoutService } from '../services/workoutService';
 import { User, WorkoutPlan, MUSCLE_GROUPS } from '../types/workout';
 import { getPeriodRange, PeriodRange, formatLocalDate } from '../utils/date';
@@ -33,12 +34,14 @@ export interface TraineeAnalyticsModalProps {
   visible: boolean;
   onClose: () => void;
   trainee: User | null;
+  initialTab?: 'muscles' | 'exercises';
 }
 
 export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
   visible,
   onClose,
   trainee,
+  initialTab,
 }) => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
@@ -53,17 +56,34 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [hasError, setHasError] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [viewTab, setViewTab] = useState<'muscles' | 'exercises'>('muscles');
+  const [viewTab, setViewTab] = useState<'muscles' | 'exercises'>(initialTab || 'muscles');
+  const [selectedExerciseForDetail, setSelectedExerciseForDetail] = useState<AggregatedExercise | null>(null);
+
+  useEffect(() => {
+    if (visible && initialTab) {
+      setViewTab(initialTab);
+    }
+  }, [visible, initialTab]);
+
+  useEffect(() => {
+    if (!visible) {
+      setSelectedExerciseForDetail(null);
+    }
+  }, [visible]);
 
   // Handle hardware back press
   useEffect(() => {
     if (!visible) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (selectedExerciseForDetail) {
+        setSelectedExerciseForDetail(null);
+        return true;
+      }
       onClose();
       return true;
     });
     return () => sub.remove();
-  }, [visible, onClose]);
+  }, [visible, selectedExerciseForDetail, onClose]);
 
   // Load workouts for trainee
   const loadData = useCallback(async () => {
@@ -159,17 +179,7 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
 
   const handleOpenExerciseDetail = (item: AggregatedExercise) => {
     if (!trainee) return;
-    onClose();
-    router.push({
-      pathname: `/exercise/${item.exerciseId}` as any,
-      params: {
-        name: item.exerciseName,
-        muscleGroup: item.muscleGroup,
-        fromTab: 'trainees',
-        traineeId: trainee.id,
-        traineeName: trainee.name || trainee.firstName || 'Підопічний',
-      },
-    });
+    setSelectedExerciseForDetail(item);
   };
 
   if (!trainee) return null;
@@ -178,13 +188,29 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
     <Modal
       visible={visible}
       animationType="slide"
-      onRequestClose={onClose}
+      onRequestClose={() => {
+        if (selectedExerciseForDetail) {
+          setSelectedExerciseForDetail(null);
+        } else {
+          onClose();
+        }
+      }}
       presentationStyle="fullScreen"
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar style={isDark ? 'light' : 'dark'} />
-        <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={onClose}>
-          <View style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+        {selectedExerciseForDetail ? (
+          <ExerciseDetailContent
+            exerciseId={selectedExerciseForDetail.exerciseId}
+            exerciseName={selectedExerciseForDetail.exerciseName}
+            muscleGroup={selectedExerciseForDetail.muscleGroup}
+            userId={trainee.id}
+            traineeName={trainee.name || trainee.firstName || 'Підопічний'}
+            onClose={() => setSelectedExerciseForDetail(null)}
+          />
+        ) : (
+          <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={onClose}>
+            <View style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
             {/* Header */}
             <View
               style={[
@@ -634,8 +660,9 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
           </ScrollView>
         </View>
       </ScreenGestureWrapper>
-    </GestureHandlerRootView>
-  </Modal>
+    )}
+  </GestureHandlerRootView>
+</Modal>
   );
 };
 

@@ -89,7 +89,7 @@ export const ExerciseDetailScreen: React.FC = () => {
       if (router.canGoBack()) {
         router.back();
       } else {
-        router.replace('/(tabs)/profile');
+        router.replace('/trainees');
       }
       return;
     }

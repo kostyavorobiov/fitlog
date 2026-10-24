@@ -14,9 +14,19 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Card } from './Card';
+import { ScreenGestureWrapper } from './ScreenGestureWrapper';
 import { WorkoutService } from '../services/workoutService';
 import { MuscleGroup, MUSCLE_GROUPS, PastExercisePerformance } from '../types/workout';
 import { calculate1RM } from '../utils/workout';
+
+export interface ExerciseDetailContentProps {
+  exerciseId: string;
+  exerciseName: string;
+  muscleGroup?: MuscleGroup;
+  userId: string;
+  traineeName?: string;
+  onClose: () => void;
+}
 
 export interface ExerciseDetailModalProps {
   visible: boolean;
@@ -25,6 +35,7 @@ export interface ExerciseDetailModalProps {
   exerciseName: string;
   muscleGroup?: MuscleGroup;
   userId: string;
+  traineeName?: string;
 }
 
 interface ChartPoint {
@@ -38,13 +49,13 @@ interface ChartPoint {
   workoutTitle: string;
 }
 
-export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
-  visible,
-  onClose,
+export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
   exerciseId,
   exerciseName,
   muscleGroup = 'other',
   userId,
+  traineeName,
+  onClose,
 }) => {
   const isDark = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
@@ -58,7 +69,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
   const muscleInfo = MUSCLE_GROUPS[muscleGroup] || MUSCLE_GROUPS.full_body;
 
   useEffect(() => {
-    if (!visible || !exerciseId) return;
+    if (!exerciseId) return;
 
     let isMounted = true;
     setLoading(true);
@@ -73,7 +84,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [visible, exerciseId, exerciseName, userId]);
+  }, [exerciseId, exerciseName, userId]);
 
   // Format date helper: YYYY-MM-DD -> DD/MM
   const parseDate = (dStr: string): Date => {
@@ -227,12 +238,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
   const valRange = maxVal - minVal || 1;
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={onClose}
-    >
+    <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={onClose}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <View
         style={[
@@ -266,7 +272,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
               {exerciseName}
             </Text>
             <Text style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
-              {muscleInfo.nameUk}
+              {traineeName ? `Підопічний: ${traineeName} · ${muscleInfo.nameUk}` : muscleInfo.nameUk}
             </Text>
           </View>
 
@@ -559,6 +565,35 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
           </ScrollView>
         )}
       </View>
+    </ScreenGestureWrapper>
+  );
+};
+
+export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
+  visible,
+  onClose,
+  exerciseId,
+  exerciseName,
+  muscleGroup,
+  userId,
+  traineeName,
+}) => {
+  if (!visible) return null;
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={onClose}
+    >
+      <ExerciseDetailContent
+        exerciseId={exerciseId}
+        exerciseName={exerciseName}
+        muscleGroup={muscleGroup}
+        userId={userId}
+        traineeName={traineeName}
+        onClose={onClose}
+      />
     </Modal>
   );
 };
