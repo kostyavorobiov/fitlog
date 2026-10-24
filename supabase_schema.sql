@@ -14,6 +14,18 @@ create table if not exists public.profiles (
   avatar_url text default '',
   role text not null default 'athlete' check (role in ('athlete', 'coach', 'admin')),
   coach_id uuid references public.profiles(id) on delete set null,
+  gender text check (gender in ('male', 'female')),
+  birth_date text,
+  age integer check (age is null or age > 0),
+  weight numeric check (weight is null or weight > 0),
+  height numeric check (height is null or height > 0),
+  activity_level numeric default 1.2 check (activity_level is null or activity_level >= 1.0),
+  goal text default 'maintenance' check (goal is null or goal in ('weight_loss', 'maintenance', 'weight_gain')),
+  calorie_adjustment_percent numeric default 0 check (calorie_adjustment_percent is null or calorie_adjustment_percent >= 0),
+  protein_per_kg numeric default 2.0 check (protein_per_kg is null or protein_per_kg >= 0),
+  fat_per_kg numeric default 1.0 check (fat_per_kg is null or fat_per_kg >= 0),
+  carbs_per_kg numeric check (carbs_per_kg is null or carbs_per_kg >= 0),
+  custom_rep_ranges jsonb default '["4-6","6-8","8-10","8-12","10-12","12-15","15-20","20+"]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

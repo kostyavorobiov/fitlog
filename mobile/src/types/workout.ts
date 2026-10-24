@@ -85,6 +85,9 @@ export const MUSCLE_GROUPS: Record<MuscleGroup, MuscleGroupInfo> = {
 };
 
 export type UserRole = 'athlete' | 'coach' | 'admin';
+export type Gender = 'male' | 'female';
+export type ActivityLevel = 1.2 | 1.375 | 1.55 | 1.725 | 1.9;
+export type NutritionGoal = 'weight_loss' | 'maintenance' | 'weight_gain';
 
 export interface User {
   id: string;
@@ -99,6 +102,19 @@ export interface User {
   traineeIds?: string[];
   customRepRanges?: string[];
   createdAt: string;
+
+  // Biometrics & Nutrition
+  gender?: Gender;
+  birthDate?: string; // YYYY-MM-DD
+  age?: number;
+  weight?: number; // kg
+  height?: number; // cm
+  activityLevel?: ActivityLevel;
+  goal?: NutritionGoal;
+  calorieAdjustmentPercent?: number; // % deficit or surplus
+  proteinPerKg?: number; // g/kg
+  fatPerKg?: number; // g/kg
+  carbsPerKg?: number; // g/kg
 }
 
 export interface Exercise {

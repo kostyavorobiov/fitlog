@@ -1118,12 +1118,20 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     (acc, e) => acc + (e.sets || []).filter((s) => s && s.completedAt !== null).length,
     0
   );
+  const effectiveOwner = (workout.userId && workout.userId !== user?.id
+    ? StorageService.getUsers().find((u) => u.id === workout.userId)
+    : null) || user;
+  const targetBodyweight = effectiveOwner?.weight || 0;
+
   const totalVolumeKg = currentExList.reduce((acc, e) => {
     return (
       acc +
       (e.sets || []).reduce((sAcc, s) => {
-        if (s && s.actualReps && s.weight) {
-          return sAcc + s.weight * s.actualReps;
+        if (s && s.actualReps) {
+          const effectiveWeight = (typeof s.weight === 'number' && s.weight > 0)
+            ? s.weight
+            : (targetBodyweight > 0 ? targetBodyweight : 0);
+          return sAcc + effectiveWeight * s.actualReps;
         }
         return sAcc;
       }, 0)

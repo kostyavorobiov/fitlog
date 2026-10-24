@@ -55,14 +55,24 @@ export const ExerciseDetailScreen: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
 
-  const { id: exerciseId, name: initialName, muscleGroup: initialMuscleGroup, fromTab } = useLocalSearchParams<{
+  const {
+    id: exerciseId,
+    name: initialName,
+    muscleGroup: initialMuscleGroup,
+    fromTab,
+    traineeId,
+    traineeName,
+  } = useLocalSearchParams<{
     id: string;
     name?: string;
     muscleGroup?: MuscleGroup;
-    fromTab?: TabName;
+    fromTab?: TabName | 'trainees';
+    traineeId?: string;
+    traineeName?: string;
   }>();
 
-  const sourceTab: TabName = fromTab || 'exercises';
+  const sourceTab = fromTab || 'exercises';
+  const effectiveUserId = traineeId || user?.id || '';
 
   const [loading, setLoading] = useState(true);
   const [exerciseName, setExerciseName] = useState<string>(initialName || '');
@@ -72,9 +82,19 @@ export const ExerciseDetailScreen: React.FC = () => {
   const [activeTooltipIdx, setActiveTooltipIdx] = useState<number | null>(null);
   const [plotWidth, setPlotWidth] = useState<number>(0);
 
-  // When exiting, guarantee that source tab (e.g. analytics or exercises) opens
+  // When exiting, guarantee that source tab (e.g. analytics, trainees, or exercises) opens
   const handleBack = useCallback(() => {
-    setSavedActiveTab(sourceTab);
+    if (sourceTab === 'trainees') {
+      setSavedActiveTab('profile');
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)/profile');
+      }
+      return;
+    }
+
+    setSavedActiveTab(sourceTab as TabName);
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -165,13 +185,17 @@ export const ExerciseDetailScreen: React.FC = () => {
 
   // Keep source tab active when entering or leaving
   useEffect(() => {
-    setSavedActiveTab(sourceTab);
+    if (sourceTab !== 'trainees') {
+      setSavedActiveTab(sourceTab);
+    }
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       handleBack();
       return true;
     });
     return () => {
-      setSavedActiveTab(sourceTab);
+      if (sourceTab !== 'trainees') {
+        setSavedActiveTab(sourceTab);
+      }
       sub.remove();
     };
   }, [handleBack, sourceTab]);
@@ -193,7 +217,7 @@ export const ExerciseDetailScreen: React.FC = () => {
 
   // Load performance history
   useEffect(() => {
-    if (!user?.id || !exerciseId) {
+    if (!effectiveUserId || !exerciseId) {
       setLoading(false);
       return;
     }
@@ -201,7 +225,7 @@ export const ExerciseDetailScreen: React.FC = () => {
     let isMounted = true;
     setLoading(true);
 
-    WorkoutService.getAllPastPerformances(user.id, exerciseId, exerciseName).then((data) => {
+    WorkoutService.getAllPastPerformances(effectiveUserId, exerciseId, exerciseName).then((data) => {
       if (isMounted) {
         setHistory(data);
         setLoading(false);
@@ -211,7 +235,7 @@ export const ExerciseDetailScreen: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [user?.id, exerciseId, exerciseName]);
+  }, [effectiveUserId, exerciseId, exerciseName]);
 
   const muscleInfo = MUSCLE_GROUPS[muscleGroup] || MUSCLE_GROUPS.full_body;
 
@@ -436,7 +460,7 @@ export const ExerciseDetailScreen: React.FC = () => {
               {exerciseName || 'Вправа'}
             </Text>
             <Text style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
-              {muscleInfo.nameUk}
+              {traineeName ? `Підопічний: ${traineeName} · ${muscleInfo.nameUk}` : muscleInfo.nameUk}
             </Text>
           </View>
         </Animated.View>

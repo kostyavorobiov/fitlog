@@ -20,13 +20,17 @@ export interface WebTopNavbarProps {
   rightAction?: React.ReactNode;
   showBack?: boolean;
   onBack?: () => void;
+  showCoachStatus?: boolean;
+  onCoachStatusPress?: () => void;
+  showLogout?: boolean;
+  onLogoutPress?: () => void;
   style?: any;
 }
 
 /**
  * WebTopNavbar: Matches Ocean Blue top navbar
  * - Left: Tab / Screen Title (e.g. "Тренування", "Аналітика", "Вправи", "Профіль")
- * - Profile button moved into bottom navbar (old button removed from top)
+ * - Right: Coach status icon, logout icon, custom action
  */
 export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
   title,
@@ -34,6 +38,10 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
   rightAction,
   showBack = false,
   onBack,
+  showCoachStatus = false,
+  onCoachStatusPress,
+  showLogout = false,
+  onLogoutPress,
   style,
 }) => {
   const router = useRouter();
@@ -92,8 +100,32 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Right Header Actions: Custom action if passed (Profile moved to bottom navbar) */}
+      {/* Right Header Actions: Coach status, Logout, and Custom actions */}
       <View style={styles.rightActions}>
+        {showCoachStatus && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onCoachStatusPress}
+            style={[styles.headerIconBtn, isDark ? styles.headerIconBtnDark : styles.headerIconBtnLight]}
+            accessibilityRole="button"
+            accessibilityLabel="Тренерський статус"
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+          >
+            <Ionicons name="ribbon-outline" size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
+          </TouchableOpacity>
+        )}
+        {showLogout && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onLogoutPress}
+            style={[styles.headerIconBtn, isDark ? styles.headerIconBtnDark : styles.headerIconBtnLight]}
+            accessibilityRole="button"
+            accessibilityLabel="Вийти"
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+          </TouchableOpacity>
+        )}
         {rightAction ? rightAction : null}
       </View>
     </View>
@@ -148,10 +180,15 @@ export interface HeaderProps {
   hideTopNavbar?: boolean;
   showBack?: boolean;
   onBack?: () => void;
+  showCoachStatus?: boolean;
+  onCoachStatusPress?: () => void;
+  showLogout?: boolean;
+  onLogoutPress?: () => void;
 }
 
 /**
- * Header: Unified header component providing WebTopNavbar with tab title + optional SectionHeader
+ * Header: Unified header component providing WebTopNavbar with tab title + optional SectionHeader.
+ * Stably fixed at the top of the screen to prevent scroll jitter and crashes.
  */
 export const Header: React.FC<HeaderProps> = ({
   title,
@@ -161,38 +198,13 @@ export const Header: React.FC<HeaderProps> = ({
   hideTopNavbar = false,
   showBack = false,
   onBack,
+  showCoachStatus = false,
+  onCoachStatusPress,
+  showLogout = false,
+  onLogoutPress,
 }) => {
-  const { isDark } = useTheme();
-  const { headerAnim } = useScrollTabBar();
-  const [measuredHeight, setMeasuredHeight] = useState(subtitle ? 100 : 56);
-
-  const marginTop = headerAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -measuredHeight],
-  });
-
-  const opacity = headerAnim.interpolate({
-    inputRange: [0, 0.7, 1],
-    outputRange: [1, 0.2, 0],
-  });
-
   return (
-    <Animated.View
-      onLayout={(e) => {
-        const h = e.nativeEvent.layout.height;
-        if (h > 0 && Math.abs(h - measuredHeight) > 2) {
-          setMeasuredHeight(h);
-        }
-      }}
-      style={[
-        styles.wrapper,
-        {
-          marginTop,
-          opacity,
-          overflow: 'hidden',
-        },
-      ]}
-    >
+    <View style={styles.wrapper}>
       {!hideTopNavbar && (
         <WebTopNavbar
           title={title}
@@ -200,6 +212,10 @@ export const Header: React.FC<HeaderProps> = ({
           rightAction={!subtitle ? rightAction : undefined}
           showBack={showBack}
           onBack={onBack}
+          showCoachStatus={showCoachStatus}
+          onCoachStatusPress={onCoachStatusPress}
+          showLogout={showLogout}
+          onLogoutPress={onLogoutPress}
         />
       )}
       {subtitle ? (
@@ -210,13 +226,30 @@ export const Header: React.FC<HeaderProps> = ({
           />
         </View>
       ) : null}
-    </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
+    zIndex: 10,
+  },
+  headerIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  headerIconBtnLight: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
+  },
+  headerIconBtnDark: {
+    backgroundColor: 'rgba(30, 41, 59, 0.7)',
+    borderColor: '#334155',
   },
   topNavbar: {
     height: 56,

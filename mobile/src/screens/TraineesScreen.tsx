@@ -162,7 +162,7 @@ export const TraineesScreen: React.FC = () => {
               toValue: 0,
               duration: 200,
               easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-              useNativeDriver: Platform.OS !== 'web',
+              useNativeDriver: false,
             }).start();
           }
           accumulatedUp.current = 0;
@@ -1114,12 +1114,25 @@ export const TraineesScreen: React.FC = () => {
                                               const exName = we.exerciseName || 'Вправа';
                                               const setCount = we.sets?.length || 0;
                                               return (
-                                                <View
+                                                <TouchableOpacity
                                                   key={we.id || `${w.id}-ex-${idx}`}
                                                   style={[
                                                     styles.exerciseBadge,
                                                     isDark ? styles.exerciseBadgeDark : styles.exerciseBadgeLight,
                                                   ]}
+                                                  activeOpacity={0.7}
+                                                  onPress={() => {
+                                                    if (we.exerciseId && selectedTrainee) {
+                                                      router.push({
+                                                        pathname: `/exercise/${we.exerciseId}` as any,
+                                                        params: {
+                                                          traineeId: selectedTrainee.id,
+                                                          traineeName: selectedTrainee.name,
+                                                          fromTab: 'trainees',
+                                                        },
+                                                      });
+                                                    }
+                                                  }}
                                                 >
                                                   <Text
                                                     style={[
@@ -1129,7 +1142,7 @@ export const TraineesScreen: React.FC = () => {
                                                   >
                                                     {exName} ({setCount})
                                                   </Text>
-                                                </View>
+                                                </TouchableOpacity>
                                               );
                                             })}
                                           </View>

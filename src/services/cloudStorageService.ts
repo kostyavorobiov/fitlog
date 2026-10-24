@@ -431,6 +431,16 @@ export class CloudStorageService {
       if (updates.role !== undefined) payload.role = updates.role;
       if (updates.image !== undefined) payload.avatar_url = updates.image;
       if (updates.coachId !== undefined) payload.coach_id = updates.coachId;
+      if (updates.gender !== undefined) payload.gender = updates.gender;
+      if (updates.birthDate !== undefined) payload.birth_date = updates.birthDate;
+      if (updates.weight !== undefined) payload.weight = updates.weight;
+      if (updates.height !== undefined) payload.height = updates.height;
+      if (updates.activityLevel !== undefined) payload.activity_level = updates.activityLevel;
+      if (updates.goal !== undefined) payload.goal = updates.goal;
+      if (updates.calorieAdjustmentPercent !== undefined) payload.calorie_adjustment_percent = updates.calorieAdjustmentPercent;
+      if (updates.proteinPerKg !== undefined) payload.protein_per_kg = updates.proteinPerKg;
+      if (updates.fatPerKg !== undefined) payload.fat_per_kg = updates.fatPerKg;
+      if (updates.customRepRanges !== undefined) payload.custom_rep_ranges = updates.customRepRanges;
 
       const { error } = await supabase.from('profiles').update(payload).eq('id', userId);
       if (error) {
@@ -463,6 +473,16 @@ export class CloudStorageService {
         coach_id: user.coachId || null,
         updated_at: new Date().toISOString(),
       };
+      if (user.gender !== undefined) payload.gender = user.gender;
+      if (user.birthDate !== undefined) payload.birth_date = user.birthDate;
+      if (user.weight !== undefined) payload.weight = user.weight;
+      if (user.height !== undefined) payload.height = user.height;
+      if (user.activityLevel !== undefined) payload.activity_level = user.activityLevel;
+      if (user.goal !== undefined) payload.goal = user.goal;
+      if (user.calorieAdjustmentPercent !== undefined) payload.calorie_adjustment_percent = user.calorieAdjustmentPercent;
+      if (user.proteinPerKg !== undefined) payload.protein_per_kg = user.proteinPerKg;
+      if (user.fatPerKg !== undefined) payload.fat_per_kg = user.fatPerKg;
+      if (user.customRepRanges !== undefined) payload.custom_rep_ranges = user.customRepRanges;
 
       const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' });
       if (error) {
@@ -569,6 +589,18 @@ export class CloudStorageService {
       coachId: item.coach_id,
       image: item.avatar_url || '',
       createdAt: item.created_at,
+      customRepRanges: Array.isArray(item.custom_rep_ranges) ? item.custom_rep_ranges : undefined,
+      gender: item.gender,
+      birthDate: item.birth_date,
+      age: item.age ? Number(item.age) : undefined,
+      weight: item.weight != null ? Number(item.weight) : undefined,
+      height: item.height != null ? Number(item.height) : undefined,
+      activityLevel: item.activity_level != null ? (Number(item.activity_level) as any) : undefined,
+      goal: item.goal,
+      calorieAdjustmentPercent: item.calorie_adjustment_percent != null ? Number(item.calorie_adjustment_percent) : undefined,
+      proteinPerKg: item.protein_per_kg != null ? Number(item.protein_per_kg) : undefined,
+      fatPerKg: item.fat_per_kg != null ? Number(item.fat_per_kg) : undefined,
+      carbsPerKg: item.carbs_per_kg != null ? Number(item.carbs_per_kg) : undefined,
     };
   }
 

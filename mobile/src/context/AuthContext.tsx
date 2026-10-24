@@ -148,15 +148,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUserProfile = async (updates: Partial<User>): Promise<User | null> => {
-    setIsLoading(true);
     try {
       const updated = await AuthService.updateUserProfile(updates);
       if (updated) {
         setUser(updated);
       }
       return updated;
-    } finally {
-      setIsLoading(false);
+    } catch (e) {
+      console.error('[AuthContext] updateUserProfile error:', e);
+      return null;
     }
   };
 

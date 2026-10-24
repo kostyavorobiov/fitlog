@@ -13,6 +13,7 @@ import {
 import { ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Card } from './Card';
 import { ScreenGestureWrapper } from './ScreenGestureWrapper';
@@ -38,6 +39,7 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
   trainee,
 }) => {
   const isDark = useColorScheme() === 'dark';
+  const router = useRouter();
 
   const [period, setPeriod] = useState<AnalyticsPeriod>('week');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -148,6 +150,21 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
       return `${(kg / 1000).toFixed(1)} т`;
     }
     return `${Math.round(kg)} кг`;
+  };
+
+  const handleOpenExerciseDetail = (item: AggregatedExercise) => {
+    if (!trainee) return;
+    onClose();
+    router.push({
+      pathname: `/exercise/${item.exerciseId}` as any,
+      params: {
+        name: item.exerciseName,
+        muscleGroup: item.muscleGroup,
+        fromTab: 'trainees',
+        traineeId: trainee.id,
+        traineeName: trainee.name || trainee.firstName || 'Підопічний',
+      },
+    });
   };
 
   if (!trainee) return null;
@@ -537,8 +554,10 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                           {filteredExercises.map((item, idx) => {
                             const muscle = MUSCLE_GROUPS[item.muscleGroup] || MUSCLE_GROUPS.other;
                             return (
-                              <View
+                              <TouchableOpacity
                                 key={item.exerciseId || `ex_${idx}`}
+                                activeOpacity={0.7}
+                                onPress={() => handleOpenExerciseDetail(item)}
                                 style={[
                                   styles.exerciseItem,
                                   idx > 0 && (isDark ? styles.itemBorderDark : styles.itemBorderLight),
@@ -583,7 +602,7 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                                       : 'підходів'}
                                   </Text>
                                 </View>
-                              </View>
+                              </TouchableOpacity>
                             );
                           })}
                         </View>

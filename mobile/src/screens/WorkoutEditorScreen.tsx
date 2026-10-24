@@ -26,6 +26,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { ExerciseSelectorModal } from '../components/ExerciseSelectorModal';
 import { useAuth } from '../context/AuthContext';
+import { AuthService } from '../services/authService';
 import { WorkoutService } from '../services/workoutService';
 import { TemplateService } from '../services/templateService';
 import { ExerciseService } from '../services/exerciseService';
@@ -281,8 +282,26 @@ export const WorkoutEditorScreen: React.FC = () => {
   const { id, traineeId } = useLocalSearchParams<{ id: string; traineeId?: string }>();
   const { user } = useAuth();
   const targetUserId = traineeId || user?.id || '';
+  const [targetUserWeight, setTargetUserWeight] = useState<number>(user?.weight || 0);
 
   const [workout, setWorkout] = useState<WorkoutPlan | null>(null);
+
+  useEffect(() => {
+    const effectiveId = traineeId || (workout && workout.userId && workout.userId !== user?.id ? workout.userId : user?.id);
+    if (!effectiveId) return;
+
+    if (user && effectiveId === user.id) {
+      setTargetUserWeight(user.weight || 0);
+    } else {
+      AuthService.fetchProfile(effectiveId)
+        .then((prof) => {
+          if (prof?.weight && prof.weight > 0) {
+            setTargetUserWeight(prof.weight);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [traineeId, workout?.userId, user]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -1418,8 +1437,12 @@ export const WorkoutEditorScreen: React.FC = () => {
   let totalVolume = 0;
   exercises.forEach((ex) => {
     (ex.sets || []).forEach((s) => {
-      if ((s.completedAt || isCompleted) && s.weight && s.actualReps) {
-        totalVolume += s.weight * s.actualReps;
+      if ((s.completedAt || isCompleted) && s.actualReps) {
+        // If set weight is 0 (bodyweight exercise), use body weight from target user profile
+        const effectiveWeight = (typeof s.weight === 'number' && s.weight > 0)
+          ? s.weight
+          : (targetUserWeight > 0 ? targetUserWeight : 0);
+        totalVolume += effectiveWeight * s.actualReps;
       }
     });
   });

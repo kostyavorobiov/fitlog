@@ -86,6 +86,18 @@ export class AuthService {
           image: data.avatar_url || '',
           role: (data.role as UserRole) || 'athlete',
           coachId: data.coach_id || null,
+          customRepRanges: Array.isArray(data.custom_rep_ranges) ? data.custom_rep_ranges : undefined,
+          gender: data.gender,
+          birthDate: data.birth_date,
+          age: data.age ? Number(data.age) : undefined,
+          weight: data.weight != null ? Number(data.weight) : undefined,
+          height: data.height != null ? Number(data.height) : undefined,
+          activityLevel: data.activity_level != null ? (Number(data.activity_level) as any) : undefined,
+          goal: data.goal,
+          calorieAdjustmentPercent: data.calorie_adjustment_percent != null ? Number(data.calorie_adjustment_percent) : undefined,
+          proteinPerKg: data.protein_per_kg != null ? Number(data.protein_per_kg) : undefined,
+          fatPerKg: data.fat_per_kg != null ? Number(data.fat_per_kg) : undefined,
+          carbsPerKg: data.carbs_per_kg != null ? Number(data.carbs_per_kg) : undefined,
           createdAt: data.created_at || new Date().toISOString(),
         };
       }
@@ -107,6 +119,18 @@ export class AuthService {
             image: row.avatar_url || '',
             role: (row.role as UserRole) || 'athlete',
             coachId: row.coach_id || null,
+            customRepRanges: Array.isArray(row.custom_rep_ranges) ? row.custom_rep_ranges : undefined,
+            gender: row.gender,
+            birthDate: row.birth_date,
+            age: row.age ? Number(row.age) : undefined,
+            weight: row.weight != null ? Number(row.weight) : undefined,
+            height: row.height != null ? Number(row.height) : undefined,
+            activityLevel: row.activity_level != null ? (Number(row.activity_level) as any) : undefined,
+            goal: row.goal,
+            calorieAdjustmentPercent: row.calorie_adjustment_percent != null ? Number(row.calorie_adjustment_percent) : undefined,
+            proteinPerKg: row.protein_per_kg != null ? Number(row.protein_per_kg) : undefined,
+            fatPerKg: row.fat_per_kg != null ? Number(row.fat_per_kg) : undefined,
+            carbsPerKg: row.carbs_per_kg != null ? Number(row.carbs_per_kg) : undefined,
             createdAt: row.created_at || new Date().toISOString(),
           };
         }
@@ -125,22 +149,30 @@ export class AuthService {
     if (!isSupabaseConfigured() || !supabase) return false;
 
     try {
-      const { error } = await supabase.from('profiles').upsert(
-        {
-          id: user.id,
-          profile_code: user.profileCode,
-          email: user.email,
-          first_name: user.firstName || '',
-          last_name: user.lastName || '',
-          name: user.name || '',
-          avatar_url: user.image || '',
-          role: user.role,
-          coach_id: user.coachId || null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'id' }
-      );
+      const payload: any = {
+        id: user.id,
+        profile_code: user.profileCode,
+        email: user.email,
+        first_name: user.firstName || '',
+        last_name: user.lastName || '',
+        name: user.name || '',
+        avatar_url: user.image || '',
+        role: user.role,
+        coach_id: user.coachId || null,
+        updated_at: new Date().toISOString(),
+      };
+      if (user.customRepRanges !== undefined) payload.custom_rep_ranges = user.customRepRanges;
+      if (user.gender !== undefined) payload.gender = user.gender;
+      if (user.birthDate !== undefined) payload.birth_date = user.birthDate;
+      if (user.weight !== undefined) payload.weight = user.weight;
+      if (user.height !== undefined) payload.height = user.height;
+      if (user.activityLevel !== undefined) payload.activity_level = user.activityLevel;
+      if (user.goal !== undefined) payload.goal = user.goal;
+      if (user.calorieAdjustmentPercent !== undefined) payload.calorie_adjustment_percent = user.calorieAdjustmentPercent;
+      if (user.proteinPerKg !== undefined) payload.protein_per_kg = user.proteinPerKg;
+      if (user.fatPerKg !== undefined) payload.fat_per_kg = user.fatPerKg;
 
+      const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' });
       return !error;
     } catch (e) {
       console.warn('[AuthService.upsertProfile] Error:', e);
