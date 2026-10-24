@@ -108,10 +108,10 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
             onPress={onCoachStatusPress}
             style={[styles.headerIconBtn, isDark ? styles.headerIconBtnDark : styles.headerIconBtnLight]}
             accessibilityRole="button"
-            accessibilityLabel="Тренерський статус"
+            accessibilityLabel="Підопічні"
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
           >
-            <Ionicons name="ribbon-outline" size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
+            <Ionicons name="people-outline" size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
           </TouchableOpacity>
         )}
         {showLogout && (

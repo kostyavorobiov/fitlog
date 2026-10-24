@@ -332,16 +332,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex items-center space-x-1.5">
                 {user ? (
                   <>
-                    {/* Coach Status Icon (only for coaches/admins, placed BEFORE logout) */}
+                    {/* Coach Status / Trainees Icon (only for coaches/admins, placed BEFORE logout) */}
                     {(isCoach || isAdmin || user.role === 'coach') && (
                       <button
                         type="button"
-                        onClick={() => setIsCoachModalOpen(true)}
+                        onClick={() => onSelectTab('trainees')}
                         className="flex h-9 w-9 rounded-full border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 items-center justify-center text-[#2563EB] dark:text-[#60A5FA] hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
-                        title="Тренерський статус"
-                        aria-label="Тренерський статус"
+                        title="Підопічні"
+                        aria-label="Підопічні"
                       >
-                        <Award className="h-4 w-4" />
+                        <Users className="h-4 w-4" />
                       </button>
                     )}
 

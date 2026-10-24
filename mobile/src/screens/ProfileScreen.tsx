@@ -392,7 +392,7 @@ export const ProfileScreen: React.FC = () => {
       color: isDark ? '#60a5fa' : '#2563eb',
       bg: isDark ? 'rgba(37, 99, 235, 0.2)' : 'rgba(37, 99, 235, 0.08)',
       border: isDark ? 'rgba(96, 165, 250, 0.35)' : 'rgba(37, 99, 235, 0.25)',
-      icon: 'ribbon-outline',
+      icon: 'people-outline',
     },
     athlete: {
       title: 'Атлет',
@@ -411,7 +411,7 @@ export const ProfileScreen: React.FC = () => {
         title="Профіль"
         showAvatar={false}
         showCoachStatus={isCoach}
-        onCoachStatusPress={() => setIsCoachModalVisible(true)}
+        onCoachStatusPress={() => router.push('/trainees')}
         showLogout={true}
         onLogoutPress={handleLogout}
       />
@@ -1222,7 +1222,7 @@ export const ProfileScreen: React.FC = () => {
           <View style={[styles.modalCard, isDark ? styles.modalDark : styles.modalLight]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="ribbon-outline" size={22} color="#2563EB" />
+                <Ionicons name="people-outline" size={22} color="#2563EB" />
                 <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
                   Тренерський статус
                 </Text>

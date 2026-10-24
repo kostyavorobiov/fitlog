@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
   TextInput,
   BackHandler,
+  Platform,
 } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -40,6 +42,9 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
 }) => {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'ios' ? 47 : 24);
+  const bottomInset = Math.max(insets.bottom, 16);
 
   const [period, setPeriod] = useState<AnalyticsPeriod>('week');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -176,18 +181,32 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
       onRequestClose={onClose}
       presentationStyle="fullScreen"
     >
-      <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={onClose}>
-        <SafeAreaView edges={['top', 'bottom']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-          {/* Header */}
-          <View style={[styles.headerRow, isDark ? styles.headerDark : styles.headerLight]}>
-            <TouchableOpacity
-              onPress={onClose}
-              style={[styles.backBtn, isDark ? styles.btnDark : styles.btnLight]}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={onClose}>
+          <View style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+            {/* Header */}
+            <View
+              style={[
+                styles.headerRow,
+                isDark ? styles.headerDark : styles.headerLight,
+                {
+                  paddingTop: topInset + 6,
+                  paddingBottom: 10,
+                  minHeight: topInset + 54,
+                },
+              ]}
             >
-              <Ionicons name="arrow-back" size={20} color={isDark ? '#f8fafc' : '#0f172a'} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onClose}
+                style={[styles.backBtn, isDark ? styles.btnDark : styles.btnLight]}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Назад"
+              >
+                <Ionicons name="arrow-back" size={20} color={isDark ? '#f8fafc' : '#0f172a'} />
+              </TouchableOpacity>
 
             <View style={styles.headerTitleWrap}>
               <Text numberOfLines={1} style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}>
@@ -238,7 +257,7 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
           </View>
 
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomInset + 30 }]}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
@@ -613,9 +632,10 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
               </>
             )}
           </ScrollView>
-        </SafeAreaView>
+        </View>
       </ScreenGestureWrapper>
-    </Modal>
+    </GestureHandlerRootView>
+  </Modal>
   );
 };
 
@@ -633,7 +653,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingBottom: 10,
     gap: 12,
     borderBottomWidth: 1,
   },

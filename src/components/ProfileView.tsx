@@ -322,7 +322,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
                     {user.role === 'admin' ? (
                       <ShieldCheck className="h-3.5 w-3.5" />
                     ) : user.role === 'coach' ? (
-                      <Award className="h-3.5 w-3.5" />
+                      <Users className="h-3.5 w-3.5" />
                     ) : (
                       <Dumbbell className="h-3.5 w-3.5" />
                     )}
