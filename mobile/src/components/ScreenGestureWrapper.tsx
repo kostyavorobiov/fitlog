@@ -45,9 +45,6 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
 
     globalLastBackNavTime = now;
     isNavigatingRef.current = true;
-    try {
-      Haptics.selectionAsync();
-    } catch {}
 
     if (onBack) {
       onBack();
@@ -129,6 +126,14 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
         const touch = e.allTouches[0];
         if (touch) {
           startX.value = touch.absoluteX;
+          // Left edge: on iOS or when back swipe is disabled, fail immediately
+          // so UIKit UIScreenEdgePanGestureRecognizer gets 100% exclusive priority.
+          if (isIOS || !enableBackSwipe) {
+            if (touch.absoluteX < 40) {
+              stateManager.fail();
+              return;
+            }
+          }
           // Right 20%: strictly fail so cards have 100% exclusive control
           if (touch.absoluteX > screenWidth * 0.8) {
             stateManager.fail();
@@ -151,20 +156,20 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
           return;
         }
 
-        // 2. Left 20%: Back navigation on right swipe
+        // 2. Left 20%: Back navigation on right swipe (Android / non-iOS only)
         if (sX < screenWidth * 0.2) {
+          if (isIOS) {
+            // On iOS, native navigation stack interactive edge swipe handles back navigation
+            return;
+          }
           if (dx > 35) {
-            // On iOS, system edge swipe handles extreme edge (0-24pt)
-            if (isIOS && sX < 24) {
-              return;
-            }
             runOnJS(handleBackNavigation)();
           }
           return;
         }
 
-        // 3. Central 60%: Tab navigation on horizontal swipe
-        if (sX >= screenWidth * 0.2 && sX <= screenWidth * 0.8) {
+        // 3. Central 60%: Tab navigation on horizontal swipe (if enabled)
+        if (enableTabSwipe && sX >= screenWidth * 0.2 && sX <= screenWidth * 0.8) {
           const isSwipeLeft = dx < -45 || vx < -350;
           const isSwipeRight = dx > 45 || vx > 350;
 
@@ -175,7 +180,18 @@ export const ScreenGestureWrapper: React.FC<ScreenGestureWrapperProps> = ({
           }
         }
       });
-  }, [screenWidth, isIOS, handleBackNavigation, handleNextTab, handlePrevTab, startX]);
+  }, [screenWidth, isIOS, enableBackSwipe, enableTabSwipe, handleBackNavigation, handleNextTab, handlePrevTab, startX]);
+
+  // On iOS with native stack navigation, native swipe-back is handled by iOS UIKit.
+  // When tab swiping is disabled (all child stack screens), bypass GestureDetector completely
+  // so UIKit interactivePopGestureRecognizer operates without any gesture competition.
+  if (isIOS && !enableTabSwipe) {
+    return (
+      <View style={styles.container}>
+        {children}
+      </View>
+    );
+  }
 
   return (
     <GestureDetector gesture={panGesture}>

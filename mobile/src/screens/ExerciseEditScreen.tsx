@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -85,6 +86,18 @@ export const ExerciseEditScreen: React.FC = () => {
     setSavedActiveTab(sourceTab);
     router.back();
   }, [router, sourceTab]);
+
+  useEffect(() => {
+    setSavedActiveTab(sourceTab);
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBack();
+      return true;
+    });
+    return () => {
+      setSavedActiveTab(sourceTab);
+      sub.remove();
+    };
+  }, [handleBack, sourceTab]);
 
   const handleSave = async () => {
     const cleanName = name.trim();

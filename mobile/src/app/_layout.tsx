@@ -76,14 +76,20 @@ function RootNavigator() {
 
   return (
     <NavigationThemeProvider value={isDark ? OceanNavigationDarkTheme : OceanNavigationLightTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
-        <Stack.Screen name="workout/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="exercise/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="exercise/edit" options={{ headerShown: false }} />
-        <Stack.Screen name="trainees" options={{ headerShown: false }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          gestureEnabled: true,
+          animation: 'default',
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="auth/callback" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="workout/[id]" options={{ headerShown: false, gestureEnabled: true }} />
+        <Stack.Screen name="exercise/[id]" options={{ headerShown: false, gestureEnabled: true }} />
+        <Stack.Screen name="exercise/edit" options={{ headerShown: false, gestureEnabled: true }} />
+        <Stack.Screen name="trainees" options={{ headerShown: false, gestureEnabled: true }} />
         <Stack.Screen name="+not-found" options={{ title: 'Не знайдено' }} />
       </Stack>
 

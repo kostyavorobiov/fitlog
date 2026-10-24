@@ -90,7 +90,10 @@ export const TraineesScreen: React.FC = () => {
       handleBackToProfile();
       return true;
     });
-    return () => sub.remove();
+    return () => {
+      setSavedActiveTab('profile');
+      sub.remove();
+    };
   }, [handleBackToProfile]);
 
   const handleCombinedScroll = useCallback(

@@ -398,8 +398,15 @@ export const WorkoutEditorScreen: React.FC = () => {
       handleBack();
       return true;
     });
-    return () => sub.remove();
-  }, [handleBack]);
+    return () => {
+      if (isTraineeWorkout) {
+        setSavedActiveTab('profile');
+      } else {
+        setSavedActiveTab('index');
+      }
+      sub.remove();
+    };
+  }, [handleBack, isTraineeWorkout]);
 
   const topBarAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
