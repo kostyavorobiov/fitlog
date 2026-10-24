@@ -147,8 +147,55 @@ export const AnalyticsScreen: React.FC = () => {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
       {/* Header with Segmented Period Switcher (День | Тиждень | Місяць) */}
+      <Header
+        title="Аналітика"
+        subtitle={
+          traineeName
+            ? `Підопічний: ${traineeName}`
+            : undefined
+        }
+        rightAction={
+          <View style={[styles.periodContainer, isDark ? styles.periodDark : styles.periodLight]}>
+            {(
+              [
+                { key: 'day', label: 'День' },
+                { key: 'week', label: 'Тиждень' },
+                { key: 'month', label: 'Місяць' },
+              ] as const
+            ).map((p) => {
+              const isActive = period === p.key;
+              return (
+                <TouchableOpacity
+                  key={p.key}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setPeriod(p.key);
+                    setCurrentDate(new Date());
+                  }}
+                  style={[
+                    styles.periodBtn,
+                    isActive && (isDark ? styles.periodBtnActiveDark : styles.periodBtnActiveLight),
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.periodBtnText,
+                      isActive
+                        ? (isDark ? styles.periodTextActiveDark : styles.periodTextActiveLight)
+                        : (isDark ? styles.subDark : styles.subLight),
+                    ]}
+                  >
+                    {p.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        }
+      />
+
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: traineeName ? 112 : 68 }]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
@@ -574,55 +621,6 @@ export const AnalyticsScreen: React.FC = () => {
           </>
         )}
       </ScrollView>
-
-      {/* Floating Header */}
-      <Header
-        title="Аналітика"
-        subtitle={
-          traineeName
-            ? `Підопічний: ${traineeName}`
-            : undefined
-        }
-        rightAction={
-          <View style={[styles.periodContainer, isDark ? styles.periodDark : styles.periodLight]}>
-            {(
-              [
-                { key: 'day', label: 'День' },
-                { key: 'week', label: 'Тиждень' },
-                { key: 'month', label: 'Місяць' },
-              ] as const
-            ).map((p) => {
-              const isActive = period === p.key;
-              return (
-                <TouchableOpacity
-                  key={p.key}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    setPeriod(p.key);
-                    setCurrentDate(new Date());
-                  }}
-                  style={[
-                    styles.periodBtn,
-                    isActive && (isDark ? styles.periodBtnActiveDark : styles.periodBtnActiveLight),
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.periodBtnText,
-                      isActive
-                        ? (isDark ? styles.periodTextActiveDark : styles.periodTextActiveLight)
-                        : (isDark ? styles.subDark : styles.subLight),
-                    ]}
-                  >
-                    {p.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        }
-      />
-
     </SafeAreaView>
   );
 };

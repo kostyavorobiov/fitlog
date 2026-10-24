@@ -408,6 +408,9 @@ export const WorkoutsScreen: React.FC = () => {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      {/* Top Navbar */}
+      <Header title="Тренування" />
+
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -602,9 +605,6 @@ export const WorkoutsScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
-
-      {/* Top Navbar floating over ScrollView */}
-      <Header title="Тренування" />
 
       {/* Create Workout Modal */}
       <Modal
@@ -862,7 +862,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingTop: 68,
     gap: 12,
     paddingBottom: 110,
   },

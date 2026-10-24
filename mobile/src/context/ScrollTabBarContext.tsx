@@ -40,7 +40,7 @@ export const ScrollTabBarProvider: React.FC<{ children: React.ReactNode }> = ({ 
       toValue: visible ? 0 : 1,
       duration: 200,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      useNativeDriver: Platform.OS !== 'web',
+      useNativeDriver: false,
     }).start();
   }, [translateY, headerAnim]);
 

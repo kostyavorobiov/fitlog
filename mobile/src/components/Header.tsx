@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
@@ -165,16 +164,16 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { isDark } = useTheme();
   const { headerAnim } = useScrollTabBar();
-  const insets = useSafeAreaInsets();
-  const topInset = Math.max(insets.top, 0);
-  const [measuredHeight, setMeasuredHeight] = useState((subtitle ? 100 : 56) + topInset);
+  const [measuredHeight, setMeasuredHeight] = useState(subtitle ? 100 : 56);
 
-  // Pure Instagram-style translation:
-  // Runs 100% on native driver without modifying layout dimensions or causing ScrollView frame resizing
-  const translateY = headerAnim.interpolate({
+  const marginTop = headerAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, -measuredHeight],
-    extrapolate: 'clamp',
+  });
+
+  const opacity = headerAnim.interpolate({
+    inputRange: [0, 0.7, 1],
+    outputRange: [1, 0.2, 0],
   });
 
   return (
@@ -187,11 +186,10 @@ export const Header: React.FC<HeaderProps> = ({
       }}
       style={[
         styles.wrapper,
-        isDark ? styles.wrapperDark : styles.wrapperLight,
-        Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
         {
-          paddingTop: topInset,
-          transform: [{ translateY }],
+          marginTop,
+          opacity,
+          overflow: 'hidden',
         },
       ]}
     >
@@ -218,21 +216,7 @@ export const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 50,
-  },
-  wrapperLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  wrapperDark: {
-    backgroundColor: 'rgba(11, 18, 32, 0.95)',
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    width: '100%',
   },
   topNavbar: {
     height: 56,
@@ -240,12 +224,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderBottomWidth: 1,
   },
   topNavbarLight: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderBottomColor: '#E2E8F0',
   },
   topNavbarDark: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(11, 18, 32, 0.95)',
+    borderBottomColor: '#334155',
   },
   navLeft: {
     flexDirection: 'row',

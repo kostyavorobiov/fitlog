@@ -426,7 +426,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             toValue: 0,
             duration: 200,
             easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-            useNativeDriver: Platform.OS !== 'web',
+            useNativeDriver: false,
           }).start();
         }
         return;
@@ -454,7 +454,7 @@ export const WorkoutEditorScreen: React.FC = () => {
               toValue: 1,
               duration: 200,
               easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-              useNativeDriver: Platform.OS !== 'web',
+              useNativeDriver: false,
             }).start();
           }
           accumulatedDown.current = 0;
@@ -471,7 +471,7 @@ export const WorkoutEditorScreen: React.FC = () => {
               toValue: 0,
               duration: 200,
               easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-              useNativeDriver: Platform.OS !== 'web',
+              useNativeDriver: false,
             }).start();
           }
           accumulatedUp.current = 0;
@@ -1419,6 +1419,88 @@ export const WorkoutEditorScreen: React.FC = () => {
   return (
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBack}>
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      {/* Top Header Bar */}
+      <Animated.View
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          if (h > 0 && Math.abs(h - topBarHeight) > 2) {
+            setTopBarHeight(h);
+          }
+        }}
+        style={[
+          styles.topBar,
+          isDark ? styles.borderDark : styles.borderLight,
+          isDark ? styles.topBarDark : styles.topBarLight,
+          Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
+          {
+            marginTop: topBarAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -topBarHeight],
+            }),
+            opacity: topBarAnim.interpolate({
+              inputRange: [0, 0.7, 1],
+              outputRange: [1, 0.2, 0],
+            }),
+            overflow: 'hidden',
+          },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleBack}
+          style={styles.iconBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Назад"
+        >
+          <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              setEditTitleValue(workout.title || 'Тренування');
+              setIsEditTitleModalOpen(true);
+            }}
+            style={styles.headerTitleRow}
+            accessibilityRole="button"
+            accessibilityLabel="Редагувати назву тренування"
+          >
+            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+              {workout.title || 'Тренування'}
+            </Text>
+            <Ionicons name="pencil" size={13} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 5 }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setIsDatePickerOpen(true)}
+            style={styles.headerDateRow}
+            accessibilityRole="button"
+            accessibilityLabel="Вибрати дату тренування"
+          >
+            <Text style={[styles.topBarDateText, isDark ? styles.subDark : styles.subLight]}>
+              {formatDateDDMMYYYY(workout.scheduledDate)}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              setTemplateName(workout.title || 'Моє тренування');
+              setIsTemplateModalOpen(true);
+            }}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Зберегти як шаблон"
+          >
+            <Ionicons name="bookmark-outline" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+
       <DatePickerModal
         visible={isDatePickerOpen}
         selectedDate={workout.scheduledDate}
@@ -1440,7 +1522,7 @@ export const WorkoutEditorScreen: React.FC = () => {
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.contentScroll,
-            { paddingTop: 68, paddingBottom: 40 + Math.max(insets.bottom, 16) },
+            { paddingBottom: 40 + Math.max(insets.bottom, 16) },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -2050,87 +2132,6 @@ export const WorkoutEditorScreen: React.FC = () => {
           </View>
         </TouchableOpacity>
       </Modal>
-
-      {/* Instagram-style Floating Top Header Bar */}
-      <Animated.View
-        onLayout={(e) => {
-          const h = e.nativeEvent.layout.height;
-          if (h > 0 && Math.abs(h - topBarHeight) > 2) {
-            setTopBarHeight(h);
-          }
-        }}
-        style={[
-          styles.topBar,
-          isDark ? styles.borderDark : styles.borderLight,
-          isDark ? styles.topBarDark : styles.topBarLight,
-          Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
-          {
-            paddingTop: Math.max(insets.top, 0),
-            transform: [{
-              translateY: topBarAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, -topBarHeight],
-                extrapolate: 'clamp',
-              }),
-            }],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={handleBack}
-          style={styles.iconBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Назад"
-        >
-          <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => {
-              setEditTitleValue(workout.title || 'Тренування');
-              setIsEditTitleModalOpen(true);
-            }}
-            style={styles.headerTitleRow}
-            accessibilityRole="button"
-            accessibilityLabel="Редагувати назву тренування"
-          >
-            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
-              {workout.title || 'Тренування'}
-            </Text>
-            <Ionicons name="pencil" size={13} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 5 }} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setIsDatePickerOpen(true)}
-            style={styles.headerDateRow}
-            accessibilityRole="button"
-            accessibilityLabel="Вибрати дату тренування"
-          >
-            <Text style={[styles.topBarDateText, isDark ? styles.subDark : styles.subLight]}>
-              {formatDateDDMMYYYY(workout.scheduledDate)}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.headerRightActions}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => {
-              setTemplateName(workout.title || 'Моє тренування');
-              setIsTemplateModalOpen(true);
-            }}
-            style={styles.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Зберегти як шаблон"
-          >
-            <Ionicons name="bookmark-outline" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
       </SafeAreaView>
     </ScreenGestureWrapper>
   );
@@ -2163,11 +2164,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   topBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 50,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

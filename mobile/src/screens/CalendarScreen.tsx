@@ -273,6 +273,13 @@ export const CalendarScreen: React.FC = () => {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      {/* Header */}
+      <Header
+        title="Календар"
+        showBack={true}
+        onBack={handleBackToWorkouts}
+      />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -583,13 +590,6 @@ export const CalendarScreen: React.FC = () => {
         </Card>
       </ScrollView>
 
-      {/* Header floating over ScrollView */}
-      <Header
-        title="Календар"
-        showBack={true}
-        onBack={handleBackToWorkouts}
-      />
-
       {/* Create Workout Modal */}
       <CreateWorkoutModal
         visible={isCreateModalOpen}
@@ -638,7 +638,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingTop: 68,
     gap: 16,
     paddingBottom: 110,
   },
