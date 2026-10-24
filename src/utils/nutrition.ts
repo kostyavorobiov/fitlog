@@ -55,12 +55,14 @@ export function calculateNutrition(user?: Partial<User> | null): NutritionCalcul
   const age = user.age || calculateAge(user.birthDate) || 0;
   const activityLevel = Number(user.activityLevel) || 1.2;
   const goal: NutritionGoal = user.goal || 'maintenance';
-  const adjustmentPercent = Number(user.calorieAdjustmentPercent) || 0;
-  const proteinPerKg = Number(user.proteinPerKg) || 1.8;
-  const fatPerKg = Number(user.fatPerKg) || 1.0;
+  const adjustmentPercent = user.calorieAdjustmentPercent !== undefined && user.calorieAdjustmentPercent !== null
+    ? Number(user.calorieAdjustmentPercent)
+    : (goal === 'maintenance' ? 0 : 10);
+  const proteinPerKg = Number(user.proteinPerKg) || 0;
+  const fatPerKg = Number(user.fatPerKg) || 0;
 
   // Validation: Check if basic required fields are filled
-  if (weight <= 0 || height <= 0 || age <= 0 || !gender) {
+  if (weight <= 0 || height <= 0 || age <= 0 || !gender || proteinPerKg <= 0 || fatPerKg <= 0) {
     return {
       ...defaultResult,
       isComplete: false,

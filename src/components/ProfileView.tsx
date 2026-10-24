@@ -56,9 +56,9 @@ const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string; desc: string }[] 
 ];
 
 const GOAL_OPTIONS: { value: NutritionGoal; label: string; icon: React.ReactNode }[] = [
-  { value: 'weight_loss', label: 'Схуднення', icon: <TrendingDown className="h-3.5 w-3.5" /> },
+  { value: 'weight_loss', label: 'Схуднення (дефіцит)', icon: <TrendingDown className="h-3.5 w-3.5" /> },
   { value: 'maintenance', label: 'Підтримка ваги', icon: <Minus className="h-3.5 w-3.5" /> },
-  { value: 'weight_gain', label: 'Набір ваги', icon: <TrendingUp className="h-3.5 w-3.5" /> },
+  { value: 'weight_gain', label: 'Набір маси (профіцит)', icon: <TrendingUp className="h-3.5 w-3.5" /> },
 ];
 
 export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
@@ -72,7 +72,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
   const [lastName, setLastName] = useState(user?.lastName || '');
   const [selectedRole, setSelectedRole] = useState<UserRole>(user?.role || 'athlete');
   const [gender, setGender] = useState<Gender | undefined>(user?.gender);
-  const [birthDate, setBirthDate] = useState<string>(user?.birthDate || '');
   const [age, setAge] = useState<string>(
     user?.age ? String(user.age) : user?.birthDate && calculateAge(user.birthDate) ? String(calculateAge(user.birthDate)) : ''
   );
@@ -81,13 +80,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(user?.activityLevel || 1.2);
   const [goal, setGoal] = useState<NutritionGoal>(user?.goal || 'maintenance');
   const [calorieAdjustmentPercent, setCalorieAdjustmentPercent] = useState<string>(
-    user?.calorieAdjustmentPercent !== undefined ? String(user.calorieAdjustmentPercent) : '15'
+    user?.calorieAdjustmentPercent !== undefined ? String(user.calorieAdjustmentPercent) : '10'
   );
   const [proteinPerKg, setProteinPerKg] = useState<string>(
-    user?.proteinPerKg !== undefined ? String(user.proteinPerKg) : '2.0'
+    user?.proteinPerKg !== undefined && user?.proteinPerKg !== null ? String(user.proteinPerKg) : ''
   );
   const [fatPerKg, setFatPerKg] = useState<string>(
-    user?.fatPerKg !== undefined ? String(user.fatPerKg) : '1.0'
+    user?.fatPerKg !== undefined && user?.fatPerKg !== null ? String(user.fatPerKg) : ''
   );
 
   const [saveToast, setSaveToast] = useState(false);
@@ -106,18 +105,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
 
   useEffect(() => {
     if (user?.customRepRanges && user.customRepRanges.length > 0) {
-      setRepRanges(sortRepRanges(user.customRepRanges));
+      const sorted = sortRepRanges(user.customRepRanges);
+      setRepRanges((prev) => (prev.join(',') !== sorted.join(',') ? sorted : prev));
     }
   }, [user?.customRepRanges]);
 
-  // Synchronize state when user changes
+  // Synchronize state when user changes without overwriting active edits
   useEffect(() => {
-    if (user) {
+    if (user && !isEditing) {
       setFirstName(user.firstName || '');
       setLastName(user.lastName || '');
       setSelectedRole(user.role);
       setGender(user.gender);
-      setBirthDate(user.birthDate || '');
       setAge(
         user.age ? String(user.age) : user.birthDate && calculateAge(user.birthDate) ? String(calculateAge(user.birthDate)) : ''
       );
@@ -126,12 +125,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
       setActivityLevel(user.activityLevel || 1.2);
       setGoal(user.goal || 'maintenance');
       setCalorieAdjustmentPercent(
-        user.calorieAdjustmentPercent !== undefined ? String(user.calorieAdjustmentPercent) : '15'
+        user.calorieAdjustmentPercent !== undefined ? String(user.calorieAdjustmentPercent) : '10'
       );
-      setProteinPerKg(user.proteinPerKg !== undefined ? String(user.proteinPerKg) : '2.0');
-      setFatPerKg(user.fatPerKg !== undefined ? String(user.fatPerKg) : '1.0');
+      setProteinPerKg(user.proteinPerKg !== undefined && user.proteinPerKg !== null ? String(user.proteinPerKg) : '');
+      setFatPerKg(user.fatPerKg !== undefined && user.fatPerKg !== null ? String(user.fatPerKg) : '');
     }
-  }, [user]);
+  }, [user, isEditing]);
 
   // Real-time nutrition plan from saved user profile
   const nutritionPlan = useMemo(() => {
@@ -142,8 +141,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
   const liveFormNutrition = useMemo(() => {
     const numWeight = parseFloat(weight.replace(',', '.')) || 0;
     const numHeight = parseFloat(height.replace(',', '.')) || 0;
-    const numAge = parseInt(age, 10) || calculateAge(birthDate) || 0;
-    const numAdj = parseFloat(calorieAdjustmentPercent.replace(',', '.')) || 0;
+    const numAge = parseInt(age, 10) || (user?.birthDate ? calculateAge(user.birthDate) || 0 : 0);
+    const numAdj = parseFloat(calorieAdjustmentPercent.replace(',', '.')) || 10;
     const numProt = parseFloat(proteinPerKg.replace(',', '.')) || 0;
     const numFat = parseFloat(fatPerKg.replace(',', '.')) || 0;
 
@@ -158,7 +157,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
       proteinPerKg: numProt,
       fatPerKg: numFat,
     });
-  }, [gender, weight, height, age, birthDate, activityLevel, goal, calorieAdjustmentPercent, proteinPerKg, fatPerKg]);
+  }, [gender, weight, height, age, user?.birthDate, activityLevel, goal, calorieAdjustmentPercent, proteinPerKg, fatPerKg]);
 
   const handleAddRepRange = () => {
     setRepRangeError(null);
@@ -199,8 +198,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
     e.preventDefault();
     const numWeight = weight ? parseFloat(weight.replace(',', '.')) : undefined;
     const numHeight = height ? parseFloat(height.replace(',', '.')) : undefined;
-    const numAge = age ? parseInt(age, 10) : calculateAge(birthDate) || undefined;
-    const numAdj = calorieAdjustmentPercent ? parseFloat(calorieAdjustmentPercent.replace(',', '.')) : 0;
+    const numAge = age ? parseInt(age, 10) : user?.birthDate ? calculateAge(user.birthDate) || undefined : undefined;
+    const numAdj = calorieAdjustmentPercent ? parseFloat(calorieAdjustmentPercent.replace(',', '.')) : 10;
     const numProt = proteinPerKg ? parseFloat(proteinPerKg.replace(',', '.')) : undefined;
     const numFat = fatPerKg ? parseFloat(fatPerKg.replace(',', '.')) : undefined;
 
@@ -209,7 +208,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
       lastName: lastName.trim(),
       role: selectedRole,
       gender,
-      birthDate: birthDate.trim() || undefined,
       age: numAge,
       weight: numWeight,
       height: numHeight,
@@ -455,25 +453,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
               </div>
             </div>
 
-            {/* Birth date, age, weight, height */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                  Дата народження
-                </label>
-                <input
-                  type="text"
-                  placeholder="РРРР-ММ-ДД"
-                  value={birthDate}
-                  onChange={(e) => {
-                    setBirthDate(e.target.value);
-                    const calc = calculateAge(e.target.value);
-                    if (calc) setAge(String(calc));
-                  }}
-                  className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
-                />
-              </div>
-
+            {/* Age, Height, Weight in a harmonious 3-column row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                   Вік (років)
@@ -489,26 +470,26 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                  Вага (кг)
+                  Зріст (см)
                 </label>
                 <input
                   type="text"
-                  placeholder="Напр. 75"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="180"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value)}
                   className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                  Зріст (см)
+                  Вага (кг)
                 </label>
                 <input
                   type="text"
-                  placeholder="Напр. 180"
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value)}
+                  placeholder="75"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
                   className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
                 />
               </div>
@@ -538,28 +519,24 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
               </div>
             </div>
 
-            {/* Goal & Deficit/Surplus % */}
+            {/* Goal (Dropdown) & Deficit/Surplus % */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                   Ціль
                 </label>
-                <div className="flex gap-2">
-                  {GOAL_OPTIONS.map((g) => (
-                    <button
-                      key={g.value}
-                      type="button"
-                      onClick={() => setGoal(g.value)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                        goal === g.value
-                          ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:text-[#60A5FA] font-bold'
-                          : 'border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400'
-                      }`}
-                    >
-                      {g.icon}
-                      <span>{g.label}</span>
-                    </button>
-                  ))}
+                <div className="relative">
+                  <select
+                    value={goal}
+                    onChange={(e) => setGoal(e.target.value as NutritionGoal)}
+                    className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 text-xs font-semibold text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB] cursor-pointer"
+                  >
+                    {GOAL_OPTIONS.map((g) => (
+                      <option key={g.value} value={g.value} className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100">
+                        {g.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -571,7 +548,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="15"
+                      placeholder="10"
                       value={calorieAdjustmentPercent}
                       onChange={(e) => setCalorieAdjustmentPercent(e.target.value)}
                       className="flex-1 h-9 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
@@ -608,7 +585,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
                   </label>
                   <input
                     type="text"
-                    placeholder="2.0"
+                    placeholder="г/кг"
                     value={proteinPerKg}
                     onChange={(e) => setProteinPerKg(e.target.value)}
                     className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
@@ -621,7 +598,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
                   </label>
                   <input
                     type="text"
-                    placeholder="1.0"
+                    placeholder="г/кг"
                     value={fatPerKg}
                     onChange={(e) => setFatPerKg(e.target.value)}
                     className="w-full h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
@@ -629,12 +606,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
                 </div>
               </div>
 
-              {/* Live preview */}
+              {/* Live preview in г/кг */}
               <div className="rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-950/20 p-3 flex flex-col justify-center">
-                <div className="text-xs font-semibold text-slate-700 dark:text-zinc-300 flex justify-between">
-                  <span>Вуглеводи (авто):</span>
+                <div className="text-xs font-semibold text-slate-700 dark:text-zinc-300 flex justify-between items-center">
+                  <span>Вуглеводи:</span>
                   <span className="font-bold text-[#2563EB] dark:text-[#60A5FA]">
-                    {liveFormNutrition.carbsGrams} г/день ({liveFormNutrition.carbsPerKg} г/кг)
+                    {liveFormNutrition.carbsPerKg > 0 ? `${liveFormNutrition.carbsPerKg} г/кг` : '0 г/кг'}
                   </span>
                 </div>
                 {liveFormNutrition.validationError && (
@@ -690,39 +667,39 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
           <div className="space-y-3">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {/* Calories */}
-              <div className="rounded-xl border border-orange-200 dark:border-orange-900/40 bg-orange-50/40 dark:bg-orange-950/20 p-3 text-center">
-                <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mb-0.5">Калорії</div>
-                <div className="text-lg font-black text-orange-600 dark:text-orange-400">
+              <div className="rounded-xl border border-orange-200 dark:border-orange-900/40 bg-orange-50/40 dark:bg-orange-950/20 p-2.5 sm:p-3 text-center min-w-0">
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mb-0.5 truncate">Калорії</div>
+                <div className="text-lg font-black text-orange-600 dark:text-orange-400 truncate">
                   {nutritionPlan.targetCalories}
                 </div>
-                <div className="text-[10px] text-slate-400">ккал / день</div>
+                <div className="text-[10px] text-slate-400 truncate">ккал / день</div>
               </div>
 
               {/* Proteins */}
-              <div className="rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/40 dark:bg-rose-950/20 p-3 text-center">
-                <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mb-0.5">Білки</div>
-                <div className="text-lg font-black text-rose-600 dark:text-rose-400">
+              <div className="rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/40 dark:bg-rose-950/20 p-2.5 sm:p-3 text-center min-w-0">
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mb-0.5 truncate">Білки</div>
+                <div className="text-lg font-black text-rose-600 dark:text-rose-400 truncate">
                   {nutritionPlan.proteinGrams}г
                 </div>
-                <div className="text-[10px] text-slate-400">{nutritionPlan.proteinPerKg} г/кг</div>
+                <div className="text-[10px] text-slate-400 truncate">{nutritionPlan.proteinPerKg} г/кг</div>
               </div>
 
               {/* Fats */}
-              <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 p-3 text-center">
-                <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mb-0.5">Жири</div>
-                <div className="text-lg font-black text-amber-600 dark:text-amber-400">
+              <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 p-2.5 sm:p-3 text-center min-w-0">
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mb-0.5 truncate">Жири</div>
+                <div className="text-lg font-black text-amber-600 dark:text-amber-400 truncate">
                   {nutritionPlan.fatGrams}г
                 </div>
-                <div className="text-[10px] text-slate-400">{nutritionPlan.fatPerKg} г/кг</div>
+                <div className="text-[10px] text-slate-400 truncate">{nutritionPlan.fatPerKg} г/кг</div>
               </div>
 
               {/* Carbs */}
-              <div className="rounded-xl border border-sky-200 dark:border-sky-900/40 bg-sky-50/40 dark:bg-sky-950/20 p-3 text-center">
-                <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mb-0.5">Вуглеводи</div>
-                <div className="text-lg font-black text-sky-600 dark:text-sky-400">
+              <div className="rounded-xl border border-sky-200 dark:border-sky-900/40 bg-sky-50/40 dark:bg-sky-950/20 p-2.5 sm:p-3 text-center min-w-0">
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mb-0.5 truncate">Вуглеводи</div>
+                <div className="text-lg font-black text-sky-600 dark:text-sky-400 truncate">
                   {nutritionPlan.carbsGrams}г
                 </div>
-                <div className="text-[10px] text-slate-400">{nutritionPlan.carbsPerKg} г/кг</div>
+                <div className="text-[10px] text-slate-400 truncate">{nutritionPlan.carbsPerKg} г/кг</div>
               </div>
             </div>
 

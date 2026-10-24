@@ -47,9 +47,9 @@ const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string; desc: string }[] 
 ];
 
 const GOAL_OPTIONS: { value: NutritionGoal; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 'weight_loss', label: 'Схуднення', icon: 'trending-down-outline' },
+  { value: 'weight_loss', label: 'Схуднення (дефіцит)', icon: 'trending-down-outline' },
   { value: 'maintenance', label: 'Підтримка ваги', icon: 'remove-outline' },
-  { value: 'weight_gain', label: 'Набір ваги', icon: 'trending-up-outline' },
+  { value: 'weight_gain', label: 'Набір маси (профіцит)', icon: 'trending-up-outline' },
 ];
 
 export const ProfileScreen: React.FC = () => {
@@ -78,7 +78,6 @@ export const ProfileScreen: React.FC = () => {
 
   // Nutrition & body edit state
   const [gender, setGender] = useState<Gender | undefined>(user?.gender);
-  const [birthDate, setBirthDate] = useState<string>(user?.birthDate || '');
   const [age, setAge] = useState<string>(
     user?.age ? String(user.age) : user?.birthDate && calculateAge(user.birthDate) ? String(calculateAge(user.birthDate)) : ''
   );
@@ -86,14 +85,15 @@ export const ProfileScreen: React.FC = () => {
   const [height, setHeight] = useState<string>(user?.height ? String(user.height) : '');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(user?.activityLevel || 1.2);
   const [goal, setGoal] = useState<NutritionGoal>(user?.goal || 'maintenance');
+  const [isGoalDropdownOpen, setIsGoalDropdownOpen] = useState(false);
   const [calorieAdjustmentPercent, setCalorieAdjustmentPercent] = useState<string>(
-    user?.calorieAdjustmentPercent !== undefined ? String(user.calorieAdjustmentPercent) : '15'
+    user?.calorieAdjustmentPercent !== undefined ? String(user.calorieAdjustmentPercent) : '10'
   );
   const [proteinPerKg, setProteinPerKg] = useState<string>(
-    user?.proteinPerKg !== undefined ? String(user.proteinPerKg) : '2.0'
+    user?.proteinPerKg !== undefined && user?.proteinPerKg !== null ? String(user.proteinPerKg) : ''
   );
   const [fatPerKg, setFatPerKg] = useState<string>(
-    user?.fatPerKg !== undefined ? String(user.fatPerKg) : '1.0'
+    user?.fatPerKg !== undefined && user?.fatPerKg !== null ? String(user.fatPerKg) : ''
   );
 
   // Coach connection state
@@ -110,14 +110,13 @@ export const ProfileScreen: React.FC = () => {
   });
   const [newRepRangeInput, setNewRepRangeInput] = useState('');
 
-  // Synchronize form when user loads/changes
+  // Synchronize form when user loads/changes without flickering or overwriting edits
   useEffect(() => {
-    if (user) {
+    if (user && !isEditing) {
       setFirstName(user.firstName || '');
       setLastName(user.lastName || '');
       setSelectedRole(user.role);
       setGender(user.gender);
-      setBirthDate(user.birthDate || '');
       setAge(
         user.age ? String(user.age) : user.birthDate && calculateAge(user.birthDate) ? String(calculateAge(user.birthDate)) : ''
       );
@@ -126,16 +125,22 @@ export const ProfileScreen: React.FC = () => {
       setActivityLevel(user.activityLevel || 1.2);
       setGoal(user.goal || 'maintenance');
       setCalorieAdjustmentPercent(
-        user.calorieAdjustmentPercent !== undefined ? String(user.calorieAdjustmentPercent) : '15'
+        user.calorieAdjustmentPercent !== undefined ? String(user.calorieAdjustmentPercent) : '10'
       );
-      setProteinPerKg(user.proteinPerKg !== undefined ? String(user.proteinPerKg) : '2.0');
-      setFatPerKg(user.fatPerKg !== undefined ? String(user.fatPerKg) : '1.0');
-
-      if (user.customRepRanges && user.customRepRanges.length > 0) {
-        setRepRanges(sortRepRanges(user.customRepRanges));
-      }
+      setProteinPerKg(user.proteinPerKg !== undefined && user.proteinPerKg !== null ? String(user.proteinPerKg) : '');
+      setFatPerKg(user.fatPerKg !== undefined && user.fatPerKg !== null ? String(user.fatPerKg) : '');
     }
-  }, [user]);
+
+    if (user?.customRepRanges && user.customRepRanges.length > 0) {
+      const sorted = sortRepRanges(user.customRepRanges);
+      setRepRanges((prev) => {
+        if (prev.join(',') !== sorted.join(',')) {
+          return sorted;
+        }
+        return prev;
+      });
+    }
+  }, [user, isEditing]);
 
   // Real-time nutrition plan based on user profile
   const nutritionPlan = useMemo(() => {
@@ -146,8 +151,8 @@ export const ProfileScreen: React.FC = () => {
   const liveFormNutrition = useMemo(() => {
     const numWeight = parseFloat(weight.replace(',', '.')) || 0;
     const numHeight = parseFloat(height.replace(',', '.')) || 0;
-    const numAge = parseInt(age, 10) || calculateAge(birthDate) || 0;
-    const numAdj = parseFloat(calorieAdjustmentPercent.replace(',', '.')) || 0;
+    const numAge = parseInt(age, 10) || (user?.birthDate ? calculateAge(user.birthDate) || 0 : 0);
+    const numAdj = parseFloat(calorieAdjustmentPercent.replace(',', '.')) || 10;
     const numProt = parseFloat(proteinPerKg.replace(',', '.')) || 0;
     const numFat = parseFloat(fatPerKg.replace(',', '.')) || 0;
 
@@ -162,15 +167,7 @@ export const ProfileScreen: React.FC = () => {
       proteinPerKg: numProt,
       fatPerKg: numFat,
     });
-  }, [gender, weight, height, age, birthDate, activityLevel, goal, calorieAdjustmentPercent, proteinPerKg, fatPerKg]);
-
-  const handleBirthDateChange = (val: string) => {
-    setBirthDate(val);
-    const calculated = calculateAge(val);
-    if (calculated) {
-      setAge(String(calculated));
-    }
-  };
+  }, [gender, weight, height, age, user?.birthDate, activityLevel, goal, calorieAdjustmentPercent, proteinPerKg, fatPerKg]);
 
   const handleAddRepRange = async () => {
     const check = validateNewRepRange(repRanges, newRepRangeInput);
@@ -200,7 +197,7 @@ export const ProfileScreen: React.FC = () => {
     await updateUserProfile({ customRepRanges: defaults });
   };
 
-  // Load coach profile or trainees count
+  // Load coach profile or trainees count only when user identity or coachId changes
   const loadCoachOrTrainees = useCallback(async () => {
     if (!user) return;
     if (isCoach) {
@@ -216,7 +213,7 @@ export const ProfileScreen: React.FC = () => {
     } else {
       setCoachProfile(null);
     }
-  }, [user, isCoach]);
+  }, [user?.id, user?.coachId, isCoach]);
 
   useEffect(() => {
     loadCoachOrTrainees();
@@ -247,8 +244,8 @@ export const ProfileScreen: React.FC = () => {
     try {
       const numWeight = weight ? parseFloat(weight.replace(',', '.')) : undefined;
       const numHeight = height ? parseFloat(height.replace(',', '.')) : undefined;
-      const numAge = age ? parseInt(age, 10) : calculateAge(birthDate) || undefined;
-      const numAdj = calorieAdjustmentPercent ? parseFloat(calorieAdjustmentPercent.replace(',', '.')) : 0;
+      const numAge = age ? parseInt(age, 10) : user?.birthDate ? calculateAge(user.birthDate) || undefined : undefined;
+      const numAdj = calorieAdjustmentPercent ? parseFloat(calorieAdjustmentPercent.replace(',', '.')) : 10;
       const numProt = proteinPerKg ? parseFloat(proteinPerKg.replace(',', '.')) : undefined;
       const numFat = fatPerKg ? parseFloat(fatPerKg.replace(',', '.')) : undefined;
 
@@ -257,7 +254,6 @@ export const ProfileScreen: React.FC = () => {
         lastName: lastName.trim(),
         role: selectedRole,
         gender,
-        birthDate: birthDate.trim() || undefined,
         age: numAge,
         weight: numWeight,
         height: numHeight,
@@ -269,6 +265,7 @@ export const ProfileScreen: React.FC = () => {
       });
 
       setIsEditing(false);
+      setIsGoalDropdownOpen(false);
       Alert.alert('Успішно', 'Профіль користувача оновлено!');
     } catch {
       Alert.alert('Помилка', 'Не вдалося зберегти зміни профілю');
@@ -572,23 +569,9 @@ export const ProfileScreen: React.FC = () => {
                 </View>
               </View>
 
-              {/* Birth Date & Age */}
-              <View style={styles.rowTwoInputs}>
-                <View style={[styles.inputGroup, { flex: 1.2 }]}>
-                  <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                    Дата народження
-                  </Text>
-                  <TextInput
-                    style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
-                    value={birthDate}
-                    onChangeText={handleBirthDateChange}
-                    placeholder="РРРР-ММ-ДД"
-                    placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
-                    autoCapitalize="none"
-                  />
-                </View>
-
-                <View style={[styles.inputGroup, { flex: 0.8 }]}>
+              {/* Age, Height & Weight in a harmonious 3-column row */}
+              <View style={styles.rowThreeInputs}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
                     Вік (років)
                   </Text>
@@ -597,23 +580,6 @@ export const ProfileScreen: React.FC = () => {
                     value={age}
                     onChangeText={setAge}
                     placeholder="Вік"
-                    placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
-                    keyboardType="numeric"
-                  />
-                </View>
-              </View>
-
-              {/* Weight & Height */}
-              <View style={styles.rowTwoInputs}>
-                <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                    Вага (кг)
-                  </Text>
-                  <TextInput
-                    style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
-                    value={weight}
-                    onChangeText={setWeight}
-                    placeholder="Напр. 75.5"
                     placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                     keyboardType="numeric"
                   />
@@ -627,7 +593,21 @@ export const ProfileScreen: React.FC = () => {
                     style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
                     value={height}
                     onChangeText={setHeight}
-                    placeholder="Напр. 180"
+                    placeholder="180"
+                    placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
+                    Вага (кг)
+                  </Text>
+                  <TextInput
+                    style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
+                    value={weight}
+                    onChangeText={setWeight}
+                    placeholder="75"
                     placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                     keyboardType="numeric"
                   />
@@ -674,44 +654,77 @@ export const ProfileScreen: React.FC = () => {
                 </View>
               </View>
 
-              {/* Goal */}
+              {/* Goal (Dropdown) */}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
                   Ціль
                 </Text>
-                <View style={styles.rolePickerRow}>
-                  {GOAL_OPTIONS.map((g) => {
-                    const active = goal === g.value;
-                    return (
-                      <TouchableOpacity
-                        key={g.value}
-                        onPress={() => setGoal(g.value)}
-                        style={[
-                          styles.roleOptionBtn,
-                          isDark ? styles.roleOptionDark : styles.roleOptionLight,
-                          active && (isDark ? styles.roleOptionActiveDark : styles.roleOptionActiveLight),
-                        ]}
-                      >
-                        <Ionicons
-                          name={g.icon}
-                          size={13}
-                          color={active ? '#2563EB' : isDark ? '#94A3B8' : '#64748B'}
-                          style={{ marginRight: 3 }}
-                        />
-                        <Text
+                <TouchableOpacity
+                  style={[
+                    styles.goalDropdownTrigger,
+                    isDark ? styles.inputDark : styles.inputLight,
+                    isGoalDropdownOpen && styles.goalDropdownTriggerOpen,
+                  ]}
+                  onPress={() => setIsGoalDropdownOpen((prev) => !prev)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.goalDropdownTriggerLeft}>
+                    <Ionicons
+                      name={GOAL_OPTIONS.find((o) => o.value === goal)?.icon || 'remove-outline'}
+                      size={18}
+                      color="#2563EB"
+                    />
+                    <Text style={[styles.goalDropdownSelectedText, isDark ? styles.textDark : styles.textLight]}>
+                      {GOAL_OPTIONS.find((o) => o.value === goal)?.label || 'Оберіть ціль'}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={isGoalDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={isDark ? '#94A3B8' : '#64748B'}
+                  />
+                </TouchableOpacity>
+
+                {isGoalDropdownOpen && (
+                  <View style={[styles.goalDropdownMenu, isDark ? styles.goalDropdownMenuDark : styles.goalDropdownMenuLight]}>
+                    {GOAL_OPTIONS.map((g) => {
+                      const active = goal === g.value;
+                      return (
+                        <TouchableOpacity
+                          key={g.value}
+                          onPress={() => {
+                            setGoal(g.value);
+                            setIsGoalDropdownOpen(false);
+                          }}
                           style={[
-                            styles.roleOptionText,
-                            active ? (isDark ? styles.textDark : styles.textLight) : (isDark ? styles.subDark : styles.subLight),
-                            active && { fontWeight: '700' },
+                            styles.goalDropdownItem,
+                            active && (isDark ? styles.goalDropdownItemActiveDark : styles.goalDropdownItemActiveLight),
                           ]}
-                          numberOfLines={1}
+                          activeOpacity={0.7}
                         >
-                          {g.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                          <View style={styles.goalDropdownItemLeft}>
+                            <Ionicons
+                              name={g.icon}
+                              size={16}
+                              color={active ? '#2563EB' : (isDark ? '#94A3B8' : '#64748B')}
+                            />
+                            <Text
+                              style={[
+                                styles.goalDropdownItemText,
+                                active
+                                  ? { fontWeight: '700', color: '#2563EB' }
+                                  : (isDark ? styles.textDark : styles.textLight),
+                              ]}
+                            >
+                              {g.label}
+                            </Text>
+                          </View>
+                          {active && <Ionicons name="checkmark" size={17} color="#2563EB" />}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
 
               {/* Calorie Deficit / Surplus % (ONLY if weight loss or weight gain) */}
@@ -725,7 +738,7 @@ export const ProfileScreen: React.FC = () => {
                       style={[styles.inputField, { flex: 1 }, isDark ? styles.inputDark : styles.inputLight]}
                       value={calorieAdjustmentPercent}
                       onChangeText={setCalorieAdjustmentPercent}
-                      placeholder="Напр. 15"
+                      placeholder="10"
                       placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                       keyboardType="numeric"
                     />
@@ -755,7 +768,7 @@ export const ProfileScreen: React.FC = () => {
                 </View>
               )}
 
-              {/* Protein & Fat per kg */}
+              {/* Protein & Fat per kg (clean placeholders, empty default) */}
               <View style={styles.rowTwoInputs}>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
@@ -765,7 +778,7 @@ export const ProfileScreen: React.FC = () => {
                     style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
                     value={proteinPerKg}
                     onChangeText={setProteinPerKg}
-                    placeholder="2.0"
+                    placeholder="г/кг"
                     placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                     keyboardType="numeric"
                   />
@@ -779,21 +792,21 @@ export const ProfileScreen: React.FC = () => {
                     style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
                     value={fatPerKg}
                     onChangeText={setFatPerKg}
-                    placeholder="1.0"
+                    placeholder="г/кг"
                     placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                     keyboardType="numeric"
                   />
                 </View>
               </View>
 
-              {/* Auto Carbs Preview & Live Validation */}
+              {/* Carbs Preview in г/кг */}
               <View style={[styles.livePreviewCard, isDark ? styles.livePreviewDark : styles.livePreviewLight]}>
                 <View style={styles.livePreviewRow}>
                   <Text style={[styles.livePreviewLabel, isDark ? styles.subDark : styles.subLight]}>
-                    Вуглеводи (розраховуються авто):
+                    Вуглеводи:
                   </Text>
                   <Text style={[styles.livePreviewVal, isDark ? styles.textDark : styles.textLight]}>
-                    {liveFormNutrition.carbsGrams} г/день ({liveFormNutrition.carbsPerKg} г/кг)
+                    {liveFormNutrition.carbsPerKg > 0 ? `${liveFormNutrition.carbsPerKg} г/кг` : '0 г/кг'}
                   </Text>
                 </View>
 
@@ -900,31 +913,31 @@ export const ProfileScreen: React.FC = () => {
                 {/* Calories */}
                 <View style={[styles.nutritionBox, isDark ? styles.nutriBoxDark : styles.nutriBoxLight]}>
                   <View style={styles.nutriIconHeader}>
-                    <Ionicons name="flame" size={15} color="#f97316" />
-                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]}>
+                    <Ionicons name="flame" size={13} color="#f97316" />
+                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
                       Калорії
                     </Text>
                   </View>
-                  <Text style={[styles.nutriVal, { color: '#f97316' }]}>
+                  <Text style={[styles.nutriVal, { color: '#f97316' }]} numberOfLines={1} adjustsFontSizeToFit>
                     {nutritionPlan.targetCalories}
                   </Text>
-                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]}>
-                    ккал / день
+                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
+                    ккал/день
                   </Text>
                 </View>
 
                 {/* Protein */}
                 <View style={[styles.nutritionBox, isDark ? styles.nutriBoxDark : styles.nutriBoxLight]}>
                   <View style={styles.nutriIconHeader}>
-                    <Ionicons name="barbell-outline" size={15} color="#f43f5e" />
-                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]}>
+                    <Ionicons name="barbell-outline" size={13} color="#f43f5e" />
+                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
                       Білки
                     </Text>
                   </View>
-                  <Text style={[styles.nutriVal, { color: '#f43f5e' }]}>
+                  <Text style={[styles.nutriVal, { color: '#f43f5e' }]} numberOfLines={1} adjustsFontSizeToFit>
                     {nutritionPlan.proteinGrams}г
                   </Text>
-                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
                     {nutritionPlan.proteinPerKg} г/кг
                   </Text>
                 </View>
@@ -932,15 +945,15 @@ export const ProfileScreen: React.FC = () => {
                 {/* Fat */}
                 <View style={[styles.nutritionBox, isDark ? styles.nutriBoxDark : styles.nutriBoxLight]}>
                   <View style={styles.nutriIconHeader}>
-                    <Ionicons name="water-outline" size={15} color="#eab308" />
-                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]}>
+                    <Ionicons name="water-outline" size={13} color="#eab308" />
+                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
                       Жири
                     </Text>
                   </View>
-                  <Text style={[styles.nutriVal, { color: '#eab308' }]}>
+                  <Text style={[styles.nutriVal, { color: '#eab308' }]} numberOfLines={1} adjustsFontSizeToFit>
                     {nutritionPlan.fatGrams}г
                   </Text>
-                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
                     {nutritionPlan.fatPerKg} г/кг
                   </Text>
                 </View>
@@ -948,15 +961,15 @@ export const ProfileScreen: React.FC = () => {
                 {/* Carbs */}
                 <View style={[styles.nutritionBox, isDark ? styles.nutriBoxDark : styles.nutriBoxLight]}>
                   <View style={styles.nutriIconHeader}>
-                    <Ionicons name="leaf-outline" size={15} color="#0ea5e9" />
-                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]}>
+                    <Ionicons name="leaf-outline" size={13} color="#0ea5e9" />
+                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
                       Вуглеводи
                     </Text>
                   </View>
-                  <Text style={[styles.nutriVal, { color: '#0ea5e9' }]}>
+                  <Text style={[styles.nutriVal, { color: '#0ea5e9' }]} numberOfLines={1} adjustsFontSizeToFit>
                     {nutritionPlan.carbsGrams}г
                   </Text>
-                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
                     {nutritionPlan.carbsPerKg} г/кг
                   </Text>
                 </View>
@@ -1385,6 +1398,71 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
+  rowThreeInputs: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  goalDropdownTrigger: {
+    height: 44,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  goalDropdownTriggerOpen: {
+    borderColor: '#2563EB',
+  },
+  goalDropdownTriggerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  goalDropdownSelectedText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  goalDropdownMenu: {
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginTop: 4,
+    gap: 2,
+    padding: 4,
+  },
+  goalDropdownMenuLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  goalDropdownMenuDark: {
+    backgroundColor: '#1e293b',
+    borderColor: '#334155',
+  },
+  goalDropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  goalDropdownItemActiveLight: {
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+  },
+  goalDropdownItemActiveDark: {
+    backgroundColor: 'rgba(37, 99, 235, 0.22)',
+  },
+  goalDropdownItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  goalDropdownItemText: {
+    fontSize: 13,
+  },
   inputGroup: {
     gap: 4,
   },
@@ -1587,16 +1665,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   nutritionCard: {
-    padding: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 14,
     gap: 12,
   },
   nutritionGrid: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 5,
   },
   nutritionBox: {
     flex: 1,
-    padding: 10,
+    minWidth: 0,
+    paddingVertical: 10,
+    paddingHorizontal: 2,
     borderRadius: 14,
     borderWidth: 1,
     alignItems: 'center',
@@ -1614,19 +1695,19 @@ const styles = StyleSheet.create({
   nutriIconHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
     marginBottom: 2,
   },
   nutriLabel: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '600',
   },
   nutriVal: {
-    fontSize: 15,
+    fontSize: 14.5,
     fontWeight: '800',
   },
   nutriSub: {
-    fontSize: 10,
+    fontSize: 9.5,
   },
   emptyNutritionPrompt: {
     alignItems: 'center',
