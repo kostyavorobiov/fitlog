@@ -18,6 +18,7 @@ import { playSuccessChime, playBeep } from '../utils/audio';
 import { getExercise1RM, format1RM, getMinRepsFromRange } from '../utils/workout';
 import { formatDateDDMMYYYY } from './WorkoutListView';
 import { TemplateService } from '../services/templateService';
+import { useEdgeSwipeBack } from '../utils/useEdgeSwipeBack';
 import {
   Calendar,
   Plus,
@@ -252,6 +253,22 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const [templateNotice, setTemplateNotice] = useState<string | null>(null);
   const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState(false);
   const [newTitleInput, setNewTitleInput] = useState('');
+
+  // Mobile edge-swipe right to navigate back to list or trainee
+  const isAnyModalOpen = Boolean(
+    isSelectorOpen ||
+    isCreateOpen ||
+    historyModalExercise ||
+    isDeleteModalOpen ||
+    exerciseToRemove ||
+    isEditTitleModalOpen ||
+    isTemplateModalOpen
+  );
+
+  useEdgeSwipeBack({
+    onBack,
+    disabled: !onBack || isAnyModalOpen,
+  });
 
   const handleSaveAsTemplate = async () => {
     const effectiveUserId = workout.userId || userId;

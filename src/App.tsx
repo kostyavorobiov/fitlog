@@ -34,6 +34,9 @@ const MainContent: React.FC = () => {
   });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [returnToTab, setReturnToTab] = useState<
+    'editor' | 'history' | 'trainees' | 'catalog' | 'analytics' | 'profile' | null
+  >(null);
 
   // Restore trainee reference if activeWorkout belongs to a trainee
   useEffect(() => {
@@ -84,12 +87,14 @@ const MainContent: React.FC = () => {
 
   const handleSelectWorkout = (workout: WorkoutPlan) => {
     setEditingTrainee(null);
+    setReturnToTab('editor');
     setActiveWorkout(workout);
     setWorkoutViewMode('editor');
   };
 
   const handleSelectWorkoutFromHistory = (workout: WorkoutPlan) => {
     setEditingTrainee(null);
+    setReturnToTab('history');
     setActiveWorkout(workout);
     setWorkoutViewMode('editor');
     setCurrentTab('editor');
@@ -99,6 +104,7 @@ const MainContent: React.FC = () => {
   const handleOpenTraineeWorkout = (traineeWorkout: WorkoutPlan, trainee: User) => {
     setEditingTrainee(trainee);
     setSelectedTraineeId(trainee.id);
+    setReturnToTab('trainees');
     try {
       const url = new URL(window.location.href);
       url.searchParams.set('trainee', trainee.id);
@@ -113,29 +119,22 @@ const MainContent: React.FC = () => {
 
   // Handle returning from WorkoutEditor back to appropriate context
   const handleBackFromWorkout = () => {
-    if (editingTrainee) {
-      // Crucial UX requirement: Return to that trainee's workouts!
-      setCurrentTab('trainees');
-      setActiveWorkout(null);
-      setWorkoutViewMode('list');
-    } else {
-      setWorkoutViewMode('list');
-      setActiveWorkout(null);
-    }
+    const target = returnToTab || (editingTrainee ? 'trainees' : 'editor');
+    setReturnToTab(null);
+    setActiveWorkout(null);
+    setWorkoutViewMode('list');
+    setCurrentTab(target);
   };
 
   const handleDeleteWorkout = (deletedId: string) => {
     if (!user) return;
     StorageService.deleteWorkout(deletedId);
     if (activeWorkout?.id === deletedId) {
-      if (editingTrainee) {
-        setCurrentTab('trainees');
-        setActiveWorkout(null);
-        setWorkoutViewMode('list');
-      } else {
-        setActiveWorkout(null);
-        setWorkoutViewMode('list');
-      }
+      const target = returnToTab || (editingTrainee ? 'trainees' : 'editor');
+      setReturnToTab(null);
+      setActiveWorkout(null);
+      setWorkoutViewMode('list');
+      setCurrentTab(target);
     }
   };
 
@@ -241,7 +240,10 @@ const MainContent: React.FC = () => {
           <AnalyticsView
             userId={user.id}
             onSelectWorkout={(workout) => {
-              handleSelectWorkout(workout);
+              setReturnToTab('analytics');
+              setEditingTrainee(null);
+              setActiveWorkout(workout);
+              setWorkoutViewMode('editor');
               setCurrentTab('editor');
             }}
           />

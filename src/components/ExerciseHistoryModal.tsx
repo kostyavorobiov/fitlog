@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { useEdgeSwipeBack } from '../utils/useEdgeSwipeBack';
 
 interface ExerciseHistoryModalProps {
   exercise: Exercise | null;
@@ -42,31 +43,10 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
   const [expandedSessionIdx, setExpandedSessionIdx] = useState<number | null>(null);
 
   // Mobile edge-swipe right to close modal
-  const touchStartRef = React.useRef<{ x: number; y: number; time: number } | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
-    const t = e.touches[0];
-    if (t.clientX <= 36) {
-      touchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now() };
-    } else {
-      touchStartRef.current = null;
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStartRef.current) return;
-    const t = e.changedTouches?.[0];
-    if (!t) return;
-    const dx = t.clientX - touchStartRef.current.x;
-    const dy = t.clientY - touchStartRef.current.y;
-    const dt = Date.now() - touchStartRef.current.time;
-    touchStartRef.current = null;
-
-    if (dx > 45 && Math.abs(dx) > Math.abs(dy) * 1.3 && dt < 600) {
-      onClose();
-    }
-  };
+  useEdgeSwipeBack({
+    onBack: onClose,
+    disabled: !isOpen,
+  });
 
   // Lock body scroll safely
   useEffect(() => {
@@ -317,11 +297,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
       data-no-swipe="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md animate-fade-in md:p-4 overflow-y-auto"
     >
-      <div
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        className="relative w-full h-full md:h-auto md:max-h-[92vh] md:max-w-xl md:rounded-3xl border-0 md:border border-[#e2e8f0] dark:border-[#334155] bg-[#f8fafc] dark:bg-[#0b1220] shadow-2xl overflow-y-auto flex flex-col text-[#0f172a] dark:text-[#f8fafc]"
-      >
+      <div className="relative w-full h-full md:h-auto md:max-h-[92vh] md:max-w-xl md:rounded-3xl border-0 md:border border-[#e2e8f0] dark:border-[#334155] bg-[#f8fafc] dark:bg-[#0b1220] shadow-2xl overflow-y-auto flex flex-col text-[#0f172a] dark:text-[#f8fafc]">
         {/* 1. Sticky Top Navigation Header - Matching WorkoutEditor */}
         <div className="sticky top-0 z-30 bg-[#f8fafc]/90 dark:bg-[#0b1220]/90 backdrop-blur-xl border-b border-[#e2e8f0]/80 dark:border-[#334155]/80 px-4 py-3 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">

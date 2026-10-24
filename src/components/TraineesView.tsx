@@ -26,6 +26,7 @@ import {
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 import { getMonthKeyAndLabel, formatDateDDMMYY, MonthGroup } from './WorkoutListView';
 import { MobileSwipeableWorkoutCard } from './MobileSwipeableWorkoutCard';
+import { useEdgeSwipeBack } from '../utils/useEdgeSwipeBack';
 
 interface TraineesViewProps {
   coach: User;
@@ -83,6 +84,13 @@ export const TraineesView: React.FC<TraineesViewProps> = ({
     onSwipeRight: handlePrevTrainee,
     threshold: 30,
     disabled: trainees.length <= 1 || Boolean(workoutToDelete) || Boolean(traineeToRemove),
+  });
+
+  // Mobile edge-swipe right to navigate back to profile
+  const isAnyModalOpen = Boolean(workoutToDelete || traineeToRemove || isCreateModalOpen);
+  useEdgeSwipeBack({
+    onBack,
+    disabled: !onBack || isAnyModalOpen,
   });
 
   // Load trainees (locally + cloud sync)

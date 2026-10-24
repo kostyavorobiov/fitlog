@@ -5,6 +5,7 @@ import { formatDateDDMMYYYY } from './WorkoutListView';
 import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { StorageService } from '../services/storageService';
 import { MobileSwipeableWorkoutCard } from './MobileSwipeableWorkoutCard';
+import { useEdgeSwipeBack } from '../utils/useEdgeSwipeBack';
 
 interface CreateWorkoutModalProps {
   isOpen: boolean;
@@ -54,6 +55,12 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
       }
     }
   }, [isOpen, initialDate, userId]);
+
+  // Mobile edge-swipe right to close modal
+  useEdgeSwipeBack({
+    onBack: onClose,
+    disabled: !isOpen,
+  });
 
   if (!isOpen) return null;
 

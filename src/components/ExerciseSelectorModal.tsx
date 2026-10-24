@@ -4,6 +4,7 @@ import { Search, X, Plus, Dumbbell, Sparkles } from 'lucide-react';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
+import { useEdgeSwipeBack } from '../utils/useEdgeSwipeBack';
 
 interface ExerciseSelectorModalProps {
   isOpen: boolean;
@@ -48,7 +49,13 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   const modalSwipeRef = useSwipeGesture<HTMLDivElement>({
     onSwipeLeft: handleNextMuscle,
     onSwipeRight: handlePrevMuscle,
-    threshold: 30,
+    threshold: 40,
+    disabled: !isOpen,
+  });
+
+  // Mobile edge-swipe right to close modal
+  useEdgeSwipeBack({
+    onBack: onClose,
     disabled: !isOpen,
   });
 
