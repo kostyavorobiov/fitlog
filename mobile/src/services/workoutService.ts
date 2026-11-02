@@ -108,7 +108,8 @@ export class WorkoutService {
                   (exObj?.name && exObj.name !== 'Вправа' ? exObj.name : undefined) ||
                   'Вправа';
 
-                const muscleGroup = metaMg || exObj?.muscle_group || 'full_body';
+                const rawMg = metaMg || exObj?.muscle_group;
+                const muscleGroup = rawMg === 'full_body' ? 'glutes' : (rawMg || 'glutes');
 
                 const sets: WorkoutSet[] = (we.workout_sets || [])
                   .sort((a: any, b: any) => (a.set_number ?? 0) - (b.set_number ?? 0))
@@ -262,7 +263,8 @@ export class WorkoutService {
                 (exObj?.name && exObj.name !== 'Вправа' ? exObj.name : undefined) ||
                 'Вправа';
 
-              const muscleGroup = metaMg || exObj?.muscle_group || 'full_body';
+              const rawMg = metaMg || exObj?.muscle_group;
+              const muscleGroup = rawMg === 'full_body' ? 'glutes' : (rawMg || 'glutes');
 
               const sets: WorkoutSet[] = (we.workout_sets || [])
                 .sort((a: any, b: any) => (a.set_number ?? 0) - (b.set_number ?? 0))

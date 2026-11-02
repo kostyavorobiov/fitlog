@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, Dumbbell } from 'lucide-react';
-import { MuscleGroup, MUSCLE_GROUPS, Exercise } from '../types/workout';
+import { MuscleGroup, MUSCLE_GROUPS, Exercise, ExerciseCategory, DEFAULT_CATEGORIES } from '../types/workout';
 import { StorageService } from '../services/storageService';
+import { CategoryService } from '../services/categoryService';
 
 interface EditExerciseModalProps {
   exercise: Exercise | null;
@@ -18,14 +19,21 @@ export const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
   onSaved,
 }) => {
   const [name, setName] = useState('');
+  const [categories, setCategories] = useState<ExerciseCategory[]>(DEFAULT_CATEGORIES);
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>('chest');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!isOpen) return;
+    CategoryService.getCategories(exercise?.userId).then(setCategories);
+  }, [isOpen, exercise?.userId]);
+
+  useEffect(() => {
     if (exercise && isOpen) {
       setName(exercise.name || '');
-      setMuscleGroup(exercise.muscleGroup || 'chest');
+      const mg = exercise.muscleGroup === 'full_body' ? 'glutes' : (exercise.muscleGroup || 'chest');
+      setMuscleGroup(mg as MuscleGroup);
       setDescription(exercise.description || '');
       setError('');
     }
@@ -128,9 +136,9 @@ export const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
               onChange={(e) => setMuscleGroup(e.target.value as MuscleGroup)}
               className="w-full h-11 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-4 text-base sm:text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB] cursor-pointer"
             >
-              {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => (
-                <option key={groupKey} value={groupKey}>
-                  {MUSCLE_GROUPS[groupKey].nameUk}
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.nameUk}
                 </option>
               ))}
             </select>

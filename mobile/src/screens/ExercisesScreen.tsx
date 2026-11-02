@@ -28,19 +28,9 @@ import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { ExerciseService } from '../services/exerciseService';
 import { ExerciseDetailModal } from '../components/ExerciseDetailModal';
-import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
+import { MUSCLE_GROUPS, MuscleGroup, Exercise, ExerciseCategory, DEFAULT_CATEGORIES, getMuscleGroupInfo } from '../types/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
-
-const MUSCLE_ORDER: MuscleGroup[] = [
-  'chest',
-  'back',
-  'legs',
-  'shoulders',
-  'biceps',
-  'triceps',
-  'full_body',
-  'other',
-];
+import { CategoryService } from '../services/categoryService';
 
 interface SwipeableExerciseCardProps {
   id: string;
@@ -90,6 +80,7 @@ export const ExercisesScreen: React.FC = () => {
   const router = useRouter();
 
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [categories, setCategories] = useState<ExerciseCategory[]>(DEFAULT_CATEGORIES);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -153,15 +144,18 @@ export const ExercisesScreen: React.FC = () => {
 
   useEffect(() => {
     loadExercises(true);
-  }, [loadExercises]);
+    CategoryService.getCategories(user?.id).then(setCategories);
+    const unsub = CategoryService.subscribe(setCategories);
+    return () => unsub();
+  }, [loadExercises, user?.id]);
 
   useFocusEffect(
     useCallback(() => {
-      // Do not automatically refresh exercises when returning from exercise detail / stats
+      CategoryService.getCategories(user?.id).then(setCategories);
       if (exercises.length === 0) {
         loadExercises(true);
       }
-    }, [loadExercises, exercises.length])
+    }, [loadExercises, exercises.length, user?.id])
   );
 
   const onRefresh = useCallback(async () => {
@@ -389,13 +383,13 @@ export const ExercisesScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
 
-          {MUSCLE_ORDER.map((groupKey) => {
-            const count = exercises.filter((e) => e.muscleGroup === groupKey).length;
-            const isSelected = selectedMuscle === groupKey;
+          {categories.map((cat) => {
+            const count = exercises.filter((e) => e.muscleGroup === cat.id).length;
+            const isSelected = selectedMuscle === cat.id;
             return (
               <TouchableOpacity
-                key={groupKey}
-                onPress={() => setSelectedMuscle(groupKey)}
+                key={cat.id}
+                onPress={() => setSelectedMuscle(cat.id)}
                 style={[
                   styles.tabChip,
                   isSelected
@@ -419,7 +413,7 @@ export const ExercisesScreen: React.FC = () => {
                       : styles.subLight,
                   ]}
                 >
-                  {MUSCLE_GROUPS[groupKey]?.nameUk || groupKey} ({count})
+                  {cat.nameUk} ({count})
                 </Text>
               </TouchableOpacity>
             );
@@ -461,7 +455,7 @@ export const ExercisesScreen: React.FC = () => {
         ) : (
           <View style={styles.grid}>
             {filteredExercises.map((ex) => {
-              const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
+              const muscleInfo = getMuscleGroupInfo(ex.muscleGroup, categories);
               const isOwner = ex.userId === user?.id;
               const canEdit = isOwner || isAdmin;
 
@@ -554,13 +548,12 @@ export const ExercisesScreen: React.FC = () => {
                   Група м'язів / Категорія *
                 </Text>
                 <View style={styles.muscleChipsWrap}>
-                  {MUSCLE_ORDER.map((group) => {
-                    const isSelected = createMuscle === group;
-                    const info = MUSCLE_GROUPS[group];
+                  {categories.map((cat) => {
+                    const isSelected = createMuscle === cat.id;
                     return (
                       <TouchableOpacity
-                        key={group}
-                        onPress={() => setCreateMuscle(group)}
+                        key={cat.id}
+                        onPress={() => setCreateMuscle(cat.id as MuscleGroup)}
                         style={[
                           styles.formChip,
                           isDark ? styles.formChipDark : styles.formChipLight,
@@ -576,7 +569,7 @@ export const ExercisesScreen: React.FC = () => {
                             isSelected && { fontWeight: '700' },
                           ]}
                         >
-                          {info.nameUk}
+                          {cat.nameUk}
                         </Text>
                       </TouchableOpacity>
                     );

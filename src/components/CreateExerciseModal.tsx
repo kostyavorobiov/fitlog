@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Dumbbell, Loader2 } from 'lucide-react';
-import { MuscleGroup, MUSCLE_GROUPS, Exercise } from '../types/workout';
+import { MuscleGroup, MUSCLE_GROUPS, Exercise, ExerciseCategory, DEFAULT_CATEGORIES } from '../types/workout';
 import { StorageService } from '../services/storageService';
+import { CategoryService } from '../services/categoryService';
 
 interface CreateExerciseModalProps {
   userId: string;
@@ -20,6 +21,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   initialName = '',
 }) => {
   const [name, setName] = useState(initialName);
+  const [categories, setCategories] = useState<ExerciseCategory[]>(DEFAULT_CATEGORIES);
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>('chest');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,6 +30,7 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    CategoryService.getCategories(userId).then(setCategories);
     setName(initialName);
     setIsSubmitting(false);
     setError('');
@@ -143,21 +146,20 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
               Цільова м'язова група
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-              {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => {
-                const info = MUSCLE_GROUPS[groupKey];
-                const isSelected = muscleGroup === groupKey;
+              {categories.map((cat) => {
+                const isSelected = muscleGroup === cat.id;
                 return (
                   <button
-                    key={groupKey}
+                    key={cat.id}
                     type="button"
-                    onClick={() => setMuscleGroup(groupKey)}
+                    onClick={() => setMuscleGroup(cat.id as MuscleGroup)}
                     className={`rounded-xl p-2.5 text-xs font-semibold border text-center transition-all cursor-pointer ${
                       isSelected
                         ? 'border-[#2563EB] bg-[#2563EB] text-white font-bold shadow-xs'
                         : 'border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
                     }`}
                   >
-                    {info.nameUk}
+                    {cat.nameUk}
                   </button>
                 );
               })}

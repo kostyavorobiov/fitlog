@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Exercise, MuscleGroup, MUSCLE_GROUPS, isCustomExercise } from '../types/workout';
+import { Exercise, MuscleGroup, MUSCLE_GROUPS, DEFAULT_CATEGORIES, ExerciseCategory, getMuscleGroupInfo, isCustomExercise } from '../types/workout';
 import { StorageService } from '../services/storageService';
+import { CategoryService } from '../services/categoryService';
 import { CreateExerciseModal } from './CreateExerciseModal';
 import { EditExerciseModal } from './EditExerciseModal';
 import { ExerciseHistoryModal } from './ExerciseHistoryModal';
@@ -22,6 +23,7 @@ interface ExerciseCatalogViewProps {
 
 export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId }) => {
   const [search, setSearch] = useState('');
+  const [categories, setCategories] = useState<ExerciseCategory[]>(DEFAULT_CATEGORIES);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
@@ -29,9 +31,15 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
   const [refreshKey, setRefreshKey] = useState(0);
   const blockHistoryModalUntilRef = useRef<number>(0);
 
+  useEffect(() => {
+    CategoryService.getCategories(userId).then(setCategories);
+    const unsub = CategoryService.subscribe(setCategories);
+    return () => unsub();
+  }, [userId]);
+
   const muscleTabs = useMemo<(MuscleGroup | 'all')[]>(
-    () => ['all', ...(Object.keys(MUSCLE_GROUPS) as MuscleGroup[])],
-    []
+    () => ['all', ...categories.map((c) => c.id as MuscleGroup)],
+    [categories]
   );
 
   const handleNextMuscle = () => {
@@ -127,21 +135,20 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
           >
             Всі мʼязи ({exercises.length})
           </button>
-          {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => {
-            const info = MUSCLE_GROUPS[groupKey];
-            const count = exercises.filter((e) => e.muscleGroup === groupKey).length;
-            const isSelected = selectedMuscle === groupKey;
+          {categories.map((cat) => {
+            const count = exercises.filter((e) => e.muscleGroup === cat.id).length;
+            const isSelected = selectedMuscle === cat.id;
             return (
               <button
-                key={groupKey}
+                key={cat.id}
                 type="button"
-                onClick={() => setSelectedMuscle(groupKey)}
+                onClick={() => setSelectedMuscle(cat.id as MuscleGroup)}
                 className={`rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all border cursor-pointer ${isSelected
                   ? 'border-[#2563eb] bg-[#2563eb] text-white font-bold shadow-sm'
                   : 'border-[#e2e8f0] dark:border-[#334155] bg-[#f1f5f9] dark:bg-[#1d2939] text-[#64748b] dark:text-[#94a3b8] hover:bg-[#e2e8f0] dark:hover:bg-[#263140]'
                   }`}
               >
-                {info.nameUk} ({count})
+                {cat.nameUk} ({count})
               </button>
             );
           })}
@@ -172,7 +179,7 @@ export const ExerciseCatalogView: React.FC<ExerciseCatalogViewProps> = ({ userId
           </div>
         ) : (
           filtered.map((ex) => {
-            const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
+            const muscleInfo = getMuscleGroupInfo(ex.muscleGroup, categories);
             const lastPerf = StorageService.getLastExercisePerformance(userId, ex.id);
             // All exercises are now user-owned — everyone can edit their own
             const canEdit = ex.userId === userId;

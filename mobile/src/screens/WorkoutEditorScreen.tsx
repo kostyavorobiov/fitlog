@@ -13,11 +13,21 @@ import {
   Modal,
   Animated,
   Easing,
-  PanResponder,
   NativeSyntheticEvent,
   NativeScrollEvent,
   BackHandler,
+  useWindowDimensions,
+  StyleProp,
+  ViewStyle,
 } from 'react-native';
+import AnimatedReanimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import * as Haptics from 'expo-haptics';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -60,6 +70,360 @@ export const computeWorkoutStatus = (exercises: WorkoutExercise[]): 'completed' 
   return allSetsDone ? 'completed' : 'in_progress';
 };
 
+export function generateSupersetGroupId(): string {
+  return `ss_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+export function normalizeSupersetGroupId(id?: string | null): string | null {
+  if (!id) return null;
+  const trimmed = id.trim();
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return null;
+  return trimmed;
+}
+
+export function ensureContiguousSupersets(exercises: WorkoutExercise[]): WorkoutExercise[] {
+  if (!exercises || exercises.length === 0) return [];
+
+  // 1. Normalize all supersetGroupIds first
+  const normalized = exercises.map((ex) => ({
+    ...ex,
+    supersetGroupId: normalizeSupersetGroupId(ex.supersetGroupId),
+  }));
+
+  // 2. Clean up orphan groups (groups with <= 1 exercise)
+  const groupCounts = new Map<string, number>();
+  for (const ex of normalized) {
+    if (ex.supersetGroupId) {
+      groupCounts.set(ex.supersetGroupId, (groupCounts.get(ex.supersetGroupId) || 0) + 1);
+    }
+  }
+
+  const cleaned = normalized.map((ex) => {
+    if (ex.supersetGroupId && (groupCounts.get(ex.supersetGroupId) || 0) <= 1) {
+      return { ...ex, supersetGroupId: null };
+    }
+    return ex;
+  });
+
+  // 3. Ensure contiguous arrangement
+  const result: WorkoutExercise[] = [];
+  const handledGroups = new Set<string>();
+
+  for (const ex of cleaned) {
+    if (!ex.supersetGroupId) {
+      result.push(ex);
+    } else {
+      if (!handledGroups.has(ex.supersetGroupId)) {
+        handledGroups.add(ex.supersetGroupId);
+        const groupMembers = cleaned.filter((e) => e.supersetGroupId === ex.supersetGroupId);
+        result.push(...groupMembers);
+      }
+    }
+  }
+
+  // 4. Renumber order 1..N
+  return result.map((ex, idx) => ({
+    ...ex,
+    order: idx + 1,
+  }));
+}
+
+export function combineExercisesIntoSuperset(
+  exercises: WorkoutExercise[],
+  draggedId: string,
+  targetId: string
+): WorkoutExercise[] {
+  if (!exercises || exercises.length === 0 || draggedId === targetId) {
+    return exercises || [];
+  }
+
+  const cleanedInput = ensureContiguousSupersets(exercises);
+  const dragged = cleanedInput.find((e) => e.id === draggedId);
+  const target = cleanedInput.find((e) => e.id === targetId);
+  if (!dragged || !target) return cleanedInput;
+
+  // Already in the same superset
+  if (
+    dragged.supersetGroupId &&
+    target.supersetGroupId &&
+    dragged.supersetGroupId === target.supersetGroupId
+  ) {
+    return cleanedInput;
+  }
+
+  // Final superset group ID:
+  // If target already belongs to a superset, dragged joins target's superset.
+  // Otherwise, create a brand-new superset with a guaranteed unique ID.
+  const finalGroupId = target.supersetGroupId || generateSupersetGroupId();
+
+  // Remove dragged exercise from list
+  const withoutDragged = cleanedInput.filter((e) => e.id !== draggedId);
+
+  // If dragged was previously in another superset, clean up its old group if it only has <=1 member left
+  const oldDraggedGroup = dragged.supersetGroupId;
+  let preparedList = withoutDragged;
+  if (oldDraggedGroup) {
+    const remainingInOld = preparedList.filter((e) => e.supersetGroupId === oldDraggedGroup);
+    if (remainingInOld.length <= 1) {
+      preparedList = preparedList.map((e) =>
+        e.supersetGroupId === oldDraggedGroup ? { ...e, supersetGroupId: null } : e
+      );
+    }
+  }
+
+  // Updated dragged exercise
+  const updatedDragged: WorkoutExercise = { ...dragged, supersetGroupId: finalGroupId };
+
+  // Find target index in preparedList
+  const targetIndex = preparedList.findIndex((e) => e.id === targetId);
+  if (targetIndex === -1) return cleanedInput;
+
+  // If target had no superset group yet, assign finalGroupId to target
+  if (!preparedList[targetIndex].supersetGroupId) {
+    preparedList[targetIndex] = { ...preparedList[targetIndex], supersetGroupId: finalGroupId };
+  }
+
+  // Insert dragged strictly at the END of target's superset group
+  const groupIndices: number[] = [];
+  preparedList.forEach((e, idx) => {
+    if (e.supersetGroupId === finalGroupId) {
+      groupIndices.push(idx);
+    }
+  });
+
+  const lastMemberIndex = groupIndices.length > 0 ? Math.max(...groupIndices) : targetIndex;
+  const insertIndex = lastMemberIndex + 1;
+
+  const newExercises = [
+    ...preparedList.slice(0, insertIndex),
+    updatedDragged,
+    ...preparedList.slice(insertIndex),
+  ];
+
+  return ensureContiguousSupersets(newExercises);
+}
+
+export function removeExerciseFromSuperset(
+  exercises: WorkoutExercise[],
+  draggedId: string,
+  targetPosition: 'above' | 'below' | 'stay' = 'stay'
+): WorkoutExercise[] {
+  if (!exercises || exercises.length === 0) return exercises || [];
+
+  const cleanedInput = ensureContiguousSupersets(exercises);
+  const draggedIndex = cleanedInput.findIndex((e) => e.id === draggedId);
+  if (draggedIndex === -1) return cleanedInput;
+
+  const dragged = cleanedInput[draggedIndex];
+  const oldGroupId = normalizeSupersetGroupId(dragged.supersetGroupId);
+  if (!oldGroupId) return cleanedInput;
+
+  // Find all indices of exercises in this superset
+  const groupIndices = cleanedInput
+    .map((e, idx) => (e.supersetGroupId === oldGroupId ? idx : -1))
+    .filter((idx) => idx !== -1);
+  const minGroupIndex = groupIndices.length > 0 ? Math.min(...groupIndices) : draggedIndex;
+  const maxGroupIndex = groupIndices.length > 0 ? Math.max(...groupIndices) : draggedIndex;
+
+  const unlinkedDragged: WorkoutExercise = {
+    ...dragged,
+    supersetGroupId: null,
+  };
+
+  const withoutDragged = cleanedInput.filter((e) => e.id !== draggedId);
+
+  // If only 1 exercise remains in the superset, automatically dissolve it
+  const remainingMembers = withoutDragged.filter((e) => e.supersetGroupId === oldGroupId);
+  const shouldDissolveGroup = remainingMembers.length <= 1;
+
+  const processedList = withoutDragged.map((e) =>
+    e.supersetGroupId === oldGroupId && shouldDissolveGroup
+      ? { ...e, supersetGroupId: null }
+      : e
+  );
+
+  let insertIndex: number;
+  if (targetPosition === 'above') {
+    insertIndex = Math.max(0, minGroupIndex);
+  } else if (targetPosition === 'below') {
+    const remainingIndices = withoutDragged
+      .map((e, idx) => (groupIndices.includes(idx >= draggedIndex ? idx + 1 : idx) ? idx : -1))
+      .filter((idx) => idx !== -1);
+    const lastRemainingIdx =
+      remainingIndices.length > 0 ? Math.max(...remainingIndices) : Math.max(0, maxGroupIndex - 1);
+    insertIndex = Math.min(processedList.length, lastRemainingIdx + 1);
+  } else {
+    insertIndex = Math.min(processedList.length, maxGroupIndex);
+  }
+
+  const updatedList = [
+    ...processedList.slice(0, insertIndex),
+    unlinkedDragged,
+    ...processedList.slice(insertIndex),
+  ];
+
+  return ensureContiguousSupersets(updatedList);
+}
+
+const safeHaptic = (type: 'medium' | 'light' | 'success') => {
+  try {
+    if (Platform.OS !== 'web') {
+      if (type === 'medium') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      else if (type === 'light') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      else if (type === 'success') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  } catch {
+    // ignore
+  }
+};
+
+interface DraggableExerciseItemProps {
+  exerciseId: string;
+  scrollRef?: React.RefObject<any>;
+  isHoveredTarget: boolean;
+  isUnlinkTarget?: boolean;
+  isDark: boolean;
+  onDragStart: (id: string, initialY: number, screenY: number) => void;
+  onDragUpdate: (id: string, translationX: number, translationY: number, screenY: number) => void;
+  onDragEnd: (id: string) => void;
+  onMeasureLayout: (id: string, y: number, height: number) => void;
+  children: React.ReactNode;
+}
+
+const DraggableExerciseItem: React.FC<DraggableExerciseItemProps> = React.memo(({
+  exerciseId,
+  scrollRef,
+  isHoveredTarget,
+  isUnlinkTarget = false,
+  isDark,
+  onDragStart,
+  onDragUpdate,
+  onDragEnd,
+  onMeasureLayout,
+  children,
+}) => {
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const scale = useSharedValue(1);
+  const zIndex = useSharedValue(1);
+  const isDragActive = useSharedValue(false);
+  const lastUpdateCallTime = useSharedValue(0);
+
+  const onDragStartRef = useRef(onDragStart);
+  onDragStartRef.current = onDragStart;
+  const onDragUpdateRef = useRef(onDragUpdate);
+  onDragUpdateRef.current = onDragUpdate;
+  const onDragEndRef = useRef(onDragEnd);
+  onDragEndRef.current = onDragEnd;
+
+  const panGesture = useMemo(() => {
+    let g = Gesture.Pan()
+      .activateAfterLongPress(250)
+      .shouldCancelWhenOutside(false);
+
+    if (scrollRef) {
+      g = g.blocksExternalGesture(scrollRef);
+    }
+
+    return g
+      .onStart((e) => {
+        'worklet';
+        isDragActive.value = true;
+        scale.value = withTiming(1.03, { duration: 150 });
+        zIndex.value = 9999;
+        runOnJS(safeHaptic)('medium');
+        runOnJS(onDragStartRef.current)(exerciseId, e.y, e.absoluteY);
+      })
+      .onUpdate((e) => {
+        'worklet';
+        if (!isDragActive.value) return;
+        translateX.value = e.translationX;
+        translateY.value = e.translationY;
+
+        const now = Date.now();
+        if (now - lastUpdateCallTime.value >= 16) {
+          lastUpdateCallTime.value = now;
+          runOnJS(onDragUpdateRef.current)(exerciseId, e.translationX, e.translationY, e.absoluteY);
+        }
+      })
+      .onEnd((e) => {
+        'worklet';
+        if (isDragActive.value) {
+          runOnJS(onDragUpdateRef.current)(exerciseId, e.translationX, e.translationY, e.absoluteY);
+          isDragActive.value = false;
+          translateX.value = withTiming(0, { duration: 180 });
+          translateY.value = withTiming(0, { duration: 180 });
+          scale.value = withTiming(1, { duration: 180 });
+          zIndex.value = 1;
+          runOnJS(onDragEndRef.current)(exerciseId);
+        }
+      })
+      .onFinalize(() => {
+        'worklet';
+        if (isDragActive.value) {
+          isDragActive.value = false;
+          translateX.value = withTiming(0, { duration: 180 });
+          translateY.value = withTiming(0, { duration: 180 });
+          scale.value = withTiming(1, { duration: 180 });
+          zIndex.value = 1;
+          runOnJS(onDragEndRef.current)(exerciseId);
+        }
+      });
+  }, [exerciseId, scrollRef]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale: scale.value },
+      ],
+      zIndex: zIndex.value,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: isDragActive.value ? 10 : 0 },
+      shadowOpacity: isDragActive.value ? 0.35 : 0,
+      shadowRadius: isDragActive.value ? 16 : 0,
+      elevation: isDragActive.value ? 12 : 0,
+      opacity: isDragActive.value ? 0.96 : 1,
+    };
+  });
+
+  return (
+    <View
+      onLayout={(e) => {
+        const { y, height } = e.nativeEvent.layout;
+        onMeasureLayout(exerciseId, y, height);
+      }}
+      style={styles.draggableItemContainer}
+    >
+      <GestureDetector gesture={panGesture}>
+        <AnimatedReanimated.View
+          style={[
+            styles.draggableCardWrapper,
+            animatedStyle,
+            isHoveredTarget && (isDark ? styles.cardHoveredTargetDark : styles.cardHoveredTargetLight),
+            isUnlinkTarget && (isDark ? styles.cardUnlinkTargetDark : styles.cardUnlinkTargetLight),
+          ]}
+        >
+          {isHoveredTarget && (
+            <View style={styles.hoverTargetBadge}>
+              <Ionicons name="link" size={13} color="#10b981" />
+              <Text style={styles.hoverTargetBadgeText}>Об'єднати в суперсет</Text>
+            </View>
+          )}
+          {isUnlinkTarget && (
+            <View style={styles.unlinkTargetBadge}>
+              <Ionicons name="unlink" size={13} color="#f59e0b" />
+              <Text style={styles.unlinkTargetBadgeText}>Прибрати з суперсету</Text>
+            </View>
+          )}
+          {children}
+        </AnimatedReanimated.View>
+      </GestureDetector>
+    </View>
+  );
+});
+
 const TITLE_PRESETS = [
   'Груди та Тріцепс',
   'Спина та Біцепс',
@@ -71,6 +435,8 @@ const TITLE_PRESETS = [
 
 interface SwipeableExerciseCardProps {
   id: string;
+  disabled?: boolean;
+  containerStyle?: StyleProp<ViewStyle>;
   onDelete: (onCancel?: () => void) => void;
   onQuickDelete?: (onCancel?: () => void) => void;
   confirmTitle?: string;
@@ -82,6 +448,8 @@ interface SwipeableExerciseCardProps {
 
 const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
   id,
+  disabled = false,
+  containerStyle,
   onDelete,
   onQuickDelete,
   confirmTitle,
@@ -93,6 +461,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
   return (
     <SwipeableActionCard
       id={id}
+      disabled={disabled}
+      containerStyle={containerStyle}
       isDark={isDark}
       onEdit={onChangeExercise}
       onDelete={onDelete}
@@ -438,6 +808,7 @@ export const WorkoutEditorScreen: React.FC = () => {
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const currentY = event.nativeEvent.contentOffset.y;
+      scrollYRef.current = currentY;
       const contentHeight = event.nativeEvent.contentSize?.height || 0;
       const layoutHeight = event.nativeEvent.layoutMeasurement?.height || 0;
       const diff = currentY - lastScrollY.current;
@@ -616,6 +987,307 @@ export const WorkoutEditorScreen: React.FC = () => {
     });
     return map;
   }, [workout?.exercises]);
+
+  interface ExerciseGroup {
+    id: string;
+    isSuperset: boolean;
+    supersetGroupId?: string | null;
+    palette?: SupersetPalette | null;
+    exercises: { ex: WorkoutExercise; globalIndex: number }[];
+  }
+
+  const workoutExercisesList = useMemo(() => workout?.exercises || [], [workout?.exercises]);
+
+  const exerciseGroups = useMemo(() => {
+    const groups: ExerciseGroup[] = [];
+    let currentGroup: ExerciseGroup | null = null;
+
+    workoutExercisesList.forEach((ex, index) => {
+      if (ex.supersetGroupId) {
+        if (currentGroup && currentGroup.isSuperset && currentGroup.supersetGroupId === ex.supersetGroupId) {
+          currentGroup.exercises.push({ ex, globalIndex: index });
+        } else {
+          if (currentGroup) groups.push(currentGroup);
+          currentGroup = {
+            id: ex.supersetGroupId,
+            isSuperset: true,
+            supersetGroupId: ex.supersetGroupId,
+            palette: supersetColorMap.get(ex.supersetGroupId) || SUPERSET_PALETTES[0],
+            exercises: [{ ex, globalIndex: index }],
+          };
+        }
+      } else {
+        if (currentGroup) {
+          groups.push(currentGroup);
+          currentGroup = null;
+        }
+        groups.push({
+          id: ex.id,
+          isSuperset: false,
+          exercises: [{ ex, globalIndex: index }],
+        });
+      }
+    });
+
+    if (currentGroup) {
+      groups.push(currentGroup);
+    }
+
+    return groups;
+  }, [workoutExercisesList, supersetColorMap]);
+
+  const exerciseToGroupMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const group of exerciseGroups) {
+      if (group.isSuperset) {
+        for (const item of group.exercises) {
+          map.set(item.ex.id, group.id);
+        }
+      }
+    }
+    return map;
+  }, [exerciseGroups]);
+
+  // Drag & Drop superset states and layout tracking
+  const activeDragIdRef = useRef<string | null>(null);
+  const [hoveredTargetId, setHoveredTargetId] = useState<string | null>(null);
+  const hoveredTargetIdRef = useRef<string | null>(null);
+  const [isUnlinkMode, setIsUnlinkMode] = useState<boolean>(false);
+  const isUnlinkModeRef = useRef<boolean>(false);
+  const unlinkPositionRef = useRef<'above' | 'below' | 'stay'>('stay');
+  const cardLayoutsRef = useRef<{ [weId: string]: { y: number; height: number } }>({});
+  const scrollYRef = useRef<number>(0);
+  const dragStartYRef = useRef<number>(0);
+  const dragCardHeightRef = useRef<number>(100);
+  const accumulatedScrollDeltaRef = useRef<number>(0);
+  const autoScrollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoScrollSpeedRef = useRef<number>(0);
+  const lastHoverIdRef = useRef<string | null>(null);
+  const currentTranslationXRef = useRef<number>(0);
+  const currentTranslationYRef = useRef<number>(0);
+  const { height: windowHeight } = useWindowDimensions();
+
+  const getExerciseContentLayout = useCallback((exId: string) => {
+    return cardLayoutsRef.current[exId] || null;
+  }, []);
+
+  const handleMeasureCardLayout = useCallback((exId: string, y: number, height: number) => {
+    cardLayoutsRef.current[exId] = { y, height };
+    exerciseLayoutsRef.current[exId] = y;
+  }, []);
+
+  const checkHoverTargetAtPosition = useCallback(
+    (draggedId: string, translationX: number, translationY: number) => {
+      const currentWorkout = workoutRef.current || workout;
+      const exercisesList = currentWorkout?.exercises || [];
+      const draggedEx = exercisesList.find((e) => e.id === draggedId);
+      const isDraggedInSuperset = Boolean(draggedEx?.supersetGroupId);
+
+      const currentCenterY =
+        dragStartYRef.current +
+        dragCardHeightRef.current / 2 +
+        translationY +
+        accumulatedScrollDeltaRef.current;
+
+      // 1. Horizontal pull out of superset threshold
+      const isHorizontalPull = isDraggedInSuperset && Math.abs(translationX) > 55;
+
+      // 2. Vertical position outside superset group bounds
+      let isVerticalOutsideSuperset = false;
+      let targetRelativePosition: 'above' | 'below' | 'stay' = 'stay';
+      if (isDraggedInSuperset && draggedEx?.supersetGroupId) {
+        const groupMembers = exercisesList.filter(
+          (e) => e.supersetGroupId === draggedEx.supersetGroupId
+        );
+        let supersetTop = Infinity;
+        let supersetBottom = -Infinity;
+        for (const m of groupMembers) {
+          const l = getExerciseContentLayout(m.id);
+          if (l) {
+            if (l.y < supersetTop) supersetTop = l.y;
+            if (l.y + l.height > supersetBottom) supersetBottom = l.y + l.height;
+          }
+        }
+        if (supersetTop !== Infinity && supersetBottom !== -Infinity) {
+          if (currentCenterY < supersetTop - 12) {
+            isVerticalOutsideSuperset = true;
+            targetRelativePosition = 'above';
+          } else if (currentCenterY > supersetBottom + 12) {
+            isVerticalOutsideSuperset = true;
+            targetRelativePosition = 'below';
+          }
+        }
+      }
+
+      // 3. Determine if we should unlink or combine:
+      // If the exercise is already in a superset and the user dragged it outside the superset bounds
+      // (above the first exercise, below the last exercise, or horizontally), it's strictly UNLINK mode.
+      // We NEVER combine with neighboring exercises in this mode!
+      const shouldUnlink =
+        isDraggedInSuperset && (isHorizontalPull || isVerticalOutsideSuperset);
+
+      let targetId: string | null = null;
+      if (!shouldUnlink) {
+        // Only look for a combine target if we are NOT in unlink mode
+        for (const otherEx of exercisesList) {
+          if (otherEx.id === draggedId) continue;
+          if (
+            draggedEx?.supersetGroupId &&
+            otherEx.supersetGroupId === draggedEx.supersetGroupId
+          ) {
+            continue;
+          }
+          const layout = getExerciseContentLayout(otherEx.id);
+          if (layout) {
+            if (currentCenterY >= layout.y && currentCenterY <= layout.y + layout.height) {
+              targetId = otherEx.id;
+              break;
+            }
+          }
+        }
+      }
+
+      unlinkPositionRef.current = shouldUnlink ? targetRelativePosition : 'stay';
+
+      if (shouldUnlink !== isUnlinkModeRef.current) {
+        isUnlinkModeRef.current = shouldUnlink;
+        setIsUnlinkMode(shouldUnlink);
+        if (shouldUnlink) {
+          safeHaptic('light');
+        }
+      }
+
+      if (targetId !== lastHoverIdRef.current) {
+        lastHoverIdRef.current = targetId;
+        hoveredTargetIdRef.current = targetId;
+        setHoveredTargetId(targetId);
+        if (targetId) {
+          safeHaptic('light');
+        }
+      }
+    },
+    [workout, getExerciseContentLayout]
+  );
+
+  const stopAutoScroll = useCallback(() => {
+    if (autoScrollTimerRef.current !== null) {
+      clearInterval(autoScrollTimerRef.current);
+      autoScrollTimerRef.current = null;
+    }
+    autoScrollSpeedRef.current = 0;
+  }, []);
+
+  const startAutoScroll = useCallback(
+    (speed: number) => {
+      autoScrollSpeedRef.current = speed;
+      if (autoScrollTimerRef.current !== null) return;
+
+      autoScrollTimerRef.current = setInterval(() => {
+        if (!autoScrollSpeedRef.current || !activeDragIdRef.current) {
+          stopAutoScroll();
+          return;
+        }
+        const currentScrollY = scrollYRef.current;
+        const nextY = Math.max(0, currentScrollY + autoScrollSpeedRef.current);
+        const delta = nextY - currentScrollY;
+        if (delta !== 0) {
+          accumulatedScrollDeltaRef.current += delta;
+          scrollYRef.current = nextY;
+          scrollViewRef.current?.scrollTo({ y: nextY, animated: false });
+          if (activeDragIdRef.current) {
+            checkHoverTargetAtPosition(
+              activeDragIdRef.current,
+              currentTranslationXRef.current,
+              currentTranslationYRef.current
+            );
+          }
+        }
+      }, 16);
+    },
+    [checkHoverTargetAtPosition, stopAutoScroll]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (autoScrollTimerRef.current !== null) {
+        clearInterval(autoScrollTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleStartDrag = useCallback(
+    (draggedId: string, initialY: number, screenY: number) => {
+      activeDragIdRef.current = draggedId;
+      hoveredTargetIdRef.current = null;
+      lastHoverIdRef.current = null;
+      isUnlinkModeRef.current = false;
+      unlinkPositionRef.current = 'stay';
+      accumulatedScrollDeltaRef.current = 0;
+      currentTranslationXRef.current = 0;
+      currentTranslationYRef.current = 0;
+
+      const layout = getExerciseContentLayout(draggedId);
+      dragStartYRef.current = layout?.y || 0;
+      dragCardHeightRef.current = layout?.height || 100;
+    },
+    [getExerciseContentLayout]
+  );
+
+  const handleUpdateDrag = useCallback(
+    (draggedId: string, translationX: number, translationY: number, screenY: number) => {
+      currentTranslationXRef.current = translationX;
+      currentTranslationYRef.current = translationY;
+
+      // Auto-scroll check
+      const TOP_THRESHOLD = 180;
+      const BOTTOM_THRESHOLD = windowHeight - 160;
+
+      if (screenY < TOP_THRESHOLD) {
+        const speed = -Math.min(18, Math.max(4, Math.round((TOP_THRESHOLD - screenY) / 6)));
+        startAutoScroll(speed);
+      } else if (screenY > BOTTOM_THRESHOLD) {
+        const speed = Math.min(18, Math.max(4, Math.round((screenY - BOTTOM_THRESHOLD) / 6)));
+        startAutoScroll(speed);
+      } else {
+        stopAutoScroll();
+      }
+
+      checkHoverTargetAtPosition(draggedId, translationX, translationY);
+    },
+    [windowHeight, startAutoScroll, stopAutoScroll, checkHoverTargetAtPosition]
+  );
+
+  const handleEndDrag = useCallback(
+    (draggedId: string) => {
+      stopAutoScroll();
+      const targetId = hoveredTargetIdRef.current;
+      const shouldUnlink = isUnlinkModeRef.current;
+      const relPos = unlinkPositionRef.current;
+      const currentWorkout = workoutRef.current || workout;
+
+      if (shouldUnlink && currentWorkout) {
+        safeHaptic('success');
+        const updated = removeExerciseFromSuperset(currentWorkout.exercises || [], draggedId, relPos);
+        updateAndSave({ ...currentWorkout, exercises: updated }, true);
+      } else if (targetId && targetId !== draggedId && currentWorkout) {
+        safeHaptic('success');
+        const updated = combineExercisesIntoSuperset(currentWorkout.exercises || [], draggedId, targetId);
+        updateAndSave({ ...currentWorkout, exercises: updated }, true);
+      }
+
+      activeDragIdRef.current = null;
+      hoveredTargetIdRef.current = null;
+      lastHoverIdRef.current = null;
+      setHoveredTargetId(null);
+      isUnlinkModeRef.current = false;
+      setIsUnlinkMode(false);
+      unlinkPositionRef.current = 'stay';
+      accumulatedScrollDeltaRef.current = 0;
+      currentTranslationXRef.current = 0;
+      currentTranslationYRef.current = 0;
+    },
+    [workout, stopAutoScroll, updateAndSave]
+  );
 
   // Handle title change
   const handleUpdateTitle = (newTitle: string) => {
@@ -847,8 +1519,9 @@ export const WorkoutEditorScreen: React.FC = () => {
               }
 
               delete exerciseLayoutsRef.current[weId];
+              delete cardLayoutsRef.current[weId];
 
-              updateAndSave({ ...workout, exercises: updatedExercises }, true);
+              updateAndSave({ ...workout, exercises: ensureContiguousSupersets(updatedExercises) }, true);
 
               // Smoothly scroll to previous or next exercise without jarring jump
               if (typeof targetY === 'number') {
@@ -871,29 +1544,103 @@ export const WorkoutEditorScreen: React.FC = () => {
     [handleRemoveExercise]
   );
 
-  // Move exercise Up / Down
+  // Move exercise Up / Down (respecting superset groups)
   const handleMoveExercise = (index: number, direction: 'up' | 'down') => {
-    if (!workout) return;
-    const items = [...(workout.exercises || [])];
+    const currentWorkout = workoutRef.current || workout;
+    if (!currentWorkout) return;
+    const items = [...(currentWorkout.exercises || [])];
+    const current = items[index];
+    if (!current) return;
+
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= items.length) return;
 
-    const temp = items[index];
-    items[index] = items[targetIndex];
-    items[targetIndex] = temp;
+    const currentGid = current.supersetGroupId;
+    const target = items[targetIndex];
+    const targetGid = target.supersetGroupId;
+
+    if (currentGid && currentGid === targetGid) {
+      // Both in same superset: reorder within superset
+      const temp = items[index];
+      items[index] = items[targetIndex];
+      items[targetIndex] = temp;
+    } else if (currentGid && (!targetGid || targetGid !== currentGid)) {
+      // Current is in a superset, target is outside. Move entire superset block as a unit.
+      const groupIndices = items
+        .map((e, idx) => (e.supersetGroupId === currentGid ? idx : -1))
+        .filter((idx) => idx !== -1);
+      const minGroupIdx = Math.min(...groupIndices);
+      const maxGroupIdx = Math.max(...groupIndices);
+      const groupExercises = items.filter((e) => e.supersetGroupId === currentGid);
+      const withoutGroup = items.filter((e) => e.supersetGroupId !== currentGid);
+
+      if (direction === 'up') {
+        if (minGroupIdx === 0) return;
+        const prevItem = items[minGroupIdx - 1];
+        let insertIdx = minGroupIdx - 1;
+        if (prevItem.supersetGroupId) {
+          const prevGroupIndices = withoutGroup
+            .map((e, idx) => (e.supersetGroupId === prevItem.supersetGroupId ? idx : -1))
+            .filter((idx) => idx !== -1);
+          if (prevGroupIndices.length > 0) {
+            insertIdx = Math.min(...prevGroupIndices);
+          }
+        }
+        items.length = 0;
+        items.push(...withoutGroup.slice(0, insertIdx), ...groupExercises, ...withoutGroup.slice(insertIdx));
+      } else {
+        if (maxGroupIdx >= items.length - 1) return;
+        const nextItem = items[maxGroupIdx + 1];
+        let insertIdx = minGroupIdx + 1;
+        if (nextItem.supersetGroupId) {
+          const nextGroupIndices = withoutGroup
+            .map((e, idx) => (e.supersetGroupId === nextItem.supersetGroupId ? idx : -1))
+            .filter((idx) => idx !== -1);
+          if (nextGroupIndices.length > 0) {
+            insertIdx = Math.max(...nextGroupIndices) + 1;
+          }
+        }
+        items.length = 0;
+        items.push(...withoutGroup.slice(0, insertIdx), ...groupExercises, ...withoutGroup.slice(insertIdx));
+      }
+    } else if (!currentGid && targetGid) {
+      // Standalone moving past a superset
+      const targetGroupIndices = items
+        .map((e, idx) => (e.supersetGroupId === targetGid ? idx : -1))
+        .filter((idx) => idx !== -1);
+      const minTargetIdx = Math.min(...targetGroupIndices);
+      const maxTargetIdx = Math.max(...targetGroupIndices);
+      const withoutCurrent = items.filter((_, idx) => idx !== index);
+
+      if (direction === 'up') {
+        const insertIdx = minTargetIdx;
+        items.length = 0;
+        items.push(...withoutCurrent.slice(0, insertIdx), current, ...withoutCurrent.slice(insertIdx));
+      } else {
+        const insertIdx = maxTargetIdx;
+        items.length = 0;
+        items.push(...withoutCurrent.slice(0, insertIdx), current, ...withoutCurrent.slice(insertIdx));
+      }
+    } else {
+      // Normal swap between standalone exercises
+      const temp = items[index];
+      items[index] = items[targetIndex];
+      items[targetIndex] = temp;
+    }
 
     const renumbered = items.map((item, idx) => ({
       ...item,
       order: idx + 1,
     }));
 
-    updateAndSave({ ...workout, exercises: renumbered }, true);
+    updateAndSave({ ...currentWorkout, exercises: ensureContiguousSupersets(renumbered) }, true);
   };
 
   // Superset toggle logic: join adjacent or unlink
   const handleToggleSuperset = (weIndex: number) => {
-    if (!workout) return;
-    const items = [...(workout.exercises || [])];
+    const currentWorkout = workoutRef.current || workout;
+    if (!currentWorkout) return;
+    const items = [...(currentWorkout.exercises || [])];
     const current = items[weIndex];
     if (!current) return;
 
@@ -902,12 +1649,12 @@ export const WorkoutEditorScreen: React.FC = () => {
       const oldGroup = current.supersetGroupId;
       let updated = items.map((e) => (e.id === current.id ? { ...e, supersetGroupId: null } : e));
 
-      // If only 1 remains in old group, clear it too
+      // If only 1 remains in old group, clear it too (automatically dissolve superset)
       const remaining = updated.filter((e) => e.supersetGroupId === oldGroup);
       if (remaining.length <= 1) {
         updated = updated.map((e) => (e.supersetGroupId === oldGroup ? { ...e, supersetGroupId: null } : e));
       }
-      updateAndSave({ ...workout, exercises: updated }, true);
+      updateAndSave({ ...currentWorkout, exercises: ensureContiguousSupersets(updated) }, true);
     } else {
       // Connect with neighbor
       const next = items[weIndex + 1];
@@ -918,27 +1665,27 @@ export const WorkoutEditorScreen: React.FC = () => {
         const updated = items.map((e, idx) =>
           idx === weIndex ? { ...e, supersetGroupId: next.supersetGroupId } : e
         );
-        updateAndSave({ ...workout, exercises: updated }, true);
+        updateAndSave({ ...currentWorkout, exercises: ensureContiguousSupersets(updated) }, true);
       } else if (prev && prev.supersetGroupId) {
         // Join prev superset
         const updated = items.map((e, idx) =>
           idx === weIndex ? { ...e, supersetGroupId: prev.supersetGroupId } : e
         );
-        updateAndSave({ ...workout, exercises: updated }, true);
+        updateAndSave({ ...currentWorkout, exercises: ensureContiguousSupersets(updated) }, true);
       } else if (next) {
         // Create new superset with next
-        const newGroupId = `SS-${Date.now().toString().slice(-4)}`;
+        const newGroupId = generateSupersetGroupId();
         const updated = items.map((e, idx) =>
           idx === weIndex || idx === weIndex + 1 ? { ...e, supersetGroupId: newGroupId } : e
         );
-        updateAndSave({ ...workout, exercises: updated }, true);
+        updateAndSave({ ...currentWorkout, exercises: ensureContiguousSupersets(updated) }, true);
       } else if (prev) {
         // Create new superset with prev
-        const newGroupId = `SS-${Date.now().toString().slice(-4)}`;
+        const newGroupId = generateSupersetGroupId();
         const updated = items.map((e, idx) =>
           idx === weIndex || idx === weIndex - 1 ? { ...e, supersetGroupId: newGroupId } : e
         );
-        updateAndSave({ ...workout, exercises: updated }, true);
+        updateAndSave({ ...currentWorkout, exercises: ensureContiguousSupersets(updated) }, true);
       }
     }
   };
@@ -1447,6 +2194,347 @@ export const WorkoutEditorScreen: React.FC = () => {
     });
   });
 
+  const renderExerciseCard = (ex: WorkoutExercise, exIndex: number) => {
+    const muscle = MUSCLE_GROUPS[ex.muscleGroup || 'other'] || MUSCLE_GROUPS.other;
+    const isSuperset = Boolean(ex.supersetGroupId);
+    const palette = ex.supersetGroupId ? supersetColorMap.get(ex.supersetGroupId) : null;
+    const pastPerf = lastPerformances[ex.exerciseId];
+    const isExpanded = expandedExerciseId === ex.id;
+
+    return (
+      <View style={styles.exerciseCardWrap}>
+        <SwipeableExerciseCard
+          id={ex.id}
+          onDelete={(onCancel) => handleRemoveExercise(ex.id, onCancel)}
+          onQuickDelete={(onCancel) => handleQuickDeleteExercise(ex.id, onCancel)}
+          onChangeExercise={() => handleChangeExercise(ex.id)}
+          isDark={isDark}
+        >
+          <View style={[styles.exerciseCard, { overflow: 'hidden' }]}>
+            {/* Superset Full Height Left Stripe */}
+            {isSuperset && palette && (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 8,
+                  backgroundColor: palette.borderColor,
+                  zIndex: 1,
+                }}
+              />
+            )}
+
+            {/* Exercise Card Header */}
+            <View style={[styles.exHeader, isExpanded && (isDark ? styles.borderBottomDark : styles.borderBottomLight)]}>
+              {/* Index/Reorder, Name & Collapsed Summary */}
+              <View style={styles.exHeaderTitleRow}>
+                {/* Vertical Reorder Stepper (Up/Down) */}
+                <View style={styles.reorderColumn}>
+                  <TouchableOpacity
+                    activeOpacity={0.6}
+                    disabled={exIndex === 0}
+                    onPress={() => handleMoveExercise(exIndex, 'up')}
+                    style={[styles.reorderBtn, exIndex === 0 && { opacity: 0.25 }]}
+                    hitSlop={{ top: 8, bottom: 2, left: 8, right: 8 }}
+                  >
+                    <Ionicons
+                      name="chevron-up"
+                      size={16}
+                      color={exIndex === 0 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.6}
+                    disabled={exIndex === exercises.length - 1}
+                    onPress={() => handleMoveExercise(exIndex, 'down')}
+                    style={[styles.reorderBtn, exIndex === exercises.length - 1 && { opacity: 0.25 }]}
+                    hitSlop={{ top: 2, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons
+                      name="chevron-down"
+                      size={16}
+                      color={exIndex === exercises.length - 1 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => handleToggleExpand(ex.id)}
+                  style={styles.exHeaderLeftTouchable}
+                >
+                  <View style={styles.exTitleContainer}>
+                    <Text
+                      numberOfLines={2}
+                      style={[styles.exTitleText, isDark ? styles.textDark : styles.textLight]}
+                    >
+                      {ex.exerciseName || 'Вправа'}
+                    </Text>
+                    {isSuperset && palette && (
+                      <View style={styles.exBadgeRow}>
+                        <View
+                          style={[
+                            styles.supersetBadge,
+                            { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder },
+                          ]}
+                        >
+                          <Ionicons name="link" size={10} color={palette.badgeText} />
+                          <Text style={[styles.supersetBadgeText, { color: palette.badgeText }]}>
+                            Суперсет
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                    {!isExpanded && (
+                      <View style={styles.collapsedSummaryRow}>
+                        <Text style={[styles.collapsedSummaryText, isDark ? styles.subDark : styles.subLight]}>
+                          {(ex.sets || []).length} підходи • {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'} повт. • 1RM: {format1RM(getExercise1RM(ex.sets, pastPerf))}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+
+                {/* Action buttons (Delete, Superset & Toggle) */}
+                <View style={styles.exCardActions}>
+                  {exercises.length > 1 && (
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => handleToggleSuperset(exIndex)}
+                      style={[
+                        styles.supersetToggleBtn,
+                        isSuperset && palette
+                          ? { backgroundColor: palette.buttonActiveBg, borderColor: palette.buttonActiveBorder }
+                          : (isDark ? styles.actionBtnDark : styles.actionBtnLight),
+                      ]}
+                      hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                    >
+                      <Ionicons
+                        name={isSuperset ? 'unlink' : 'link'}
+                        size={15}
+                        color={isSuperset && palette ? palette.buttonActiveText : (isDark ? '#a1a1aa' : '#71717a')}
+                      />
+                    </TouchableOpacity>
+                  )}
+
+                  <ExerciseProgressRing
+                    completed={(ex.sets || []).filter((s) => Boolean(s.completedAt)).length}
+                    total={(ex.sets || []).length}
+                    size={30}
+                    isDark={isDark}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {isExpanded && (
+              <>
+                {/* Target Rep Range Dropdown Bar */}
+                <View style={[styles.quickSelectorsRow, isDark ? styles.quickSelectorsRowDark : styles.quickSelectorsRowLight]}>
+                  <View style={styles.repsDropdownRow}>
+                    <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
+                      Діапазон повторень:
+                    </Text>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setActiveRepsPickerWeId(ex.id)}
+                      style={[
+                        styles.repsDropdownBtn,
+                        isDark ? styles.repsDropdownBtnDark : styles.repsDropdownBtnLight,
+                      ]}
+                    >
+                      <Text style={[styles.repsDropdownBtnText, isDark ? styles.textDark : styles.textLight]}>
+                        {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'}
+                      </Text>
+                      <Ionicons name="chevron-down" size={13} color={isDark ? '#a1a1aa' : '#71717a'} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.repsDropdownRow}>
+                    <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
+                      1RM:
+                    </Text>
+                    <Text style={[{ fontSize: 13, fontWeight: '700' }, isDark ? styles.textDark : styles.textLight]}>
+                      {format1RM(getExercise1RM(ex.sets, pastPerf))}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Sets Table */}
+                <View style={styles.setsTable}>
+                  {/* Table Header */}
+                  <View style={[styles.tableHeaderRow, isDark ? styles.borderDark : styles.borderLight]}>
+                    <Text style={[styles.thCell, styles.thSet, isDark ? styles.subDark : styles.subLight]}>
+                      Сет
+                    </Text>
+                    <Text style={[styles.thCell, styles.thWeight, isDark ? styles.subDark : styles.subLight]}>
+                      Вага (кг)
+                    </Text>
+                    <Text style={[styles.thCell, styles.thReps, isDark ? styles.subDark : styles.subLight]}>
+                      Повторення
+                    </Text>
+                    <Text style={[styles.thCell, styles.thAction, isDark ? styles.subDark : styles.subLight]}>
+                    </Text>
+                  </View>
+
+                  {/* Table Rows */}
+                  {(ex.sets || []).map((s, sIndex) => {
+                    const isDone = Boolean(s.completedAt);
+                    return (
+                      <View
+                        key={s.id || `s_${sIndex}`}
+                        style={[
+                          styles.setTableRow,
+                          isDone && (isDark ? styles.setRowDoneDark : styles.setRowDoneLight),
+                          sIndex > 0 && [styles.setRowDivider, isDark ? styles.borderDark : styles.borderLight],
+                        ]}
+                      >
+                        {/* Set number */}
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={() => handleToggleWarmup(ex.id, s.id)}
+                          style={styles.tdSet}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Text
+                            style={[
+                              styles.setNumberText,
+                              s.isWarmup ? styles.warmupText : (isDark ? styles.textDark : styles.textLight),
+                            ]}
+                          >
+                            {s.setNumber || sIndex + 1}
+                            {s.isWarmup ? ' (Р)' : ''}
+                          </Text>
+                        </TouchableOpacity>
+
+                        {/* Weight numeric input + steppers */}
+                        <View style={styles.tdWeight}>
+                          <View style={styles.stepperContainer}>
+                            <TouchableOpacity
+                              activeOpacity={0.6}
+                              onPress={() => handleStepAdjust(ex.id, s.id, 'weight', -1)}
+                              style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                            >
+                              <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                                -
+                              </Text>
+                            </TouchableOpacity>
+
+                            <TextInput
+                              style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
+                              keyboardType="decimal-pad"
+                              inputMode="decimal"
+                              value={s.weight !== null && s.weight !== undefined ? String(s.weight) : ''}
+                              onChangeText={(val) => {
+                                const clean = val.replace(',', '.');
+                                const parsed = parseFloat(clean);
+                                handleUpdateSet(ex.id, s.id, 'weight', isNaN(parsed) ? 0 : parsed);
+                              }}
+                              selectTextOnFocus
+                            />
+
+                            <TouchableOpacity
+                              activeOpacity={0.6}
+                              onPress={() => handleStepAdjust(ex.id, s.id, 'weight', 1)}
+                              style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                            >
+                              <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                                +
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+
+                        {/* Actual Reps numeric input + steppers */}
+                        <View style={styles.tdReps}>
+                          <View style={styles.stepperContainer}>
+                            <TouchableOpacity
+                              activeOpacity={0.6}
+                              onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', -1)}
+                              style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                            >
+                              <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                                -
+                              </Text>
+                            </TouchableOpacity>
+
+                            <TextInput
+                              style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
+                              keyboardType="number-pad"
+                              inputMode="numeric"
+                              value={s.actualReps !== null && s.actualReps !== undefined ? String(s.actualReps) : ''}
+                              onChangeText={(val) => {
+                                const parsed = parseInt(val, 10);
+                                handleUpdateSet(ex.id, s.id, 'actualReps', isNaN(parsed) ? 0 : parsed);
+                              }}
+                              selectTextOnFocus
+                            />
+
+                            <TouchableOpacity
+                              activeOpacity={0.6}
+                              onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', 1)}
+                              style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                            >
+                              <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                                +
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+
+                        {/* Completed toggle */}
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={() => handleToggleCompleteSet(ex.id, s)}
+                          style={styles.tdDone}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Ionicons
+                            name={isDone ? 'checkmark-circle' : 'ellipse-outline'}
+                            size={26}
+                            color={isDone ? '#22C55E' : (isDark ? '#334155' : '#E2E8F0')}
+                          />
+                        </TouchableOpacity>
+
+                        {/* Remove set */}
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={() => handleRemoveSet(ex.id, s.id)}
+                          style={styles.tdAction}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Ionicons name="close" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                </View>
+
+                {/* Add set button */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => handleAddSet(ex.id)}
+                  style={[styles.addSetBtn, isDark ? styles.borderDark : styles.borderLight]}
+                >
+                  <Ionicons name="add" size={16} color={isDark ? '#F8FAFC' : '#0F172A'} />
+                  <Text style={[styles.addSetBtnText, isDark ? styles.textDark : styles.textLight]}>
+                    Додати підхід
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </SwipeableExerciseCard>
+      </View>
+    );
+  };
+
   return (
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBack}>
       <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
@@ -1572,351 +2660,27 @@ export const WorkoutEditorScreen: React.FC = () => {
             </Card>
           )}
 
-          {/* Exercises List */}
-          {exercises.map((ex, exIndex) => {
-            const muscle = MUSCLE_GROUPS[ex.muscleGroup || 'other'] || MUSCLE_GROUPS.other;
-            const isSuperset = Boolean(ex.supersetGroupId);
-            const palette = ex.supersetGroupId ? supersetColorMap.get(ex.supersetGroupId) : null;
-            const pastPerf = lastPerformances[ex.exerciseId];
-            const isExpanded = expandedExerciseId === ex.id;
-
-            return (
-              <View
-                key={ex.id || `ex_${exIndex}`}
-                onLayout={(e) => {
-                  exerciseLayoutsRef.current[ex.id] = e.nativeEvent.layout.y;
-                }}
-                style={styles.exerciseCardWrap}
-              >
-                <SwipeableExerciseCard
-                  id={ex.id}
-                  onDelete={(onCancel) => handleRemoveExercise(ex.id, onCancel)}
-                  onQuickDelete={(onCancel) => handleQuickDeleteExercise(ex.id, onCancel)}
-                  onChangeExercise={() => handleChangeExercise(ex.id)}
+          {/* Exercises List (Grouped with Supersets & Drag and Drop) */}
+          {exerciseGroups.map((group) => (
+            <React.Fragment key={group.id}>
+              {group.exercises.map(({ ex, globalIndex }) => (
+                <DraggableExerciseItem
+                  key={ex.id || `ex_${globalIndex}`}
+                  exerciseId={ex.id}
+                  scrollRef={scrollViewRef}
+                  isHoveredTarget={hoveredTargetId === ex.id}
+                  isUnlinkTarget={isUnlinkMode && activeDragIdRef.current === ex.id}
                   isDark={isDark}
+                  onDragStart={handleStartDrag}
+                  onDragUpdate={handleUpdateDrag}
+                  onDragEnd={handleEndDrag}
+                  onMeasureLayout={handleMeasureCardLayout}
                 >
-                  <View style={[styles.exerciseCard, { overflow: 'hidden' }]}>
-                    {/* Superset Full Height Left Stripe */}
-                    {isSuperset && palette && (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: 8,
-                          backgroundColor: palette.borderColor,
-                          zIndex: 1,
-                        }}
-                      />
-                    )}
-                    {/* Exercise Card Header */}
-                    <View style={[styles.exHeader, isExpanded && (isDark ? styles.borderBottomDark : styles.borderBottomLight)]}>
-                      {/* Index/Reorder, Name & Collapsed Summary */}
-                      <View style={styles.exHeaderTitleRow}>
-                        {/* Vertical Reorder Stepper (Up/Down) */}
-                        <View style={styles.reorderColumn}>
-                          <TouchableOpacity
-                            activeOpacity={0.6}
-                            disabled={exIndex === 0}
-                            onPress={() => handleMoveExercise(exIndex, 'up')}
-                            style={[styles.reorderBtn, exIndex === 0 && { opacity: 0.25 }]}
-                            hitSlop={{ top: 8, bottom: 2, left: 8, right: 8 }}
-                          >
-                            <Ionicons
-                              name="chevron-up"
-                              size={16}
-                              color={exIndex === 0 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
-                            />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            activeOpacity={0.6}
-                            disabled={exIndex === exercises.length - 1}
-                            onPress={() => handleMoveExercise(exIndex, 'down')}
-                            style={[styles.reorderBtn, exIndex === exercises.length - 1 && { opacity: 0.25 }]}
-                            hitSlop={{ top: 2, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <Ionicons
-                              name="chevron-down"
-                              size={16}
-                              color={exIndex === exercises.length - 1 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
-                            />
-                          </TouchableOpacity>
-                        </View>
-
-                        <TouchableOpacity
-                          activeOpacity={0.7}
-                          onPress={() => handleToggleExpand(ex.id)}
-                          style={styles.exHeaderLeftTouchable}
-                        >
-                          <View style={styles.exTitleContainer}>
-                            <Text
-                              numberOfLines={2}
-                              style={[styles.exTitleText, isDark ? styles.textDark : styles.textLight]}
-                            >
-                              {ex.exerciseName || 'Вправа'}
-                            </Text>
-                            {isSuperset && palette && (
-                              <View style={styles.exBadgeRow}>
-                                <View
-                                  style={[
-                                    styles.supersetBadge,
-                                    { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder },
-                                  ]}
-                                >
-                                  <Ionicons name="link" size={10} color={palette.badgeText} />
-                                  <Text style={[styles.supersetBadgeText, { color: palette.badgeText }]}>
-                                    Суперсет
-                                  </Text>
-                                </View>
-                              </View>
-                            )}
-                            {!isExpanded && (
-                              <View style={styles.collapsedSummaryRow}>
-                                <Text style={[styles.collapsedSummaryText, isDark ? styles.subDark : styles.subLight]}>
-                                  {(ex.sets || []).length} підходи • {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'} повт. • 1RM: {format1RM(getExercise1RM(ex.sets, pastPerf))}
-                                </Text>
-                              </View>
-                            )}
-                          </View>
-                        </TouchableOpacity>
-
-                        {/* Action buttons (Delete, Superset & Toggle) */}
-                        <View style={styles.exCardActions}>
-                          {exercises.length > 1 && (
-                            <TouchableOpacity
-                              activeOpacity={0.7}
-                              onPress={() => handleToggleSuperset(exIndex)}
-                              style={[
-                                styles.supersetToggleBtn,
-                                isSuperset && palette
-                                  ? { backgroundColor: palette.buttonActiveBg, borderColor: palette.buttonActiveBorder }
-                                  : (isDark ? styles.actionBtnDark : styles.actionBtnLight),
-                              ]}
-                              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                            >
-                              <Ionicons
-                                name={isSuperset ? 'unlink' : 'link'}
-                                size={15}
-                                color={isSuperset && palette ? palette.buttonActiveText : (isDark ? '#a1a1aa' : '#71717a')}
-                              />
-                            </TouchableOpacity>
-                          )}
-
-                          <ExerciseProgressRing
-                            completed={(ex.sets || []).filter((s) => Boolean(s.completedAt)).length}
-                            total={(ex.sets || []).length}
-                            size={30}
-                            isDark={isDark}
-                          />
-                        </View>
-                      </View>
-                    </View>
-
-                    {isExpanded && (
-                      <>
-                        {/* Target Rep Range Dropdown Bar (Sets count row deleted) */}
-                        <View style={[styles.quickSelectorsRow, isDark ? styles.quickSelectorsRowDark : styles.quickSelectorsRowLight]}>
-                          <View style={styles.repsDropdownRow}>
-                            <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
-                              Діапазон повторень:
-                            </Text>
-                            <TouchableOpacity
-                              activeOpacity={0.7}
-                              onPress={() => setActiveRepsPickerWeId(ex.id)}
-                              style={[
-                                styles.repsDropdownBtn,
-                                isDark ? styles.repsDropdownBtnDark : styles.repsDropdownBtnLight,
-                              ]}
-                            >
-                              <Text style={[styles.repsDropdownBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'}
-                              </Text>
-                              <Ionicons name="chevron-down" size={13} color={isDark ? '#a1a1aa' : '#71717a'} />
-                            </TouchableOpacity>
-                          </View>
-                          <View style={styles.repsDropdownRow}>
-                            <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
-                              1RM:
-                            </Text>
-                            <Text style={[{ fontSize: 13, fontWeight: '700' }, isDark ? styles.textDark : styles.textLight]}>
-                              {format1RM(getExercise1RM(ex.sets, pastPerf))}
-                            </Text>
-                          </View>
-                        </View>
-
-                        {/* Sets Table */}
-                        <View style={styles.setsTable}>
-                          {/* Table Header */}
-                          <View style={[styles.tableHeaderRow, isDark ? styles.borderDark : styles.borderLight]}>
-                            <Text style={[styles.thCell, styles.thSet, isDark ? styles.subDark : styles.subLight]}>
-                              Сет
-                            </Text>
-                            <Text style={[styles.thCell, styles.thWeight, isDark ? styles.subDark : styles.subLight]}>
-                              Вага (кг)
-                            </Text>
-                            <Text style={[styles.thCell, styles.thReps, isDark ? styles.subDark : styles.subLight]}>
-                              Повторення
-                            </Text>
-                            <Text style={[styles.thCell, styles.thAction, isDark ? styles.subDark : styles.subLight]}>
-                            </Text>
-                          </View>
-
-                          {/* Table Rows */}
-                          {(ex.sets || []).map((s, sIndex) => {
-                            const isDone = Boolean(s.completedAt);
-                            return (
-                              <View
-                                key={s.id || `s_${sIndex}`}
-                                style={[
-                                  styles.setTableRow,
-                                  isDone && (isDark ? styles.setRowDoneDark : styles.setRowDoneLight),
-                                  sIndex > 0 && [styles.setRowDivider, isDark ? styles.borderDark : styles.borderLight],
-                                ]}
-                              >
-                                {/* Set number */}
-                                <TouchableOpacity
-                                  activeOpacity={0.7}
-                                  onPress={() => handleToggleWarmup(ex.id, s.id)}
-                                  style={styles.tdSet}
-                                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                >
-                                  <Text
-                                    style={[
-                                      styles.setNumberText,
-                                      s.isWarmup ? styles.warmupText : (isDark ? styles.textDark : styles.textLight),
-                                    ]}
-                                  >
-                                    {s.setNumber || sIndex + 1}
-                                    {s.isWarmup ? ' (Р)' : ''}
-                                  </Text>
-                                </TouchableOpacity>
-
-                                {/* Weight numeric input + steppers */}
-                                <View style={styles.tdWeight}>
-                                  <View style={styles.stepperContainer}>
-                                    <TouchableOpacity
-                                      activeOpacity={0.6}
-                                      onPress={() => handleStepAdjust(ex.id, s.id, 'weight', -1)}
-                                      style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
-                                      hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                                    >
-                                      <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                        -
-                                      </Text>
-                                    </TouchableOpacity>
-
-                                    <TextInput
-                                      style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
-                                      keyboardType="decimal-pad"
-                                      inputMode="decimal"
-                                      value={s.weight !== null && s.weight !== undefined ? String(s.weight) : ''}
-                                      onChangeText={(val) => {
-                                        const clean = val.replace(',', '.');
-                                        const parsed = parseFloat(clean);
-                                        handleUpdateSet(ex.id, s.id, 'weight', isNaN(parsed) ? 0 : parsed);
-                                      }}
-                                      selectTextOnFocus
-                                    />
-
-                                    <TouchableOpacity
-                                      activeOpacity={0.6}
-                                      onPress={() => handleStepAdjust(ex.id, s.id, 'weight', 1)}
-                                      style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
-                                      hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                                    >
-                                      <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                        +
-                                      </Text>
-                                    </TouchableOpacity>
-                                  </View>
-                                </View>
-
-                                {/* Actual Reps numeric input + steppers */}
-                                <View style={styles.tdReps}>
-                                  <View style={styles.stepperContainer}>
-                                    <TouchableOpacity
-                                      activeOpacity={0.6}
-                                      onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', -1)}
-                                      style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
-                                      hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                                    >
-                                      <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                        -
-                                      </Text>
-                                    </TouchableOpacity>
-
-                                    <TextInput
-                                      style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
-                                      keyboardType="number-pad"
-                                      inputMode="numeric"
-                                      value={s.actualReps !== null && s.actualReps !== undefined ? String(s.actualReps) : ''}
-                                      onChangeText={(val) => {
-                                        const parsed = parseInt(val, 10);
-                                        handleUpdateSet(ex.id, s.id, 'actualReps', isNaN(parsed) ? 0 : parsed);
-                                      }}
-                                      selectTextOnFocus
-                                    />
-
-                                    <TouchableOpacity
-                                      activeOpacity={0.6}
-                                      onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', 1)}
-                                      style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
-                                      hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                                    >
-                                      <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                        +
-                                      </Text>
-                                    </TouchableOpacity>
-                                  </View>
-                                </View>
-
-                                {/* Completed toggle */}
-                                <TouchableOpacity
-                                  activeOpacity={0.7}
-                                  onPress={() => handleToggleCompleteSet(ex.id, s)}
-                                  style={styles.tdDone}
-                                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                >
-                                  <Ionicons
-                                    name={isDone ? 'checkmark-circle' : 'ellipse-outline'}
-                                    size={26}
-                                    color={isDone ? '#22C55E' : (isDark ? '#334155' : '#E2E8F0')}
-                                  />
-                                </TouchableOpacity>
-
-                                {/* Remove set */}
-                                <TouchableOpacity
-                                  activeOpacity={0.7}
-                                  onPress={() => handleRemoveSet(ex.id, s.id)}
-                                  style={styles.tdAction}
-                                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                >
-                                  <Ionicons name="close" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
-                                </TouchableOpacity>
-                              </View>
-                            );
-                          })}
-                        </View>
-
-                        {/* Add set button */}
-                        <TouchableOpacity
-                          activeOpacity={0.7}
-                          onPress={() => handleAddSet(ex.id)}
-                          style={[styles.addSetBtn, isDark ? styles.borderDark : styles.borderLight]}
-                        >
-                          <Ionicons name="add" size={16} color={isDark ? '#F8FAFC' : '#0F172A'} />
-                          <Text style={[styles.addSetBtnText, isDark ? styles.textDark : styles.textLight]}>
-                            Додати підхід
-                          </Text>
-                        </TouchableOpacity>
-                      </>
-                    )}
-                  </View>
-                </SwipeableExerciseCard>
-              </View>
-            );
-          })}
+                  {renderExerciseCard(ex, globalIndex)}
+                </DraggableExerciseItem>
+              ))}
+            </React.Fragment>
+          ))}
 
           {/* Add Exercise Big Button */}
           <TouchableOpacity
@@ -3034,5 +3798,98 @@ const styles = StyleSheet.create({
   },
   borderDark: {
     borderColor: '#334155',
+  },
+  draggableItemContainer: {
+    width: '100%',
+  },
+  draggableCardWrapper: {
+    width: '100%',
+    borderRadius: 20,
+  },
+  cardActiveDrag: {
+    opacity: 0.96,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  cardHoveredTargetDark: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.10)',
+    borderRadius: 20,
+  },
+  cardHoveredTargetLight: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderRadius: 20,
+  },
+  hoverTargetBadge: {
+    position: 'absolute',
+    top: -12,
+    alignSelf: 'center',
+    backgroundColor: '#064e3b',
+    borderWidth: 1,
+    borderColor: '#10b981',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    zIndex: 100,
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  hoverTargetBadgeText: {
+    color: '#34d399',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  cardUnlinkTargetDark: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#f59e0b',
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderRadius: 20,
+  },
+  cardUnlinkTargetLight: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#f59e0b',
+    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+    borderRadius: 20,
+  },
+  unlinkTargetBadge: {
+    position: 'absolute',
+    top: -12,
+    alignSelf: 'center',
+    backgroundColor: '#78350f',
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    zIndex: 100,
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  unlinkTargetBadgeText: {
+    color: '#fef3c7',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

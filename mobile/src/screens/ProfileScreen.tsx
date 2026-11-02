@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { TraineeService } from '../services/traineeService';
+import { CategoryService } from '../services/categoryService';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import {
@@ -32,6 +33,7 @@ import {
   Gender,
   ActivityLevel,
   NutritionGoal,
+  ExerciseCategory,
 } from '../types/workout';
 import {
   calculateNutrition,
@@ -106,6 +108,18 @@ export const ProfileScreen: React.FC = () => {
       : sortRepRanges([...DEFAULT_REPS_RANGES]);
   });
   const [newRepRangeInput, setNewRepRangeInput] = useState('');
+
+  // Exercise Categories state
+  const [categories, setCategories] = useState<ExerciseCategory[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+
+  useEffect(() => {
+    CategoryService.getCategories(user?.id).then(setCategories);
+    const unsubscribe = CategoryService.subscribe(setCategories);
+    return () => unsubscribe();
+  }, [user?.id]);
 
   // Synchronize form when user loads/changes without flickering or overwriting edits
   useEffect(() => {
@@ -194,6 +208,83 @@ export const ProfileScreen: React.FC = () => {
     await updateUserProfile({ customRepRanges: defaults });
   };
 
+  const handleAddCategory = async () => {
+    const clean = newCategoryName.trim();
+    if (!clean) {
+      Alert.alert('Помилка', 'Введіть назву категорії');
+      return;
+    }
+    if (categories.some((c) => c.nameUk.toLowerCase() === clean.toLowerCase())) {
+      Alert.alert('Помилка', 'Категорія з такою назвою вже існує');
+      return;
+    }
+    setIsAddingCategory(true);
+    try {
+      const updated = await CategoryService.addCategory(clean, user?.id);
+      setCategories(updated);
+      setNewCategoryName('');
+    } catch (err) {
+      Alert.alert('Помилка', 'Не вдалося додати категорію');
+    } finally {
+      setIsAddingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = (cat: ExerciseCategory) => {
+    if (cat.id === 'other') {
+      Alert.alert('Увага', 'Категорію «Інше» не можна видалити, оскільки до неї переносяться вправи з видалених категорій.');
+      return;
+    }
+
+    Alert.alert(
+      'Видалити категорію?',
+      `Видалити категорію «${cat.nameUk}»? Усі вправи з цієї категорії будуть перенесені в категорію «Інше».`,
+      [
+        { text: 'Скасувати', style: 'cancel' },
+        {
+          text: 'Видалити',
+          style: 'destructive',
+          onPress: async () => {
+            setIsDeletingCategory(true);
+            try {
+              const { categories: updated, movedCount } = await CategoryService.deleteCategory(cat.id, user?.id);
+              setCategories(updated);
+              if (movedCount > 0) {
+                Alert.alert('Успіх', `Категорію «${cat.nameUk}» видалено. Перенесено вправ у «Інше»: ${movedCount}`);
+              }
+            } catch (e) {
+              Alert.alert('Помилка', 'Не вдалося видалити категорію');
+            } finally {
+              setIsDeletingCategory(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleResetCategories = () => {
+    Alert.alert(
+      'Скинути категорії?',
+      'Скинути список категорій до стандартних (Грудні, Спина, Ноги, Сідниці, Плечі, Біцепс, Тріцепс, Інше)?',
+      [
+        { text: 'Скасувати', style: 'cancel' },
+        {
+          text: 'Скинути',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const reset = await CategoryService.resetCategories(user?.id);
+              setCategories(reset);
+            } catch (e) {
+              Alert.alert('Помилка', 'Не вдалося скинути категорії');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Load coach profile or trainees count only when user identity or coachId changes
   const loadCoachOrTrainees = useCallback(async () => {
     if (!user) return;
@@ -223,6 +314,7 @@ export const ProfileScreen: React.FC = () => {
       await Promise.all([
         refreshUser(),
         loadCoachOrTrainees(),
+        CategoryService.getCategories(user?.id).then(setCategories),
       ]);
     } catch (e) {
       console.warn('[ProfileScreen.onRefresh] Error:', e);
@@ -230,7 +322,7 @@ export const ProfileScreen: React.FC = () => {
       setIsRefreshing(false);
       await triggerRefreshSuccessHaptic();
     }
-  }, [refreshUser, loadCoachOrTrainees]);
+  }, [refreshUser, loadCoachOrTrainees, user?.id]);
 
   // Copy unique ID to clipboard / share
   const handleCopyCode = async () => {
@@ -1174,7 +1266,95 @@ export const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </Card>
 
-        {/* 5. Theme Settings Card: MOVED TO VERY BOTTOM OF PAGE */}
+        {/* 5. Exercise Categories Card */}
+        <Card style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionTitleWrap}>
+              <View style={styles.sectionIconRow}>
+                <Ionicons
+                  name="barbell-outline"
+                  size={18}
+                  color={isDark ? '#ec4899' : '#db2777'}
+                />
+                <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
+                  Категорії вправ
+                </Text>
+              </View>
+              <Text style={[styles.sectionSubtitle, isDark ? styles.subDark : styles.subLight]}>
+                Додавайте власні категорії або видаляйте існуючі (вправи перенесуться в «Інше»)
+              </Text>
+            </View>
+          </View>
+
+          {/* Current Categories Pills */}
+          <View style={styles.rangesPillsContainer}>
+            {categories.map((cat) => (
+              <View
+                key={cat.id}
+                style={[styles.rangePill, isDark ? styles.rangePillDark : styles.rangePillLight]}
+              >
+                <Text style={[styles.rangePillText, isDark ? styles.textDark : styles.textLight]}>
+                  {cat.nameUk}
+                </Text>
+                {cat.id !== 'other' && (
+                  <TouchableOpacity
+                    onPress={() => handleDeleteCategory(cat)}
+                    hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                    style={styles.rangeDeleteBtn}
+                    activeOpacity={0.7}
+                    disabled={isDeletingCategory}
+                  >
+                    <Ionicons name="close-circle" size={16} color={isDark ? '#94a3b8' : '#64748b'} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </View>
+
+          {/* Add New Category Row */}
+          <View style={styles.addRangeRow}>
+            <TextInput
+              style={[styles.addRangeInput, isDark ? styles.inputDark : styles.inputLight]}
+              placeholder="Напр. Прес або Кардіо"
+              placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+              value={newCategoryName}
+              onChangeText={setNewCategoryName}
+              autoCapitalize="words"
+              autoCorrect={false}
+              returnKeyType="done"
+              onSubmitEditing={handleAddCategory}
+            />
+            <TouchableOpacity
+              style={[styles.addRangeBtn, (!newCategoryName.trim() || isAddingCategory) && styles.btnDisabled]}
+              onPress={handleAddCategory}
+              disabled={!newCategoryName.trim() || isAddingCategory}
+              activeOpacity={0.8}
+            >
+              {isAddingCategory ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <Ionicons name="add" size={18} color="#ffffff" />
+                  <Text style={styles.addRangeBtnText}>Додати</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Reset to Defaults */}
+          <TouchableOpacity
+            style={styles.resetRangesBtn}
+            onPress={handleResetCategories}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="refresh-outline" size={14} color={isDark ? '#94a3b8' : '#64748b'} />
+            <Text style={[styles.resetRangesBtnText, isDark ? styles.subDark : styles.subLight]}>
+              Скинути до стандартних
+            </Text>
+          </TouchableOpacity>
+        </Card>
+
+        {/* 6. Theme Settings Card: MOVED TO VERY BOTTOM OF PAGE */}
         <Card style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionTitleWrap}>

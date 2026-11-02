@@ -279,7 +279,7 @@ export class StorageService {
           id,
           userId: null,
           name: matchWe.exerciseName,
-          muscleGroup: matchWe.muscleGroup || 'full_body',
+          muscleGroup: matchWe.muscleGroup === 'full_body' ? 'glutes' : (matchWe.muscleGroup || 'glutes'),
           description: '',
           createdAt: '2026-01-01T00:00:00.000Z',
           isDefault: id.startsWith('def_ex') || id.startsWith('global_ex'),
@@ -894,7 +894,7 @@ export class StorageService {
               id: exerciseId,
               userId: null,
               name: matchWe.exerciseName,
-              muscleGroup: matchWe.muscleGroup || 'full_body',
+              muscleGroup: matchWe.muscleGroup === 'full_body' ? 'glutes' : (matchWe.muscleGroup || 'glutes'),
               isDefault: false,
               createdAt: '',
             };
@@ -983,7 +983,7 @@ export class StorageService {
               id: exerciseId,
               userId: null,
               name: matchWe.exerciseName,
-              muscleGroup: matchWe.muscleGroup || 'full_body',
+              muscleGroup: matchWe.muscleGroup === 'full_body' ? 'glutes' : (matchWe.muscleGroup || 'glutes'),
               isDefault: false,
               createdAt: '',
             };

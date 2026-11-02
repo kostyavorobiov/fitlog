@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, X, Plus, Dumbbell, Sparkles } from 'lucide-react';
-import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
+import { Exercise, MuscleGroup, MUSCLE_GROUPS, DEFAULT_CATEGORIES, ExerciseCategory, getMuscleGroupInfo } from '../types/workout';
 import { StorageService } from '../services/storageService';
+import { CategoryService } from '../services/categoryService';
 import { useSwipeGesture } from '../utils/useSwipeGesture';
 import { useEdgeSwipeBack } from '../utils/useEdgeSwipeBack';
 
@@ -24,12 +25,24 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   onOpenCreateModal,
 }) => {
   const [search, setSearch] = useState('');
+  const [categories, setCategories] = useState<ExerciseCategory[]>(DEFAULT_CATEGORIES);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
   const [refreshKey, setRefreshKey] = useState(0);
 
+  useEffect(() => {
+    if (isOpen) {
+      CategoryService.getCategories(userId).then(setCategories);
+    }
+  }, [isOpen, userId]);
+
+  useEffect(() => {
+    const unsub = CategoryService.subscribe(setCategories);
+    return () => unsub();
+  }, []);
+
   const muscleTabs = useMemo<(MuscleGroup | 'all')[]>(
-    () => ['all', ...(Object.keys(MUSCLE_GROUPS) as MuscleGroup[])],
-    []
+    () => ['all', ...categories.map((c) => c.id as MuscleGroup)],
+    [categories]
   );
 
   const handleNextMuscle = () => {
@@ -189,8 +202,8 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             )}
           </div>
 
-          {/* Muscle filter pills */}
-          <div className="flex space-x-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+          {/* Muscle filter pills - wrapped to new line */}
+          <div className="flex flex-wrap gap-1.5 pb-1 text-xs">
             <button
               onClick={() => setSelectedMuscle('all')}
               className={`rounded-xl px-3 py-1.5 font-medium whitespace-nowrap transition cursor-pointer ${selectedMuscle === 'all'
@@ -200,20 +213,19 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             >
               Всі ({exercises.length})
             </button>
-            {(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((groupKey) => {
-              const info = MUSCLE_GROUPS[groupKey];
-              const count = exercises.filter((e) => e.muscleGroup === groupKey).length;
-              const isSelected = selectedMuscle === groupKey;
+            {categories.map((cat) => {
+              const count = exercises.filter((e) => e.muscleGroup === cat.id).length;
+              const isSelected = selectedMuscle === cat.id;
               return (
                 <button
-                  key={groupKey}
-                  onClick={() => setSelectedMuscle(groupKey)}
+                  key={cat.id}
+                  onClick={() => setSelectedMuscle(cat.id as MuscleGroup)}
                   className={`rounded-xl px-3 py-1.5 font-medium whitespace-nowrap transition border cursor-pointer ${isSelected
                     ? 'bg-[#2563EB] text-white border-[#2563EB] font-bold shadow-xs'
                     : 'border-transparent bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-700'
                     }`}
                 >
-                  {info.nameUk} ({count})
+                  {cat.nameUk} ({count})
                 </button>
               );
             })}
@@ -239,7 +251,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             </div>
           ) : (
             filtered.map((ex) => {
-              const muscleInfo = MUSCLE_GROUPS[ex.muscleGroup] || MUSCLE_GROUPS.full_body;
+              const muscleInfo = getMuscleGroupInfo(ex.muscleGroup, categories);
               const lastPerf = perfMap.get(ex.id);
 
               return (

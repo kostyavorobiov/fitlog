@@ -24,7 +24,7 @@ import { setSavedActiveTab, getSavedActiveTab, TabName } from '../components/Ins
 import { useAuth } from '../context/AuthContext';
 import { WorkoutService } from '../services/workoutService';
 import { ExerciseService } from '../services/exerciseService';
-import { MuscleGroup, MUSCLE_GROUPS, PastExercisePerformance, PastExerciseSetSummary } from '../types/workout';
+import { MuscleGroup, MUSCLE_GROUPS, PastExercisePerformance, PastExerciseSetSummary, getMuscleGroupInfo } from '../types/workout';
 import { calculate1RM } from '../utils/workout';
 
 interface ChartPoint {
@@ -237,7 +237,7 @@ export const ExerciseDetailScreen: React.FC = () => {
     };
   }, [effectiveUserId, exerciseId, exerciseName]);
 
-  const muscleInfo = MUSCLE_GROUPS[muscleGroup] || MUSCLE_GROUPS.full_body;
+  const muscleInfo = getMuscleGroupInfo(muscleGroup);
 
   // Date parsing helpers matching web version
   const parseDate = useCallback((dStr: string): Date => {

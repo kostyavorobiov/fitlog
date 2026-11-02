@@ -1,15 +1,17 @@
 export type MuscleGroup =
   | 'legs'       // Ноги
+  | 'glutes'     // Сідниці
   | 'back'       // Спина
   | 'chest'      // Грудні
   | 'shoulders'  // Плечі
   | 'biceps'     // Біцепс
   | 'triceps'    // Тріцепс
-  | 'full_body'  // Full body
-  | 'other';     // Інше
+  | 'other'      // Інше
+  | 'full_body'  // Застаріле (Сідниці)
+  | string;
 
 export interface MuscleGroupInfo {
-  id: MuscleGroup;
+  id: string;
   nameUk: string;
   color: string;
   badgeBg: string;
@@ -17,7 +19,28 @@ export interface MuscleGroupInfo {
   iconName: string;
 }
 
-export const MUSCLE_GROUPS: Record<MuscleGroup, MuscleGroupInfo> = {
+export interface ExerciseCategory {
+  id: string;
+  nameUk: string;
+  color?: string;
+  badgeBg?: string;
+  badgeBorder?: string;
+  iconName?: string;
+  isDefault?: boolean;
+}
+
+export const DEFAULT_CATEGORIES: ExerciseCategory[] = [
+  { id: 'chest', nameUk: 'Грудні', color: 'text-rose-400', badgeBg: 'bg-rose-500/10 text-rose-300 border-rose-500/30', badgeBorder: 'border-rose-500/30', iconName: 'Shield', isDefault: true },
+  { id: 'back', nameUk: 'Спина', color: 'text-indigo-400', badgeBg: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30', badgeBorder: 'border-indigo-500/30', iconName: 'Layers', isDefault: true },
+  { id: 'legs', nameUk: 'Ноги', color: 'text-amber-500', badgeBg: 'bg-amber-500/10 text-amber-300 border-amber-500/30', badgeBorder: 'border-amber-500/30', iconName: 'TrendingUp', isDefault: true },
+  { id: 'glutes', nameUk: 'Сідниці', color: 'text-pink-400', badgeBg: 'bg-pink-500/10 text-pink-300 border-pink-500/30', badgeBorder: 'border-pink-500/30', iconName: 'Flame', isDefault: true },
+  { id: 'shoulders', nameUk: 'Плечі', color: 'text-cyan-400', badgeBg: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30', badgeBorder: 'border-cyan-500/30', iconName: 'Crosshair', isDefault: true },
+  { id: 'biceps', nameUk: 'Біцепс', color: 'text-emerald-400', badgeBg: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30', badgeBorder: 'border-emerald-500/30', iconName: 'Dumbbell', isDefault: true },
+  { id: 'triceps', nameUk: 'Тріцепс', color: 'text-teal-400', badgeBg: 'bg-teal-500/10 text-teal-300 border-teal-500/30', badgeBorder: 'border-teal-500/30', iconName: 'Zap', isDefault: true },
+  { id: 'other', nameUk: 'Інше', color: 'text-zinc-400', badgeBg: 'bg-zinc-500/10 text-zinc-300 border-zinc-500/30', badgeBorder: 'border-zinc-500/30', iconName: 'Activity', isDefault: true },
+];
+
+export const MUSCLE_GROUPS: Record<string, MuscleGroupInfo> = {
   legs: {
     id: 'legs',
     nameUk: 'Ноги',
@@ -25,6 +48,14 @@ export const MUSCLE_GROUPS: Record<MuscleGroup, MuscleGroupInfo> = {
     badgeBg: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
     badgeBorder: 'border-amber-500/30',
     iconName: 'TrendingUp',
+  },
+  glutes: {
+    id: 'glutes',
+    nameUk: 'Сідниці',
+    color: 'text-pink-400',
+    badgeBg: 'bg-pink-500/10 text-pink-300 border-pink-500/30',
+    badgeBorder: 'border-pink-500/30',
+    iconName: 'Flame',
   },
   back: {
     id: 'back',
@@ -67,12 +98,12 @@ export const MUSCLE_GROUPS: Record<MuscleGroup, MuscleGroupInfo> = {
     iconName: 'Zap',
   },
   full_body: {
-    id: 'full_body',
-    nameUk: 'Full body',
-    color: 'text-purple-400',
-    badgeBg: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
-    badgeBorder: 'border-purple-500/30',
-    iconName: 'Trophy',
+    id: 'glutes',
+    nameUk: 'Сідниці',
+    color: 'text-pink-400',
+    badgeBg: 'bg-pink-500/10 text-pink-300 border-pink-500/30',
+    badgeBorder: 'border-pink-500/30',
+    iconName: 'Flame',
   },
   other: {
     id: 'other',
@@ -82,6 +113,36 @@ export const MUSCLE_GROUPS: Record<MuscleGroup, MuscleGroupInfo> = {
     badgeBorder: 'border-zinc-500/30',
     iconName: 'Activity',
   },
+};
+
+export const getMuscleGroupInfo = (
+  mg?: string,
+  categories?: ExerciseCategory[]
+): MuscleGroupInfo => {
+  if (!mg) return MUSCLE_GROUPS.other;
+  if (mg === 'full_body') return MUSCLE_GROUPS.glutes;
+  if (MUSCLE_GROUPS[mg]) return MUSCLE_GROUPS[mg];
+  if (categories) {
+    const custom = categories.find((c) => c.id === mg || c.nameUk === mg);
+    if (custom) {
+      return {
+        id: custom.id,
+        nameUk: custom.nameUk,
+        color: custom.color || 'text-purple-400',
+        badgeBg: custom.badgeBg || 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+        badgeBorder: custom.badgeBorder || 'border-purple-500/30',
+        iconName: custom.iconName || 'Dumbbell',
+      };
+    }
+  }
+  return {
+    id: mg,
+    nameUk: mg,
+    color: 'text-purple-400',
+    badgeBg: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+    badgeBorder: 'border-purple-500/30',
+    iconName: 'Dumbbell',
+  };
 };
 
 export type UserRole = 'athlete' | 'coach' | 'admin';

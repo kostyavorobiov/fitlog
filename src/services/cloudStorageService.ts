@@ -120,7 +120,8 @@ export class CloudStorageService {
               exerciseName = metaExName || exObj?.name || localEx?.name || undefined;
             }
 
-            const muscleGroup = metaMg || exObj?.muscle_group || localEx?.muscleGroup || undefined;
+            const rawMg = metaMg || exObj?.muscle_group || localEx?.muscleGroup;
+            const muscleGroup = rawMg === 'full_body' ? 'glutes' : (rawMg || undefined);
 
             const sets: WorkoutSet[] = (we.workout_sets || [])
               .sort((a: any, b: any) => a.set_number - b.set_number)
@@ -270,7 +271,7 @@ export class CloudStorageService {
             id: item.id,
             userId: isDef ? null : item.user_id,
             name: item.name,
-            muscleGroup: item.muscle_group,
+            muscleGroup: item.muscle_group === 'full_body' ? 'glutes' : item.muscle_group,
             description: item.description,
             isDefault: isDef,
             createdAt: item.created_at,

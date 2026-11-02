@@ -110,12 +110,13 @@ export const WorkoutDetailScreen: React.FC = () => {
       chest: 'Груди',
       back: 'Спина',
       legs: 'Ноги',
+      glutes: 'Сідниці',
       shoulders: 'Плечі',
       arms: 'Руки',
       biceps: 'Біцепс',
       triceps: 'Трицепс',
       core: 'Прес / Кор',
-      full_body: 'Все тіло',
+      full_body: 'Сідниці',
       cardio: 'Кардіо',
     };
     return mg ? (map[mg] || mg) : 'М’язи';

@@ -13,8 +13,9 @@ import {
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Exercise, MuscleGroup, MUSCLE_GROUPS } from '../types/workout';
+import { Exercise, MuscleGroup, MUSCLE_GROUPS, ExerciseCategory, DEFAULT_CATEGORIES, getMuscleGroupInfo } from '../types/workout';
 import { ExerciseService } from '../services/exerciseService';
+import { CategoryService } from '../services/categoryService';
 
 interface ExerciseSelectorModalProps {
   visible: boolean;
@@ -23,18 +24,6 @@ interface ExerciseSelectorModalProps {
   userId?: string;
   traineeId?: string;
 }
-
-const MUSCLE_FILTER_OPTIONS: { id: MuscleGroup | 'all'; label: string }[] = [
-  { id: 'all', label: 'Всі' },
-  { id: 'chest', label: 'Грудні' },
-  { id: 'back', label: 'Спина' },
-  { id: 'legs', label: 'Ноги' },
-  { id: 'shoulders', label: 'Плечі' },
-  { id: 'biceps', label: 'Біцепс' },
-  { id: 'triceps', label: 'Тріцепс' },
-  { id: 'full_body', label: 'Full body' },
-  { id: 'other', label: 'Інше' },
-];
 
 export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   visible,
@@ -45,6 +34,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
 }) => {
   const isDark = useColorScheme() === 'dark';
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [categories, setCategories] = useState<ExerciseCategory[]>(DEFAULT_CATEGORIES);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
@@ -57,8 +47,14 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   useEffect(() => {
     if (visible) {
       loadExercises();
+      CategoryService.getCategories(userId).then(setCategories);
     }
   }, [visible, userId, traineeId]);
+
+  useEffect(() => {
+    const unsub = CategoryService.subscribe(setCategories);
+    return () => unsub();
+  }, []);
 
   const loadExercises = async () => {
     setIsLoading(true);
@@ -167,7 +163,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               Група м'язів
             </Text>
             <View style={styles.muscleChipsWrap}>
-              {MUSCLE_FILTER_OPTIONS.filter((o) => o.id !== 'all').map((opt) => {
+              {categories.map((opt) => {
                 const isSel = customMuscle === opt.id;
                 return (
                   <TouchableOpacity
@@ -188,7 +184,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                           : (isDark ? styles.textDark : styles.textLight),
                       ]}
                     >
-                      {opt.label}
+                      {opt.nameUk}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -238,41 +234,57 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               </View>
             </View>
 
-            {/* Muscle Group Horizontal Scroll */}
-            <View style={styles.filtersScrollContainer}>
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={MUSCLE_FILTER_OPTIONS}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.filterListContent}
-                renderItem={({ item }) => {
-                  const isSelected = selectedMuscle === item.id;
-                  return (
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => setSelectedMuscle(item.id)}
+            {/* Exercise Categories Wrapped Container */}
+            <View style={styles.categoriesWrapContainer}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setSelectedMuscle('all')}
+                style={[
+                  styles.filterTab,
+                  selectedMuscle === 'all'
+                    ? (isDark ? styles.filterTabActiveDark : styles.filterTabActiveLight)
+                    : (isDark ? styles.filterTabDark : styles.filterTabLight),
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterTabText,
+                    selectedMuscle === 'all'
+                      ? (isDark ? styles.filterTabTextActiveDark : styles.filterTabTextActiveLight)
+                      : (isDark ? styles.subDark : styles.subLight),
+                  ]}
+                >
+                  Всі
+                </Text>
+              </TouchableOpacity>
+
+              {categories.map((cat) => {
+                const isSelected = selectedMuscle === cat.id;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    activeOpacity={0.7}
+                    onPress={() => setSelectedMuscle(cat.id)}
+                    style={[
+                      styles.filterTab,
+                      isSelected
+                        ? (isDark ? styles.filterTabActiveDark : styles.filterTabActiveLight)
+                        : (isDark ? styles.filterTabDark : styles.filterTabLight),
+                    ]}
+                  >
+                    <Text
                       style={[
-                        styles.filterTab,
+                        styles.filterTabText,
                         isSelected
-                          ? (isDark ? styles.filterTabActiveDark : styles.filterTabActiveLight)
-                          : (isDark ? styles.filterTabDark : styles.filterTabLight),
+                          ? (isDark ? styles.filterTabTextActiveDark : styles.filterTabTextActiveLight)
+                          : (isDark ? styles.subDark : styles.subLight),
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.filterTabText,
-                          isSelected
-                            ? (isDark ? styles.filterTabTextActiveDark : styles.filterTabTextActiveLight)
-                            : (isDark ? styles.subDark : styles.subLight),
-                        ]}
-                      >
-                        {item.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }}
-              />
+                      {cat.nameUk}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             {/* Exercises List */}
@@ -290,7 +302,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 contentContainerStyle={styles.listContent}
                 keyboardShouldPersistTaps="handled"
                 renderItem={({ item }) => {
-                  const muscle = MUSCLE_GROUPS[item.muscleGroup] || MUSCLE_GROUPS.other;
+                  const muscle = getMuscleGroupInfo(item.muscleGroup, categories);
                   return (
                     <TouchableOpacity
                       activeOpacity={0.7}
@@ -420,6 +432,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     paddingVertical: 0,
+  },
+  categoriesWrapContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
   },
   filtersScrollContainer: {
     paddingVertical: 6,

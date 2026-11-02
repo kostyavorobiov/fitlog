@@ -32,9 +32,12 @@ import {
   Gender,
   ActivityLevel,
   NutritionGoal,
+  ExerciseCategory,
 } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { CloudStorageService } from '../services/cloudStorageService';
+import { CategoryService } from '../services/categoryService';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import {
   calculateNutrition,
@@ -102,6 +105,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
   });
   const [newRepRangeInput, setNewRepRangeInput] = useState('');
   const [repRangeError, setRepRangeError] = useState<string | null>(null);
+
+  // Exercise Categories state
+  const [categories, setCategories] = useState<ExerciseCategory[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<ExerciseCategory | null>(null);
+  const [, setIsDeletingCategory] = useState(false);
+
+  useEffect(() => {
+    CategoryService.getCategories(user?.id).then(setCategories);
+    const unsub = CategoryService.subscribe(setCategories);
+    return () => unsub();
+  }, [user?.id]);
 
   useEffect(() => {
     if (user?.customRepRanges && user.customRepRanges.length > 0) {
@@ -260,6 +276,43 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
       alert('Помилка під час відкріплення від тренера');
     } finally {
       setIsLinkingCoach(false);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    const clean = newCategoryName.trim();
+    if (!clean) return;
+    if (categories.some((c) => c.nameUk.toLowerCase() === clean.toLowerCase())) {
+      setCategoryError('Така категорія вже існує');
+      return;
+    }
+    setCategoryError(null);
+    const updated = await CategoryService.addCategory(clean, user?.id);
+    setCategories(updated);
+    setNewCategoryName('');
+  };
+
+  const handleDeleteCategory = (cat: ExerciseCategory) => {
+    if (cat.id === 'other') return;
+    setCategoryToDelete(cat);
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+    setIsDeletingCategory(true);
+    try {
+      const { categories: updated } = await CategoryService.deleteCategory(categoryToDelete.id, user?.id);
+      setCategories(updated);
+      setCategoryToDelete(null);
+    } finally {
+      setIsDeletingCategory(false);
+    }
+  };
+
+  const handleResetCategories = async () => {
+    if (window.confirm('Скинути список категорій до стандартних (Грудні, Спина, Ноги, Сідниці, Плечі, Біцепс, Тріцепс, Інше)?')) {
+      const reset = await CategoryService.resetCategories(user?.id);
+      setCategories(reset);
     }
   };
 
@@ -877,6 +930,87 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
         </div>
       </div>
 
+      {/* Exercise Categories Card */}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 space-y-3.5 shadow-xs">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100 flex items-center space-x-2">
+            <Dumbbell className="h-4 w-4 text-pink-500" />
+            <span>Категорії вправ</span>
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+            Керуйте категоріями вправ: додавайте власні або видаляйте існуючі (вправи перенесуться в «Інше»)
+          </p>
+        </div>
+
+        {/* Current Categories Pills */}
+        <div className="flex flex-wrap gap-2 pt-1">
+          {categories.map((cat) => (
+            <div
+              key={cat.id}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-xs font-semibold text-slate-800 dark:text-zinc-200 shadow-2xs"
+            >
+              <span>{cat.nameUk}</span>
+              {cat.id !== 'other' && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteCategory(cat)}
+                  className="text-slate-400 hover:text-rose-500 dark:text-zinc-500 dark:hover:text-rose-400 transition-colors cursor-pointer p-0.5"
+                  title="Видалити категорію"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Add new category row */}
+        <div className="space-y-1 pt-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              placeholder="Напр. Прес або Кардіо"
+              value={newCategoryName}
+              onChange={(e) => {
+                setNewCategoryName(e.target.value);
+                setCategoryError(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddCategory();
+                }
+              }}
+              className="flex-1 h-9 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3.5 text-xs text-slate-900 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 focus:border-[#2563EB]"
+            />
+            <button
+              type="button"
+              onClick={handleAddCategory}
+              disabled={!newCategoryName.trim()}
+              className="h-9 px-4 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer shrink-0 disabled:opacity-50 inline-flex items-center justify-center space-x-1"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Додати</span>
+            </button>
+          </div>
+          {categoryError && (
+            <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">{categoryError}</p>
+          )}
+        </div>
+
+        {/* Reset button */}
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={handleResetCategories}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+          >
+            <RotateCcw className="h-3 w-3" />
+            <span>Скинути до стандартних</span>
+          </button>
+        </div>
+      </div>
+
       {/* 5. Theme Settings Card: MOVED TO VERY BOTTOM OF PAGE */}
       <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
         <div>
@@ -916,6 +1050,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenTrainees }) => {
           </button>
         </div>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={Boolean(categoryToDelete)}
+        title="Видалити категорію?"
+        message={`Видалити категорію «${categoryToDelete?.nameUk}»? Усі вправи з цієї категорії будуть перенесені в «Інше».`}
+        confirmLabel="Видалити категорію"
+        onConfirm={confirmDeleteCategory}
+        onClose={() => setCategoryToDelete(null)}
+      />
     </div>
   );
 };

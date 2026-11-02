@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Exercise, MUSCLE_GROUPS } from '../types/workout';
+import { Exercise, MUSCLE_GROUPS, getMuscleGroupInfo } from '../types/workout';
 import { StorageService } from '../services/storageService';
 import { calculate1RM } from '../utils/workout';
 import {
@@ -224,7 +224,7 @@ export const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({
 
   if (!isOpen || !exercise) return null;
 
-  const muscleInfo = MUSCLE_GROUPS[exercise.muscleGroup] || MUSCLE_GROUPS.full_body;
+  const muscleInfo = getMuscleGroupInfo(exercise.muscleGroup);
 
   // Chart Rendering Math (starts from first day to current day)
   const chartW = 380;

@@ -106,6 +106,12 @@ export const MUSCLE_CONFIG: Record<
     badgeBg: 'rgba(245, 158, 11, 0.1)',
     badgeBorder: 'rgba(245, 158, 11, 0.3)',
   },
+  glutes: {
+    nameUk: 'Сідниці',
+    color: '#ec4899',
+    badgeBg: 'rgba(236, 72, 153, 0.1)',
+    badgeBorder: 'rgba(236, 72, 153, 0.3)',
+  },
   chest: {
     nameUk: 'Грудні',
     color: '#fb7185',

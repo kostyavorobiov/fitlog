@@ -16,7 +16,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Card } from './Card';
 import { ScreenGestureWrapper } from './ScreenGestureWrapper';
 import { WorkoutService } from '../services/workoutService';
-import { MuscleGroup, MUSCLE_GROUPS, PastExercisePerformance } from '../types/workout';
+import { MuscleGroup, MUSCLE_GROUPS, PastExercisePerformance, getMuscleGroupInfo } from '../types/workout';
 import { calculate1RM } from '../utils/workout';
 
 export interface ExerciseDetailContentProps {
@@ -66,7 +66,7 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
   const [history, setHistory] = useState<PastExercisePerformance[]>([]);
   const [activeTooltipIdx, setActiveTooltipIdx] = useState<number | null>(null);
 
-  const muscleInfo = MUSCLE_GROUPS[muscleGroup] || MUSCLE_GROUPS.full_body;
+  const muscleInfo = getMuscleGroupInfo(muscleGroup);
 
   useEffect(() => {
     if (!exerciseId) return;

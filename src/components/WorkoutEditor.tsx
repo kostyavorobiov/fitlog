@@ -5,6 +5,7 @@ import {
   WorkoutSet,
   Exercise,
   MUSCLE_GROUPS,
+  getMuscleGroupInfo,
   PastExercisePerformance,
   DEFAULT_REPS_RANGES,
 } from '../types/workout';
@@ -381,7 +382,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
           return {
             ...we,
             exerciseName: resolvedName,
-            muscleGroup: we.muscleGroup || ex?.muscleGroup || 'full_body',
+            muscleGroup: we.muscleGroup || ex?.muscleGroup || 'glutes',
           };
         }
         return we;
@@ -1247,8 +1248,8 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             const exerciseName = (weItem.exerciseName && weItem.exerciseName !== 'Вправа')
               ? weItem.exerciseName
               : ((exercise?.name && exercise.name !== 'Вправа') ? exercise.name : (weItem.exerciseName || 'Вправа'));
-            const muscleGroupKey = exercise?.muscleGroup || weItem.muscleGroup || 'full_body';
-            const muscleInfo = MUSCLE_GROUPS[muscleGroupKey] || MUSCLE_GROUPS.full_body;
+            const muscleGroupKey = exercise?.muscleGroup || weItem.muscleGroup || 'glutes';
+            const muscleInfo = getMuscleGroupInfo(muscleGroupKey);
 
             const isDragged = draggedIndex === weIndex;
             const isSuperset = Boolean(weItem.supersetGroupId);

@@ -19,20 +19,10 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 import { Button } from '../components/Button';
 import { ExerciseService } from '../services/exerciseService';
+import { CategoryService } from '../services/categoryService';
 import { useAuth } from '../context/AuthContext';
-import { MUSCLE_GROUPS, MuscleGroup, Exercise } from '../types/workout';
+import { MUSCLE_GROUPS, MuscleGroup, Exercise, ExerciseCategory, DEFAULT_CATEGORIES } from '../types/workout';
 import { setSavedActiveTab, getSavedActiveTab, TabName } from '../components/InstagramTabPager';
-
-const MUSCLE_ORDER: MuscleGroup[] = [
-  'chest',
-  'back',
-  'legs',
-  'shoulders',
-  'biceps',
-  'triceps',
-  'full_body',
-  'other',
-];
 
 export const ExerciseEditScreen: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
@@ -44,13 +34,18 @@ export const ExerciseEditScreen: React.FC = () => {
   const exerciseId = params.id as string | undefined;
 
   const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState<ExerciseCategory[]>(DEFAULT_CATEGORIES);
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [name, setName] = useState(params.name || '');
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>(
-    (params.muscleGroup as MuscleGroup) || 'chest'
+    (params.muscleGroup as MuscleGroup) === 'full_body' ? 'glutes' : ((params.muscleGroup as MuscleGroup) || 'chest')
   );
   const [description, setDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    CategoryService.getCategories(user?.id).then(setCategories);
+  }, [user?.id]);
 
   // Load exercise details
   useEffect(() => {
@@ -205,12 +200,12 @@ export const ExerciseEditScreen: React.FC = () => {
                   Група м'язів / Категорія *
                 </Text>
                 <View style={styles.chipsWrap}>
-                  {MUSCLE_ORDER.map((groupKey) => {
-                    const isSelected = muscleGroup === groupKey;
+                  {categories.map((cat) => {
+                    const isSelected = muscleGroup === cat.id;
                     return (
                       <TouchableOpacity
-                        key={groupKey}
-                        onPress={() => setMuscleGroup(groupKey)}
+                        key={cat.id}
+                        onPress={() => setMuscleGroup(cat.id as MuscleGroup)}
                         activeOpacity={0.7}
                         style={[
                           styles.chip,
@@ -235,7 +230,7 @@ export const ExerciseEditScreen: React.FC = () => {
                               : styles.subLight,
                           ]}
                         >
-                          {MUSCLE_GROUPS[groupKey]?.nameUk || groupKey}
+                          {cat.nameUk}
                         </Text>
                       </TouchableOpacity>
                     );

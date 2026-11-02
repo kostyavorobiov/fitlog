@@ -165,11 +165,25 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
     setWorkouts((prev) => [copied, ...prev]);
   };
 
-  // Sort workouts within each group from newest to oldest
+  // Sort workouts within each group:
+  // "В Процесі" (in_progress) sorted ascending by date (oldest first),
+  // completed / other sorted descending by date (newest first, as is).
+  // "В Процесі" are placed before completed.
   const sortedWorkouts = useMemo(() => {
     return [...workouts].sort((a, b) => {
+      const isProgA = a.status === 'in_progress';
+      const isProgB = b.status === 'in_progress';
+
+      if (isProgA && !isProgB) return -1;
+      if (!isProgA && isProgB) return 1;
+
       const dateA = a.scheduledDate || a.createdAt || '';
       const dateB = b.scheduledDate || b.createdAt || '';
+
+      if (isProgA && isProgB) {
+        return dateA.localeCompare(dateB);
+      }
+
       return dateB.localeCompare(dateA);
     });
   }, [workouts]);
