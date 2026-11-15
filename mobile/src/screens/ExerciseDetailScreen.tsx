@@ -792,7 +792,7 @@ export const ExerciseDetailScreen: React.FC = () => {
 
             {/* Achievement Card */}
             {stats.isNewPrInLatest && (
-              <View style={[styles.recordBanner, { backgroundColor: isDark ? 'rgba(242, 201, 76, 0.12)' : 'rgba(37, 99, 235, 0.12)', borderColor: colors.accent }]}>
+              <View style={[styles.recordBanner, { backgroundColor: isDark ? 'rgba(245, 217, 10, 0.12)' : 'rgba(37, 99, 235, 0.12)', borderColor: colors.accent }]}>
                 <Ionicons name="trophy" size={20} color={colors.accent} />
                 <View style={styles.recordBannerContent}>
                   <Text style={[styles.recordBannerTitle, { color: colors.accent }]}>Особистий рекорд!</Text>

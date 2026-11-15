@@ -1318,8 +1318,8 @@ export const ProfileScreen: React.FC = () => {
           {/* 4 Themes Side-by-Side: Night, Paper, Blue, Navy */}
           <View style={styles.themeCardsGrid}>
             {[
-              { id: 'night', label: 'Night', cardBg: '#0E1015', pillColor: '#F2C94C', textColor: '#FFFFFF' },
-              { id: 'paper', label: 'Paper', cardBg: '#F5F3EC', pillColor: '#F2C94C', textColor: '#121826' },
+              { id: 'night', label: 'Night', cardBg: '#0E1015', pillColor: '#F5D90A', textColor: '#FFFFFF' },
+              { id: 'paper', label: 'Paper', cardBg: '#F5F3EC', pillColor: '#F5D90A', textColor: '#121826' },
               { id: 'blue', label: 'Blue', cardBg: '#FFFFFF', pillColor: '#2563EB', textColor: '#0F172A' },
               { id: 'navy', label: 'Navy', cardBg: '#0D111D', pillColor: '#5E8BFF', textColor: '#FFFFFF' },
             ].map((opt) => {
