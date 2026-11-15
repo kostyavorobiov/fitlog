@@ -254,18 +254,20 @@ export const WorkoutsScreen: React.FC = () => {
 
   const handleDeleteWorkout = async (w: WorkoutPlan, onCancel?: () => void) => {
     Alert.alert(
-      'Видалити тренування?',
-      `Ви впевнені, що хочете видалити тренування "${w.title || 'Без назви'}"?`,
+      t('workouts.delete_workout_title', 'Видалити тренування?'),
+      w.title
+        ? `${t('workouts.delete_confirm', 'Ви впевнені, що хочете видалити це тренування?')} («${w.title}»)`
+        : t('workouts.delete_confirm', 'Ви впевнені, що хочете видалити це тренування?'),
       [
         {
-          text: 'Скасувати',
+          text: t('common.cancel', 'Скасувати'),
           style: 'cancel',
           onPress: () => {
             onCancel?.();
           },
         },
         {
-          text: 'Видалити',
+          text: t('common.delete', 'Видалити'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -276,11 +278,11 @@ export const WorkoutsScreen: React.FC = () => {
                   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 } catch {}
               } else {
-                Alert.alert('Помилка', 'Не вдалося видалити тренування');
+                Alert.alert(t('common.error', 'Помилка'), t('workouts.delete_failed', 'Не вдалося видалити тренування'));
                 onCancel?.();
               }
             } catch (e: any) {
-              Alert.alert('Помилка', e?.message || 'Не вдалося видалити тренування');
+              Alert.alert(t('common.error', 'Помилка'), e?.message || t('workouts.delete_failed', 'Не вдалося видалити тренування'));
               onCancel?.();
             }
           },
@@ -289,22 +291,8 @@ export const WorkoutsScreen: React.FC = () => {
     );
   };
 
-  const handleQuickDeleteWorkout = async (w: WorkoutPlan, onCancel?: () => void) => {
-    try {
-      const ok = await WorkoutService.deleteWorkout(user?.id || '', w.id);
-      if (ok) {
-        setWorkouts((prev) => prev.filter((item) => item.id !== w.id));
-        try {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        } catch {}
-      } else {
-        Alert.alert('Помилка', 'Не вдалося видалити тренування');
-        onCancel?.();
-      }
-    } catch (e: any) {
-      Alert.alert('Помилка', e?.message || 'Не вдалося видалити тренування');
-      onCancel?.();
-    }
+  const handleQuickDeleteWorkout = (w: WorkoutPlan, onCancel?: () => void) => {
+    handleDeleteWorkout(w, onCancel);
   };
 
   const handleCopyWorkout = async (source: WorkoutPlan) => {
