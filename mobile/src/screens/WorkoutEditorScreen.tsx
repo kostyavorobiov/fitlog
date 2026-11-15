@@ -2728,13 +2728,13 @@ export const WorkoutEditorScreen: React.FC = () => {
 
           {/* Add Exercise Big Button */}
           <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={0.85}
             onPress={() => setIsSelectorOpen(true)}
-            style={[styles.bigAddExerciseBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+            style={[styles.bigAddExerciseBtn, { backgroundColor: colors.primaryBtnBg }]}
           >
-            <Ionicons name="add" size={20} color={colors.accent} />
-            <Text style={[styles.bigAddExerciseText, { color: colors.text }]}>
-              {t('editor.add_exercise', 'Додати вправу з каталогу')}
+            <Ionicons name="add" size={19} color={colors.primaryBtnText} />
+            <Text style={[styles.bigAddExerciseText, { color: colors.primaryBtnText }]}>
+              {t('workouts.add_exercise', 'Add Exercise')}
             </Text>
           </TouchableOpacity>
 
@@ -2747,8 +2747,15 @@ export const WorkoutEditorScreen: React.FC = () => {
               isDark ? styles.deleteWorkoutBottomBtnDark : styles.deleteWorkoutBottomBtnLight,
             ]}
           >
-            <Ionicons name="trash-outline" size={17} color="#ef4444" />
-            <Text style={styles.deleteWorkoutBottomBtnText}>{t('editor.delete_workout', 'Видалити тренування')}</Text>
+            <Ionicons name="trash-outline" size={17} color={isDark ? '#ef4444' : '#dc2626'} />
+            <Text
+              style={[
+                styles.deleteWorkoutBottomBtnText,
+                { color: isDark ? '#ef4444' : '#dc2626' },
+              ]}
+            >
+              {t('editor.delete_workout', 'Видалити тренування')}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -3777,16 +3784,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 9999,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
+    gap: 6,
+    height: 48,
+    borderRadius: 14,
     marginVertical: 4,
   },
   bigAddExerciseText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
   },
   finishWorkoutBtn: {
     marginTop: 12,
@@ -3796,25 +3801,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    borderRadius: 9999,
+    gap: 8,
+    height: 48,
+    borderRadius: 14,
     borderWidth: 1,
-    marginTop: 6,
-    marginBottom: 16,
+    marginTop: 8,
+    marginBottom: 20,
   },
   deleteWorkoutBottomBtnLight: {
-    backgroundColor: '#fff1f2',
-    borderColor: '#fecdd3',
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FECDD3',
   },
   deleteWorkoutBottomBtnDark: {
-    backgroundColor: '#3f1218',
-    borderColor: '#7f1d1d',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderColor: 'rgba(239, 68, 68, 0.28)',
   },
   deleteWorkoutBottomBtnText: {
-    color: '#ef4444',
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
   },
   bottomActionBar: {
     position: 'absolute',
