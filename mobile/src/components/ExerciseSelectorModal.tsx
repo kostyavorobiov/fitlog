@@ -134,7 +134,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             {isCreatingCustom ? t('modal.new_exercise') : t('modal.select_exercise')}
           </Text>
           <TouchableOpacity
-            style={styles.closeBtn}
+            style={[styles.closeBtn, { backgroundColor: colors.subCard }]}
             activeOpacity={0.7}
             onPress={() => {
               if (isCreatingCustom) {
@@ -144,7 +144,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               }
             }}
           >
-            <Ionicons name="close" size={24} color={colors.text} />
+            <Ionicons name="close" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -153,7 +153,15 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           <View style={styles.createForm}>
             <Text style={[styles.formLabel, { color: colors.text }]}>{t('modal.exercise_name')}</Text>
             <TextInput
-              style={[styles.input, { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.subCard,
+                  borderColor: colors.activeTabBg,
+                  borderWidth: 1.5,
+                  color: colors.text,
+                },
+              ]}
               placeholder={t('modal.exercise_name_placeholder')}
               placeholderTextColor={colors.textSecondary}
               value={customName}
@@ -174,16 +182,16 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                     style={[
                       styles.muscleChip,
                       isSel
-                        ? { backgroundColor: colors.accent, borderColor: colors.accent }
-                        : { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                        ? { backgroundColor: colors.activeChipBg, borderColor: colors.activeChipBg }
+                        : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
                     ]}
                   >
                     <Text
                       style={[
                         styles.muscleChipText,
                         isSel
-                          ? { color: colors.accentText, fontWeight: '700' }
-                          : { color: colors.textSecondary },
+                          ? { color: colors.activeChipText, fontWeight: '700' }
+                          : { color: colors.text },
                       ]}
                     >
                       {t(`muscles.${opt.id}`, opt.nameUk)}
@@ -196,7 +204,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             <TouchableOpacity
               style={[
                 styles.saveCustomBtn,
-                { backgroundColor: colors.accent },
+                { backgroundColor: colors.primaryBtnBg },
                 isSubmittingCustom && { opacity: 0.6 },
               ]}
               activeOpacity={0.8}
@@ -204,9 +212,9 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               onPress={handleCreateExercise}
             >
               {isSubmittingCustom ? (
-                <ActivityIndicator size="small" color={colors.accentText} />
+                <ActivityIndicator size="small" color={colors.primaryBtnText} />
               ) : (
-                <Text style={[styles.saveCustomBtnText, { color: colors.accentText }]}>
+                <Text style={[styles.saveCustomBtnText, { color: colors.primaryBtnText }]}>
                   {t('modal.add_and_select')}
                 </Text>
               )}
@@ -244,16 +252,16 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 style={[
                   styles.filterTab,
                   selectedMuscle === 'all'
-                    ? { backgroundColor: colors.accent, borderColor: colors.accent }
-                    : { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                    ? { backgroundColor: colors.activeChipBg, borderColor: colors.activeChipBg }
+                    : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
                 ]}
               >
                 <Text
                   style={[
                     styles.filterTabText,
                     selectedMuscle === 'all'
-                      ? { color: colors.accentText, fontWeight: '700' }
-                      : { color: colors.textSecondary },
+                      ? { color: colors.activeChipText, fontWeight: '700' }
+                      : { color: colors.text },
                   ]}
                 >
                   {t('exercises.all_filter')}
@@ -270,16 +278,16 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                     style={[
                       styles.filterTab,
                       isSelected
-                        ? { backgroundColor: colors.accent, borderColor: colors.accent }
-                        : { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                        ? { backgroundColor: colors.activeChipBg, borderColor: colors.activeChipBg }
+                        : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
                     ]}
                   >
                     <Text
                       style={[
                         styles.filterTabText,
                         isSelected
-                          ? { color: colors.accentText, fontWeight: '700' }
-                          : { color: colors.textSecondary },
+                          ? { color: colors.activeChipText, fontWeight: '700' }
+                          : { color: colors.text },
                       ]}
                     >
                       {t(`muscles.${cat.id}`, cat.nameUk)}
@@ -315,17 +323,18 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                         <Text style={[styles.exerciseName, { color: colors.text }]} numberOfLines={2}>
                           {item.name}
                         </Text>
-                        <View style={styles.exerciseMetaRow}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                           <View
-                            style={[
-                              styles.muscleBadge,
-                              { backgroundColor: muscle.badgeBg, borderColor: muscle.badgeBorder },
-                            ]}
-                          >
-                            <Text style={[styles.muscleBadgeText, { color: muscle.color }]}>
-                              {t(`muscles.${item.muscleGroup}`, muscle.nameUk)}
-                            </Text>
-                          </View>
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: 3,
+                              backgroundColor: muscle.color || colors.accent,
+                            }}
+                          />
+                          <Text style={{ fontSize: 13, color: colors.textSecondary }}>
+                            {t(`muscles.${item.muscleGroup}`, muscle.nameUk)}
+                          </Text>
                         </View>
                       </View>
 
@@ -343,15 +352,15 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                       {t('modal.try_another_search')}
                     </Text>
                     <TouchableOpacity
-                      style={[styles.addCustomBtn, { backgroundColor: colors.accent }]}
+                      style={[styles.addCustomBtn, { backgroundColor: colors.primaryBtnBg }]}
                       activeOpacity={0.8}
                       onPress={() => {
                         setCustomName(searchQuery);
                         setIsCreatingCustom(true);
                       }}
                     >
-                      <Ionicons name="add" size={16} color={colors.accentText} />
-                      <Text style={[styles.addCustomBtnText, { color: colors.accentText }]}>
+                      <Ionicons name="add" size={16} color={colors.primaryBtnText} />
+                      <Text style={[styles.addCustomBtnText, { color: colors.primaryBtnText }]}>
                         {t('modal.create_custom_btn')}
                       </Text>
                     </TouchableOpacity>
@@ -406,8 +415,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   closeBtn: {
-    padding: 4,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchContainer: {
     paddingHorizontal: 16,
@@ -450,10 +462,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterTab: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: 14,
+    height: 36,
+    borderRadius: 9999,
     borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filterTabLight: {
     backgroundColor: '#f1f5f9',
@@ -645,10 +659,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   muscleChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 38,
+    borderRadius: 9999,
     borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   muscleChipLight: {
     backgroundColor: '#f1f5f9',
@@ -677,7 +693,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   saveCustomBtn: {
-    height: 44,
+    height: 48,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',

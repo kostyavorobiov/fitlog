@@ -30,7 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
     switch (variant) {
       case 'primary':
         return {
-          backgroundColor: colors.accent,
+          backgroundColor: colors.primaryBtnBg || colors.accent,
         };
       case 'secondary':
         return {
@@ -50,7 +50,7 @@ export const Button: React.FC<ButtonProps> = ({
         };
       default:
         return {
-          backgroundColor: colors.accent,
+          backgroundColor: colors.primaryBtnBg || colors.accent,
         };
     }
   };
@@ -59,7 +59,7 @@ export const Button: React.FC<ButtonProps> = ({
     switch (variant) {
       case 'primary':
         return {
-          color: colors.accentText,
+          color: colors.primaryBtnText || colors.accentText,
         };
       case 'secondary':
         return {
@@ -75,7 +75,7 @@ export const Button: React.FC<ButtonProps> = ({
         };
       default:
         return {
-          color: colors.accentText,
+          color: colors.primaryBtnText || colors.accentText,
         };
     }
   };
@@ -95,7 +95,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? colors.accentText : colors.textSecondary}
+          color={variant === 'primary' ? (colors.primaryBtnText || colors.accentText) : colors.textSecondary}
         />
       ) : (
         <Text style={[styles.textBase, getTextStyle()]}>{title}</Text>
@@ -106,9 +106,9 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   base: {
-    height: 44,
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    height: 46,
+    borderRadius: 9999,
+    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

@@ -38,6 +38,14 @@ export interface ThemePalette {
   heroCardText: string;
   heroBtnBg: string;
   heroBtnText: string;
+  primaryBtnBg: string;
+  primaryBtnText: string;
+  iconBadgeBg: string;
+  iconBadgeColor: string;
+  activeTabBg: string;
+  activeTabText: string;
+  activeChipBg: string;
+  activeChipText: string;
 }
 
 export const THEMES: Record<Theme, ThemePalette> = {
@@ -76,6 +84,14 @@ export const THEMES: Record<Theme, ThemePalette> = {
     heroCardText: '#000000',
     heroBtnBg: '#0E1015',
     heroBtnText: '#F5D90A',
+    primaryBtnBg: '#F5D90A',
+    primaryBtnText: '#000000',
+    iconBadgeBg: '#F5D90A',
+    iconBadgeColor: '#000000',
+    activeTabBg: '#F5D90A',
+    activeTabText: '#000000',
+    activeChipBg: '#F5D90A',
+    activeChipText: '#000000',
   },
   paper: {
     id: 'paper',
@@ -112,6 +128,14 @@ export const THEMES: Record<Theme, ThemePalette> = {
     heroCardText: '#000000',
     heroBtnBg: '#0E1015',
     heroBtnText: '#F5D90A',
+    primaryBtnBg: '#121826',
+    primaryBtnText: '#FFFFFF',
+    iconBadgeBg: '#F5D90A',
+    iconBadgeColor: '#000000',
+    activeTabBg: '#121826',
+    activeTabText: '#FFFFFF',
+    activeChipBg: '#F5D90A',
+    activeChipText: '#000000',
   },
   blue: {
     id: 'blue',
@@ -148,6 +172,14 @@ export const THEMES: Record<Theme, ThemePalette> = {
     heroCardText: '#FFFFFF',
     heroBtnBg: '#FFFFFF',
     heroBtnText: '#2563EB',
+    primaryBtnBg: '#2563EB',
+    primaryBtnText: '#FFFFFF',
+    iconBadgeBg: '#2563EB',
+    iconBadgeColor: '#FFFFFF',
+    activeTabBg: '#2563EB',
+    activeTabText: '#FFFFFF',
+    activeChipBg: '#2563EB',
+    activeChipText: '#FFFFFF',
   },
   navy: {
     id: 'navy',
@@ -184,6 +216,14 @@ export const THEMES: Record<Theme, ThemePalette> = {
     heroCardText: '#0D111D',
     heroBtnBg: '#0D111D',
     heroBtnText: '#5E8BFF',
+    primaryBtnBg: '#5E8BFF',
+    primaryBtnText: '#0D111D',
+    iconBadgeBg: '#5E8BFF',
+    iconBadgeColor: '#0D111D',
+    activeTabBg: '#5E8BFF',
+    activeTabText: '#0D111D',
+    activeChipBg: '#5E8BFF',
+    activeChipText: '#0D111D',
   },
 };
 

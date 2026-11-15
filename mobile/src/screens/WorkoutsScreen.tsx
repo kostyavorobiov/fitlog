@@ -826,7 +826,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   heroBtn: {
-    borderRadius: 16,
+    borderRadius: 9999,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   monthCountBadge: {
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: 9999,
   },
   monthCountText: {
     fontSize: 12,
@@ -977,9 +977,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   quickChip: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: 10,
+    borderRadius: 9999,
   },
   quickChipText: {
     fontSize: 12,

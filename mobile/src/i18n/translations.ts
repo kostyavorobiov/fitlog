@@ -176,6 +176,8 @@ export const translations = {
     'exercises.no_exercises': 'Вправ не знайдено',
     'exercises.delete_confirm': 'Видалити цю вправу?',
     'exercises.custom_badge': 'Користувацька',
+    'exercises.save_exercise': 'Зберегти вправу',
+    'exercises.all_filter': 'Всі',
 
     // Muscle Groups
     'muscles.back': 'Спина',
@@ -434,6 +436,8 @@ export const translations = {
     'exercises.no_exercises': 'No exercises found',
     'exercises.delete_confirm': 'Delete this exercise?',
     'exercises.custom_badge': 'Custom',
+    'exercises.save_exercise': 'Save exercise',
+    'exercises.all_filter': 'All',
 
     // Muscle Groups
     'muscles.back': 'Back',

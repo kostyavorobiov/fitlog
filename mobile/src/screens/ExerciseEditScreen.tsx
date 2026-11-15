@@ -140,11 +140,11 @@ export const ExerciseEditScreen: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleBack}
-            style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
+            style={[styles.iconBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}
             accessibilityRole="button"
             accessibilityLabel="Назад"
           >
-            <Ionicons name="chevron-back" size={22} color={colors.text} />
+            <Ionicons name="chevron-back" size={20} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
@@ -152,7 +152,7 @@ export const ExerciseEditScreen: React.FC = () => {
               Редагування власної вправи
             </Text>
             <Text style={[styles.topBarSub, { color: colors.textSecondary }]}>
-              {MUSCLE_GROUPS[muscleGroup]?.nameUk || 'Категорія'}
+              {categories.find((c) => c.id === muscleGroup)?.nameUk || MUSCLE_GROUPS[muscleGroup]?.nameUk || 'Категорія'}
             </Text>
           </View>
         </View>
@@ -182,7 +182,7 @@ export const ExerciseEditScreen: React.FC = () => {
                 <TextInput
                   style={[
                     styles.input,
-                    { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text },
+                    { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text },
                   ]}
                   value={name}
                   onChangeText={setName}
@@ -209,16 +209,16 @@ export const ExerciseEditScreen: React.FC = () => {
                         style={[
                           styles.chip,
                           isSelected
-                            ? { backgroundColor: colors.accent, borderColor: colors.accent }
-                            : { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                            ? { backgroundColor: colors.activeChipBg, borderColor: colors.activeChipBg }
+                            : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
                         ]}
                       >
                         <Text
                           style={[
                             styles.chipText,
                             isSelected
-                              ? { color: colors.accentText, fontWeight: '700' }
-                              : { color: colors.textSecondary },
+                              ? { color: colors.activeChipText, fontWeight: '700' }
+                              : { color: colors.text },
                           ]}
                         >
                           {cat.nameUk}
@@ -237,7 +237,7 @@ export const ExerciseEditScreen: React.FC = () => {
                 <TextInput
                   style={[
                     styles.textArea,
-                    { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text },
+                    { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text },
                   ]}
                   value={description}
                   onChangeText={setDescription}
@@ -251,19 +251,34 @@ export const ExerciseEditScreen: React.FC = () => {
 
               {/* Submit Buttons */}
               <View style={styles.buttonsRow}>
-                <Button
-                  title="Скасувати"
-                  variant="outline"
+                <TouchableOpacity
+                  activeOpacity={0.7}
                   onPress={handleBack}
-                  style={styles.cancelBtn}
-                />
-                <Button
-                  title="Зберегти зміни"
+                  style={[styles.cancelBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}
+                >
+                  <Text style={[styles.cancelBtnText, { color: colors.text }]}>
+                    Скасувати
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
                   onPress={handleSave}
-                  loading={isSaving}
-                  disabled={!name.trim()}
-                  style={styles.saveBtn}
-                />
+                  disabled={!name.trim() || isSaving}
+                  style={[
+                    styles.saveBtn,
+                    { backgroundColor: colors.primaryBtnBg },
+                    (!name.trim() || isSaving) && { opacity: 0.6 },
+                  ]}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color={colors.primaryBtnText} />
+                  ) : (
+                    <Text style={[styles.saveBtnText, { color: colors.primaryBtnText }]}>
+                      Зберегти зміни
+                    </Text>
+                  )}
+                </TouchableOpacity>
               </View>
             </ScrollView>
           </KeyboardAvoidingView>
@@ -304,25 +319,27 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
+    paddingVertical: 12,
+    gap: 12,
   },
   iconBtn: {
-    padding: 6,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerCenter: {
     flex: 1,
-    marginHorizontal: 8,
   },
   topBarTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
   },
   topBarSub: {
-    fontSize: 11,
-    marginTop: 1,
+    fontSize: 12,
+    marginTop: 2,
   },
   centerContainer: {
     flex: 1,
@@ -343,22 +360,21 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   input: {
     borderWidth: 1,
     borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
+    paddingHorizontal: 16,
+    height: 48,
+    fontSize: 14,
   },
   textArea: {
     borderWidth: 1,
     borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    padding: 16,
     fontSize: 14,
-    minHeight: 90,
+    minHeight: 120,
   },
   inputLight: {
     backgroundColor: '#FFFFFF',
@@ -374,10 +390,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    height: 38,
+    borderRadius: 9999,
     borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipActiveLight: {
     backgroundColor: '#2563EB',
@@ -396,8 +414,7 @@ const styles = StyleSheet.create({
     borderColor: '#334155',
   },
   chipText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
   },
   chipTextActiveLight: {
     color: '#FFFFFF',
@@ -407,13 +424,30 @@ const styles = StyleSheet.create({
   },
   buttonsRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
-    marginTop: 12,
+    marginTop: 24,
   },
   cancelBtn: {
     flex: 1,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   saveBtn: {
-    flex: 2,
+    flex: 1.2,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

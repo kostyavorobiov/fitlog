@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   todayChip: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: 9999,
     borderWidth: 1,
     marginLeft: 4,
   },
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 4,
-    borderRadius: 14,
+    borderRadius: 9999,
     marginTop: 4,
   },
   periodPill: {
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 10,
+    borderRadius: 9999,
   },
   periodPillText: {
     fontSize: 13,

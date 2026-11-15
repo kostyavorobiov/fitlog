@@ -14,6 +14,8 @@ import {
   Animated,
   PanResponder,
   RefreshControl,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -294,15 +296,15 @@ export const ExercisesScreen: React.FC = () => {
       style={[styles.container, { backgroundColor: colors.bg }]}
     >
       <Header
-        title={t('exercises.title', 'База вправ')}
+        title={t('tabs.exercises', 'Вправи')}
         rightAction={
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={handleOpenCreateModal}
-            style={[styles.webAddBtn, { backgroundColor: colors.accent }]}
+            style={[styles.webAddBtn, { backgroundColor: colors.primaryBtnBg }]}
           >
-            <Ionicons name="add" size={16} color={colors.accentText} />
-            <Text style={[styles.webAddBtnText, { color: colors.accentText }]}>
+            <Ionicons name="add" size={16} color={colors.primaryBtnText} />
+            <Text style={[styles.webAddBtnText, { color: colors.primaryBtnText }]}>
               {t('common.add', 'Додати')}
             </Text>
           </TouchableOpacity>
@@ -326,7 +328,7 @@ export const ExercisesScreen: React.FC = () => {
       >
         {/* Search Bar */}
         <View style={styles.filterBarContainer}>
-          <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <View style={[styles.searchBar, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}>
             <Ionicons
               name="search"
               size={18}
@@ -335,7 +337,7 @@ export const ExercisesScreen: React.FC = () => {
             />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
-              placeholder={t('exercises.search_placeholder', 'Пошук вправи за назвою...')}
+              placeholder="Пошук вправ..."
               placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -352,7 +354,7 @@ export const ExercisesScreen: React.FC = () => {
 
         {/* Muscle group tabs */}
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-          {t('analytics.muscle_groups', "М'язові групи")}
+          ГРУПИ М'ЯЗІВ
         </Text>
 
         <View style={styles.tabsContainer}>
@@ -361,19 +363,19 @@ export const ExercisesScreen: React.FC = () => {
             style={[
               styles.tabChip,
               selectedMuscle === 'all'
-                ? { backgroundColor: colors.accent, borderColor: colors.accent }
-                : { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                ? { backgroundColor: colors.activeChipBg, borderColor: colors.activeChipBg }
+                : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
             ]}
           >
             <Text
               style={[
                 styles.tabText,
                 selectedMuscle === 'all'
-                  ? { color: colors.accentText, fontWeight: '700' }
-                  : { color: colors.textSecondary },
+                  ? { color: colors.activeChipText, fontWeight: '700' }
+                  : { color: colors.text },
               ]}
             >
-              {t('exercises.all_categories', 'Всі')} ({exercises.length})
+              {t('exercises.all_filter', 'Всі')} ({exercises.length})
             </Text>
           </TouchableOpacity>
 
@@ -387,16 +389,16 @@ export const ExercisesScreen: React.FC = () => {
                 style={[
                   styles.tabChip,
                   isSelected
-                    ? { backgroundColor: colors.accent, borderColor: colors.accent }
-                    : { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                    ? { backgroundColor: colors.activeChipBg, borderColor: colors.activeChipBg }
+                    : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
                 ]}
               >
                 <Text
                   style={[
                     styles.tabText,
                     isSelected
-                      ? { color: colors.accentText, fontWeight: '700' }
-                      : { color: colors.textSecondary },
+                      ? { color: colors.activeChipText, fontWeight: '700' }
+                      : { color: colors.text },
                   ]}
                 >
                   {t(`muscles.${cat.id}`, cat.nameUk)} ({count})
@@ -428,12 +430,12 @@ export const ExercisesScreen: React.FC = () => {
                 : 'У цій категорії поки що немає вправ.'}
             </Text>
             <TouchableOpacity
-              style={[styles.emptyBtn, { backgroundColor: colors.accent }]}
+              style={[styles.emptyBtn, { backgroundColor: colors.primaryBtnBg }]}
               activeOpacity={0.8}
               onPress={handleOpenCreateModal}
             >
-              <Ionicons name="add" size={16} color={colors.accentText} />
-              <Text style={[styles.emptyBtnText, { color: colors.accentText }]}>
+              <Ionicons name="add" size={16} color={colors.primaryBtnText} />
+              <Text style={[styles.emptyBtnText, { color: colors.primaryBtnText }]}>
                 Створити власну вправу
               </Text>
             </TouchableOpacity>
@@ -460,26 +462,20 @@ export const ExercisesScreen: React.FC = () => {
                     onPress={() => handleOpenExerciseDetail(ex)}
                     style={[styles.exCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
                   >
-                    <View style={styles.exCardHeader}>
-                      <View style={{ flex: 1, gap: 4 }}>
-                        <Text style={[styles.exTitle, { color: colors.text }]}>
-                          {ex.name}
-                        </Text>
+                    <Text style={[styles.exTitle, { color: colors.text }]}>
+                      {ex.name}
+                    </Text>
 
-                        <View style={styles.badgesRow}>
-                          {/* Muscle group badge */}
-                          <View
-                            style={[
-                              styles.muscleBadge,
-                              { backgroundColor: muscleInfo.badgeBg, borderColor: muscleInfo.badgeBorder },
-                            ]}
-                          >
-                            <Text style={[styles.muscleBadgeText, { color: muscleInfo.color }]}>
-                              {muscleInfo.nameUk}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
+                    <View style={styles.categoryRow}>
+                      <View
+                        style={[
+                          styles.categoryDot,
+                          { backgroundColor: muscleInfo.color || colors.accent },
+                        ]}
+                      />
+                      <Text style={[styles.categoryText, { color: colors.textSecondary }]}>
+                        {t(`muscles.${ex.muscleGroup}`, muscleInfo.nameUk)}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 </SwipeableExerciseCard>
@@ -492,112 +488,142 @@ export const ExercisesScreen: React.FC = () => {
       {/* CREATE MODAL */}
       <Modal
         visible={isCreateOpen}
-        animationType="slide"
-        presentationStyle="pageSheet"
+        animationType="fade"
+        transparent={true}
         onRequestClose={() => setIsCreateOpen(false)}
       >
-        <SafeAreaView edges={['top', 'bottom']} style={[styles.modalContainer, { backgroundColor: colors.bg }]}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={{ flex: 1 }}
-          >
-            {/* Modal Header */}
-            <View style={[styles.modalHeader, { borderBottomColor: colors.cardBorder }]}>
-              <View style={styles.modalTitleRow}>
-                <Ionicons name="barbell-outline" size={20} color={colors.accent} />
-                <Text style={[styles.modalTitle, { color: colors.text }]}>
-                  Створити власну вправу
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setIsCreateOpen(false)} style={styles.modalCloseBtn}>
-                <Ionicons name="close" size={22} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.modalBody} showsVerticalScrollIndicator={false}>
-              <View style={styles.fieldGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Назва вправи *
-                </Text>
-                <TextInput
-                  style={[styles.modalInput, { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text }]}
-                  placeholder="Наприклад: Жим штанги під кутом"
-                  placeholderTextColor={colors.textSecondary}
-                  value={createName}
-                  onChangeText={setCreateName}
-                  autoFocus
-                />
-              </View>
-
-              <View style={styles.fieldGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Група м'язів / Категорія *
-                </Text>
-                <View style={styles.muscleChipsWrap}>
-                  {categories.map((cat) => {
-                    const isSelected = createMuscle === cat.id;
-                    return (
-                      <TouchableOpacity
-                        key={cat.id}
-                        onPress={() => setCreateMuscle(cat.id as MuscleGroup)}
-                        style={[
-                          styles.formChip,
-                          isSelected
-                            ? { backgroundColor: colors.accent, borderColor: colors.accent }
-                            : { backgroundColor: colors.card, borderColor: colors.cardBorder },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.formChipText,
-                            isSelected
-                              ? { color: colors.accentText, fontWeight: '700' }
-                              : { color: colors.textSecondary },
-                          ]}
-                        >
-                          {cat.nameUk}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <View style={styles.modalActionsRow}>
-                <TouchableOpacity
-                  style={[styles.modalCancelBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
-                  onPress={() => setIsCreateOpen(false)}
-                  disabled={isSubmittingCreate}
-                >
-                  <Text style={[styles.modalCancelText, { color: colors.text }]}>
-                    Скасувати
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
+        <TouchableWithoutFeedback onPress={() => setIsCreateOpen(false)}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.keyboardWrap}
+            >
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View
                   style={[
-                    styles.modalSaveBtn,
-                    { backgroundColor: colors.accent },
-                    isSubmittingCreate && styles.btnDisabled,
+                    styles.modalCard,
+                    { backgroundColor: colors.card, borderColor: colors.cardBorder },
                   ]}
-                  onPress={handleSaveCreate}
-                  disabled={isSubmittingCreate}
                 >
-                  {isSubmittingCreate ? (
-                    <ActivityIndicator size="small" color={colors.accentText} />
-                  ) : (
-                    <>
-                      <Ionicons name="checkmark" size={18} color={colors.accentText} />
-                      <Text style={[styles.modalSaveText, { color: colors.accentText }]}>
-                        Зберегти вправу
+                  {/* Modal Header */}
+                  <View style={[styles.modalHeaderRow, { borderBottomColor: colors.cardBorder }]}>
+                    <View style={styles.modalHeaderLeft}>
+                      <View style={[styles.modalIconBadge, { backgroundColor: colors.iconBadgeBg }]}>
+                        <Ionicons
+                          name="barbell"
+                          size={22}
+                          color={colors.iconBadgeColor}
+                        />
+                      </View>
+                      <Text style={[styles.modalTitleText, { color: colors.text }]}>
+                        Створити власну вправу
                       </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setIsCreateOpen(false)}
+                      style={[styles.modalCloseCircle, { backgroundColor: colors.subCard }]}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Закрити"
+                    >
+                      <Ionicons name="close" size={16} color={colors.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.fieldGroup}>
+                    <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                      Назва вправи *
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.modalInput,
+                        {
+                          backgroundColor: colors.subCard,
+                          borderColor: colors.activeTabBg,
+                          borderWidth: 1.5,
+                          color: colors.text,
+                        },
+                      ]}
+                      placeholder="Наприклад: Жим штанги під кутом"
+                      placeholderTextColor={colors.textSecondary}
+                      value={createName}
+                      onChangeText={setCreateName}
+                      autoFocus
+                    />
+                  </View>
+
+                  <View style={[styles.fieldGroup, { marginTop: 14 }]}>
+                    <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                      Група м'язів / Категорія *
+                    </Text>
+                    <View style={styles.muscleChipsWrap}>
+                      {categories.map((cat) => {
+                        const isSelected = createMuscle === cat.id;
+                        return (
+                          <TouchableOpacity
+                            key={cat.id}
+                            onPress={() => setCreateMuscle(cat.id as MuscleGroup)}
+                            activeOpacity={0.7}
+                            style={[
+                              styles.formChip,
+                              isSelected
+                                ? { backgroundColor: colors.activeChipBg, borderColor: colors.activeChipBg }
+                                : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.formChipText,
+                                isSelected
+                                  ? { color: colors.activeChipText, fontWeight: '700' }
+                                  : { color: colors.text },
+                              ]}
+                            >
+                              {t(`muscles.${cat.id}`, cat.nameUk)}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+
+                  <View style={styles.modalActionsRow}>
+                    <TouchableOpacity
+                      style={[styles.modalCancelBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}
+                      onPress={() => setIsCreateOpen(false)}
+                      disabled={isSubmittingCreate}
+                    >
+                      <Text style={[styles.modalCancelText, { color: colors.text }]}>
+                        {t('common.cancel', 'Скасувати')}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.modalSaveBtn,
+                        { backgroundColor: colors.primaryBtnBg },
+                        isSubmittingCreate && styles.btnDisabled,
+                      ]}
+                      onPress={handleSaveCreate}
+                      disabled={isSubmittingCreate}
+                    >
+                      {isSubmittingCreate ? (
+                        <ActivityIndicator size="small" color={colors.primaryBtnText} />
+                      ) : (
+                        <>
+                          <Ionicons name="checkmark" size={18} color={colors.primaryBtnText} />
+                          <Text style={[styles.modalSaveText, { color: colors.primaryBtnText }]}>
+                            {t('exercises.save_exercise', 'Зберегти вправу')}
+                          </Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
 
@@ -662,10 +688,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   tabChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 36,
+    borderRadius: 9999,
     borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabActiveLight: {
     backgroundColor: '#2563eb',
@@ -765,30 +793,37 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 16,
+    borderRadius: 9999,
     marginTop: 16,
-    backgroundColor: '#2563eb',
   },
   emptyBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#ffffff',
   },
   grid: {
     gap: 10,
   },
   exCard: {
-    padding: 12,
-  },
-  exCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
+    padding: 16,
+    borderRadius: 16,
   },
   exTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  categoryDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  categoryText: {
+    fontSize: 13,
   },
   badgesRow: {
     flexDirection: 'row',
@@ -861,29 +896,61 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.3)',
   },
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  modalHeader: {
+  keyboardWrap: {
+    width: '100%',
+    maxWidth: 420,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 22,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingBottom: 14,
     borderBottomWidth: 1,
+    marginBottom: 16,
   },
-  modalTitleRow: {
+  modalHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
+    flex: 1,
   },
-  modalTitle: {
-    fontSize: 16,
+  modalIconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitleText: {
+    fontSize: 17,
     fontWeight: '700',
   },
-  modalCloseBtn: {
-    padding: 4,
-    borderRadius: 20,
+  modalCloseCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalBody: {
     padding: 20,
@@ -897,11 +964,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   modalInput: {
-    height: 44,
+    height: 48,
     borderRadius: 14,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     fontSize: 14,
-    borderWidth: 1,
   },
   muscleChipsWrap: {
     flexDirection: 'row',
@@ -910,39 +976,26 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   formChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 38,
+    borderRadius: 9999,
     borderWidth: 1,
-  },
-  formChipLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
-  },
-  formChipDark: {
-    backgroundColor: '#263140',
-    borderColor: '#334155',
-  },
-  formChipActiveLight: {
-    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-    borderColor: '#2563eb',
-  },
-  formChipActiveDark: {
-    backgroundColor: 'rgba(37, 99, 235, 0.25)',
-    borderColor: '#60a5fa',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   formChipText: {
-    fontSize: 12,
+    fontSize: 13,
   },
   modalActionsRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
-    marginTop: 12,
+    marginTop: 22,
   },
   modalCancelBtn: {
     flex: 1,
-    height: 46,
-    borderRadius: 16,
+    height: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -950,19 +1003,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  modalSaveBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  modalSaveText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  btnDisabled: {
+    opacity: 0.6,
+  },
   webAddBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    height: 36,
-    paddingHorizontal: 14,
-    borderRadius: 18,
-    backgroundColor: '#2563eb',
+    height: 38,
+    paddingHorizontal: 16,
+    borderRadius: 9999,
   },
   webAddBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#ffffff',
   },
   filterBarContainer: {
     gap: 8,
@@ -996,24 +1063,6 @@ const styles = StyleSheet.create({
   customToggleText: {
     fontSize: 12,
     fontWeight: '600',
-  },
-  modalSaveBtn: {
-    flex: 1.5,
-    height: 46,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 6,
-    backgroundColor: '#2563eb',
-  },
-  modalSaveText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  btnDisabled: {
-    opacity: 0.6,
   },
   btnOutlineLight: {
     borderWidth: 1,

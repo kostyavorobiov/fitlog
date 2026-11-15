@@ -199,11 +199,11 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                 {/* Header */}
                 <View style={[styles.headerRow, { borderBottomColor: colors.cardBorder }]}>
                   <View style={styles.headerLeft}>
-                    <View style={[styles.iconBadge, { backgroundColor: colors.subCard }]}>
+                    <View style={[styles.iconBadge, { backgroundColor: colors.iconBadgeBg }]}>
                       <Ionicons
                         name="barbell"
                         size={22}
-                        color={colors.accent}
+                        color={colors.iconBadgeColor}
                       />
                     </View>
                     <View style={styles.headerTextWrap}>
@@ -217,35 +217,37 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                   </View>
                   <TouchableOpacity
                     onPress={handleClose}
-                    style={styles.closeBtn}
+                    style={[styles.closeBtn, { backgroundColor: colors.subCard }]}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     accessibilityRole="button"
                     accessibilityLabel="Закрити"
                   >
-                    <Ionicons name="close" size={20} color={colors.textSecondary} />
+                    <Ionicons name="close" size={16} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
 
                 {/* Mode Selector Segment */}
-                <View style={[styles.segmentContainer, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}>
+                <View style={styles.segmentContainer}>
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setMode('empty')}
                     style={[
                       styles.segmentBtn,
-                      mode === 'empty' && { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 },
+                      mode === 'empty'
+                        ? { backgroundColor: colors.activeTabBg }
+                        : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 },
                     ]}
                   >
                     <Ionicons
-                      name="barbell-outline"
+                      name="swap-horizontal"
                       size={15}
-                      color={mode === 'empty' ? colors.accent : colors.textSecondary}
+                      color={mode === 'empty' ? colors.activeTabText : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles.segmentBtnText,
                         mode === 'empty'
-                          ? { color: colors.text, fontWeight: '700' }
+                          ? { color: colors.activeTabText, fontWeight: '700' }
                           : { color: colors.textSecondary },
                       ]}
                     >
@@ -258,23 +260,25 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     onPress={() => setMode('template')}
                     style={[
                       styles.segmentBtn,
-                      mode === 'template' && { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 },
+                      mode === 'template'
+                        ? { backgroundColor: colors.activeTabBg }
+                        : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 },
                     ]}
                   >
                     <Ionicons
-                      name="bookmark-outline"
+                      name="document-text-outline"
                       size={15}
-                      color={mode === 'template' ? colors.accent : colors.textSecondary}
+                      color={mode === 'template' ? colors.activeTabText : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles.segmentBtnText,
                         mode === 'template'
-                          ? { color: colors.text, fontWeight: '700' }
+                          ? { color: colors.activeTabText, fontWeight: '700' }
                           : { color: colors.textSecondary },
                       ]}
                     >
-                      {t('workouts.templates', 'З шаблону')} {templates.length > 0 ? `(${templates.length})` : ''}
+                      {t('workouts.templates', 'Шаблони')} {templates.length > 0 ? `(${templates.length})` : ''}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -299,9 +303,9 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                         </Text>
                         <TouchableOpacity
                           onPress={() => setMode('empty')}
-                          style={[styles.switchModeBtn, { backgroundColor: colors.accent }]}
+                          style={[styles.switchModeBtn, { backgroundColor: colors.primaryBtnBg }]}
                         >
-                          <Text style={[styles.switchModeBtnText, { color: colors.accentText }]}>
+                          <Text style={[styles.switchModeBtnText, { color: colors.primaryBtnText }]}>
                             {t('modal.start_empty', 'Створити порожнє тренування')}
                           </Text>
                         </TouchableOpacity>
@@ -325,7 +329,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                                 deleteLabel="Видалити"
                                 containerStyle={[
                                   styles.templateSwipeContainer,
-                                  isSelected && { borderColor: colors.accent, borderWidth: 1.5 },
+                                  isSelected && { borderColor: colors.activeTabBg, borderWidth: 1.5 },
                                 ]}
                               >
                                 <TouchableOpacity
@@ -336,7 +340,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                                   }}
                                   style={[
                                     styles.templateCardInner,
-                                    isSelected && { backgroundColor: colors.subCard },
+                                    { backgroundColor: colors.card, borderColor: isSelected ? colors.activeTabBg : colors.cardBorder, borderWidth: 1 },
                                   ]}
                                 >
                                   <View style={{ flex: 1, paddingRight: 8 }}>
@@ -347,11 +351,18 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                                       {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
                                     </Text>
                                   </View>
-                                  <Ionicons
-                                    name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
-                                    size={20}
-                                    color={isSelected ? colors.accent : colors.textSecondary}
-                                  />
+                                  <View
+                                    style={[
+                                      styles.radioCircle,
+                                      isSelected
+                                        ? { backgroundColor: colors.activeTabBg, borderColor: colors.activeTabBg }
+                                        : { borderColor: colors.subCardBorder },
+                                    ]}
+                                  >
+                                    {isSelected && (
+                                      <Ionicons name="checkmark" size={13} color={colors.activeTabText} />
+                                    )}
+                                  </View>
                                 </TouchableOpacity>
                               </SwipeableActionCard>
                             );
@@ -367,7 +378,15 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                       Назва тренування *
                     </Text>
                     <TextInput
-                      style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.subCard,
+                          borderColor: colors.activeTabBg,
+                          borderWidth: 1.5,
+                          color: colors.text,
+                        },
+                      ]}
                       placeholder="наприклад: Груди та Тріцепс"
                       placeholderTextColor={colors.textSecondary}
                       value={title}
@@ -392,7 +411,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     <Ionicons
                       name="calendar-outline"
                       size={18}
-                      color={colors.accent}
+                      color={colors.textSecondary}
                       style={{ marginRight: 10 }}
                     />
                     <Text style={[styles.dateText, { color: colors.text }]}>
@@ -418,14 +437,14 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     activeOpacity={0.85}
                     onPress={handleSubmit}
                     disabled={isLoading}
-                    style={[styles.actionBtn, styles.createBtn, { backgroundColor: colors.accent, shadowColor: colors.accent }]}
+                    style={[styles.actionBtn, styles.createBtn, { backgroundColor: colors.primaryBtnBg }]}
                   >
                     {isLoading ? (
-                      <ActivityIndicator size="small" color={colors.accentText} />
+                      <ActivityIndicator size="small" color={colors.primaryBtnText} />
                     ) : (
                       <>
-                        <Ionicons name="add" size={19} color={colors.accentText} />
-                        <Text style={[styles.createBtnText, { color: colors.accentText }]}>
+                        <Ionicons name="add" size={19} color={colors.primaryBtnText} />
+                        <Text style={[styles.createBtnText, { color: colors.primaryBtnText }]}>
                           {t('common.create', 'Створити')}
                         </Text>
                       </>
@@ -467,7 +486,7 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: '100%',
-    borderRadius: 28,
+    borderRadius: 24,
     borderWidth: 1,
     padding: 22,
     shadowColor: '#000',
@@ -505,7 +524,7 @@ const styles = StyleSheet.create({
   iconBadge: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -529,8 +548,11 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   closeBtn: {
-    padding: 6,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textLight: {
     color: '#0F172A',
@@ -552,9 +574,7 @@ const styles = StyleSheet.create({
   },
   segmentContainer: {
     flexDirection: 'row',
-    borderRadius: 16,
-    padding: 4,
-    borderWidth: 1,
+    gap: 10,
     marginTop: 16,
   },
   segmentLight: {
@@ -571,8 +591,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 9,
-    borderRadius: 12,
+    height: 40,
+    borderRadius: 9999,
   },
   segmentBtnActiveLight: {
     backgroundColor: '#FFFFFF',
@@ -700,7 +720,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
+    padding: 14,
+    borderRadius: 14,
+  },
+  radioCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   templateCardSelected: {
     borderColor: '#2563EB',

@@ -236,9 +236,9 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerIconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -274,9 +274,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   navBackBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -306,9 +306,9 @@ const styles = StyleSheet.create({
     borderColor: '#334155',
   },
   loginBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
     backgroundColor: '#2563EB',
   },
   loginBtnLight: {

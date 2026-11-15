@@ -821,9 +821,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

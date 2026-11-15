@@ -993,18 +993,18 @@ export const ProfileScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.saveBtn,
-                    { backgroundColor: colors.accent },
+                    { backgroundColor: colors.primaryBtnBg },
                     isSavingProfile && styles.btnDisabled,
                   ]}
                   onPress={handleSaveProfile}
                   disabled={isSavingProfile}
                 >
                   {isSavingProfile ? (
-                    <ActivityIndicator size="small" color={colors.accentText} />
+                    <ActivityIndicator size="small" color={colors.primaryBtnText} />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={16} color={colors.accentText} />
-                      <Text style={[styles.saveBtnText, { color: colors.accentText }]}>
+                      <Ionicons name="checkmark" size={16} color={colors.primaryBtnText} />
+                      <Text style={[styles.saveBtnText, { color: colors.primaryBtnText }]}>
                         {t('common.save', 'Зберегти зміни')}
                       </Text>
                     </>
@@ -1917,7 +1917,8 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
+    borderRadius: 9999,
+    borderWidth: 1,
   },
   cancelBtnText: {
     fontSize: 13,
@@ -1928,7 +1929,7 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
+    borderRadius: 9999,
     flexDirection: 'row',
     gap: 6,
     backgroundColor: '#2563eb',
@@ -2196,7 +2197,7 @@ const styles = StyleSheet.create({
   linkCoachBtn: {
     height: 44,
     paddingHorizontal: 16,
-    borderRadius: 16,
+    borderRadius: 9999,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#2563eb',
@@ -2382,7 +2383,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 13,
-    borderRadius: 16,
+    borderRadius: 9999,
     marginTop: 4,
   },
   modalPrimaryBtnText: {
