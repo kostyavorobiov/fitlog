@@ -117,7 +117,7 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
 
   const renderStandaloneItem = (item: (typeof STANDALONE_ITEMS)[0]) => {
     const isFocused = currentTab === item.name;
-    const color = isFocused ? (colors.id === 'blue' ? colors.accent : colors.text) : colors.textSecondary;
+    const color = isFocused ? colors.text : colors.textSecondary;
 
     return (
       <TouchableOpacity
@@ -186,7 +186,7 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
       }
     };
 
-    const color = isFocused ? (colors.id === 'blue' ? colors.accent : colors.text) : colors.textSecondary;
+    const color = isFocused ? colors.text : colors.textSecondary;
 
     return (
       <TouchableOpacity
@@ -251,23 +251,24 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
           <>
             {STANDALONE_ITEMS.slice(0, 2).map(renderStandaloneItem)}
 
-            {/* Central '+' Create Workout Button */}
+            {/* Central '+' Create Workout Button with surrounding circular notch */}
             {!isEditingOrViewingWorkout && (
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => openCreateModal()}
-                style={[
-                  styles.centerAddBtn,
-                  {
-                    backgroundColor: colors.centerButtonBg,
-                    shadowColor: colors.centerButtonBg,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Створити нове тренування"
-              >
-                <Ionicons name="add" size={32} color={colors.centerButtonIcon} />
-              </TouchableOpacity>
+              <View style={[styles.centerNotch, { backgroundColor: colors.tabBarBg }]}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => openCreateModal()}
+                  style={[
+                    styles.centerAddBtn,
+                    {
+                      backgroundColor: colors.centerButtonBg,
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Створити нове тренування"
+                >
+                  <Ionicons name="add" size={28} color={colors.centerButtonIcon} />
+                </TouchableOpacity>
+              </View>
             )}
 
             {STANDALONE_ITEMS.slice(2).map(renderStandaloneItem)}
@@ -276,23 +277,24 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
           <>
             {leftRoutes.map(renderTabItem)}
 
-            {/* Central '+' Create Workout Button */}
+            {/* Central '+' Create Workout Button with surrounding circular notch */}
             {!isEditingOrViewingWorkout && (
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => openCreateModal()}
-                style={[
-                  styles.centerAddBtn,
-                  {
-                    backgroundColor: colors.centerButtonBg,
-                    shadowColor: colors.centerButtonBg,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Створити нове тренування"
-              >
-                <Ionicons name="add" size={32} color={colors.centerButtonIcon} />
-              </TouchableOpacity>
+              <View style={[styles.centerNotch, { backgroundColor: colors.tabBarBg }]}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => openCreateModal()}
+                  style={[
+                    styles.centerAddBtn,
+                    {
+                      backgroundColor: colors.centerButtonBg,
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Створити нове тренування"
+                >
+                  <Ionicons name="add" size={28} color={colors.centerButtonIcon} />
+                </TouchableOpacity>
+              </View>
             )}
 
             {rightRoutes.map(renderTabItem)}
@@ -312,17 +314,19 @@ const styles = StyleSheet.create({
     zIndex: 100,
     borderTopWidth: 1,
     paddingTop: 8,
+    overflow: 'visible',
   },
   tabsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingHorizontal: 8,
-    height: 54,
+    height: 52,
+    overflow: 'visible',
   },
   tabButton: {
     flex: 1,
-    height: 54,
+    height: 52,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -331,26 +335,36 @@ const styles = StyleSheet.create({
   activeIndicator: {
     position: 'absolute',
     top: -8,
-    width: 24,
-    height: 3,
+    width: 30,
+    height: 3.5,
     borderRadius: 2,
   },
-  centerAddBtn: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+  centerNotch: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -22,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 8,
+    marginTop: -26,
+    zIndex: 10,
+  },
+  centerAddBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 4,
   },
   iconWrap: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    height: 24,
   },
   badgeDot: {
     position: 'absolute',
@@ -361,7 +375,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '500',
     letterSpacing: -0.2,
   },
