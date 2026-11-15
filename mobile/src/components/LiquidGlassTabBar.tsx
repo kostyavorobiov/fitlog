@@ -46,6 +46,43 @@ export interface BottomTabBarProps {
   onTabChange?: (tab: string) => void;
 }
 
+interface PlusIconProps {
+  color: string;
+  size?: number;
+  strokeWidth?: number;
+}
+
+const PlusIcon: React.FC<PlusIconProps> = ({
+  color,
+  size = 20,
+  strokeWidth = 3.5,
+}) => (
+  <View style={styles.plusIconWrap}>
+    <View
+      style={[
+        styles.plusBarHorizontal,
+        {
+          width: size,
+          height: strokeWidth,
+          borderRadius: strokeWidth / 2,
+          backgroundColor: color,
+        },
+      ]}
+    />
+    <View
+      style={[
+        styles.plusBarVertical,
+        {
+          width: strokeWidth,
+          height: size,
+          borderRadius: strokeWidth / 2,
+          backgroundColor: color,
+        },
+      ]}
+    />
+  </View>
+);
+
 export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
   state,
   descriptors,
@@ -263,10 +300,11 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
                       backgroundColor: colors.centerButtonBg,
                     },
                   ]}
+                  hitSlop={{ top: 20, bottom: 10, left: 10, right: 10 }}
                   accessibilityRole="button"
                   accessibilityLabel="Створити нове тренування"
                 >
-                  <Ionicons name="add" size={28} color={colors.centerButtonIcon} />
+                  <PlusIcon color={colors.centerButtonIcon} size={20} strokeWidth={3.5} />
                 </TouchableOpacity>
               </View>
             )}
@@ -289,10 +327,11 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
                       backgroundColor: colors.centerButtonBg,
                     },
                   ]}
+                  hitSlop={{ top: 20, bottom: 10, left: 10, right: 10 }}
                   accessibilityRole="button"
                   accessibilityLabel="Створити нове тренування"
                 >
-                  <Ionicons name="add" size={28} color={colors.centerButtonIcon} />
+                  <PlusIcon color={colors.centerButtonIcon} size={20} strokeWidth={3.5} />
                 </TouchableOpacity>
               </View>
             )}
@@ -340,18 +379,18 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   centerNotch: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -26,
+    marginTop: -44,
     zIndex: 10,
   },
   centerAddBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -359,6 +398,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 4,
     elevation: 4,
+  },
+  plusIconWrap: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  plusBarHorizontal: {
+    position: 'absolute',
+  },
+  plusBarVertical: {
+    position: 'absolute',
   },
   iconWrap: {
     position: 'relative',
