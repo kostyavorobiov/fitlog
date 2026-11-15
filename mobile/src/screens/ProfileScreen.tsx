@@ -1618,8 +1618,8 @@ const styles = StyleSheet.create({
   },
   themeItemCard: {
     flex: 1,
-    height: 42,
-    borderRadius: 12,
+    height: 38,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1637,8 +1637,8 @@ const styles = StyleSheet.create({
   },
   langItemCard: {
     flex: 1,
-    height: 44,
-    borderRadius: 12,
+    height: 38,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1646,7 +1646,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   langFlag: {
-    fontSize: 18,
+    fontSize: 16,
   },
   langItemLabel: {
     fontSize: 13,
