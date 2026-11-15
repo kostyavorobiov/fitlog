@@ -6,7 +6,7 @@ import {
   StyleSheet,
   TouchableOpacityProps,
 } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger';
 
@@ -24,35 +24,59 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   ...props
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors } = useTheme();
 
   const getContainerStyle = () => {
     switch (variant) {
       case 'primary':
-        return isDark ? styles.primaryDark : styles.primaryLight;
+        return {
+          backgroundColor: colors.accent,
+        };
       case 'secondary':
-        return isDark ? styles.secondaryDark : styles.secondaryLight;
+        return {
+          backgroundColor: colors.subCard,
+          borderWidth: 1,
+          borderColor: colors.subCardBorder,
+        };
       case 'outline':
-        return isDark ? styles.outlineDark : styles.outlineLight;
+        return {
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          borderColor: colors.cardBorder,
+        };
       case 'danger':
-        return styles.danger;
+        return {
+          backgroundColor: colors.danger,
+        };
       default:
-        return styles.primaryLight;
+        return {
+          backgroundColor: colors.accent,
+        };
     }
   };
 
   const getTextStyle = () => {
     switch (variant) {
       case 'primary':
-        return isDark ? styles.textPrimaryDark : styles.textPrimaryLight;
+        return {
+          color: colors.accentText,
+        };
       case 'secondary':
-        return isDark ? styles.textSecondaryDark : styles.textSecondaryLight;
+        return {
+          color: colors.text,
+        };
       case 'outline':
-        return isDark ? styles.textOutlineDark : styles.textOutlineLight;
+        return {
+          color: colors.text,
+        };
       case 'danger':
-        return styles.textDanger;
+        return {
+          color: '#ffffff',
+        };
       default:
-        return styles.textPrimaryLight;
+        return {
+          color: colors.accentText,
+        };
     }
   };
 
@@ -71,7 +95,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B')}
+          color={variant === 'primary' ? colors.accentText : colors.textSecondary}
         />
       ) : (
         <Text style={[styles.textBase, getTextStyle()]}>{title}</Text>

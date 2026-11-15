@@ -1,20 +1,20 @@
 import React from 'react';
 import { Link, Stack } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 
 export default function NotFoundScreen() {
-  const isDark = useColorScheme() === 'dark';
+  const { colors } = useTheme();
 
   return (
     <>
       <Stack.Screen options={{ title: 'Не знайдено' }} />
-      <View style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-        <Text style={[styles.title, isDark ? styles.textDark : styles.textLight]}>
+      <View style={[styles.container, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.title, { color: colors.text }]}>
           Цієї сторінки не існує
         </Text>
         <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Повернутися до тренувань</Text>
+          <Text style={[styles.linkText, { color: colors.accent }]}>Повернутися до тренувань</Text>
         </Link>
       </View>
     </>
@@ -28,21 +28,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  bgLight: {
-    backgroundColor: '#F8FAFC',
-  },
-  bgDark: {
-    backgroundColor: '#0B1220',
-  },
   title: {
     fontSize: 18,
     fontWeight: '700',
-  },
-  textLight: {
-    color: '#0F172A',
-  },
-  textDark: {
-    color: '#F8FAFC',
   },
   link: {
     marginTop: 16,
@@ -52,6 +40,5 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2563EB',
   },
 });

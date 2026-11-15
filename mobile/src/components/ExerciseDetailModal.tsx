@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import { Card } from './Card';
 import { ScreenGestureWrapper } from './ScreenGestureWrapper';
 import { WorkoutService } from '../services/workoutService';
@@ -57,7 +57,7 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
   traineeName,
   onClose,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === 'ios' ? 47 : 24);
   const bottomInset = Math.max(insets.bottom, 16);
@@ -243,35 +243,35 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
       <View
         style={[
           styles.container,
-          isDark ? styles.bgDark : styles.bgLight,
+          { backgroundColor: colors.bg },
           { paddingTop: topInset, paddingBottom: bottomInset },
         ]}
       >
         {/* Top Header Bar - Exact Workout Style */}
-        <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
+        <View style={[styles.topBar, { borderBottomWidth: 0, backgroundColor: colors.bg }]}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={onClose}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             accessibilityRole="button"
             accessibilityLabel="Назад"
           >
             <Ionicons
-              name="arrow-back"
+              name="chevron-back"
               size={22}
-              color={isDark ? '#F8FAFC' : '#0F172A'}
+              color={colors.text}
             />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
             <Text
               numberOfLines={1}
-              style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}
+              style={[styles.topBarTitle, { color: colors.text }]}
             >
               {exerciseName}
             </Text>
-            <Text style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
+            <Text style={[styles.topBarSub, { color: colors.textSecondary }]}>
               {traineeName ? `Підопічний: ${traineeName} · ${muscleInfo.nameUk}` : muscleInfo.nameUk}
             </Text>
           </View>
@@ -281,8 +281,8 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
 
         {loading ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
-            <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+            <ActivityIndicator size="small" color={colors.accent} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
               Завантаження аналітики вправи...
             </Text>
           </View>
@@ -294,16 +294,16 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
             {/* Status & Overview Card - Matching Workout Overview */}
             <Card style={styles.overviewCard}>
               <View style={styles.statusRow}>
-                <View style={[styles.statusPill, styles.statusCompleted]}>
-                  <View style={[styles.statusDot, { backgroundColor: '#22c55e' }]} />
-                  <Text style={[styles.statusText, { color: '#22c55e' }]}>
+                <View style={[styles.statusPill, { backgroundColor: colors.subCard }]}>
+                  <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
+                  <Text style={[styles.statusText, { color: colors.success }]}>
                     Вправа каталогу
                   </Text>
                 </View>
 
-                <View style={[styles.badgePill, isDark ? styles.badgePillDark : styles.badgePillLight]}>
-                  <Ionicons name="barbell-outline" size={13} color={isDark ? '#60a5fa' : '#2563eb'} />
-                  <Text style={[styles.badgeText, isDark ? styles.badgeTextDark : styles.badgeTextLight]}>
+                <View style={[styles.badgePill, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}>
+                  <Ionicons name="barbell-outline" size={13} color={colors.accent} />
+                  <Text style={[styles.badgeText, { color: colors.text }]}>
                     {muscleInfo.nameUk}
                   </Text>
                 </View>
@@ -312,32 +312,32 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
               {/* Metrics Summary Row with Dividers */}
               <View style={styles.metricsSummaryRow}>
                 <View style={styles.metricSummaryItem}>
-                  <Text style={[styles.summaryVal, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.summaryVal, { color: colors.text }]}>
                     {stats.personalBest > 0 ? `${stats.personalBest} кг` : '—'}
                   </Text>
-                  <Text style={[styles.summaryLbl, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.summaryLbl, { color: colors.textSecondary }]}>
                     Рекорд (PR)
                   </Text>
                 </View>
 
-                <View style={[styles.summaryDivider, isDark ? styles.borderDark : styles.borderLight]} />
+                <View style={[styles.summaryDivider, { backgroundColor: colors.cardBorder }]} />
 
                 <View style={styles.metricSummaryItem}>
-                  <Text style={[styles.summaryVal, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.summaryVal, { color: colors.text }]}>
                     {stats.best1RM > 0 ? `${stats.best1RM} кг` : '—'}
                   </Text>
-                  <Text style={[styles.summaryLbl, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.summaryLbl, { color: colors.textSecondary }]}>
                     Розрахунковий 1ПМ
                   </Text>
                 </View>
 
-                <View style={[styles.summaryDivider, isDark ? styles.borderDark : styles.borderLight]} />
+                <View style={[styles.summaryDivider, { backgroundColor: colors.cardBorder }]} />
 
                 <View style={styles.metricSummaryItem}>
-                  <Text style={[styles.summaryVal, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.summaryVal, { color: colors.text }]}>
                     {stats.totalSets}
                   </Text>
-                  <Text style={[styles.summaryLbl, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.summaryLbl, { color: colors.textSecondary }]}>
                     Підходів
                   </Text>
                 </View>
@@ -348,16 +348,16 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
             <Card style={styles.chartCard}>
               <View style={styles.chartHeader}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.chartTitle, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.chartTitle, { color: colors.text }]}>
                     Динаміка максимальної ваги
                   </Text>
-                  <Text style={[styles.chartSub, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.chartSub, { color: colors.textSecondary }]}>
                     {stats.dateRangeText}
                   </Text>
                 </View>
                 {stats.avgWeight > 0 && (
-                  <View style={[styles.avgBadge, isDark ? styles.avgBadgeDark : styles.avgBadgeLight]}>
-                    <Text style={[styles.avgBadgeText, isDark ? styles.badgeTextDark : styles.badgeTextLight]}>
+                  <View style={[styles.avgBadge, { backgroundColor: colors.subCard }]}>
+                    <Text style={[styles.avgBadgeText, { color: colors.text }]}>
                       Сер: {stats.avgWeight} кг
                     </Text>
                   </View>
@@ -366,8 +366,8 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
 
               {allPoints.length === 0 ? (
                 <View style={styles.chartEmpty}>
-                  <Ionicons name="barbell-outline" size={32} color={isDark ? '#64748b' : '#94a3b8'} />
-                  <Text style={[styles.chartEmptyText, isDark ? styles.subDark : styles.subLight]}>
+                  <Ionicons name="barbell-outline" size={32} color={colors.textSecondary} />
+                  <Text style={[styles.chartEmptyText, { color: colors.textSecondary }]}>
                     Немає даних для побудови графіка
                   </Text>
                 </View>
@@ -376,9 +376,9 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
                   {/* Chart Grid and Bars */}
                   <View style={[styles.chartArea, { height: chartHeight }]}>
                     <View style={styles.gridLinesContainer}>
-                      <View style={[styles.gridLine, isDark ? styles.lineDark : styles.lineLight]} />
-                      <View style={[styles.gridLine, isDark ? styles.lineDark : styles.lineLight]} />
-                      <View style={[styles.gridLine, isDark ? styles.lineDark : styles.lineLight]} />
+                      <View style={[styles.gridLine, { backgroundColor: colors.cardBorder }]} />
+                      <View style={[styles.gridLine, { backgroundColor: colors.cardBorder }]} />
+                      <View style={[styles.gridLine, { backgroundColor: colors.cardBorder }]} />
                     </View>
 
                     <View style={styles.pointsRow}>
@@ -400,18 +400,16 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
                                   {
                                     height: `${Math.round(ratio * 100)}%`,
                                     backgroundColor: isSelected
-                                      ? '#2563eb'
-                                      : isDark
-                                      ? 'rgba(96, 165, 250, 0.45)'
-                                      : 'rgba(37, 99, 235, 0.35)',
+                                      ? colors.accent
+                                      : colors.subCard,
                                   },
                                 ]}
                               >
                                 <View
                                   style={[
                                     styles.pointDot,
-                                    isSelected && styles.pointDotActive,
-                                    { borderColor: isDark ? '#1d2939' : '#ffffff' },
+                                    isSelected && { backgroundColor: colors.accent },
+                                    { borderColor: colors.card },
                                   ]}
                                 />
                               </View>
@@ -420,8 +418,8 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
                               numberOfLines={1}
                               style={[
                                 styles.pointDateLabel,
-                                isDark ? styles.subDark : styles.subLight,
-                                isSelected && { color: isDark ? '#60a5fa' : '#2563eb', fontWeight: '700' },
+                                { color: isSelected ? colors.accent : colors.textSecondary },
+                                isSelected && { fontWeight: '700' },
                               ]}
                             >
                               {p.displayDate}
@@ -434,16 +432,16 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
 
                   {/* Active Tooltip Popover */}
                   {activeTooltipIdx !== null && allPoints[activeTooltipIdx] && (
-                    <View style={[styles.tooltipBox, isDark ? styles.tooltipDark : styles.tooltipLight]}>
+                    <View style={[styles.tooltipBox, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.tooltipDate, isDark ? styles.textDark : styles.textLight]}>
+                        <Text style={[styles.tooltipDate, { color: colors.text }]}>
                           {allPoints[activeTooltipIdx].workoutTitle}
                         </Text>
-                        <Text style={[styles.tooltipSub, isDark ? styles.subDark : styles.subLight]}>
+                        <Text style={[styles.tooltipSub, { color: colors.textSecondary }]}>
                           {allPoints[activeTooltipIdx].displayDate} • {allPoints[activeTooltipIdx].setsCount} підходів
                         </Text>
                       </View>
-                      <Text style={styles.tooltipVal}>
+                      <Text style={[styles.tooltipVal, { color: colors.accent }]}>
                         {allPoints[activeTooltipIdx].maxWeight} кг
                       </Text>
                     </View>
@@ -454,7 +452,7 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
 
             {/* Workout History Sessions Section Header */}
             <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionHeading, isDark ? styles.textDark : styles.textLight]}>
+              <Text style={[styles.sectionHeading, { color: colors.text }]}>
                 Останні тренування ({last5Sessions.length})
               </Text>
             </View>
@@ -462,11 +460,11 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
             {/* List of Sessions in Exact Workout ExerciseCard Style */}
             {last5Sessions.length === 0 ? (
               <Card style={styles.emptyExercisesCard}>
-                <Ionicons name="barbell-outline" size={36} color={isDark ? '#334155' : '#94a3b8'} />
-                <Text style={[styles.emptyExercisesTitle, isDark ? styles.textDark : styles.textLight]}>
+                <Ionicons name="barbell-outline" size={36} color={colors.textSecondary} />
+                <Text style={[styles.emptyExercisesTitle, { color: colors.text }]}>
                   У вас ще немає збережених підходів
                 </Text>
-                <Text style={[styles.emptyExercisesDesc, isDark ? styles.subDark : styles.subLight]}>
+                <Text style={[styles.emptyExercisesDesc, { color: colors.textSecondary }]}>
                   Додайте цю вправу до тренування та запишіть підходи, щоб відстежувати прогрес.
                 </Text>
               </Card>
@@ -478,34 +476,34 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
                     <View
                       style={[
                         styles.exIndexCircle,
-                        isDark ? styles.exIndexCircleDark : styles.exIndexCircleLight,
+                        { backgroundColor: colors.subCard },
                       ]}
                     >
                       <Text
                         style={[
                           styles.exIndexText,
-                          isDark ? styles.textPrimaryDark : styles.textPrimaryLight,
+                          { color: colors.text },
                         ]}
                       >
                         {sIndex + 1}
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}>
+                      <Text style={[styles.exTitle, { color: colors.text }]}>
                         {session.workoutTitle}
                       </Text>
                       <View style={styles.sessionMetaRow}>
-                        <Text style={[styles.sessionDate, isDark ? styles.subDark : styles.subLight]}>
+                        <Text style={[styles.sessionDate, { color: colors.textSecondary }]}>
                           {formatLongDateUk(parseDate(session.date))}
                         </Text>
-                        <Text style={[styles.sessionDot, isDark ? styles.subDark : styles.subLight]}>•</Text>
-                        <Text style={[styles.sessionMaxWeight, { color: isDark ? '#60a5fa' : '#2563eb' }]}>
+                        <Text style={[styles.sessionDot, { color: colors.textSecondary }]}>•</Text>
+                        <Text style={[styles.sessionMaxWeight, { color: colors.accent }]}>
                           Макс: {session.maxWeight} кг
                         </Text>
                       </View>
                     </View>
-                    <View style={[styles.setsCountPill, isDark ? styles.setsCountPillDark : styles.setsCountPillLight]}>
-                      <Text style={[styles.setsCountText, isDark ? styles.textDark : styles.textLight]}>
+                    <View style={[styles.setsCountPill, { backgroundColor: colors.subCard }]}>
+                      <Text style={[styles.setsCountText, { color: colors.textSecondary }]}>
                         {session.setsCount} {session.setsCount === 1 ? 'підхід' : session.setsCount >= 2 && session.setsCount <= 4 ? 'підходи' : 'підходів'}
                       </Text>
                     </View>
@@ -514,11 +512,11 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
                   {/* Sets Table - EXACTLY matching WorkoutDetailScreen */}
                   {session.sets && session.sets.length > 0 && (
                     <View style={styles.setsTable}>
-                      <View style={[styles.setsTableHeader, isDark ? styles.rowBorderDark : styles.rowBorderLight]}>
-                        <Text style={[styles.colHeader, styles.colSet, isDark ? styles.subDark : styles.subLight]}>Сет</Text>
-                        <Text style={[styles.colHeader, styles.colWeight, isDark ? styles.subDark : styles.subLight]}>Вага</Text>
-                        <Text style={[styles.colHeader, styles.colReps, isDark ? styles.subDark : styles.subLight]}>Повт.</Text>
-                        <Text style={[styles.colHeader, styles.colStatus, isDark ? styles.subDark : styles.subLight]}>Статус</Text>
+                      <View style={[styles.setsTableHeader, { borderBottomColor: colors.cardBorder }]}>
+                        <Text style={[styles.colHeader, styles.colSet, { color: colors.textSecondary }]}>Сет</Text>
+                        <Text style={[styles.colHeader, styles.colWeight, { color: colors.textSecondary }]}>Вага</Text>
+                        <Text style={[styles.colHeader, styles.colReps, { color: colors.textSecondary }]}>Повт.</Text>
+                        <Text style={[styles.colHeader, styles.colStatus, { color: colors.textSecondary }]}>Статус</Text>
                       </View>
 
                       {session.sets.map((s, sIndex) => {
@@ -527,21 +525,21 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
                             key={`set_${s.setNumber || sIndex}`}
                             style={[
                               styles.setRow,
-                              sIndex > 0 && (isDark ? styles.rowBorderDark : styles.rowBorderLight),
+                              sIndex > 0 && { borderTopWidth: 1, borderTopColor: colors.cardBorder },
                             ]}
                           >
                             <View style={styles.colSet}>
-                              <Text style={[styles.setNum, isDark ? styles.textDark : styles.textLight]}>
+                              <Text style={[styles.setNum, { color: colors.text }]}>
                                 {s.setNumber || sIndex + 1}
                               </Text>
                             </View>
                             <View style={styles.colWeight}>
-                              <Text style={[styles.setVal, isDark ? styles.textDark : styles.textLight]}>
+                              <Text style={[styles.setVal, { color: colors.text }]}>
                                 {s.weight ? `${s.weight} кг` : '—'}
                               </Text>
                             </View>
                             <View style={styles.colReps}>
-                              <Text style={[styles.setVal, isDark ? styles.textDark : styles.textLight]}>
+                              <Text style={[styles.setVal, { color: colors.text }]}>
                                 {s.actualReps !== null && s.actualReps !== undefined
                                   ? s.actualReps
                                   : s.targetRepsRange || '—'}
@@ -551,7 +549,7 @@ export const ExerciseDetailContent: React.FC<ExerciseDetailContentProps> = ({
                               <Ionicons
                                 name="checkmark-circle"
                                 size={18}
-                                color="#22c55e"
+                                color={colors.success}
                               />
                             </View>
                           </View>

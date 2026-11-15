@@ -20,7 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { triggerRefreshSuccessHaptic } from '../utils/haptics';
@@ -74,7 +74,7 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
 };
 
 export const ExercisesScreen: React.FC = () => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors, isDark } = useTheme();
   const { user, isAdmin } = useAuth();
   const { handleScroll } = useScrollTabBar();
   const router = useRouter();
@@ -289,7 +289,7 @@ export const ExercisesScreen: React.FC = () => {
   return (
     <SafeAreaView
       edges={['top']}
-      style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}
+      style={[styles.container, { backgroundColor: colors.bg }]}
     >
       <Header
         title="База вправ"
@@ -297,10 +297,10 @@ export const ExercisesScreen: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={handleOpenCreateModal}
-            style={styles.webAddBtn}
+            style={[styles.webAddBtn, { backgroundColor: colors.accent }]}
           >
-            <Ionicons name="add" size={16} color="#ffffff" />
-            <Text style={styles.webAddBtnText}>
+            <Ionicons name="add" size={16} color={colors.accentText} />
+            <Text style={[styles.webAddBtnText, { color: colors.accentText }]}>
               Додати
             </Text>
           </TouchableOpacity>
@@ -317,24 +317,24 @@ export const ExercisesScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={isDark ? '#38bdf8' : '#2563eb'}
-            colors={['#2563eb']}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       >
         {/* Search Bar */}
         <View style={styles.filterBarContainer}>
-          <View style={[styles.searchBar, isDark ? styles.searchBarDark : styles.searchBarLight]}>
+          <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
             <Ionicons
               name="search"
               size={18}
-              color={isDark ? '#94a3b8' : '#64748b'}
+              color={colors.textSecondary}
               style={styles.searchIcon}
             />
             <TextInput
-              style={[styles.searchInput, isDark ? styles.textDark : styles.textLight]}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Пошук вправи за назвою..."
-              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
+              placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCorrect={false}
@@ -342,14 +342,14 @@ export const ExercisesScreen: React.FC = () => {
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={16} color={isDark ? '#94a3b8' : '#64748b'} />
+                <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
               </TouchableOpacity>
             )}
           </View>
         </View>
 
         {/* Muscle group tabs */}
-        <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
           М'язові групи
         </Text>
 
@@ -359,24 +359,16 @@ export const ExercisesScreen: React.FC = () => {
             style={[
               styles.tabChip,
               selectedMuscle === 'all'
-                ? isDark
-                  ? styles.tabActiveDark
-                  : styles.tabActiveLight
-                : isDark
-                ? styles.tabInactiveDark
-                : styles.tabInactiveLight,
+                ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                : { backgroundColor: colors.card, borderColor: colors.cardBorder },
             ]}
           >
             <Text
               style={[
                 styles.tabText,
                 selectedMuscle === 'all'
-                  ? isDark
-                    ? styles.textPrimaryDark
-                    : styles.textPrimaryLight
-                  : isDark
-                  ? styles.subDark
-                  : styles.subLight,
+                  ? { color: colors.accentText, fontWeight: '700' }
+                  : { color: colors.textSecondary },
               ]}
             >
               Всі ({exercises.length})
@@ -393,24 +385,16 @@ export const ExercisesScreen: React.FC = () => {
                 style={[
                   styles.tabChip,
                   isSelected
-                    ? isDark
-                      ? styles.tabActiveDark
-                      : styles.tabActiveLight
-                    : isDark
-                    ? styles.tabInactiveDark
-                    : styles.tabInactiveLight,
+                    ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                    : { backgroundColor: colors.card, borderColor: colors.cardBorder },
                 ]}
               >
                 <Text
                   style={[
                     styles.tabText,
                     isSelected
-                      ? isDark
-                        ? styles.textPrimaryDark
-                        : styles.textPrimaryLight
-                      : isDark
-                      ? styles.subDark
-                      : styles.subLight,
+                      ? { color: colors.accentText, fontWeight: '700' }
+                      : { color: colors.textSecondary },
                   ]}
                 >
                   {cat.nameUk} ({count})
@@ -423,31 +407,31 @@ export const ExercisesScreen: React.FC = () => {
         {/* Exercises List */}
         {isLoading ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#2563eb" />
-            <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+            <ActivityIndicator size="large" color={colors.accent} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
               Завантаження вправ...
             </Text>
           </View>
         ) : filteredExercises.length === 0 ? (
-          <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
-            <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-              <Ionicons name="barbell-outline" size={26} color={isDark ? '#94a3b8' : '#64748b'} />
+          <View style={[styles.emptyContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <View style={[styles.emptyIconBox, { backgroundColor: colors.subCard }]}>
+              <Ionicons name="barbell-outline" size={26} color={colors.accent} />
             </View>
-            <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
               Вправ не знайдено
             </Text>
-            <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               {searchQuery
                 ? `Вправ із назвою «${searchQuery}» не знайдено.`
                 : 'У цій категорії поки що немає вправ.'}
             </Text>
             <TouchableOpacity
-              style={styles.emptyBtn}
+              style={[styles.emptyBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
               onPress={handleOpenCreateModal}
             >
-              <Ionicons name="add" size={16} color="#ffffff" />
-              <Text style={styles.emptyBtnText}>
+              <Ionicons name="add" size={16} color={colors.accentText} />
+              <Text style={[styles.emptyBtnText, { color: colors.accentText }]}>
                 Створити власну вправу
               </Text>
             </TouchableOpacity>
@@ -472,11 +456,11 @@ export const ExercisesScreen: React.FC = () => {
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => handleOpenExerciseDetail(ex)}
-                    style={styles.exCard}
+                    style={[styles.exCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
                   >
                     <View style={styles.exCardHeader}>
                       <View style={{ flex: 1, gap: 4 }}>
-                        <Text style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}>
+                        <Text style={[styles.exTitle, { color: colors.text }]}>
                           {ex.name}
                         </Text>
 
@@ -510,33 +494,33 @@ export const ExercisesScreen: React.FC = () => {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsCreateOpen(false)}
       >
-        <SafeAreaView edges={['top', 'bottom']} style={[styles.modalContainer, isDark ? styles.bgDark : styles.bgLight]}>
+        <SafeAreaView edges={['top', 'bottom']} style={[styles.modalContainer, { backgroundColor: colors.bg }]}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={{ flex: 1 }}
           >
             {/* Modal Header */}
-            <View style={[styles.modalHeader, isDark ? styles.borderDark : styles.borderLight]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.cardBorder }]}>
               <View style={styles.modalTitleRow}>
-                <Ionicons name="barbell-outline" size={20} color={isDark ? '#60a5fa' : '#2563eb'} />
-                <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
+                <Ionicons name="barbell-outline" size={20} color={colors.accent} />
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
                   Створити власну вправу
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setIsCreateOpen(false)} style={styles.modalCloseBtn}>
-                <Ionicons name="close" size={22} color={isDark ? '#f8fafc' : '#0f172a'} />
+                <Ionicons name="close" size={22} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <ScrollView contentContainerStyle={styles.modalBody} showsVerticalScrollIndicator={false}>
               <View style={styles.fieldGroup}>
-                <Text style={[styles.fieldLabel, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
                   Назва вправи *
                 </Text>
                 <TextInput
-                  style={[styles.modalInput, isDark ? styles.inputDark : styles.inputLight]}
+                  style={[styles.modalInput, { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text }]}
                   placeholder="Наприклад: Жим штанги під кутом"
-                  placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+                  placeholderTextColor={colors.textSecondary}
                   value={createName}
                   onChangeText={setCreateName}
                   autoFocus
@@ -544,7 +528,7 @@ export const ExercisesScreen: React.FC = () => {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={[styles.fieldLabel, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
                   Група м'язів / Категорія *
                 </Text>
                 <View style={styles.muscleChipsWrap}>
@@ -556,17 +540,17 @@ export const ExercisesScreen: React.FC = () => {
                         onPress={() => setCreateMuscle(cat.id as MuscleGroup)}
                         style={[
                           styles.formChip,
-                          isDark ? styles.formChipDark : styles.formChipLight,
-                          isSelected && (isDark ? styles.formChipActiveDark : styles.formChipActiveLight),
+                          isSelected
+                            ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                            : { backgroundColor: colors.card, borderColor: colors.cardBorder },
                         ]}
                       >
                         <Text
                           style={[
                             styles.formChipText,
                             isSelected
-                              ? (isDark ? styles.textDark : styles.textLight)
-                              : (isDark ? styles.subDark : styles.subLight),
-                            isSelected && { fontWeight: '700' },
+                              ? { color: colors.accentText, fontWeight: '700' }
+                              : { color: colors.textSecondary },
                           ]}
                         >
                           {cat.nameUk}
@@ -579,11 +563,11 @@ export const ExercisesScreen: React.FC = () => {
 
               <View style={styles.modalActionsRow}>
                 <TouchableOpacity
-                  style={[styles.modalCancelBtn, isDark ? styles.btnOutlineDark : styles.btnOutlineLight]}
+                  style={[styles.modalCancelBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
                   onPress={() => setIsCreateOpen(false)}
                   disabled={isSubmittingCreate}
                 >
-                  <Text style={[styles.modalCancelText, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.modalCancelText, { color: colors.text }]}>
                     Скасувати
                   </Text>
                 </TouchableOpacity>
@@ -591,17 +575,18 @@ export const ExercisesScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.modalSaveBtn,
+                    { backgroundColor: colors.accent },
                     isSubmittingCreate && styles.btnDisabled,
                   ]}
                   onPress={handleSaveCreate}
                   disabled={isSubmittingCreate}
                 >
                   {isSubmittingCreate ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <ActivityIndicator size="small" color={colors.accentText} />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={18} color="#ffffff" />
-                      <Text style={styles.modalSaveText}>
+                      <Ionicons name="checkmark" size={18} color={colors.accentText} />
+                      <Text style={[styles.modalSaveText, { color: colors.accentText }]}>
                         Зберегти вправу
                       </Text>
                     </>

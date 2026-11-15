@@ -18,6 +18,7 @@ import Animated, {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useTheme } from '../context/ThemeContext';
 import { swipeCardManager } from '../services/swipeCardManager';
 
 export interface SwipeableActionCardProps {
@@ -65,10 +66,11 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
   children,
 }) => {
   const { width: screenWidth } = useWindowDimensions();
+  const { colors } = useTheme();
   const QUICK_DELETE_THRESHOLD = screenWidth * 0.5;
 
-  const bg = cardBackgroundColor ?? (isDark ? '#1D2939' : '#FFFFFF');
-  const border = borderColor ?? (isDark ? '#334155' : '#E2E8F0');
+  const bg = cardBackgroundColor ?? colors.card;
+  const border = borderColor ?? colors.cardBorder;
 
   const hasFirstAction = Boolean(onCopy || onEdit);
   const restingWidth = hasFirstAction

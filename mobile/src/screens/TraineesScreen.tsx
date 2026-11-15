@@ -18,10 +18,10 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useTheme } from '../context/ThemeContext';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { Card } from '../components/Card';
 import { UserAvatar } from '../components/UserAvatar';
@@ -41,7 +41,7 @@ import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
 
 export const TraineesScreen: React.FC = () => {
-  const isDark = useColorScheme() === 'dark';
+  const { theme, colors, isDark } = useTheme();
   const router = useRouter();
   const { traineeId: paramTraineeId } = useLocalSearchParams<{ traineeId?: string }>();
   const { user, isAdmin, isCoach, isLoading: isAuthLoading } = useAuth();
@@ -581,10 +581,10 @@ export const TraineesScreen: React.FC = () => {
 
   if (isAuthLoading) {
     return (
-      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="small" color="#2563eb" />
-          <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+          <ActivityIndicator size="small" color={colors.accent} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
             Завантаження...
           </Text>
         </View>
@@ -594,8 +594,8 @@ export const TraineesScreen: React.FC = () => {
 
   if (!isTrainer) {
     return (
-      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-        <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
+      <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
+        <View style={[styles.topBar, { backgroundColor: colors.bg, borderBottomWidth: 0 }]}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleBackToProfile}
@@ -603,14 +603,14 @@ export const TraineesScreen: React.FC = () => {
             accessibilityRole="button"
             accessibilityLabel="Назад"
           >
-            <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
-            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+            <Text numberOfLines={1} style={[styles.topBarTitle, { color: colors.text }]}>
               Підопічні
             </Text>
-            <Text numberOfLines={1} style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
+            <Text numberOfLines={1} style={[styles.topBarSub, { color: colors.textSecondary }]}>
               Розділ для тренерів
             </Text>
           </View>
@@ -618,22 +618,22 @@ export const TraineesScreen: React.FC = () => {
           <View style={styles.headerRightActions} />
         </View>
         <View style={styles.nonCoachContainer}>
-          <View style={styles.nonCoachIconWrap}>
-            <Ionicons name="shield-outline" size={48} color="#2563eb" />
+          <View style={[styles.nonCoachIconWrap, { backgroundColor: colors.subCard }]}>
+            <Ionicons name="shield-outline" size={48} color={colors.accent} />
           </View>
-          <Text style={[styles.nonCoachTitle, isDark ? styles.textDark : styles.textLight]}>
+          <Text style={[styles.nonCoachTitle, { color: colors.text }]}>
             Доступ лише для тренерів
           </Text>
-          <Text style={[styles.nonCoachDesc, isDark ? styles.subDark : styles.subLight]}>
+          <Text style={[styles.nonCoachDesc, { color: colors.textSecondary }]}>
             Цей розділ призначений для перегляду та складання тренувальних планів ваших спортсменів.
           </Text>
           <TouchableOpacity
-            style={styles.goToProfileBtn}
+            style={[styles.goToProfileBtn, { backgroundColor: colors.accent }]}
             onPress={handleBackToProfile}
             activeOpacity={0.8}
           >
-            <Ionicons name="person-outline" size={18} color="#ffffff" />
-            <Text style={styles.goToProfileBtnText}>
+            <Ionicons name="person-outline" size={18} color={colors.accentText} />
+            <Text style={[styles.goToProfileBtnText, { color: colors.accentText }]}>
               Перейти у профіль
             </Text>
           </TouchableOpacity>
@@ -646,7 +646,7 @@ export const TraineesScreen: React.FC = () => {
 
   return (
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBackToProfile}>
-      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
         {/* Top Header Bar */}
         <Animated.View
           onLayout={(e) => {
@@ -657,8 +657,7 @@ export const TraineesScreen: React.FC = () => {
           }}
           style={[
             styles.topBar,
-            isDark ? styles.borderDark : styles.borderLight,
-            isDark ? styles.topBarDark : styles.topBarLight,
+            { backgroundColor: colors.bg, borderBottomWidth: 0 },
             Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
             {
               marginTop: topBarAnim.interpolate({
@@ -680,14 +679,14 @@ export const TraineesScreen: React.FC = () => {
             accessibilityRole="button"
             accessibilityLabel="Назад"
           >
-            <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
-            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+            <Text numberOfLines={1} style={[styles.topBarTitle, { color: colors.text }]}>
               Підопічні
             </Text>
-            <Text numberOfLines={1} style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
+            <Text numberOfLines={1} style={[styles.topBarSub, { color: colors.textSecondary }]}>
               {selectedTrainee ? `Обрано: ${selectedTrainee.name || selectedTrainee.email}` : 'Складання планів та контроль прогресу'}
             </Text>
           </View>
@@ -704,8 +703,8 @@ export const TraineesScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#2563eb"
-            colors={['#2563eb']}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       >
@@ -713,33 +712,33 @@ export const TraineesScreen: React.FC = () => {
         <Card style={styles.coachCodeCard}>
           <View style={styles.coachCodeRow}>
             <View style={styles.coachCodeLeft}>
-              <View style={styles.codeIconWrap}>
-                <Ionicons name="key-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
+              <View style={[styles.codeIconWrap, { backgroundColor: colors.subCard }]}>
+                <Ionicons name="key-outline" size={18} color={colors.accent} />
               </View>
               <View>
-                <Text style={[styles.codeLabel, isDark ? styles.subDark : styles.subLight]}>
+                <Text style={[styles.codeLabel, { color: colors.textSecondary }]}>
                   Ваш код тренера
                 </Text>
-                <Text style={[styles.codeValue, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.codeValue, { color: colors.text }]}>
                   {coachCode}
                 </Text>
               </View>
             </View>
 
             <TouchableOpacity
-              style={[styles.copyBtn, isDark ? styles.copyBtnDark : styles.copyBtnLight]}
+              style={[styles.copyBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
               onPress={handleCopyCoachCode}
               activeOpacity={0.7}
             >
               <Ionicons
                 name={copiedCode ? 'checkmark' : 'copy-outline'}
                 size={16}
-                color={copiedCode ? '#22c55e' : (isDark ? '#f8fafc' : '#0f172a')}
+                color={copiedCode ? '#22c55e' : colors.text}
               />
               <Text
                 style={[
                   styles.copyBtnText,
-                  copiedCode ? { color: '#22c55e' } : (isDark ? styles.textDark : styles.textLight),
+                  copiedCode ? { color: '#22c55e' } : { color: colors.text },
                 ]}
               >
                 {copiedCode ? 'Скопійовано' : 'Копіювати'}
@@ -750,20 +749,20 @@ export const TraineesScreen: React.FC = () => {
 
         {/* Add Trainee Form Card */}
         <Card style={styles.addTraineeCard}>
-          <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Прикріпити нового підопічного
           </Text>
-          <Text style={[styles.sectionSub, isDark ? styles.subDark : styles.subLight]}>
+          <Text style={[styles.sectionSub, { color: colors.textSecondary }]}>
             Введіть персональний код, ID або email спортсмена
           </Text>
 
           <View style={styles.inputRow}>
-            <View style={[styles.inputWrap, isDark ? styles.inputDark : styles.inputLight]}>
-              <Ionicons name="person-add-outline" size={18} color={isDark ? '#94a3b8' : '#64748b'} />
+            <View style={[styles.inputWrap, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
+              <Ionicons name="person-add-outline" size={18} color={colors.textSecondary} />
               <TextInput
-                style={[styles.input, isDark ? styles.textDark : styles.textLight]}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Код або email підопічного..."
-                placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
+                placeholderTextColor={colors.textSecondary}
                 value={addCodeInput}
                 onChangeText={setAddCodeInput}
                 autoCapitalize="none"
@@ -774,6 +773,7 @@ export const TraineesScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.addBtn,
+                { backgroundColor: colors.accent },
                 isAddingTrainee && styles.addBtnDisabled,
               ]}
               onPress={handleAddTrainee}
@@ -781,11 +781,11 @@ export const TraineesScreen: React.FC = () => {
               activeOpacity={0.8}
             >
               {isAddingTrainee ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={colors.accentText} />
               ) : (
                 <>
-                  <Ionicons name="add" size={18} color="#ffffff" />
-                  <Text style={styles.addBtnText}>
+                  <Ionicons name="add" size={18} color={colors.accentText} />
+                  <Text style={[styles.addBtnText, { color: colors.accentText }]}>
                     Додати
                   </Text>
                 </>
@@ -797,21 +797,21 @@ export const TraineesScreen: React.FC = () => {
         {/* Trainees List Selector */}
         {isLoadingTrainees && !isRefreshing ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="small" color="#2563eb" />
-            <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+            <ActivityIndicator size="small" color={colors.accent} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
               Завантаження підопічних...
             </Text>
           </View>
         ) : trainees.length === 0 ? (
           /* Empty Trainees State */
-          <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
-            <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-              <Ionicons name="people-outline" size={26} color={isDark ? '#94A3B8' : '#64748B'} />
+          <View style={[styles.emptyContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <View style={[styles.emptyIconBox, { backgroundColor: colors.subCard }]}>
+              <Ionicons name="people-outline" size={26} color={colors.textSecondary} />
             </View>
-            <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
               У вас ще немає підопічних
             </Text>
-            <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               Поділіться кодом тренера ({coachCode}) зі своїм атлетом або введіть його код вище, щоб розпочати співпрацю.
             </Text>
           </View>
@@ -819,7 +819,7 @@ export const TraineesScreen: React.FC = () => {
           <>
             {/* Trainee Horizontal Switcher */}
             <View style={styles.traineeSelectorSection}>
-              <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
+              <Text style={[styles.selectorLabel, { color: colors.textSecondary }]}>
                 СПИСОК ПІДОПІЧНИХ ({trainees.length})
               </Text>
               <ScrollView
@@ -838,8 +838,9 @@ export const TraineesScreen: React.FC = () => {
                       onPress={() => setSelectedTrainee(t)}
                       style={[
                         styles.traineePill,
-                        isDark ? styles.pillDark : styles.pillLight,
-                        isSelected && (isDark ? styles.traineePillActiveDark : styles.traineePillActiveLight),
+                        isSelected
+                          ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                          : { backgroundColor: colors.card, borderColor: colors.cardBorder },
                       ]}
                     >
                       <UserAvatar image={t.image} name={t.name} size="xs" />
@@ -849,8 +850,8 @@ export const TraineesScreen: React.FC = () => {
                           style={[
                             styles.pillName,
                             isSelected
-                              ? (isDark ? styles.pillNameActiveDark : styles.pillNameActiveLight)
-                              : (isDark ? styles.textDark : styles.textLight),
+                              ? { color: colors.accentText, fontWeight: '700' }
+                              : { color: colors.text },
                           ]}
                         >
                           {t.name}
@@ -859,8 +860,8 @@ export const TraineesScreen: React.FC = () => {
                           style={[
                             styles.pillCode,
                             isSelected
-                              ? (isDark ? styles.pillCodeActiveDark : styles.pillCodeActiveLight)
-                              : (isDark ? styles.subDark : styles.subLight),
+                              ? { color: colors.accentText }
+                              : { color: colors.textSecondary },
                           ]}
                         >
                           {t.profileCode}
@@ -876,14 +877,14 @@ export const TraineesScreen: React.FC = () => {
             {selectedTrainee && (
               <>
                 <Card style={styles.selectedTraineeCard}>
-                <View style={[styles.traineeHeaderRow, { borderBottomColor: isDark ? '#334155' : '#e2e8f0' }]}>
+                <View style={[styles.traineeHeaderRow, { borderBottomColor: colors.cardBorder }]}>
                   <View style={styles.traineeHeaderLeft}>
                     <UserAvatar image={selectedTrainee.image} name={selectedTrainee.name} size="lg" />
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.traineeNameTitle, isDark ? styles.textDark : styles.textLight]}>
+                      <Text style={[styles.traineeNameTitle, { color: colors.text }]}>
                         {selectedTrainee.name}
                       </Text>
-                      <Text style={[styles.traineeEmailSub, isDark ? styles.subDark : styles.subLight]}>
+                      <Text style={[styles.traineeEmailSub, { color: colors.textSecondary }]}>
                         {selectedTrainee.email || `Код: ${selectedTrainee.profileCode}`}
                       </Text>
                     </View>
@@ -902,23 +903,23 @@ export const TraineesScreen: React.FC = () => {
                 {/* Trainee Action Buttons */}
                 <View style={styles.actionButtonsRow}>
                   <TouchableOpacity
-                    style={styles.createWorkoutBtn}
+                    style={[styles.createWorkoutBtn, { backgroundColor: colors.accent }]}
                     activeOpacity={0.8}
                     onPress={handleCreateWorkoutForTrainee}
                   >
-                    <Ionicons name="add-circle" size={18} color="#ffffff" />
-                    <Text style={styles.createWorkoutBtnText}>
+                    <Ionicons name="add-circle" size={18} color={colors.accentText} />
+                    <Text style={[styles.createWorkoutBtnText, { color: colors.accentText }]}>
                       Додати тренування
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.analyticsBtn, isDark ? styles.analyticsBtnDark : styles.analyticsBtnLight]}
+                    style={[styles.analyticsBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
                     activeOpacity={0.8}
                     onPress={() => setIsAnalyticsModalOpen(true)}
                   >
-                    <Ionicons name="stats-chart-outline" size={16} color={isDark ? '#f8fafc' : '#0f172a'} />
-                    <Text style={[styles.analyticsBtnText, isDark ? styles.textDark : styles.textLight]}>
+                    <Ionicons name="stats-chart-outline" size={16} color={colors.text} />
+                    <Text style={[styles.analyticsBtnText, { color: colors.text }]}>
                       Аналітика
                     </Text>
                   </TouchableOpacity>
@@ -929,34 +930,34 @@ export const TraineesScreen: React.FC = () => {
               <View style={styles.traineeWorkoutsSection}>
                 {/* Trainee Workouts Header */}
                 <View style={styles.workoutsHeaderRow}>
-                  <Text style={[styles.workoutsSectionTitle, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.workoutsSectionTitle, { color: colors.text }]}>
                     Тренування підопічного
                   </Text>
-                  <View style={styles.countBadge}>
-                    <Text style={styles.countBadgeText}>{traineeWorkouts.length}</Text>
+                  <View style={[styles.countBadge, { backgroundColor: colors.subCard }]}>
+                    <Text style={[styles.countBadgeText, { color: colors.text }]}>{traineeWorkouts.length}</Text>
                   </View>
                 </View>
 
                 {/* Trainee Workouts List */}
                 {isLoadingWorkouts ? (
                   <View style={styles.centerContainer}>
-                    <ActivityIndicator size="small" color="#2563eb" />
+                    <ActivityIndicator size="small" color={colors.accent} />
                   </View>
                 ) : traineeWorkouts.length === 0 ? (
-                  <View style={[styles.noWorkoutsWrap, isDark ? styles.noWorkoutsDark : styles.noWorkoutsLight]}>
-                    <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-                      <Ionicons name="barbell-outline" size={24} color={isDark ? '#94a3b8' : '#64748b'} />
+                  <View style={[styles.noWorkoutsWrap, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                    <View style={[styles.emptyIconBox, { backgroundColor: colors.subCard }]}>
+                      <Ionicons name="barbell-outline" size={24} color={colors.textSecondary} />
                     </View>
-                    <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
+                    <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                       У підопічного немає запланованих тренувань. Натисніть «Додати тренування», щоб скласти перший план.
                     </Text>
                     <TouchableOpacity
-                      style={styles.firstWorkoutBtn}
+                      style={[styles.firstWorkoutBtn, { backgroundColor: colors.accent }]}
                       activeOpacity={0.8}
                       onPress={handleCreateWorkoutForTrainee}
                     >
-                      <Ionicons name="add-circle" size={16} color="#ffffff" />
-                      <Text style={styles.firstWorkoutBtnText}>
+                      <Ionicons name="add-circle" size={16} color={colors.accentText} />
+                      <Text style={[styles.firstWorkoutBtnText, { color: colors.accentText }]}>
                         Скласти перше тренування
                       </Text>
                     </TouchableOpacity>
@@ -974,17 +975,17 @@ export const TraineesScreen: React.FC = () => {
                             onPress={() => toggleTraineeMonth(group.key)}
                             style={[
                               styles.monthHeader,
-                              isDark ? styles.monthHeaderDark : styles.monthHeaderLight,
+                              { backgroundColor: colors.subCard },
                             ]}
                             accessibilityRole="button"
                             accessibilityLabel={`${group.label}, ${group.workouts.length} тренувань`}
                           >
                             <View style={styles.monthHeaderLeft}>
-                              <Text style={[styles.monthTitle, isDark ? styles.textDark : styles.textLight]}>
+                              <Text style={[styles.monthTitle, { color: colors.text }]}>
                                 {group.label}
                               </Text>
-                              <View style={[styles.monthCountBadge, isDark ? styles.monthCountBadgeDark : styles.monthCountBadgeLight]}>
-                                <Text style={[styles.monthCountText, isDark ? styles.monthCountTextDark : styles.monthCountTextLight]}>
+                              <View style={[styles.monthCountBadge, { backgroundColor: colors.card }]}>
+                                <Text style={[styles.monthCountText, { color: colors.textSecondary }]}>
                                   {group.workouts.length}
                                 </Text>
                               </View>
@@ -992,7 +993,7 @@ export const TraineesScreen: React.FC = () => {
                             <Ionicons
                               name={isOpen ? 'chevron-up' : 'chevron-down'}
                               size={18}
-                              color={isDark ? '#94A3B8' : '#64748B'}
+                              color={colors.textSecondary}
                             />
                           </TouchableOpacity>
 
@@ -1038,8 +1039,9 @@ export const TraineesScreen: React.FC = () => {
                                                   color: isCompleted
                                                     ? '#22C55E'
                                                     : isInProgress
-                                                    ? '#60A5FA'
-                                                    : (isDark ? '#94A3B8' : '#64748B'),
+                                                    ? colors.accent
+                                                    : colors.textSecondary,
+                                                  fontWeight: (isCompleted || isInProgress) ? '700' : '600',
                                                 },
                                               ]}
                                             >
@@ -1059,7 +1061,7 @@ export const TraineesScreen: React.FC = () => {
                                               <Ionicons
                                                 name={isExpanded ? 'chevron-up' : 'chevron-down'}
                                                 size={18}
-                                                color={isDark ? '#94A3B8' : '#64748B'}
+                                                color={colors.textSecondary}
                                               />
                                             </TouchableOpacity>
                                           )}
@@ -1068,7 +1070,7 @@ export const TraineesScreen: React.FC = () => {
                                         {/* Workout Title */}
                                         <Text
                                           numberOfLines={1}
-                                          style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
+                                          style={[styles.workoutTitle, { color: colors.text }]}
                                         >
                                           {w.title || 'Тренування без назви'}
                                         </Text>
@@ -1079,34 +1081,34 @@ export const TraineesScreen: React.FC = () => {
                                             <Ionicons
                                               name="calendar-outline"
                                               size={13}
-                                              color={isDark ? '#94A3B8' : '#64748B'}
+                                              color={colors.textSecondary}
                                             />
-                                            <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
+                                            <Text style={[styles.metricText, { color: colors.textSecondary }]}>
                                               {formatDateDDMMYY(w.scheduledDate)}
                                             </Text>
                                           </View>
 
-                                          <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+                                          <Text style={[styles.dotSep, { color: colors.textSecondary }]}>·</Text>
 
                                           <View style={styles.metricItem}>
                                             <Ionicons
                                               name="layers-outline"
                                               size={14}
-                                              color={isDark ? '#94A3B8' : '#64748B'}
+                                              color={colors.textSecondary}
                                             />
-                                            <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
-                                              <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                                            <Text style={[styles.metricText, { color: colors.textSecondary }]}>
+                                              <Text style={[styles.metricVal, { color: colors.text }]}>
                                                 {exerciseCount}
                                               </Text>{' '}
                                               {exerciseCount === 1 ? 'вправа' : 'вправ'}
                                             </Text>
                                           </View>
 
-                                          <Text style={[styles.dotSep, isDark ? styles.subDark : styles.subLight]}>·</Text>
+                                          <Text style={[styles.dotSep, { color: colors.textSecondary }]}>·</Text>
 
                                           <View style={styles.metricItem}>
-                                            <Text style={[styles.metricText, isDark ? styles.subDark : styles.subLight]}>
-                                              <Text style={[styles.metricVal, isDark ? styles.textDark : styles.textLight]}>
+                                            <Text style={[styles.metricText, { color: colors.textSecondary }]}>
+                                              <Text style={[styles.metricVal, { color: colors.text }]}>
                                                 {setsCount}
                                               </Text>{' '}
                                               підходів
@@ -1125,7 +1127,7 @@ export const TraineesScreen: React.FC = () => {
                                                   key={we.id || `${w.id}-ex-${idx}`}
                                                   style={[
                                                     styles.exerciseBadge,
-                                                    isDark ? styles.exerciseBadgeDark : styles.exerciseBadgeLight,
+                                                    { backgroundColor: colors.card, borderColor: colors.cardBorder },
                                                   ]}
                                                   activeOpacity={0.7}
                                                   onPress={() => {
@@ -1144,7 +1146,7 @@ export const TraineesScreen: React.FC = () => {
                                                   <Text
                                                     style={[
                                                       styles.exerciseBadgeText,
-                                                      isDark ? styles.exerciseBadgeTextDark : styles.exerciseBadgeTextLight,
+                                                      { color: colors.text },
                                                     ]}
                                                   >
                                                     {exName} ({setCount})

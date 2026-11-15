@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import { Card } from './Card';
 import { ScreenGestureWrapper } from './ScreenGestureWrapper';
 import { WorkoutCalendarView } from './WorkoutCalendarView';
@@ -44,7 +44,7 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
   trainee,
   initialTab,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { theme, colors, isDark } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === 'ios' ? 47 : 24);
@@ -223,13 +223,15 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
           />
         ) : (
           <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={onClose}>
-            <View style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+            <View style={[styles.container, { backgroundColor: colors.bg }]}>
             {/* Header */}
             <View
               style={[
                 styles.headerRow,
-                isDark ? styles.headerDark : styles.headerLight,
                 {
+                  backgroundColor: colors.bg,
+                  borderBottomColor: 'transparent',
+                  borderBottomWidth: 0,
                   paddingTop: topInset + 6,
                   paddingBottom: 10,
                   minHeight: topInset + 54,
@@ -238,26 +240,26 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
             >
               <TouchableOpacity
                 onPress={onClose}
-                style={[styles.backBtn, isDark ? styles.btnDark : styles.btnLight]}
+                style={[styles.backBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 accessibilityRole="button"
                 accessibilityLabel="Назад"
               >
-                <Ionicons name="arrow-back" size={20} color={isDark ? '#f8fafc' : '#0f172a'} />
+                <Ionicons name="arrow-back" size={20} color={colors.text} />
               </TouchableOpacity>
 
             <View style={styles.headerTitleWrap}>
-              <Text numberOfLines={1} style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}>
+              <Text numberOfLines={1} style={[styles.headerTitle, { color: colors.text }]}>
                 Аналітика підопічного
               </Text>
-              <Text numberOfLines={1} style={[styles.headerSubtitle, isDark ? styles.subDark : styles.subLight]}>
+              <Text numberOfLines={1} style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
                 {trainee.name || trainee.email}
               </Text>
             </View>
 
             {/* Period Switcher (День | Тиждень | Місяць) */}
-            <View style={[styles.periodContainer, isDark ? styles.periodDark : styles.periodLight]}>
+            <View style={[styles.periodContainer, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, borderWidth: 1 }]}>
               {(
                 [
                   { key: 'day', label: 'Д' },
@@ -276,15 +278,15 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                     }}
                     style={[
                       styles.periodBtn,
-                      isActive && (isDark ? styles.periodBtnActiveDark : styles.periodBtnActiveLight),
+                      isActive && { backgroundColor: colors.accent },
                     ]}
                   >
                     <Text
                       style={[
                         styles.periodBtnText,
                         isActive
-                          ? (isDark ? styles.periodTextActiveDark : styles.periodTextActiveLight)
-                          : (isDark ? styles.subDark : styles.subLight),
+                          ? { color: colors.accentText, fontWeight: '700' }
+                          : { color: colors.textSecondary },
                       ]}
                     >
                       {p.label}
@@ -302,8 +304,8 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
               <RefreshControl
                 refreshing={isRefreshing}
                 onRefresh={onRefresh}
-                tintColor="#2563eb"
-                colors={['#2563eb']}
+                tintColor={colors.accent}
+                colors={[colors.accent]}
               />
             }
           >
@@ -326,24 +328,24 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
               <View style={styles.dateNavRow}>
                 <TouchableOpacity
                   onPress={handlePrevPeriod}
-                  style={[styles.navArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
+                  style={[styles.navArrowBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
                   activeOpacity={0.7}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="chevron-back" size={18} color={isDark ? '#f8fafc' : '#0f172a'} />
+                  <Ionicons name="chevron-back" size={18} color={colors.text} />
                 </TouchableOpacity>
 
                 <View style={styles.dateNavCenter}>
                   <View style={styles.dateNavTitleRow}>
-                    <Ionicons name="calendar-outline" size={15} color={isDark ? '#60a5fa' : '#2563eb'} />
+                    <Ionicons name="calendar-outline" size={15} color={colors.accent} />
                     <Text
                       numberOfLines={1}
-                      style={[styles.dateNavTitle, isDark ? styles.textDark : styles.textLight]}
+                      style={[styles.dateNavTitle, { color: colors.text }]}
                     >
                       {periodRange.titleUk}
                     </Text>
                   </View>
-                  <Text style={[styles.dateNavSub, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.dateNavSub, { color: colors.textSecondary }]}>
                     {period === 'day'
                       ? 'Календарний день'
                       : period === 'week'
@@ -355,20 +357,20 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                 <View style={styles.dateNavRight}>
                   <TouchableOpacity
                     onPress={handleNextPeriod}
-                    style={[styles.navArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
+                    style={[styles.navArrowBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
                     activeOpacity={0.7}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Ionicons name="chevron-forward" size={18} color={isDark ? '#f8fafc' : '#0f172a'} />
+                    <Ionicons name="chevron-forward" size={18} color={colors.text} />
                   </TouchableOpacity>
 
                   {!periodRange.isCurrent && (
                     <TouchableOpacity
                       onPress={handleJumpToToday}
-                      style={[styles.todayBtn, isDark ? styles.todayBtnDark : styles.todayBtnLight]}
+                      style={[styles.todayBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.todayBtnText, isDark ? styles.todayBtnTextDark : styles.todayBtnTextLight]}>
+                      <Text style={[styles.todayBtnText, { color: colors.text }]}>
                         Сьогодні
                       </Text>
                     </TouchableOpacity>
@@ -380,18 +382,18 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
             {/* Loading / Error / Content */}
             {isLoading && !isRefreshing ? (
               <View style={styles.stateContainer}>
-                <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
-                <Text style={[styles.stateText, isDark ? styles.subDark : styles.subLight]}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={[styles.stateText, { color: colors.textSecondary }]}>
                   Розрахунок аналітики...
                 </Text>
               </View>
             ) : hasError ? (
               <Card style={styles.errorCard}>
                 <Ionicons name="alert-circle-outline" size={40} color="#ef4444" />
-                <Text style={[styles.errorTitle, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.errorTitle, { color: colors.text }]}>
                   Помилка завантаження даних
                 </Text>
-                <Text style={[styles.errorSub, isDark ? styles.subDark : styles.subLight]}>
+                <Text style={[styles.errorSub, { color: colors.textSecondary }]}>
                   Не вдалося отримати тренування для побудови аналітики.
                 </Text>
                 <TouchableOpacity style={styles.retryBtn} activeOpacity={0.8} onPress={loadData}>
@@ -409,14 +411,14 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                       <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
                         <Ionicons name="checkmark-circle-outline" size={18} color="#22c55e" />
                       </View>
-                      <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
+                      <Text style={[styles.kpiTitle, { color: colors.textSecondary }]}>
                         Підходи
                       </Text>
                     </View>
-                    <Text style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}>
+                    <Text style={[styles.kpiValue, { color: colors.text }]}>
                       {analyticsData.periodCompletedSets}
                     </Text>
-                    <Text style={[styles.kpiDesc, isDark ? styles.subDark : styles.subLight]}>
+                    <Text style={[styles.kpiDesc, { color: colors.textSecondary }]}>
                       виконано
                     </Text>
                   </Card>
@@ -424,17 +426,17 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                   {/* Workouts */}
                   <Card style={styles.kpiCard}>
                     <View style={styles.kpiHeaderRow}>
-                      <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(37, 99, 235, 0.15)' }]}>
-                        <Ionicons name="barbell-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
+                      <View style={[styles.kpiIconWrap, { backgroundColor: colors.subCard }]}>
+                        <Ionicons name="barbell-outline" size={18} color={colors.accent} />
                       </View>
-                      <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
+                      <Text style={[styles.kpiTitle, { color: colors.textSecondary }]}>
                         Тренування
                       </Text>
                     </View>
-                    <Text style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}>
+                    <Text style={[styles.kpiValue, { color: colors.text }]}>
                       {analyticsData.workoutsCount}
                     </Text>
-                    <Text style={[styles.kpiDesc, isDark ? styles.subDark : styles.subLight]}>
+                    <Text style={[styles.kpiDesc, { color: colors.textSecondary }]}>
                       завершено
                     </Text>
                   </Card>
@@ -445,16 +447,16 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                       <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
                         <Ionicons name="trending-up-outline" size={18} color="#f59e0b" />
                       </View>
-                      <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
+                      <Text style={[styles.kpiTitle, { color: colors.textSecondary }]}>
                         Тоннаж
                       </Text>
                     </View>
-                    <Text style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}>
+                    <Text style={[styles.kpiValue, { color: colors.text }]}>
                       {analyticsData.periodTons > 0
                         ? `${analyticsData.periodTons} т`
                         : formatVolume(analyticsData.periodVolumeKg)}
                     </Text>
-                    <Text style={[styles.kpiDesc, isDark ? styles.subDark : styles.subLight]}>
+                    <Text style={[styles.kpiDesc, { color: colors.textSecondary }]}>
                       загальний тоннаж
                     </Text>
                   </Card>
@@ -465,41 +467,41 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                       <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(168, 85, 247, 0.15)' }]}>
                         <Ionicons name="trophy-outline" size={18} color="#a855f7" />
                       </View>
-                      <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
+                      <Text style={[styles.kpiTitle, { color: colors.textSecondary }]}>
                         Вправи
                       </Text>
                     </View>
-                    <Text style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}>
+                    <Text style={[styles.kpiValue, { color: colors.text }]}>
                       {analyticsData.exercisesList.length}
                     </Text>
-                    <Text style={[styles.kpiDesc, isDark ? styles.subDark : styles.subLight]}>
+                    <Text style={[styles.kpiDesc, { color: colors.textSecondary }]}>
                       задіяно
                     </Text>
                   </Card>
                 </View>
 
                 {analyticsData.periodCompletedSets === 0 ? (
-                  <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
-                    <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-                      <Ionicons name="stats-chart-outline" size={28} color={isDark ? '#60a5fa' : '#2563eb'} />
+                  <View style={[styles.emptyContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                    <View style={[styles.emptyIconBox, { backgroundColor: colors.subCard }]}>
+                      <Ionicons name="stats-chart-outline" size={28} color={colors.accent} />
                     </View>
-                    <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
                       Немає завершених підходів
                     </Text>
-                    <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
+                    <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                       У підопічного немає завершених підходів за обраний період ({periodRange.titleUk}).
                     </Text>
                   </View>
                 ) : (
                   <>
                     {/* View Switcher: М'язи | Вправи */}
-                    <View style={[styles.filterContainer, isDark ? styles.filterDark : styles.filterLight]}>
+                    <View style={[styles.filterContainer, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, borderWidth: 1 }]}>
                       <TouchableOpacity
                         activeOpacity={0.8}
                         onPress={() => setViewTab('muscles')}
-                        style={[styles.filterBtn, viewTab === 'muscles' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight)]}
+                        style={[styles.filterBtn, viewTab === 'muscles' && { backgroundColor: colors.accent }]}
                       >
-                        <Text style={[styles.filterBtnText, viewTab === 'muscles' ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight) : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight)]}>
+                        <Text style={[styles.filterBtnText, viewTab === 'muscles' ? { color: colors.accentText, fontWeight: '700' } : { color: colors.textSecondary, fontWeight: '600' }]}>
                           М'язові групи ({analyticsData.muscleList.length})
                         </Text>
                       </TouchableOpacity>
@@ -507,9 +509,9 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                       <TouchableOpacity
                         activeOpacity={0.8}
                         onPress={() => setViewTab('exercises')}
-                        style={[styles.filterBtn, viewTab === 'exercises' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight)]}
+                        style={[styles.filterBtn, viewTab === 'exercises' && { backgroundColor: colors.accent }]}
                       >
-                        <Text style={[styles.filterBtnText, viewTab === 'exercises' ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight) : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight)]}>
+                        <Text style={[styles.filterBtnText, viewTab === 'exercises' ? { color: colors.accentText, fontWeight: '700' } : { color: colors.textSecondary, fontWeight: '600' }]}>
                           Вправи ({analyticsData.exercisesList.length})
                         </Text>
                       </TouchableOpacity>
@@ -518,17 +520,17 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                     {/* Muscles View */}
                     {viewTab === 'muscles' && (
                       <Card style={styles.breakdownCard}>
-                        <View style={[styles.cardHeader, isDark ? styles.itemBorderDark : styles.itemBorderLight]}>
+                        <View style={[styles.cardHeader, { borderBottomColor: colors.cardBorder }]}>
                           <View>
-                            <Text style={[styles.cardTitle, isDark ? styles.textDark : styles.textLight]}>
+                            <Text style={[styles.cardTitle, { color: colors.text }]}>
                               Розподіл по м'язах
                             </Text>
-                            <Text style={[styles.cardSub, isDark ? styles.subDark : styles.subLight]}>
+                            <Text style={[styles.cardSub, { color: colors.textSecondary }]}>
                               Відсоток навантаження за підходами
                             </Text>
                           </View>
-                          <View style={styles.totalBadge}>
-                            <Text style={styles.totalBadgeText}>
+                          <View style={[styles.totalBadge, { backgroundColor: colors.subCard }]}>
+                            <Text style={[styles.totalBadgeText, { color: colors.text }]}>
                               {analyticsData.periodCompletedSets} підх.
                             </Text>
                           </View>
@@ -540,23 +542,23 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                               <View style={styles.muscleInfoRow}>
                                 <View style={styles.muscleNameWrap}>
                                   <View style={[styles.muscleDot, { backgroundColor: item.color }]} />
-                                  <Text style={[styles.muscleNameText, isDark ? styles.textDark : styles.textLight]}>
+                                  <Text style={[styles.muscleNameText, { color: colors.text }]}>
                                     {item.nameUk}
                                   </Text>
                                 </View>
                                 <View style={styles.muscleCountWrap}>
-                                  <Text style={[styles.muscleCountText, isDark ? styles.textDark : styles.textLight]}>
+                                  <Text style={[styles.muscleCountText, { color: colors.text }]}>
                                     {item.setsCount}{' '}
-                                    <Text style={[styles.countUnitText, isDark ? styles.subDark : styles.subLight]}>
+                                    <Text style={[styles.countUnitText, { color: colors.textSecondary }]}>
                                       {item.setsCount === 1 ? 'підхід' : item.setsCount >= 2 && item.setsCount <= 4 ? 'підходи' : 'підходів'}
                                     </Text>
                                   </Text>
-                                  <Text style={[styles.musclePercentText, isDark ? styles.subDark : styles.subLight]}>
+                                  <Text style={[styles.musclePercentText, { color: colors.textSecondary }]}>
                                     ({item.percentage}%)
                                   </Text>
                                 </View>
                               </View>
-                              <View style={[styles.progressTrack, isDark ? styles.trackDark : styles.trackLight]}>
+                              <View style={[styles.progressTrack, { backgroundColor: colors.subCard }]}>
                                 <View
                                   style={[
                                     styles.progressFill,
@@ -576,12 +578,12 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                     {/* Exercises View */}
                     {viewTab === 'exercises' && (
                       <Card style={styles.breakdownCard}>
-                        <View style={[styles.cardHeader, isDark ? styles.itemBorderDark : styles.itemBorderLight]}>
+                        <View style={[styles.cardHeader, { borderBottomColor: colors.cardBorder }]}>
                           <View>
-                            <Text style={[styles.cardTitle, isDark ? styles.textDark : styles.textLight]}>
+                            <Text style={[styles.cardTitle, { color: colors.text }]}>
                               Виконані вправи
                             </Text>
-                            <Text style={[styles.cardSub, isDark ? styles.subDark : styles.subLight]}>
+                            <Text style={[styles.cardSub, { color: colors.textSecondary }]}>
                               Всього: {analyticsData.exercisesList.length}
                             </Text>
                           </View>
@@ -589,20 +591,20 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
 
                         {/* Search input */}
                         {analyticsData.exercisesList.length > 3 && (
-                          <View style={[styles.searchWrap, isDark ? styles.searchDark : styles.searchLight]}>
-                            <Ionicons name="search" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                          <View style={[styles.searchWrap, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
+                            <Ionicons name="search" size={16} color={colors.textSecondary} />
                             <TextInput
                               value={searchQuery}
                               onChangeText={setSearchQuery}
                               placeholder="Пошук вправи..."
-                              placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
-                              style={[styles.searchInput, isDark ? styles.textDark : styles.textLight]}
+                              placeholderTextColor={colors.textSecondary}
+                              style={[styles.searchInput, { color: colors.text }]}
                               autoCapitalize="none"
                               clearButtonMode="while-editing"
                             />
                             {Boolean(searchQuery) && (
                               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                                <Ionicons name="close-circle" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                                <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
                               </TouchableOpacity>
                             )}
                           </View>
@@ -618,13 +620,13 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                                 onPress={() => handleOpenExerciseDetail(item)}
                                 style={[
                                   styles.exerciseItem,
-                                  idx > 0 && (isDark ? styles.itemBorderDark : styles.itemBorderLight),
+                                  idx > 0 && { borderTopWidth: 1, borderTopColor: colors.cardBorder },
                                 ]}
                               >
                                 <View style={styles.exLeftCol}>
                                   <Text
                                     numberOfLines={2}
-                                    style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}
+                                    style={[styles.exTitle, { color: colors.text }]}
                                   >
                                     {item.exerciseName}
                                   </Text>
@@ -640,7 +642,7 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                                       </Text>
                                     </View>
                                     {item.maxWeight > 0 && (
-                                      <Text style={[styles.exPrText, isDark ? styles.subDark : styles.subLight]}>
+                                      <Text style={[styles.exPrText, { color: colors.textSecondary }]}>
                                         Макс: <Text style={{ fontWeight: '700' }}>{item.maxWeight} кг</Text>
                                         {item.repsAtMaxWeight > 0 ? ` × ${item.repsAtMaxWeight}` : ''}
                                       </Text>
@@ -649,10 +651,10 @@ export const TraineeAnalyticsModal: React.FC<TraineeAnalyticsModalProps> = ({
                                 </View>
 
                                 <View style={styles.exRightCol}>
-                                  <Text style={[styles.exSetsCount, isDark ? styles.textDark : styles.textLight]}>
+                                  <Text style={[styles.exSetsCount, { color: colors.text }]}>
                                     {item.completedSetsCount}
                                   </Text>
-                                  <Text style={[styles.exSetsLabel, isDark ? styles.subDark : styles.subLight]}>
+                                  <Text style={[styles.exSetsLabel, { color: colors.textSecondary }]}>
                                     {item.completedSetsCount === 1
                                       ? 'підхід'
                                       : item.completedSetsCount >= 2 && item.completedSetsCount <= 4

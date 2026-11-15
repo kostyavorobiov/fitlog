@@ -15,7 +15,7 @@ import {
   Keyboard,
   LayoutAnimation,
 } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { useAuth } from '../context/AuthContext';
@@ -46,7 +46,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   modalSub,
   templateUserId,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors, isDark } = useTheme();
   const { user } = useAuth();
 
   const [mode, setMode] = useState<'empty' | 'template'>('empty');
@@ -190,25 +190,25 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
               <View
                 style={[
                   styles.modalCard,
-                  isDark ? styles.cardDark : styles.cardLight,
+                  { backgroundColor: colors.card, borderColor: colors.cardBorder },
                   isKeyboardVisible && styles.modalCardKeyboardOpen,
                 ]}
               >
                 {/* Header */}
-                <View style={styles.headerRow}>
+                <View style={[styles.headerRow, { borderBottomColor: colors.cardBorder }]}>
                   <View style={styles.headerLeft}>
-                    <View style={[styles.iconBadge, isDark ? styles.iconBadgeDark : styles.iconBadgeLight]}>
+                    <View style={[styles.iconBadge, { backgroundColor: colors.subCard }]}>
                       <Ionicons
                         name="barbell"
                         size={22}
-                        color={isDark ? '#60A5FA' : '#2563EB'}
+                        color={colors.accent}
                       />
                     </View>
                     <View style={styles.headerTextWrap}>
-                      <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
+                      <Text style={[styles.modalTitle, { color: colors.text }]}>
                         {modalTitle || 'Нове тренування'}
                       </Text>
-                      <Text style={[styles.modalSub, isDark ? styles.subDark : styles.subLight]}>
+                      <Text style={[styles.modalSub, { color: colors.textSecondary }]}>
                         {modalSub || 'Створіть порожнє або з збереженого шаблону'}
                       </Text>
                     </View>
@@ -220,31 +220,31 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     accessibilityRole="button"
                     accessibilityLabel="Закрити"
                   >
-                    <Ionicons name="close" size={20} color={isDark ? '#94A3B8' : '#64748B'} />
+                    <Ionicons name="close" size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
 
                 {/* Mode Selector Segment */}
-                <View style={[styles.segmentContainer, isDark ? styles.segmentDark : styles.segmentLight]}>
+                <View style={[styles.segmentContainer, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}>
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setMode('empty')}
                     style={[
                       styles.segmentBtn,
-                      mode === 'empty' && (isDark ? styles.segmentBtnActiveDark : styles.segmentBtnActiveLight),
+                      mode === 'empty' && { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 },
                     ]}
                   >
                     <Ionicons
                       name="barbell-outline"
                       size={15}
-                      color={mode === 'empty' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#64748B')}
+                      color={mode === 'empty' ? colors.accent : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles.segmentBtnText,
                         mode === 'empty'
-                          ? (isDark ? styles.segmentTextActiveDark : styles.segmentTextActiveLight)
-                          : (isDark ? styles.subDark : styles.subLight),
+                          ? { color: colors.text, fontWeight: '700' }
+                          : { color: colors.textSecondary },
                       ]}
                     >
                       Нове тренування
@@ -256,20 +256,20 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     onPress={() => setMode('template')}
                     style={[
                       styles.segmentBtn,
-                      mode === 'template' && (isDark ? styles.segmentBtnActiveDark : styles.segmentBtnActiveLight),
+                      mode === 'template' && { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 },
                     ]}
                   >
                     <Ionicons
                       name="bookmark-outline"
                       size={15}
-                      color={mode === 'template' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#64748B')}
+                      color={mode === 'template' ? colors.accent : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles.segmentBtnText,
                         mode === 'template'
-                          ? (isDark ? styles.segmentTextActiveDark : styles.segmentTextActiveLight)
-                          : (isDark ? styles.subDark : styles.subLight),
+                          ? { color: colors.text, fontWeight: '700' }
+                          : { color: colors.textSecondary },
                       ]}
                     >
                       З шаблону {templates.length > 0 ? `(${templates.length})` : ''}
@@ -281,30 +281,30 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                   <View style={styles.templateSection}>
                     {isLoadingTemplates ? (
                       <View style={styles.loadingBox}>
-                        <ActivityIndicator size="small" color="#2563EB" />
-                        <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+                        <ActivityIndicator size="small" color={colors.accent} />
+                        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
                           Завантаження шаблонів...
                         </Text>
                       </View>
                     ) : templates.length === 0 ? (
-                      <View style={[styles.emptyTemplatesBox, isDark ? styles.innerBoxDark : styles.innerBoxLight]}>
-                        <Ionicons name="bookmark-outline" size={28} color={isDark ? '#64748b' : '#94a3b8'} />
-                        <Text style={[styles.emptyTemplatesTitle, isDark ? styles.textDark : styles.textLight]}>
+                      <View style={[styles.emptyTemplatesBox, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}>
+                        <Ionicons name="bookmark-outline" size={28} color={colors.textSecondary} />
+                        <Text style={[styles.emptyTemplatesTitle, { color: colors.text }]}>
                           Немає збережених шаблонів
                         </Text>
-                        <Text style={[styles.emptyTemplatesSub, isDark ? styles.subDark : styles.subLight]}>
+                        <Text style={[styles.emptyTemplatesSub, { color: colors.textSecondary }]}>
                           Збережіть будь-яке тренування як шаблон у верхньому меню редактора.
                         </Text>
                         <TouchableOpacity
                           onPress={() => setMode('empty')}
-                          style={styles.switchModeBtn}
+                          style={[styles.switchModeBtn, { backgroundColor: colors.accent }]}
                         >
-                          <Text style={styles.switchModeBtnText}>Створити порожнє тренування</Text>
+                          <Text style={[styles.switchModeBtnText, { color: colors.accentText }]}>Створити порожнє тренування</Text>
                         </TouchableOpacity>
                       </View>
                     ) : (
                       <View style={styles.templateListWrap}>
-                        <Text style={[styles.inputLabel, isDark ? styles.labelDark : styles.labelLight]}>
+                        <Text style={[styles.inputLabel, { color: colors.text }]}>
                           Оберіть шаблон *
                         </Text>
                         <ScrollView style={{ maxHeight: 180 }} showsVerticalScrollIndicator={false}>
@@ -321,7 +321,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                                 deleteLabel="Видалити"
                                 containerStyle={[
                                   styles.templateSwipeContainer,
-                                  isSelected && styles.templateCardSelected,
+                                  isSelected && { borderColor: colors.accent, borderWidth: 1.5 },
                                 ]}
                               >
                                 <TouchableOpacity
@@ -332,21 +332,21 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                                   }}
                                   style={[
                                     styles.templateCardInner,
-                                    isSelected && styles.templateCardSelectedInner,
+                                    isSelected && { backgroundColor: colors.subCard },
                                   ]}
                                 >
                                   <View style={{ flex: 1, paddingRight: 8 }}>
-                                    <Text style={[styles.templateCardTitle, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
+                                    <Text style={[styles.templateCardTitle, { color: colors.text }]} numberOfLines={1}>
                                       {tpl.title}
                                     </Text>
-                                    <Text style={[styles.templateCardSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
+                                    <Text style={[styles.templateCardSub, { color: colors.textSecondary }]} numberOfLines={1}>
                                       {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
                                     </Text>
                                   </View>
                                   <Ionicons
                                     name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
                                     size={20}
-                                    color={isSelected ? '#2563EB' : (isDark ? '#64748b' : '#cbd5e1')}
+                                    color={isSelected ? colors.accent : colors.textSecondary}
                                   />
                                 </TouchableOpacity>
                               </SwipeableActionCard>
@@ -359,13 +359,13 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                 ) : (
                   /* Title Field (without quick presets) */
                   <View style={styles.fieldGroup}>
-                    <Text style={[styles.inputLabel, isDark ? styles.labelDark : styles.labelLight]}>
+                    <Text style={[styles.inputLabel, { color: colors.text }]}>
                       Назва тренування *
                     </Text>
                     <TextInput
-                      style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
+                      style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
                       placeholder="наприклад: Груди та Тріцепс"
-                      placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
+                      placeholderTextColor={colors.textSecondary}
                       value={title}
                       onChangeText={setTitle}
                       autoFocus
@@ -375,23 +375,23 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
 
                 {/* Date Field */}
                 <View style={styles.fieldGroup}>
-                  <Text style={[styles.inputLabel, isDark ? styles.labelDark : styles.labelLight]}>
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>
                     Дата тренування
                   </Text>
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={() => setIsDatePickerOpen(true)}
-                    style={[styles.input, styles.datePickerBtn, isDark ? styles.inputDark : styles.inputLight]}
+                    style={[styles.input, styles.datePickerBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}
                     accessibilityRole="button"
                     accessibilityLabel="Оберіть дату тренування"
                   >
                     <Ionicons
                       name="calendar-outline"
                       size={18}
-                      color={isDark ? '#60A5FA' : '#2563EB'}
+                      color={colors.accent}
                       style={{ marginRight: 10 }}
                     />
-                    <Text style={[styles.dateText, isDark ? styles.textDark : styles.textLight]}>
+                    <Text style={[styles.dateText, { color: colors.text }]}>
                       {formatDateDDMMYYYY(date)}
                     </Text>
                   </TouchableOpacity>
@@ -403,9 +403,9 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     activeOpacity={0.7}
                     onPress={handleClose}
                     disabled={isLoading}
-                    style={[styles.actionBtn, isDark ? styles.cancelBtnDark : styles.cancelBtnLight]}
+                    style={[styles.actionBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}
                   >
-                    <Text style={[styles.cancelBtnText, isDark ? styles.cancelTextDark : styles.cancelTextLight]}>
+                    <Text style={[styles.cancelBtnText, { color: colors.text }]}>
                       Скасувати
                     </Text>
                   </TouchableOpacity>
@@ -414,14 +414,14 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     activeOpacity={0.85}
                     onPress={handleSubmit}
                     disabled={isLoading}
-                    style={[styles.actionBtn, styles.createBtn]}
+                    style={[styles.actionBtn, styles.createBtn, { backgroundColor: colors.accent, shadowColor: colors.accent }]}
                   >
                     {isLoading ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
+                      <ActivityIndicator size="small" color={colors.accentText} />
                     ) : (
                       <>
-                        <Ionicons name="add" size={19} color="#ffffff" />
-                        <Text style={styles.createBtnText}>
+                        <Ionicons name="add" size={19} color={colors.accentText} />
+                        <Text style={[styles.createBtnText, { color: colors.accentText }]}>
                           {mode === 'template' ? 'Створити' : 'Створити'}
                         </Text>
                       </>

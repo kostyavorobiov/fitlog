@@ -5,9 +5,8 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
-  useColorScheme as useRNColorScheme,
 } from 'react-native';
-import { useAppColorScheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 
 export type UserAvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -36,8 +35,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   onPress,
   style,
 }) => {
-  const scheme = useAppColorScheme();
-  const isDark = scheme === 'dark';
+  const { colors, isDark } = useTheme();
   const [imageError, setImageError] = useState(false);
 
   const resolvedSrc = src || image;
@@ -72,15 +70,15 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
           width: sizeInfo.dimension,
           height: sizeInfo.dimension,
           borderRadius: sizeInfo.dimension / 2,
+          backgroundColor: colors.subCard,
+          borderColor: colors.cardBorder,
         },
-        isDark ? styles.fallbackDark : styles.fallbackLight,
       ]}
     >
       <Text
         style={[
           styles.fallbackText,
-          { fontSize: sizeInfo.fontSize },
-          isDark ? styles.fallbackTextDark : styles.fallbackTextLight,
+          { fontSize: sizeInfo.fontSize, color: colors.text },
         ]}
       >
         WD
@@ -99,8 +97,8 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
             width: sizeInfo.dimension,
             height: sizeInfo.dimension,
             borderRadius: sizeInfo.dimension / 2,
+            borderColor: colors.cardBorder,
           },
-          isDark ? styles.touchableDark : styles.touchableLight,
           style,
         ]}
       >

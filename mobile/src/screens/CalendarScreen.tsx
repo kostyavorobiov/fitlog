@@ -10,10 +10,10 @@ import {
   Alert,
   BackHandler,
 } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useTheme } from '../context/ThemeContext';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import { Header } from '../components/Header';
@@ -33,7 +33,7 @@ import {
 } from '../utils/date';
 
 export const CalendarScreen: React.FC = () => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors, isDark } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { handleScroll } = useScrollTabBar();
@@ -280,7 +280,7 @@ export const CalendarScreen: React.FC = () => {
   }, [handleBackToWorkouts]);
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+    <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Header */}
       <Header
         title="Календар"
@@ -297,8 +297,8 @@ export const CalendarScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#2563EB"
-            colors={['#2563EB']}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       >
@@ -308,46 +308,46 @@ export const CalendarScreen: React.FC = () => {
             <View style={styles.monthTitleWrap}>
               <TouchableOpacity
                 onPress={handlePrevMonth}
-                style={[styles.navArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
+                style={[styles.navArrowBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="chevron-back" size={18} color={isDark ? '#F8FAFC' : '#0F172A'} />
+                <Ionicons name="chevron-back" size={18} color={colors.text} />
               </TouchableOpacity>
 
-              <Text style={[styles.monthTitleText, isDark ? styles.textDark : styles.textLight]}>
+              <Text style={[styles.monthTitleText, { color: colors.text }]}>
                 {UKRAINIAN_MONTHS[month]} {year}
               </Text>
 
               <TouchableOpacity
                 onPress={handleNextMonth}
-                style={[styles.navArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
+                style={[styles.navArrowBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="chevron-forward" size={18} color={isDark ? '#F8FAFC' : '#0F172A'} />
+                <Ionicons name="chevron-forward" size={18} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity
               onPress={handleJumpToToday}
-              style={[styles.todayBtn, isDark ? styles.todayBtnDark : styles.todayBtnLight]}
+              style={[styles.todayBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.todayBtnText, isDark ? styles.textDark : styles.textLight]}>
+              <Text style={[styles.todayBtnText, { color: colors.text }]}>
                 Сьогодні
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Weekdays row */}
-          <View style={[styles.weekDaysRow, isDark ? styles.borderDark : styles.borderLight]}>
+          <View style={[styles.weekDaysRow, { borderBottomColor: colors.cardBorder }]}>
             {UKRAINIAN_WEEKDAYS_SHORT.map((day, idx) => (
               <View key={day} style={styles.weekDayCol}>
                 <Text
                   style={[
                     styles.weekDayText,
-                    idx >= 5 ? styles.weekendText : (isDark ? styles.subDark : styles.subLight),
+                    idx >= 5 ? { color: colors.accent } : { color: colors.textSecondary },
                   ]}
                 >
                   {day}
@@ -378,8 +378,8 @@ export const CalendarScreen: React.FC = () => {
                   onPress={() => setSelectedDateStr(cellDateStr)}
                   style={[
                     styles.dayCell,
-                    isSelected && (isDark ? styles.dayCellSelectedDark : styles.dayCellSelectedLight),
-                    isToday && !isSelected && styles.dayCellToday,
+                    isSelected && { backgroundColor: colors.accent },
+                    isToday && !isSelected && { borderWidth: 1.5, borderColor: colors.accent },
                   ]}
                 >
                   <View style={styles.dayNumWrap}>
@@ -387,17 +387,17 @@ export const CalendarScreen: React.FC = () => {
                       style={[
                         styles.dayCellNum,
                         isSelected
-                          ? (isDark ? styles.dayCellNumSelectedDark : styles.dayCellNumSelectedLight)
+                          ? { color: colors.accentText, fontWeight: '800' }
                           : isToday
-                          ? styles.dayCellNumToday
+                          ? { color: colors.accent, fontWeight: '700' }
                           : hasWorkouts
-                          ? (isDark ? styles.textDark : styles.textLight)
-                          : (isDark ? styles.dayMutedDark : styles.dayMutedLight),
+                          ? { color: colors.text }
+                          : { color: colors.textSecondary },
                       ]}
                     >
                       {dayNum}
                     </Text>
-                    {isToday && !isSelected && <View style={styles.todayIndicatorDot} />}
+                    {isToday && !isSelected && <View style={[styles.todayIndicatorDot, { backgroundColor: colors.accent }]} />}
                   </View>
 
                   {/* Workout Dots Indicator */}
@@ -409,8 +409,8 @@ export const CalendarScreen: React.FC = () => {
                           allDone
                             ? styles.dotCompleted
                             : hasInProgress
-                            ? styles.dotInProgress
-                            : styles.dotPlanned,
+                            ? { backgroundColor: colors.accent }
+                            : { backgroundColor: colors.textSecondary },
                         ]}
                       />
                     )}
@@ -418,7 +418,7 @@ export const CalendarScreen: React.FC = () => {
                       <Text
                         style={[
                           styles.multipleCountText,
-                          isSelected ? styles.multipleCountSelected : (isDark ? styles.subDark : styles.subLight),
+                          isSelected ? { color: colors.accentText } : { color: colors.textSecondary },
                         ]}
                       >
                         +{dayWorkouts.length}
@@ -433,21 +433,21 @@ export const CalendarScreen: React.FC = () => {
 
         {/* Selected Date Header & Workouts */}
         <Card style={styles.selectedDateCard}>
-          <View style={[styles.selectedDateHeader, isDark ? styles.borderDark : styles.borderLight]}>
+          <View style={[styles.selectedDateHeader, { borderBottomColor: colors.cardBorder }]}>
             <View style={styles.dateNavWrap}>
               <TouchableOpacity
                 onPress={handlePrevDay}
-                style={[styles.miniArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
+                style={[styles.miniArrowBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
                 hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               >
-                <Ionicons name="chevron-back" size={16} color={isDark ? '#F8FAFC' : '#0F172A'} />
+                <Ionicons name="chevron-back" size={16} color={colors.text} />
               </TouchableOpacity>
 
               <View style={{ flex: 1 }}>
-                <Text style={[styles.selectedDateTitle, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.selectedDateTitle, { color: colors.text }]}>
                   {formatUkFullDate(selectedDateStr)}
                 </Text>
-                <Text style={[styles.selectedDateSub, isDark ? styles.subDark : styles.subLight]}>
+                <Text style={[styles.selectedDateSub, { color: colors.textSecondary }]}>
                   {selectedDateWorkouts.length === 0
                     ? 'На цей день немає запланованих тренувань'
                     : `Заплановано тренувань: ${selectedDateWorkouts.length}`}
@@ -456,20 +456,20 @@ export const CalendarScreen: React.FC = () => {
 
               <TouchableOpacity
                 onPress={handleNextDay}
-                style={[styles.miniArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
+                style={[styles.miniArrowBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
                 hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               >
-                <Ionicons name="chevron-forward" size={16} color={isDark ? '#F8FAFC' : '#0F172A'} />
+                <Ionicons name="chevron-forward" size={16} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity
-              style={[styles.addForDateBtn, isDark ? styles.addForDateBtnDark : styles.addForDateBtnLight]}
+              style={[styles.addForDateBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
               onPress={() => setIsCreateModalOpen(true)}
             >
-              <Ionicons name="add" size={15} color="#ffffff" />
-              <Text style={[styles.addForDateText, isDark ? styles.addForDateTextDark : styles.addForDateTextLight]}>
+              <Ionicons name="add" size={16} color={colors.accentText} />
+              <Text style={[styles.addForDateText, { color: colors.accentText }]}>
                 Додати на цей день
               </Text>
             </TouchableOpacity>
@@ -478,20 +478,20 @@ export const CalendarScreen: React.FC = () => {
           {/* Workouts List for Selected Date */}
           {isLoading ? (
             <View style={styles.centerContainer}>
-              <ActivityIndicator size="small" color="#2563EB" />
-              <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+              <ActivityIndicator size="small" color={colors.accent} />
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
                 Завантаження розкладу...
               </Text>
             </View>
           ) : selectedDateWorkouts.length === 0 ? (
-            <View style={[styles.emptyDayContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
-              <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-                <Ionicons name="calendar-clear-outline" size={26} color={isDark ? '#94A3B8' : '#64748B'} />
+            <View style={[styles.emptyDayContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+              <View style={[styles.emptyIconBox, { backgroundColor: colors.subCard }]}>
+                <Ionicons name="calendar-clear-outline" size={26} color={colors.textSecondary} />
               </View>
-              <Text style={[styles.emptyDayTitle, isDark ? styles.textDark : styles.textLight]}>
+              <Text style={[styles.emptyDayTitle, { color: colors.text }]}>
                 Тренувань на обрану дату немає
               </Text>
-              <Text style={[styles.emptyDayDesc, isDark ? styles.subDark : styles.subLight]}>
+              <Text style={[styles.emptyDayDesc, { color: colors.textSecondary }]}>
                 Натисніть «Додати на цей день» вище, щоб запланувати тренування.
               </Text>
             </View>
@@ -531,13 +531,13 @@ export const CalendarScreen: React.FC = () => {
                       onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
                       style={[
                         styles.workoutItem,
-                        isDark ? styles.workoutItemDark : styles.workoutItemLight,
+                        { backgroundColor: colors.subCard, borderColor: colors.cardBorder, borderWidth: 1 },
                       ]}
                     >
                     <View style={styles.workoutItemLeft}>
                       <View style={styles.workoutItemTitleRow}>
                         <Text
-                          style={[styles.workoutTitle, isDark ? styles.textDark : styles.textLight]}
+                          style={[styles.workoutTitle, { color: colors.text }]}
                           numberOfLines={1}
                         >
                           {w.title || 'Тренування'}
@@ -548,8 +548,8 @@ export const CalendarScreen: React.FC = () => {
                             isCompleted
                               ? styles.badgeCompleted
                               : isInProgress
-                              ? styles.badgeInProgress
-                              : styles.badgePlanned,
+                              ? { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.accent }
+                              : { backgroundColor: colors.card },
                           ]}
                         >
                           <Text
@@ -558,8 +558,8 @@ export const CalendarScreen: React.FC = () => {
                               isCompleted
                                 ? styles.statusTextCompleted
                                 : isInProgress
-                                ? styles.statusTextInProgress
-                                : styles.statusTextPlanned,
+                                ? { color: colors.accent, fontWeight: '700' }
+                                : { color: colors.textSecondary },
                             ]}
                           >
                             {isCompleted
@@ -572,11 +572,11 @@ export const CalendarScreen: React.FC = () => {
                       </View>
 
                       <View style={styles.workoutItemMetaRow}>
-                        <Text style={[styles.metaInfoText, isDark ? styles.subDark : styles.subLight]}>
+                        <Text style={[styles.metaInfoText, { color: colors.textSecondary }]}>
                           {exercisesCount} вправ • {setsCount} підходів
                         </Text>
                         {totalVolume > 0 && (
-                          <Text style={[styles.metaVolumeText, isDark ? styles.subDark : styles.subLight]}>
+                          <Text style={[styles.metaVolumeText, { color: colors.textSecondary }]}>
                             • {totalVolume} кг
                           </Text>
                         )}
@@ -586,7 +586,7 @@ export const CalendarScreen: React.FC = () => {
                     <Ionicons
                       name="chevron-forward"
                       size={20}
-                      color={isDark ? '#94A3B8' : '#64748B'}
+                      color={colors.textSecondary}
                       style={styles.chevronIcon}
                     />
                     </TouchableOpacity>

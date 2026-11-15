@@ -148,20 +148,20 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   rightAction,
   style,
 }) => {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
 
   if (!title && !subtitle && !rightAction) return null;
 
   return (
-    <View style={[styles.sectionRow, isDark ? styles.sectionBorderDark : styles.sectionBorderLight, style]}>
+    <View style={[styles.sectionRow, style]}>
       <View style={styles.sectionTitleWrap}>
         {title ? (
-          <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {title}
           </Text>
         ) : null}
         {subtitle ? (
-          <Text style={[styles.sectionSubtitle, isDark ? styles.subDark : styles.subLight]}>
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
             {subtitle}
           </Text>
         ) : null}

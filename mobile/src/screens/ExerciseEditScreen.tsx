@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 import { Button } from '../components/Button';
 import { ExerciseService } from '../services/exerciseService';
@@ -25,7 +25,7 @@ import { MUSCLE_GROUPS, MuscleGroup, Exercise, ExerciseCategory, DEFAULT_CATEGOR
 import { setSavedActiveTab, getSavedActiveTab, TabName } from '../components/InstagramTabPager';
 
 export const ExerciseEditScreen: React.FC = () => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors, isDark } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
   const params = useLocalSearchParams<{ id?: string; name?: string; muscleGroup?: string; fromTab?: TabName }>();
@@ -134,24 +134,24 @@ export const ExerciseEditScreen: React.FC = () => {
 
   return (
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBack}>
-      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
         {/* Top Header Bar matching WorkoutEditorScreen */}
-        <View style={[styles.topBar, isDark ? styles.borderDark : styles.borderLight]}>
+        <View style={[styles.topBar, { backgroundColor: colors.bg, borderBottomWidth: 0 }]}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleBack}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
             accessibilityRole="button"
             accessibilityLabel="Назад"
           >
-            <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
-            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+            <Text numberOfLines={1} style={[styles.topBarTitle, { color: colors.text }]}>
               Редагування власної вправи
             </Text>
-            <Text style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
+            <Text style={[styles.topBarSub, { color: colors.textSecondary }]}>
               {MUSCLE_GROUPS[muscleGroup]?.nameUk || 'Категорія'}
             </Text>
           </View>
@@ -159,8 +159,8 @@ export const ExerciseEditScreen: React.FC = () => {
 
         {isLoading ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
-            <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+            <ActivityIndicator size="small" color={colors.accent} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
               Завантаження вправи...
             </Text>
           </View>
@@ -176,19 +176,18 @@ export const ExerciseEditScreen: React.FC = () => {
             >
               {/* Exercise Name Input */}
               <View style={styles.fieldGroup}>
-                <Text style={[styles.label, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.label, { color: colors.text }]}>
                   Назва вправи *
                 </Text>
                 <TextInput
                   style={[
                     styles.input,
-                    isDark ? styles.inputDark : styles.inputLight,
-                    isDark ? styles.textDark : styles.textLight,
+                    { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text },
                   ]}
                   value={name}
                   onChangeText={setName}
                   placeholder="Введіть назву вправи..."
-                  placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
+                  placeholderTextColor={colors.textSecondary}
                   autoCorrect={false}
                   maxLength={100}
                 />
@@ -196,7 +195,7 @@ export const ExerciseEditScreen: React.FC = () => {
 
               {/* Muscle Group Chips */}
               <View style={styles.fieldGroup}>
-                <Text style={[styles.label, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.label, { color: colors.text }]}>
                   Група м'язів / Категорія *
                 </Text>
                 <View style={styles.chipsWrap}>
@@ -210,24 +209,16 @@ export const ExerciseEditScreen: React.FC = () => {
                         style={[
                           styles.chip,
                           isSelected
-                            ? isDark
-                              ? styles.chipActiveDark
-                              : styles.chipActiveLight
-                            : isDark
-                            ? styles.chipInactiveDark
-                            : styles.chipInactiveLight,
+                            ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                            : { backgroundColor: colors.card, borderColor: colors.cardBorder },
                         ]}
                       >
                         <Text
                           style={[
                             styles.chipText,
                             isSelected
-                              ? isDark
-                                ? styles.chipTextActiveDark
-                                : styles.chipTextActiveLight
-                              : isDark
-                              ? styles.subDark
-                              : styles.subLight,
+                              ? { color: colors.accentText, fontWeight: '700' }
+                              : { color: colors.textSecondary },
                           ]}
                         >
                           {cat.nameUk}
@@ -240,19 +231,18 @@ export const ExerciseEditScreen: React.FC = () => {
 
               {/* Description Input */}
               <View style={styles.fieldGroup}>
-                <Text style={[styles.label, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.label, { color: colors.text }]}>
                   Опис або нотатки (опціонально)
                 </Text>
                 <TextInput
                   style={[
                     styles.textArea,
-                    isDark ? styles.inputDark : styles.inputLight,
-                    isDark ? styles.textDark : styles.textLight,
+                    { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text },
                   ]}
                   value={description}
                   onChangeText={setDescription}
                   placeholder="Додайте техніку виконання або нотатки..."
-                  placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
+                  placeholderTextColor={colors.textSecondary}
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"

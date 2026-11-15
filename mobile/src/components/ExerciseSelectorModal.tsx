@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS, ExerciseCategory, DEFAULT_CATEGORIES, getMuscleGroupInfo } from '../types/workout';
@@ -32,7 +32,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   userId,
   traineeId,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors, isDark } = useTheme();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [categories, setCategories] = useState<ExerciseCategory[]>(DEFAULT_CATEGORIES);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -125,10 +125,10 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView edges={['top', 'bottom']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      <SafeAreaView edges={['top', 'bottom']} style={[styles.container, { backgroundColor: colors.bg }]}>
         {/* Header */}
-        <View style={[styles.header, isDark ? styles.borderDark : styles.borderLight]}>
-          <Text style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}>
+        <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
             {isCreatingCustom ? 'Нова вправа' : 'Вибір вправи'}
           </Text>
           <TouchableOpacity
@@ -142,24 +142,24 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               }
             }}
           >
-            <Ionicons name="close" size={24} color={isDark ? '#f8fafc' : '#0f172a'} />
+            <Ionicons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
 
         {isCreatingCustom ? (
           /* Create custom exercise form */
           <View style={styles.createForm}>
-            <Text style={[styles.formLabel, isDark ? styles.textDark : styles.textLight]}>Назва вправи</Text>
+            <Text style={[styles.formLabel, { color: colors.text }]}>Назва вправи</Text>
             <TextInput
-              style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
+              style={[styles.input, { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text }]}
               placeholder="Наприклад: Жим штанги під кутом"
-              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
+              placeholderTextColor={colors.textSecondary}
               value={customName}
               onChangeText={setCustomName}
               autoFocus
             />
 
-            <Text style={[styles.formLabel, { marginTop: 14 }, isDark ? styles.textDark : styles.textLight]}>
+            <Text style={[styles.formLabel, { marginTop: 14, color: colors.text }]}>
               Група м'язів
             </Text>
             <View style={styles.muscleChipsWrap}>
@@ -172,16 +172,16 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                     style={[
                       styles.muscleChip,
                       isSel
-                        ? (isDark ? styles.muscleChipActiveDark : styles.muscleChipActiveLight)
-                        : (isDark ? styles.muscleChipDark : styles.muscleChipLight),
+                        ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                        : { backgroundColor: colors.card, borderColor: colors.cardBorder },
                     ]}
                   >
                     <Text
                       style={[
                         styles.muscleChipText,
                         isSel
-                          ? (isDark ? styles.muscleChipTextActiveDark : styles.muscleChipTextActiveLight)
-                          : (isDark ? styles.textDark : styles.textLight),
+                          ? { color: colors.accentText, fontWeight: '700' }
+                          : { color: colors.textSecondary },
                       ]}
                     >
                       {opt.nameUk}
@@ -194,7 +194,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             <TouchableOpacity
               style={[
                 styles.saveCustomBtn,
-                isDark ? styles.saveCustomBtnDark : styles.saveCustomBtnLight,
+                { backgroundColor: colors.accent },
                 isSubmittingCustom && { opacity: 0.6 },
               ]}
               activeOpacity={0.8}
@@ -202,9 +202,9 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               onPress={handleCreateExercise}
             >
               {isSubmittingCustom ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={colors.accentText} />
               ) : (
-                <Text style={[styles.saveCustomBtnText, isDark ? styles.saveCustomBtnTextDark : styles.saveCustomBtnTextLight]}>
+                <Text style={[styles.saveCustomBtnText, { color: colors.accentText }]}>
                   Додати та обрати
                 </Text>
               )}
@@ -215,12 +215,12 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           <>
             {/* Search Bar */}
             <View style={styles.searchContainer}>
-              <View style={[styles.searchBar, isDark ? styles.searchBarDark : styles.searchBarLight]}>
-                <Ionicons name="search" size={18} color={isDark ? '#94a3b8' : '#64748b'} style={styles.searchIcon} />
+              <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                <Ionicons name="search" size={18} color={colors.textSecondary} style={styles.searchIcon} />
                 <TextInput
-                  style={[styles.searchInput, isDark ? styles.textDark : styles.textLight]}
+                  style={[styles.searchInput, { color: colors.text }]}
                   placeholder="Пошук вправи..."
-                  placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
+                  placeholderTextColor={colors.textSecondary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   autoCorrect={false}
@@ -228,7 +228,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 />
                 {searchQuery.length > 0 && (
                   <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Ionicons name="close-circle" size={16} color={isDark ? '#94a3b8' : '#64748b'} />
+                    <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -242,16 +242,16 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 style={[
                   styles.filterTab,
                   selectedMuscle === 'all'
-                    ? (isDark ? styles.filterTabActiveDark : styles.filterTabActiveLight)
-                    : (isDark ? styles.filterTabDark : styles.filterTabLight),
+                    ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                    : { backgroundColor: colors.card, borderColor: colors.cardBorder },
                 ]}
               >
                 <Text
                   style={[
                     styles.filterTabText,
                     selectedMuscle === 'all'
-                      ? (isDark ? styles.filterTabTextActiveDark : styles.filterTabTextActiveLight)
-                      : (isDark ? styles.subDark : styles.subLight),
+                      ? { color: colors.accentText, fontWeight: '700' }
+                      : { color: colors.textSecondary },
                   ]}
                 >
                   Всі
@@ -268,16 +268,16 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                     style={[
                       styles.filterTab,
                       isSelected
-                        ? (isDark ? styles.filterTabActiveDark : styles.filterTabActiveLight)
-                        : (isDark ? styles.filterTabDark : styles.filterTabLight),
+                        ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                        : { backgroundColor: colors.card, borderColor: colors.cardBorder },
                     ]}
                   >
                     <Text
                       style={[
                         styles.filterTabText,
                         isSelected
-                          ? (isDark ? styles.filterTabTextActiveDark : styles.filterTabTextActiveLight)
-                          : (isDark ? styles.subDark : styles.subLight),
+                          ? { color: colors.accentText, fontWeight: '700' }
+                          : { color: colors.textSecondary },
                       ]}
                     >
                       {cat.nameUk}
@@ -290,8 +290,8 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             {/* Exercises List */}
             {isLoading ? (
               <View style={styles.centerContainer}>
-                <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
-                <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
                   Завантаження вправ...
                 </Text>
               </View>
@@ -306,11 +306,11 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                   return (
                     <TouchableOpacity
                       activeOpacity={0.7}
-                      style={[styles.exerciseItem, isDark ? styles.exerciseItemDark : styles.exerciseItemLight]}
+                      style={[styles.exerciseItem, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
                       onPress={() => onSelectExercise(item)}
                     >
                       <View style={styles.exerciseItemLeft}>
-                        <Text style={[styles.exerciseName, isDark ? styles.textDark : styles.textLight]} numberOfLines={2}>
+                        <Text style={[styles.exerciseName, { color: colors.text }]} numberOfLines={2}>
                           {item.name}
                         </Text>
                         <View style={styles.exerciseMetaRow}>
@@ -327,29 +327,29 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                         </View>
                       </View>
 
-                      <Ionicons name="add" size={20} color={isDark ? '#60a5fa' : '#2563eb'} />
+                      <Ionicons name="add" size={20} color={colors.accent} />
                     </TouchableOpacity>
                   );
                 }}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
-                    <Ionicons name="barbell-outline" size={40} color={isDark ? '#334155' : '#cbd5e1'} />
-                    <Text style={[styles.emptyTitle, isDark ? styles.textDark : styles.textLight]}>
+                    <Ionicons name="barbell-outline" size={40} color={colors.textSecondary} />
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
                       Вправ не знайдено
                     </Text>
-                    <Text style={[styles.emptySub, isDark ? styles.subDark : styles.subLight]}>
+                    <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
                       Спробуйте інший пошуковий запит або створіть власну вправу.
                     </Text>
                     <TouchableOpacity
-                      style={[styles.addCustomBtn, isDark ? styles.addCustomBtnDark : styles.addCustomBtnLight]}
+                      style={[styles.addCustomBtn, { backgroundColor: colors.accent }]}
                       activeOpacity={0.8}
                       onPress={() => {
                         setCustomName(searchQuery);
                         setIsCreatingCustom(true);
                       }}
                     >
-                      <Ionicons name="add" size={16} color="#ffffff" />
-                      <Text style={[styles.addCustomBtnText, isDark ? styles.addCustomBtnTextDark : styles.addCustomBtnTextLight]}>
+                      <Ionicons name="add" size={16} color={colors.accentText} />
+                      <Text style={[styles.addCustomBtnText, { color: colors.accentText }]}>
                         Створити власну вправу
                       </Text>
                     </TouchableOpacity>
@@ -358,15 +358,15 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 ListFooterComponent={
                   filteredExercises.length > 0 ? (
                     <TouchableOpacity
-                      style={[styles.footerCustomBtn, isDark ? styles.borderDark : styles.borderLight]}
+                      style={[styles.footerCustomBtn, { borderColor: colors.cardBorder }]}
                       activeOpacity={0.7}
                       onPress={() => {
                         setCustomName(searchQuery);
                         setIsCreatingCustom(true);
                       }}
                     >
-                      <Ionicons name="add-circle-outline" size={16} color={isDark ? '#60a5fa' : '#2563eb'} />
-                      <Text style={[styles.footerCustomBtnText, isDark ? styles.textDark : styles.textLight]}>
+                      <Ionicons name="add-circle-outline" size={16} color={colors.accent} />
+                      <Text style={[styles.footerCustomBtnText, { color: colors.text }]}>
                         Не знайшли вправу? Створити власну
                       </Text>
                     </TouchableOpacity>

@@ -465,11 +465,11 @@ export const ProfileScreen: React.FC = () => {
 
   if (!user) {
     return (
-      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
         <Header title="Профіль" showAvatar={false} />
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
-          <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
             Завантаження профілю...
           </Text>
         </View>
@@ -683,7 +683,7 @@ export const ProfileScreen: React.FC = () => {
                         <Ionicons
                           name={g === 'male' ? 'male' : 'female'}
                           size={14}
-                          color={active ? '#2563EB' : isDark ? '#94A3B8' : '#64748B'}
+                          color={active ? colors.accent : colors.textSecondary}
                           style={{ marginRight: 4 }}
                         />
                         <Text
@@ -779,7 +779,7 @@ export const ProfileScreen: React.FC = () => {
                             {opt.desc}
                           </Text>
                         </View>
-                        {active && <Ionicons name="checkmark-circle" size={18} color="#2563EB" />}
+                        {active && <Ionicons name="checkmark-circle" size={18} color={colors.accent} />}
                       </TouchableOpacity>
                     );
                   })}
@@ -788,14 +788,13 @@ export const ProfileScreen: React.FC = () => {
 
               {/* Goal (Dropdown) */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
                   Ціль
                 </Text>
                 <TouchableOpacity
                   style={[
                     styles.goalDropdownTrigger,
-                    isDark ? styles.inputDark : styles.inputLight,
-                    isGoalDropdownOpen && styles.goalDropdownTriggerOpen,
+                    { backgroundColor: colors.subCard, borderColor: isGoalDropdownOpen ? colors.accent : colors.cardBorder },
                   ]}
                   onPress={() => setIsGoalDropdownOpen((prev) => !prev)}
                   activeOpacity={0.7}
@@ -804,21 +803,21 @@ export const ProfileScreen: React.FC = () => {
                     <Ionicons
                       name={GOAL_OPTIONS.find((o) => o.value === goal)?.icon || 'remove-outline'}
                       size={18}
-                      color="#2563EB"
+                      color={colors.accent}
                     />
-                    <Text style={[styles.goalDropdownSelectedText, isDark ? styles.textDark : styles.textLight]}>
+                    <Text style={[styles.goalDropdownSelectedText, { color: colors.text }]}>
                       {GOAL_OPTIONS.find((o) => o.value === goal)?.label || 'Оберіть ціль'}
                     </Text>
                   </View>
                   <Ionicons
                     name={isGoalDropdownOpen ? 'chevron-up' : 'chevron-down'}
                     size={18}
-                    color={isDark ? '#94A3B8' : '#64748B'}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
 
                 {isGoalDropdownOpen && (
-                  <View style={[styles.goalDropdownMenu, isDark ? styles.goalDropdownMenuDark : styles.goalDropdownMenuLight]}>
+                  <View style={[styles.goalDropdownMenu, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
                     {GOAL_OPTIONS.map((g) => {
                       const active = goal === g.value;
                       return (
@@ -830,7 +829,7 @@ export const ProfileScreen: React.FC = () => {
                           }}
                           style={[
                             styles.goalDropdownItem,
-                            active && (isDark ? styles.goalDropdownItemActiveDark : styles.goalDropdownItemActiveLight),
+                            active && { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' },
                           ]}
                           activeOpacity={0.7}
                         >
@@ -838,20 +837,20 @@ export const ProfileScreen: React.FC = () => {
                             <Ionicons
                               name={g.icon}
                               size={16}
-                              color={active ? '#2563EB' : (isDark ? '#94A3B8' : '#64748B')}
+                              color={active ? colors.accent : colors.textSecondary}
                             />
                             <Text
                               style={[
                                 styles.goalDropdownItemText,
                                 active
-                                  ? { fontWeight: '700', color: '#2563EB' }
-                                  : (isDark ? styles.textDark : styles.textLight),
+                                  ? { fontWeight: '700', color: colors.accent }
+                                  : { color: colors.text },
                               ]}
                             >
                               {g.label}
                             </Text>
                           </View>
-                          {active && <Ionicons name="checkmark" size={17} color="#2563EB" />}
+                          {active && <Ionicons name="checkmark" size={17} color={colors.accent} />}
                         </TouchableOpacity>
                       );
                     })}
@@ -862,16 +861,16 @@ export const ProfileScreen: React.FC = () => {
               {/* Calorie Deficit / Surplus % (ONLY if weight loss or weight gain) */}
               {goal !== 'maintenance' && (
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>
                     {goal === 'weight_loss' ? 'Дефіцит калорій (%)' : 'Профіцит калорій (%)'}
                   </Text>
                   <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                     <TextInput
-                      style={[styles.inputField, { flex: 1 }, isDark ? styles.inputDark : styles.inputLight]}
+                      style={[styles.inputField, { flex: 1, backgroundColor: colors.subCard, borderColor: colors.cardBorder, color: colors.text }]}
                       value={calorieAdjustmentPercent}
                       onChangeText={setCalorieAdjustmentPercent}
                       placeholder="10"
-                      placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+                      placeholderTextColor={colors.textSecondary}
                       keyboardType="numeric"
                     />
                     {/* Quick percentage chips */}
@@ -881,15 +880,18 @@ export const ProfileScreen: React.FC = () => {
                         onPress={() => setCalorieAdjustmentPercent(p)}
                         style={[
                           styles.percentChip,
-                          calorieAdjustmentPercent === p && styles.percentChipActive,
-                          isDark ? styles.chipDark : styles.chipLight,
+                          {
+                            backgroundColor: calorieAdjustmentPercent === p ? colors.accent : colors.subCard,
+                            borderColor: calorieAdjustmentPercent === p ? colors.accent : colors.cardBorder,
+                          },
                         ]}
                       >
                         <Text
                           style={[
                             styles.percentChipText,
-                            calorieAdjustmentPercent === p && { color: '#ffffff', fontWeight: '700' },
-                            isDark ? styles.textDark : styles.textLight,
+                            calorieAdjustmentPercent === p
+                              ? { color: colors.accentText, fontWeight: '700' }
+                              : { color: colors.text },
                           ]}
                         >
                           {p}%
@@ -903,41 +905,41 @@ export const ProfileScreen: React.FC = () => {
               {/* Protein & Fat per kg (clean placeholders, empty default) */}
               <View style={styles.rowTwoInputs}>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>
                     Білки (г/кг)
                   </Text>
                   <TextInput
-                    style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
+                    style={[styles.inputField, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, color: colors.text }]}
                     value={proteinPerKg}
                     onChangeText={setProteinPerKg}
                     placeholder="г/кг"
-                    placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+                    placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
                   />
                 </View>
 
                 <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>
                     Жири (г/кг)
                   </Text>
                   <TextInput
-                    style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
+                    style={[styles.inputField, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, color: colors.text }]}
                     value={fatPerKg}
                     onChangeText={setFatPerKg}
                     placeholder="г/кг"
-                    placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+                    placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
                   />
                 </View>
               </View>
 
               {/* Carbs Preview in г/кг */}
-              <View style={[styles.livePreviewCard, isDark ? styles.livePreviewDark : styles.livePreviewLight]}>
+              <View style={[styles.livePreviewCard, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
                 <View style={styles.livePreviewRow}>
-                  <Text style={[styles.livePreviewLabel, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.livePreviewLabel, { color: colors.textSecondary }]}>
                     Вуглеводи:
                   </Text>
-                  <Text style={[styles.livePreviewVal, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.livePreviewVal, { color: colors.text }]}>
                     {liveFormNutrition.carbsPerKg > 0 ? `${liveFormNutrition.carbsPerKg} г/кг` : '0 г/кг'}
                   </Text>
                 </View>
@@ -955,11 +957,11 @@ export const ProfileScreen: React.FC = () => {
               {/* Form Action Buttons */}
               <View style={styles.formActionsRow}>
                 <TouchableOpacity
-                  style={[styles.cancelBtn, isDark ? styles.btnOutlineDark : styles.btnOutlineLight]}
+                  style={[styles.cancelBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, borderWidth: 1 }]}
                   onPress={() => setIsEditing(false)}
                   disabled={isSavingProfile}
                 >
-                  <Text style={[styles.cancelBtnText, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.cancelBtnText, { color: colors.text }]}>
                     Скасувати
                   </Text>
                 </TouchableOpacity>
@@ -967,17 +969,18 @@ export const ProfileScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.saveBtn,
+                    { backgroundColor: colors.accent },
                     isSavingProfile && styles.btnDisabled,
                   ]}
                   onPress={handleSaveProfile}
                   disabled={isSavingProfile}
                 >
                   {isSavingProfile ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <ActivityIndicator size="small" color={colors.accentText} />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={16} color="#ffffff" />
-                      <Text style={styles.saveBtnText}>
+                      <Ionicons name="checkmark" size={16} color={colors.accentText} />
+                      <Text style={[styles.saveBtnText, { color: colors.accentText }]}>
                         Зберегти зміни
                       </Text>
                     </>
@@ -1123,15 +1126,16 @@ export const ProfileScreen: React.FC = () => {
                   <TouchableOpacity
                     style={[
                       styles.linkCoachBtn,
+                      { backgroundColor: colors.accent },
                       isLinkingCoach && styles.btnDisabled,
                     ]}
                     onPress={handleLinkCoach}
                     disabled={isLinkingCoach}
                   >
                     {isLinkingCoach ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
+                      <ActivityIndicator size="small" color={colors.accentText} />
                     ) : (
-                      <Text style={styles.linkCoachBtnText}>
+                      <Text style={[styles.linkCoachBtnText, { color: colors.accentText }]}>
                         Прикріпитися
                       </Text>
                     )}
@@ -1150,13 +1154,13 @@ export const ProfileScreen: React.FC = () => {
                 <Ionicons
                   name="repeat-outline"
                   size={18}
-                  color={isDark ? '#60a5fa' : '#2563eb'}
+                  color={colors.accent}
                 />
-                <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
                   Діапазони повторень
                 </Text>
               </View>
-              <Text style={[styles.sectionSubtitle, isDark ? styles.subDark : styles.subLight]}>
+              <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
                 Автоматично впорядковані діапазони підходів для швидкого вибору під час тренувань
               </Text>
             </View>
@@ -1167,9 +1171,9 @@ export const ProfileScreen: React.FC = () => {
             {repRanges.map((rng) => (
               <View
                 key={rng}
-                style={[styles.rangePill, isDark ? styles.rangePillDark : styles.rangePillLight]}
+                style={[styles.rangePill, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
               >
-                <Text style={[styles.rangePillText, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.rangePillText, { color: colors.text }]}>
                   {rng}
                 </Text>
                 <TouchableOpacity
@@ -1178,7 +1182,7 @@ export const ProfileScreen: React.FC = () => {
                   style={styles.rangeDeleteBtn}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="close-circle" size={16} color={isDark ? '#94a3b8' : '#64748b'} />
+                  <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
             ))}
@@ -1187,9 +1191,9 @@ export const ProfileScreen: React.FC = () => {
           {/* Add New Range Row */}
           <View style={styles.addRangeRow}>
             <TextInput
-              style={[styles.addRangeInput, isDark ? styles.inputDark : styles.inputLight]}
+              style={[styles.addRangeInput, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, color: colors.text }]}
               placeholder="Напр. 12-15 або 20+"
-              placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+              placeholderTextColor={colors.textSecondary}
               value={newRepRangeInput}
               onChangeText={setNewRepRangeInput}
               autoCapitalize="none"
@@ -1198,13 +1202,13 @@ export const ProfileScreen: React.FC = () => {
               onSubmitEditing={handleAddRepRange}
             />
             <TouchableOpacity
-              style={[styles.addRangeBtn, !newRepRangeInput.trim() && styles.btnDisabled]}
+              style={[styles.addRangeBtn, { backgroundColor: colors.accent }, !newRepRangeInput.trim() && styles.btnDisabled]}
               onPress={handleAddRepRange}
               disabled={!newRepRangeInput.trim()}
               activeOpacity={0.8}
             >
-              <Ionicons name="add" size={18} color="#ffffff" />
-              <Text style={styles.addRangeBtnText}>Додати</Text>
+              <Ionicons name="add" size={18} color={colors.accentText} />
+              <Text style={[styles.addRangeBtnText, { color: colors.accentText }]}>Додати</Text>
             </TouchableOpacity>
           </View>
 
@@ -1214,8 +1218,8 @@ export const ProfileScreen: React.FC = () => {
             onPress={handleResetRepRanges}
             activeOpacity={0.7}
           >
-            <Ionicons name="refresh-outline" size={14} color={isDark ? '#94a3b8' : '#64748b'} />
-            <Text style={[styles.resetRangesBtnText, isDark ? styles.subDark : styles.subLight]}>
+            <Ionicons name="refresh-outline" size={14} color={colors.textSecondary} />
+            <Text style={[styles.resetRangesBtnText, { color: colors.textSecondary }]}>
               Скинути до стандартних
             </Text>
           </TouchableOpacity>
@@ -1229,13 +1233,13 @@ export const ProfileScreen: React.FC = () => {
                 <Ionicons
                   name="barbell-outline"
                   size={18}
-                  color={isDark ? '#ec4899' : '#db2777'}
+                  color={colors.accent}
                 />
-                <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
                   Категорії вправ
                 </Text>
               </View>
-              <Text style={[styles.sectionSubtitle, isDark ? styles.subDark : styles.subLight]}>
+              <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
                 Додавайте власні категорії або видаляйте існуючі (вправи перенесуться в «Інше»)
               </Text>
             </View>
@@ -1246,9 +1250,9 @@ export const ProfileScreen: React.FC = () => {
             {categories.map((cat) => (
               <View
                 key={cat.id}
-                style={[styles.rangePill, isDark ? styles.rangePillDark : styles.rangePillLight]}
+                style={[styles.rangePill, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
               >
-                <Text style={[styles.rangePillText, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.rangePillText, { color: colors.text }]}>
                   {cat.nameUk}
                 </Text>
                 {cat.id !== 'other' && (
@@ -1259,7 +1263,7 @@ export const ProfileScreen: React.FC = () => {
                     activeOpacity={0.7}
                     disabled={isDeletingCategory}
                   >
-                    <Ionicons name="close-circle" size={16} color={isDark ? '#94a3b8' : '#64748b'} />
+                    <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -1269,9 +1273,9 @@ export const ProfileScreen: React.FC = () => {
           {/* Add New Category Row */}
           <View style={styles.addRangeRow}>
             <TextInput
-              style={[styles.addRangeInput, isDark ? styles.inputDark : styles.inputLight]}
+              style={[styles.addRangeInput, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, color: colors.text }]}
               placeholder="Напр. Прес або Кардіо"
-              placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+              placeholderTextColor={colors.textSecondary}
               value={newCategoryName}
               onChangeText={setNewCategoryName}
               autoCapitalize="words"
@@ -1280,17 +1284,17 @@ export const ProfileScreen: React.FC = () => {
               onSubmitEditing={handleAddCategory}
             />
             <TouchableOpacity
-              style={[styles.addRangeBtn, (!newCategoryName.trim() || isAddingCategory) && styles.btnDisabled]}
+              style={[styles.addRangeBtn, { backgroundColor: colors.accent }, (!newCategoryName.trim() || isAddingCategory) && styles.btnDisabled]}
               onPress={handleAddCategory}
               disabled={!newCategoryName.trim() || isAddingCategory}
               activeOpacity={0.8}
             >
               {isAddingCategory ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={colors.accentText} />
               ) : (
                 <>
-                  <Ionicons name="add" size={18} color="#ffffff" />
-                  <Text style={styles.addRangeBtnText}>Додати</Text>
+                  <Ionicons name="add" size={18} color={colors.accentText} />
+                  <Text style={[styles.addRangeBtnText, { color: colors.accentText }]}>Додати</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -1302,8 +1306,8 @@ export const ProfileScreen: React.FC = () => {
             onPress={handleResetCategories}
             activeOpacity={0.7}
           >
-            <Ionicons name="refresh-outline" size={14} color={isDark ? '#94a3b8' : '#64748b'} />
-            <Text style={[styles.resetRangesBtnText, isDark ? styles.subDark : styles.subLight]}>
+            <Ionicons name="refresh-outline" size={14} color={colors.textSecondary} />
+            <Text style={[styles.resetRangesBtnText, { color: colors.textSecondary }]}>
               Скинути до стандартних
             </Text>
           </TouchableOpacity>
@@ -1357,11 +1361,11 @@ export const ProfileScreen: React.FC = () => {
         onRequestClose={() => setIsCoachModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, isDark ? styles.modalDark : styles.modalLight]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="people-outline" size={22} color="#2563EB" />
-                <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>
+                <Ionicons name="people-outline" size={22} color={colors.accent} />
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
                   Тренерський статус
                 </Text>
               </View>
@@ -1369,39 +1373,39 @@ export const ProfileScreen: React.FC = () => {
                 onPress={() => setIsCoachModalVisible(false)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="close" size={22} color={isDark ? '#94A3B8' : '#64748B'} />
+                <Ionicons name="close" size={22} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <Text style={[styles.modalDesc, isDark ? styles.subDark : styles.subLight]}>
-              Ви зареєстровані як <Text style={{ fontWeight: '700', color: isDark ? '#60A5FA' : '#2563EB' }}>Тренер</Text>.
+            <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
+              Ви зареєстровані як <Text style={{ fontWeight: '700', color: colors.accent }}>Тренер</Text>.
               Ви маєте повний доступ до тренувальних програм і статистики підопічних.
             </Text>
 
             {/* Code */}
-            <View style={[styles.coachCodeBox, isDark ? styles.inputDark : styles.inputLight]}>
+            <View style={[styles.coachCodeBox, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.coachCodeLabel, isDark ? styles.subDark : styles.subLight]}>
+                <Text style={[styles.coachCodeLabel, { color: colors.textSecondary }]}>
                   Ваш код тренера:
                 </Text>
-                <Text style={[styles.coachCodeVal, isDark ? styles.textDark : styles.textLight]}>
+                <Text style={[styles.coachCodeVal, { color: colors.text }]}>
                   {user.profileCode || user.id}
                 </Text>
               </View>
               <TouchableOpacity
-                style={[styles.copyBtn, isDark ? styles.copyBtnDark : styles.copyBtnLight]}
+                style={[styles.copyBtn, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
                 onPress={handleCopyCode}
                 activeOpacity={0.7}
               >
                 <Ionicons
                   name={copiedCode ? 'checkmark' : 'copy-outline'}
                   size={14}
-                  color={copiedCode ? '#22c55e' : (isDark ? '#f8fafc' : '#0f172a')}
+                  color={copiedCode ? '#22c55e' : colors.text}
                 />
                 <Text
                   style={[
                     styles.copyBtnText,
-                    copiedCode ? { color: '#22c55e' } : (isDark ? styles.textDark : styles.textLight),
+                    copiedCode ? { color: '#22c55e' } : { color: colors.text },
                   ]}
                 >
                   {copiedCode ? 'Скопійовано' : 'Копіювати'}
@@ -1410,26 +1414,26 @@ export const ProfileScreen: React.FC = () => {
             </View>
 
             {/* Trainees count */}
-            <View style={[styles.traineesStatRow, isDark ? styles.inputDark : styles.inputLight]}>
-              <Text style={[styles.traineesStatLabel, isDark ? styles.subDark : styles.subLight]}>
+            <View style={[styles.traineesStatRow, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
+              <Text style={[styles.traineesStatLabel, { color: colors.textSecondary }]}>
                 Кількість підопічних:
               </Text>
-              <Text style={[styles.traineesStatValue, isDark ? styles.textDark : styles.textLight]}>
+              <Text style={[styles.traineesStatValue, { color: colors.text }]}>
                 {traineesCount}
               </Text>
             </View>
 
             {/* Open Trainees Button */}
             <TouchableOpacity
-              style={styles.modalPrimaryBtn}
+              style={[styles.modalPrimaryBtn, { backgroundColor: colors.accent }]}
               onPress={() => {
                 setIsCoachModalVisible(false);
                 router.push('/trainees');
               }}
               activeOpacity={0.8}
             >
-              <Ionicons name="list-outline" size={18} color="#ffffff" />
-              <Text style={styles.modalPrimaryBtnText}>Перейти до підопічних</Text>
+              <Ionicons name="list-outline" size={18} color={colors.accentText} />
+              <Text style={[styles.modalPrimaryBtnText, { color: colors.accentText }]}>Перейти до підопічних</Text>
             </TouchableOpacity>
           </View>
         </View>

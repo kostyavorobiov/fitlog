@@ -11,17 +11,17 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { UserRole } from '../types/workout';
 
 export const LoginScreen: React.FC = () => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors, isDark } = useTheme();
   const { loginWithGoogle, loginWithEmail, registerWithEmail, loginAsDemo } = useAuth();
   const isCloudConnected = isSupabaseConfigured();
 
@@ -98,7 +98,7 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -110,13 +110,13 @@ export const LoginScreen: React.FC = () => {
         >
           {/* Brand Header */}
           <View style={styles.brandHeader}>
-            <View style={[styles.logoCircle, isDark ? styles.logoDark : styles.logoLight]}>
-              <Ionicons name="barbell" size={36} color={isDark ? '#60a5fa' : '#2563eb'} />
+            <View style={[styles.logoCircle, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}>
+              <Ionicons name="barbell" size={36} color={colors.accent} />
             </View>
-            <Text style={[styles.brandTitle, isDark ? styles.textDark : styles.textLight]}>
-              Workout Diary
+            <Text style={[styles.brandTitle, { color: colors.text }]}>
+              FitLog
             </Text>
-            <Text style={[styles.brandSubtitle, isDark ? styles.subDark : styles.subLight]}>
+            <Text style={[styles.brandSubtitle, { color: colors.textSecondary }]}>
               Щоденник тренувань та синхронізація
             </Text>
 
@@ -130,13 +130,13 @@ export const LoginScreen: React.FC = () => {
               <View
                 style={[
                   styles.dot,
-                  { backgroundColor: isCloudConnected ? '#22c55e' : (isDark ? '#94a3b8' : '#64748b') },
+                  { backgroundColor: isCloudConnected ? colors.success : colors.textSecondary },
                 ]}
               />
               <Text
                 style={[
                   styles.cloudBadgeText,
-                  { color: isCloudConnected ? '#22c55e' : (isDark ? '#94a3b8' : '#64748b') },
+                  { color: isCloudConnected ? colors.success : colors.textSecondary },
                 ]}
               >
                 {isCloudConnected ? 'Supabase Cloud зв’язок готовий' : 'Офлайн / Тестовий режим'}
@@ -147,7 +147,7 @@ export const LoginScreen: React.FC = () => {
           {/* Error Banner */}
           {errorMessage ? (
             <View style={styles.errorBanner}>
-              <Ionicons name="alert-circle" size={20} color="#ef4444" />
+              <Ionicons name="alert-circle" size={20} color={colors.danger} />
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           ) : null}
@@ -158,14 +158,14 @@ export const LoginScreen: React.FC = () => {
               activeOpacity={0.8}
               disabled={loading}
               onPress={handleGoogleLogin}
-              style={[styles.googleButton, isDark ? styles.googleDark : styles.googleLight]}
+              style={[styles.googleButton, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}
             >
               {loading ? (
-                <ActivityIndicator size="small" color={isDark ? '#ffffff' : '#000000'} />
+                <ActivityIndicator size="small" color={colors.text} />
               ) : (
                 <>
                   <Ionicons name="logo-google" size={22} color="#ea4335" />
-                  <Text style={[styles.googleText, isDark ? styles.textDark : styles.textLight]}>
+                  <Text style={[styles.googleText, { color: colors.text }]}>
                     Увійти через Google
                   </Text>
                 </>
@@ -173,26 +173,26 @@ export const LoginScreen: React.FC = () => {
             </TouchableOpacity>
 
             <View style={styles.dividerRow}>
-              <View style={[styles.line, isDark ? styles.borderDark : styles.borderLight]} />
-              <Text style={[styles.dividerText, isDark ? styles.subDark : styles.subLight]}>
+              <View style={[styles.line, { backgroundColor: colors.cardBorder }]} />
+              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>
                 або через email
               </Text>
-              <View style={[styles.line, isDark ? styles.borderDark : styles.borderLight]} />
+              <View style={[styles.line, { backgroundColor: colors.cardBorder }]} />
             </View>
 
             {/* Auth Mode Toggle */}
-            <View style={[styles.toggleContainer, isDark ? styles.toggleDark : styles.toggleLight]}>
+            <View style={[styles.toggleContainer, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}>
               <TouchableOpacity
                 onPress={() => {
                   setMode('login');
                   setErrorMessage(null);
                 }}
-                style={[styles.toggleBtn, mode === 'login' && styles.toggleBtnActive]}
+                style={[styles.toggleBtn, mode === 'login' && { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
               >
                 <Text
                   style={[
                     styles.toggleBtnText,
-                    mode === 'login' ? styles.toggleBtnTextActive : (isDark ? styles.subDark : styles.subLight),
+                    mode === 'login' ? { color: colors.text, fontWeight: '700' } : { color: colors.textSecondary },
                   ]}
                 >
                   Вхід
@@ -203,12 +203,12 @@ export const LoginScreen: React.FC = () => {
                   setMode('register');
                   setErrorMessage(null);
                 }}
-                style={[styles.toggleBtn, mode === 'register' && styles.toggleBtnActive]}
+                style={[styles.toggleBtn, mode === 'register' && { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
               >
                 <Text
                   style={[
                     styles.toggleBtnText,
-                    mode === 'register' ? styles.toggleBtnTextActive : (isDark ? styles.subDark : styles.subLight),
+                    mode === 'register' ? { color: colors.text, fontWeight: '700' } : { color: colors.textSecondary },
                   ]}
                 >
                   Реєстрація
@@ -220,25 +220,25 @@ export const LoginScreen: React.FC = () => {
             {mode === 'register' && (
               <View style={styles.formRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
                     Ім’я
                   </Text>
                   <TextInput
-                    style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
+                    style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
                     placeholder="Іван"
-                    placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                    placeholderTextColor={colors.textSecondary}
                     value={firstName}
                     onChangeText={setFirstName}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
                     Прізвище
                   </Text>
                   <TextInput
-                    style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
+                    style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
                     placeholder="Франко"
-                    placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                    placeholderTextColor={colors.textSecondary}
                     value={lastName}
                     onChangeText={setLastName}
                   />
@@ -248,13 +248,13 @@ export const LoginScreen: React.FC = () => {
 
             {/* Email Field */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
                 Email
               </Text>
               <TextInput
-                style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
+                style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
                 placeholder="athlete@example.com"
-                placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -265,13 +265,13 @@ export const LoginScreen: React.FC = () => {
 
             {/* Password Field */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
                 Пароль
               </Text>
               <TextInput
-                style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
+                style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
                 placeholder="••••••••"
-                placeholderTextColor={isDark ? '#71717a' : '#a1a1aa'}
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
@@ -281,7 +281,7 @@ export const LoginScreen: React.FC = () => {
             {/* Role Select for Registration */}
             {mode === 'register' && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, isDark ? styles.subDark : styles.subLight]}>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
                   Ваша роль
                 </Text>
                 <View style={styles.roleRow}>
@@ -289,20 +289,22 @@ export const LoginScreen: React.FC = () => {
                     onPress={() => setRole('athlete')}
                     style={[
                       styles.roleChip,
-                      role === 'athlete' && styles.roleChipActive,
-                      isDark ? styles.chipDark : styles.chipLight,
+                      role === 'athlete'
+                        ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                        : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
                     ]}
                   >
                     <Ionicons
                       name="fitness"
                       size={16}
-                      color={role === 'athlete' ? (isDark ? '#60a5fa' : '#2563eb') : (isDark ? '#94a3b8' : '#64748b')}
+                      color={role === 'athlete' ? colors.accentText : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles.roleChipText,
-                        role === 'athlete' && styles.roleChipTextActive,
-                        isDark ? styles.textDark : styles.textLight,
+                        role === 'athlete'
+                          ? { color: colors.accentText, fontWeight: '700' }
+                          : { color: colors.textSecondary },
                       ]}
                     >
                       Атлет
@@ -313,20 +315,22 @@ export const LoginScreen: React.FC = () => {
                     onPress={() => setRole('coach')}
                     style={[
                       styles.roleChip,
-                      role === 'coach' && styles.roleChipActive,
-                      isDark ? styles.chipDark : styles.chipLight,
+                      role === 'coach'
+                        ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                        : { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
                     ]}
                   >
                     <Ionicons
                       name="people"
                       size={16}
-                      color={role === 'coach' ? (isDark ? '#60a5fa' : '#2563eb') : (isDark ? '#94a3b8' : '#64748b')}
+                      color={role === 'coach' ? colors.accentText : colors.textSecondary}
                     />
                     <Text
                       style={[
                         styles.roleChipText,
-                        role === 'coach' && styles.roleChipTextActive,
-                        isDark ? styles.textDark : styles.textLight,
+                        role === 'coach'
+                          ? { color: colors.accentText, fontWeight: '700' }
+                          : { color: colors.textSecondary },
                       ]}
                     >
                       Тренер

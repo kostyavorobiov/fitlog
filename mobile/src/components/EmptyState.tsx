@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from './Button';
 
@@ -19,15 +19,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionTitle,
   onAction,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors } = useTheme();
 
   return (
     <View style={styles.container}>
-      <View style={[styles.iconCircle, isDark ? styles.iconCircleDark : styles.iconCircleLight]}>
-        <Ionicons name={icon} size={32} color={isDark ? '#60a5fa' : '#2563eb'} />
+      <View style={[styles.iconCircle, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}>
+        <Ionicons name={icon} size={32} color={colors.accent} />
       </View>
-      <Text style={[styles.title, isDark ? styles.textDark : styles.textLight]}>{title}</Text>
-      <Text style={[styles.description, isDark ? styles.subDark : styles.subLight]}>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      <Text style={[styles.description, { color: colors.textSecondary }]}>
         {description}
       </Text>
       {actionTitle && onAction ? (

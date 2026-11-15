@@ -8,7 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import {
   UKRAINIAN_MONTHS,
   UKRAINIAN_WEEKDAYS_SHORT,
@@ -36,7 +36,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
   onSelect,
   onSelectDate,
 }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors } = useTheme();
   const effectiveDateValue = value || selectedDate;
 
   const triggerSelect = (iso: string, displayDate: string) => {
@@ -122,21 +122,21 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
     >
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable
-          style={[styles.card, isDark ? styles.cardDark : styles.cardLight]}
+          style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
           onPress={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <View style={styles.headerRow}>
             <View>
-              <Text style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>
                 {title}
               </Text>
-              <Text style={[styles.headerSub, isDark ? styles.subDark : styles.subLight]}>
+              <Text style={[styles.headerSub, { color: colors.textSecondary }]}>
                 Формат: {formatDateDDMMYYYY(selectedIso)} (ДД/ММ/Рік)
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close" size={20} color={isDark ? '#94A3B8' : '#64748B'} />
+              <Ionicons name="close" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -144,26 +144,26 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
           <View style={styles.quickChipsRow}>
             <TouchableOpacity
               onPress={() => handleQuickSelect(-1)}
-              style={[styles.chip, isDark ? styles.chipDark : styles.chipLight]}
+              style={[styles.chip, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.chipText, isDark ? styles.subDark : styles.subLight]}>
+              <Text style={[styles.chipText, { color: colors.textSecondary }]}>
                 Вчора
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleQuickSelect(0)}
-              style={[styles.chip, styles.chipPrimary]}
+              style={[styles.chip, { backgroundColor: colors.accent, borderColor: colors.accent }]}
               activeOpacity={0.7}
             >
-              <Text style={styles.chipPrimaryText}>Сьогодні</Text>
+              <Text style={[styles.chipPrimaryText, { color: colors.accentText }]}>Сьогодні</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleQuickSelect(1)}
-              style={[styles.chip, isDark ? styles.chipDark : styles.chipLight]}
+              style={[styles.chip, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.chipText, isDark ? styles.subDark : styles.subLight]}>
+              <Text style={[styles.chipText, { color: colors.textSecondary }]}>
                 Завтра
               </Text>
             </TouchableOpacity>
@@ -173,22 +173,22 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
           <View style={styles.monthNavRow}>
             <TouchableOpacity
               onPress={handlePrevMonth}
-              style={[styles.navBtn, isDark ? styles.navBtnDark : styles.navBtnLight]}
+              style={[styles.navBtn, { backgroundColor: colors.subCard }]}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="chevron-back" size={18} color={isDark ? '#F8FAFC' : '#0F172A'} />
+              <Ionicons name="chevron-back" size={18} color={colors.text} />
             </TouchableOpacity>
 
-            <Text style={[styles.monthTitle, isDark ? styles.textDark : styles.textLight]}>
+            <Text style={[styles.monthTitle, { color: colors.text }]}>
               {UKRAINIAN_MONTHS[viewMonth]} {viewYear}
             </Text>
 
             <TouchableOpacity
               onPress={handleNextMonth}
-              style={[styles.navBtn, isDark ? styles.navBtnDark : styles.navBtnLight]}
+              style={[styles.navBtn, { backgroundColor: colors.subCard }]}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="chevron-forward" size={18} color={isDark ? '#F8FAFC' : '#0F172A'} />
+              <Ionicons name="chevron-forward" size={18} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -199,7 +199,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
                 <Text
                   style={[
                     styles.weekDayText,
-                    idx >= 5 ? styles.weekEndText : (isDark ? styles.subDark : styles.subLight),
+                    idx >= 5 ? styles.weekEndText : { color: colors.textSecondary },
                   ]}
                 >
                   {day}
@@ -226,18 +226,18 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
                   activeOpacity={0.7}
                   style={[
                     styles.dayCell,
-                    isSelected && styles.dayCellSelected,
-                    isToday && !isSelected && (isDark ? styles.dayCellTodayDark : styles.dayCellTodayLight),
+                    isSelected && { backgroundColor: colors.accent },
+                    isToday && !isSelected && { backgroundColor: colors.subCard, borderWidth: 1, borderColor: colors.accent },
                   ]}
                 >
                   <Text
                     style={[
                       styles.dayText,
                       isSelected
-                        ? styles.dayTextSelected
+                        ? { color: colors.accentText, fontWeight: '700' }
                         : isToday
-                        ? (isDark ? styles.todayTextDark : styles.todayTextLight)
-                        : (isDark ? styles.textDark : styles.textLight),
+                        ? { color: colors.accent, fontWeight: '700' }
+                        : { color: colors.text },
                     ]}
                   >
                     {dayNum}
