@@ -3016,15 +3016,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
   },
   topBarLight: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderBottomColor: '#E2E8F0',
   },
   topBarDark: {
     backgroundColor: 'rgba(11, 18, 32, 0.95)',
-    borderBottomColor: '#334155',
   },
   iconBtn: {
     width: 44,
@@ -3658,11 +3656,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   thWeight: {
-    flex: 1,
+    flex: 1.35,
     textAlign: 'center',
   },
   thReps: {
-    flex: 1,
+    flex: 0.95,
     textAlign: 'center',
   },
   thDone: {
@@ -3699,23 +3697,23 @@ const styles = StyleSheet.create({
     color: '#60A5FA',
   },
   tdWeight: {
-    flex: 1,
-    paddingHorizontal: 4,
+    flex: 1.35,
+    paddingHorizontal: 2,
   },
   tdReps: {
-    flex: 1,
-    paddingHorizontal: 4,
+    flex: 0.95,
+    paddingHorizontal: 2,
   },
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 4,
   },
   stepBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 30,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -3731,11 +3729,11 @@ const styles = StyleSheet.create({
   },
   numberInput: {
     flex: 1,
-    height: 34,
+    height: 32,
     borderRadius: 10,
     textAlign: 'center',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     borderWidth: 1,
     paddingHorizontal: 2,
   },
