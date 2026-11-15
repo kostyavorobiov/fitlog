@@ -17,7 +17,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import { Card } from '../components/Card';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 import { setSavedActiveTab, getSavedActiveTab, TabName } from '../components/InstagramTabPager';
@@ -51,7 +51,7 @@ interface SessionRow {
 }
 
 export const ExerciseDetailScreen: React.FC = () => {
-  const isDark = useColorScheme() === 'dark';
+  const { theme, colors, isDark } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
 
@@ -418,7 +418,7 @@ export const ExerciseDetailScreen: React.FC = () => {
 
   return (
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBack}>
-      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
         {/* Top Header Bar */}
         <Animated.View
           onLayout={(e) => {
@@ -429,10 +429,8 @@ export const ExerciseDetailScreen: React.FC = () => {
           }}
           style={[
             styles.topBar,
-            isDark ? styles.borderDark : styles.borderLight,
-            isDark ? styles.topBarDark : styles.topBarLight,
-            Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
             {
+              backgroundColor: colors.bg,
               marginTop: topBarAnim.interpolate({
                 inputRange: [0, 1],
                 outputRange: [0, -topBarHeight],
@@ -448,18 +446,18 @@ export const ExerciseDetailScreen: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleBack}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
             accessibilityRole="button"
             accessibilityLabel="Назад"
           >
-            <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
-            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+            <Text numberOfLines={1} style={[styles.topBarTitle, { color: colors.text }]}>
               {exerciseName || 'Вправа'}
             </Text>
-            <Text style={[styles.topBarSub, isDark ? styles.subDark : styles.subLight]}>
+            <Text style={[styles.topBarSub, { color: colors.textSecondary }]}>
               {traineeName ? `Підопічний: ${traineeName} · ${muscleInfo.nameUk}` : muscleInfo.nameUk}
             </Text>
           </View>
@@ -467,8 +465,8 @@ export const ExerciseDetailScreen: React.FC = () => {
 
         {loading ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
-            <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
+            <ActivityIndicator size="small" color={colors.accent} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
               Завантаження статистики вправи...
             </Text>
           </View>
@@ -479,30 +477,74 @@ export const ExerciseDetailScreen: React.FC = () => {
             onScroll={handleScroll}
             scrollEventThrottle={16}
           >
-            {/* Average Weight Above Chart - Matching mobile web version */}
-            <View style={styles.heroSection}>
-              <Text style={[styles.heroLabel, isDark ? styles.subDark : styles.subLight]}>
-                Середнє
+            {/* Hero 1RM Card - Design from Page 13 */}
+            <View style={[styles.heroCard, { backgroundColor: colors.heroCardBg }]}>
+              <Text style={[styles.heroCardLabel, { color: colors.heroCardText }]}>
+                РОЗРАХУНКОВИЙ 1ПМ
               </Text>
-              <View style={styles.heroRow}>
-                <Text style={[styles.heroVal, isDark ? styles.textDark : styles.textLight]}>
-                  {stats.avgWeight}
+              <View style={styles.heroCardRow}>
+                <Text style={[styles.heroCardVal, { color: colors.heroCardText }]}>
+                  {stats.best1RM > 0 ? stats.best1RM : '—'}
                 </Text>
-                <Text style={[styles.heroUnit, isDark ? styles.subDark : styles.subLight]}>
+                <Text style={[styles.heroCardUnit, { color: colors.heroCardText }]}>
                   кг
                 </Text>
               </View>
-              <Text style={[styles.dateRangeText, isDark ? styles.subDark : styles.subLight]}>
-                {stats.dateRangeText}
-              </Text>
             </View>
 
-            {/* Interactive Chart Card - Matching mobile web version */}
+            {/* 3 Metric Summary Cards in a Row: РЕКОРД, СЕРЕДНЄ, ПІДХОДІВ */}
+            <View style={styles.kpiRow}>
+              {/* Record (PR) */}
+              <Card style={styles.kpiCard}>
+                <Text style={[styles.kpiLbl, { color: colors.textSecondary }]}>
+                  РЕКОРД
+                </Text>
+                <View style={styles.kpiValRow}>
+                  <Text style={[styles.kpiVal, { color: colors.text }]}>
+                    {stats.personalBest > 0 ? stats.personalBest : '—'}
+                  </Text>
+                  <Text style={[styles.kpiUnit, { color: colors.textSecondary }]}>
+                    {' '}кг
+                  </Text>
+                </View>
+              </Card>
+
+              {/* Average Weight */}
+              <Card style={styles.kpiCard}>
+                <Text style={[styles.kpiLbl, { color: colors.textSecondary }]}>
+                  СЕРЕДНЄ
+                </Text>
+                <View style={styles.kpiValRow}>
+                  <Text style={[styles.kpiVal, { color: colors.text }]}>
+                    {stats.avgWeight > 0 ? stats.avgWeight : '—'}
+                  </Text>
+                  <Text style={[styles.kpiUnit, { color: colors.textSecondary }]}>
+                    {' '}кг
+                  </Text>
+                </View>
+              </Card>
+
+              {/* Total Sets */}
+              <Card style={styles.kpiCard}>
+                <Text style={[styles.kpiLbl, { color: colors.textSecondary }]}>
+                  ПІДХОДІВ
+                </Text>
+                <Text style={[styles.kpiVal, { color: colors.text }]}>
+                  {stats.totalSets}
+                </Text>
+              </Card>
+            </View>
+
+            {/* Interactive Chart Card - Design from Page 13 */}
             <Card style={styles.chartCard}>
+              <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>
+                ВАГА ПО ТРЕНУВАННЯХ
+              </Text>
+
               {allPoints.length === 0 ? (
                 <View style={styles.chartEmpty}>
-                  <Ionicons name="barbell-outline" size={32} color={isDark ? '#64748b' : '#94a3b8'} />
-                  <Text style={[styles.chartEmptyText, isDark ? styles.subDark : styles.subLight]}>
+                  <Ionicons name="barbell-outline" size={32} color={colors.textSecondary} />
+                  <Text style={[styles.chartEmptyText, { color: colors.textSecondary }]}>
                     Немає даних для побудови графіка
                   </Text>
                 </View>
@@ -514,7 +556,7 @@ export const ExerciseDetailScreen: React.FC = () => {
                       {yTicks.map((tick, idx) => (
                         <Text
                           key={idx}
-                          style={[styles.yAxisLabel, isDark ? styles.subDark : styles.subLight]}
+                          style={[styles.yAxisLabel, { color: colors.textSecondary }]}
                         >
                           {tick}
                         </Text>
@@ -523,14 +565,14 @@ export const ExerciseDetailScreen: React.FC = () => {
 
                     {/* Chart Plot Area */}
                     <View style={[styles.plotArea, { height: chartHeight }]} onLayout={onChartLayout}>
-                      {/* Dashed Horizontal Grid Lines */}
+                      {/* Grid lines */}
                       <View style={StyleSheet.absoluteFill}>
                         {yTicks.map((_, idx) => (
                           <View
                             key={idx}
                             style={[
                               styles.gridLine,
-                              isDark ? styles.gridLineDark : styles.gridLineLight,
+                              { backgroundColor: colors.cardBorder },
                               { top: `${(idx / (yTicks.length - 1)) * 100}%` },
                             ]}
                           />
@@ -556,33 +598,6 @@ export const ExerciseDetailScreen: React.FC = () => {
 
                         return (
                           <>
-                            {/* Area Fill under curve segments */}
-                            {coords.map((curr, idx) => {
-                              if (idx === coords.length - 1) return null;
-                              const next = coords[idx + 1];
-                              const minSegmentY = Math.min(curr.y, next.y);
-                              const segmentWidth = Math.max(0, next.x - curr.x);
-                              const fillHeight = Math.max(0, chartHeight - bottomPad - minSegmentY);
-
-                              return (
-                                <View
-                                  key={`fill_${idx}`}
-                                  style={{
-                                    position: 'absolute',
-                                    left: curr.x,
-                                    width: segmentWidth,
-                                    top: minSegmentY,
-                                    height: fillHeight,
-                                    backgroundColor: isDark
-                                      ? 'rgba(37, 99, 235, 0.16)'
-                                      : 'rgba(37, 99, 235, 0.10)',
-                                    borderTopLeftRadius: 3,
-                                    borderTopRightRadius: 3,
-                                  }}
-                                />
-                              );
-                            })}
-
                             {/* Line Segments */}
                             {coords.map((curr, idx) => {
                               if (idx === coords.length - 1) return null;
@@ -600,8 +615,9 @@ export const ExerciseDetailScreen: React.FC = () => {
                                   style={[
                                     styles.chartLineSegment,
                                     {
+                                      backgroundColor: colors.accent,
                                       left: midX - length / 2,
-                                      top: midY - 1.25,
+                                      top: midY - 1.5,
                                       width: length,
                                       transform: [{ rotate: `${angle}deg` }],
                                     },
@@ -621,10 +637,15 @@ export const ExerciseDetailScreen: React.FC = () => {
                                   hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
                                   style={[
                                     styles.chartDot,
-                                    isSelected && styles.chartDotActive,
                                     {
-                                      left: c.x - (isSelected ? 6 : 5),
-                                      top: c.y - (isSelected ? 6 : 5),
+                                      borderColor: colors.accent,
+                                      backgroundColor: colors.card,
+                                      left: c.x - (isSelected ? 7 : 5),
+                                      top: c.y - (isSelected ? 7 : 5),
+                                      width: isSelected ? 14 : 10,
+                                      height: isSelected ? 14 : 10,
+                                      borderRadius: isSelected ? 7 : 5,
+                                      borderWidth: isSelected ? 3.5 : 2.5,
                                     },
                                   ]}
                                 />
@@ -646,8 +667,8 @@ export const ExerciseDetailScreen: React.FC = () => {
                             key={idx}
                             style={[
                               styles.xAxisLabel,
-                              isDark ? styles.subDark : styles.subLight,
-                              activeTooltipIdx === idx && { color: '#2563EB', fontWeight: '700' },
+                              { color: colors.textSecondary },
+                              activeTooltipIdx === idx && { color: colors.accent, fontWeight: '700' },
                             ]}
                           >
                             {p.displayDate}
@@ -655,13 +676,13 @@ export const ExerciseDetailScreen: React.FC = () => {
                         ))
                       ) : (
                         <>
-                          <Text style={[styles.xAxisLabel, isDark ? styles.subDark : styles.subLight]}>
+                          <Text style={[styles.xAxisLabel, { color: colors.textSecondary }]}>
                             {allPoints[0].displayDate}
                           </Text>
-                          <Text style={[styles.xAxisLabel, isDark ? styles.subDark : styles.subLight]}>
+                          <Text style={[styles.xAxisLabel, { color: colors.textSecondary }]}>
                             {allPoints[Math.floor(allPoints.length / 2)].displayDate}
                           </Text>
-                          <Text style={[styles.xAxisLabel, isDark ? styles.subDark : styles.subLight]}>
+                          <Text style={[styles.xAxisLabel, { color: colors.textSecondary }]}>
                             {allPoints[allPoints.length - 1].displayDate}
                           </Text>
                         </>
@@ -669,18 +690,18 @@ export const ExerciseDetailScreen: React.FC = () => {
                     </View>
                   </View>
 
-                  {/* Active Tooltip Popover matching mobile web */}
+                  {/* Active Tooltip Popover */}
                   {activeTooltipIdx !== null && allPoints[activeTooltipIdx] && (
-                    <View style={[styles.tooltipBox, isDark ? styles.tooltipBoxDark : styles.tooltipBoxLight]}>
+                    <View style={[styles.tooltipBox, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.tooltipDate, isDark ? styles.textDark : styles.textLight]}>
+                        <Text style={[styles.tooltipDate, { color: colors.text }]}>
                           {allPoints[activeTooltipIdx].displayDate}
                         </Text>
-                        <Text style={[styles.tooltipTitle, isDark ? styles.subDark : styles.subLight]}>
+                        <Text style={[styles.tooltipTitle, { color: colors.textSecondary }]}>
                           {allPoints[activeTooltipIdx].workoutTitle}
                         </Text>
                       </View>
-                      <Text style={styles.tooltipVal}>
+                      <Text style={[styles.tooltipVal, { color: colors.accent }]}>
                         {allPoints[activeTooltipIdx].value} кг ({allPoints[activeTooltipIdx].setsCount} підх.)
                       </Text>
                     </View>
@@ -689,147 +710,71 @@ export const ExerciseDetailScreen: React.FC = () => {
               )}
             </Card>
 
-            {/* 3 Metric Summary Cards in a Row - Matching mobile web version */}
-            <View style={styles.kpiRow}>
-              {/* Personal Best */}
-              <Card style={styles.kpiCard}>
-                <Ionicons name="trophy" size={16} color="#F59E0B" style={styles.kpiIcon} />
-                <Text style={[styles.kpiVal, isDark ? styles.textDark : styles.textLight]}>
-                  {stats.personalBest > 0 ? `${stats.personalBest} кг` : '—'}
-                </Text>
-                <Text style={[styles.kpiLbl, isDark ? styles.subDark : styles.subLight]}>
-                  Рекорд (PR)
-                </Text>
-              </Card>
-
-              {/* Est. 1RM */}
-              <Card style={styles.kpiCard}>
-                <Ionicons name="trending-up" size={16} color="#3B82F6" style={styles.kpiIcon} />
-                <Text style={[styles.kpiVal, isDark ? styles.textDark : styles.textLight]}>
-                  {stats.best1RM > 0 ? `${stats.best1RM} кг` : '—'}
-                </Text>
-                <Text numberOfLines={1} style={[styles.kpiLbl, isDark ? styles.subDark : styles.subLight]}>
-                  Розрахунковий 1ПМ
-                </Text>
-              </Card>
-
-              {/* Total Sets */}
-              <Card style={styles.kpiCard}>
-                <Ionicons name="barbell" size={16} color="#10B981" style={styles.kpiIcon} />
-                <Text style={[styles.kpiVal, isDark ? styles.textDark : styles.textLight]}>
-                  {stats.totalSets}
-                </Text>
-                <Text style={[styles.kpiLbl, isDark ? styles.subDark : styles.subLight]}>
-                  Всього підходів
-                </Text>
-              </Card>
-            </View>
-
-            {/* Progress Analytics Section - Matching mobile web version */}
-            <Text style={[styles.sectionHeading, isDark ? styles.subDark : styles.subLight]}>
-              АНАЛІТИКА ПРОГРЕСУ
-            </Text>
-
+            {/* Recent Sessions Card - Design from Page 13 */}
             <Card style={styles.analyticsCard}>
-              {/* Header: Dumbbell + Прогрес */}
-              <View style={styles.analyticsTitleRow}>
-                <Ionicons name="barbell-outline" size={17} color="#3B82F6" />
-                <Text style={[styles.analyticsTitle, isDark ? styles.textDark : styles.textLight]}>
-                  Прогрес
-                </Text>
-              </View>
-
-              <Text style={[styles.analyticsDesc, isDark ? styles.subDark : styles.subLight]}>
-                Ви тренували цю вправу{' '}
-                <Text style={[styles.boldText, isDark ? styles.textDark : styles.textLight]}>
-                  {allPoints.length}
-                </Text>{' '}
-                {formatRazy(allPoints.length)} за весь час.
+              <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>
+                ОСТАННІ ТРЕНУВАННЯ
               </Text>
 
-              {/* Last 5 Sessions Table */}
               <View style={styles.sessionsTableSection}>
-                <Text style={[styles.tableSubheader, isDark ? styles.textDark : styles.textLight]}>
-                  Останні 5 тренувань
-                </Text>
-
                 {last5Sessions.length === 0 ? (
-                  <Text style={[styles.noSessionsText, isDark ? styles.subDark : styles.subLight]}>
+                  <Text style={[styles.noSessionsText, { color: colors.textSecondary }]}>
                     Ще немає записів
                   </Text>
                 ) : (
                   <View style={styles.tableContainer}>
-                    {/* Header Row */}
-                    <View style={[styles.tableHeaderRow, isDark ? styles.tableBorderDark : styles.tableBorderLight]}>
-                      <Text style={[styles.colDate, styles.tableHeaderCell, isDark ? styles.subDark : styles.subLight]}>
-                        Дата
-                      </Text>
-                      <Text style={[styles.colSets, styles.tableHeaderCell, isDark ? styles.subDark : styles.subLight]}>
-                        Підходи
-                      </Text>
-                      <Text style={[styles.colWeight, styles.tableHeaderCell, isDark ? styles.subDark : styles.subLight]}>
-                        Макс. вага
-                      </Text>
-                      <Text style={[styles.colVolume, styles.tableHeaderCell, isDark ? styles.subDark : styles.subLight]}>
-                        Тоннаж
-                      </Text>
-                    </View>
-
                     {/* Table Rows */}
                     {last5Sessions.map((session, sIdx) => {
                       const isExpanded = expandedSessionIdx === sIdx;
 
                       return (
-                        <View key={sIdx} style={styles.rowWrapper}>
+                        <View key={sIdx} style={[styles.rowWrapper, { borderBottomColor: colors.cardBorder }]}>
                           <TouchableOpacity
                             activeOpacity={0.7}
                             onPress={() => setExpandedSessionIdx(isExpanded ? null : sIdx)}
-                            style={[
-                              styles.tableRow,
-                              isDark ? styles.tableBorderDark : styles.tableBorderLight,
-                            ]}
+                            style={styles.tableRow}
                           >
                             <View style={[styles.colDate, styles.dateColRow]}>
-                              <Text style={[styles.cellDateText, isDark ? styles.textDark : styles.textLight]}>
+                              <Text style={[styles.cellDateText, { color: colors.textSecondary }]}>
                                 {session.displayDate}
                               </Text>
                               <Ionicons
                                 name={isExpanded ? 'chevron-up' : 'chevron-down'}
                                 size={12}
-                                color={isDark ? '#94A3B8' : '#64748B'}
-                                style={{ marginLeft: 3 }}
+                                color={colors.textSecondary}
+                                style={{ marginLeft: 4 }}
                               />
                             </View>
 
-                            <Text style={[styles.colSets, styles.cellSetsText, isDark ? styles.textDark : styles.textLight]}>
-                              {session.setsCount}
+                            <Text style={[styles.colSets, styles.cellSetsText, { color: colors.text }]}>
+                              {session.setsCount} підх.
                             </Text>
 
-                            <Text style={[styles.colWeight, styles.cellWeightText, isDark ? styles.textDark : styles.textLight]}>
+                            <Text style={[styles.colWeight, styles.cellWeightText, { color: colors.text }]}>
                               {session.maxWeight > 0 ? `${session.maxWeight} кг` : '—'}
                             </Text>
 
-                            <Text style={[styles.colVolume, styles.cellVolumeText, isDark ? styles.subDark : styles.subLight]}>
-                              {session.volumeTons > 0 ? `${session.volumeTons} т` : '0'}
+                            <Text style={[styles.colVolume, styles.cellVolumeText, { color: colors.textSecondary }]}>
+                              {session.volumeTons > 0 ? `${session.volumeTons} т` : '0 т'}
                             </Text>
                           </TouchableOpacity>
 
-                          {/* Expanded Sets Details - Grid of cards matching web version */}
+                          {/* Expanded Sets Details */}
                           {isExpanded && session.sets.length > 0 && (
-                            <View style={[styles.expandedSetsBox, isDark ? styles.expandedBoxDark : styles.expandedBoxLight]}>
-                              <Text style={[styles.expandedHeading, isDark ? styles.subDark : styles.subLight]}>
+                            <View style={[styles.expandedSetsBox, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
+                              <Text style={[styles.expandedHeading, { color: colors.textSecondary }]}>
                                 ВИКОНАНІ ПІДХОДИ:
                               </Text>
                               <View style={styles.setsGrid}>
                                 {session.sets.map((set, setIdx) => (
                                   <View
                                     key={setIdx}
-                                    style={[styles.setCard, isDark ? styles.setCardDark : styles.setCardLight]}
+                                    style={[styles.setCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
                                   >
-                                    <Text style={[styles.setCardNum, isDark ? styles.subDark : styles.subLight]}>
+                                    <Text style={[styles.setCardNum, { color: colors.textSecondary }]}>
                                       Сет {set.setNumber || setIdx + 1}
                                     </Text>
-                                    <Text style={[styles.setCardVal, isDark ? styles.textDark : styles.textLight]}>
+                                    <Text style={[styles.setCardVal, { color: colors.text }]}>
                                       {set.weight} кг × {set.actualReps}
                                     </Text>
                                   </View>
@@ -845,13 +790,13 @@ export const ExerciseDetailScreen: React.FC = () => {
               </View>
             </Card>
 
-            {/* Achievement Card matching mobile web version */}
+            {/* Achievement Card */}
             {stats.isNewPrInLatest && (
-              <View style={[styles.recordBanner, isDark ? styles.recordBannerDark : styles.recordBannerLight]}>
-                <Ionicons name="trophy" size={20} color="#F59E0B" />
+              <View style={[styles.recordBanner, { backgroundColor: isDark ? 'rgba(204, 255, 0, 0.12)' : 'rgba(37, 99, 235, 0.12)', borderColor: colors.accent }]}>
+                <Ionicons name="trophy" size={20} color={colors.accent} />
                 <View style={styles.recordBannerContent}>
-                  <Text style={styles.recordBannerTitle}>Особистий рекорд!</Text>
-                  <Text style={[styles.recordBannerDesc, isDark ? styles.recordBannerDescDark : styles.recordBannerDescLight]}>
+                  <Text style={[styles.recordBannerTitle, { color: colors.accent }]}>Особистий рекорд!</Text>
+                  <Text style={[styles.recordBannerDesc, { color: colors.text }]}>
                     Ви встановили новий рекорд у цій вправі на останньому тренуванні!
                   </Text>
                 </View>
@@ -868,61 +813,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  bgLight: {
-    backgroundColor: '#F8FAFC',
-  },
-  bgDark: {
-    backgroundColor: '#0B1220',
-  },
-  textLight: {
-    color: '#0F172A',
-  },
-  textDark: {
-    color: '#F8FAFC',
-  },
-  subLight: {
-    color: '#64748B',
-  },
-  subDark: {
-    color: '#94A3B8',
-  },
-  borderLight: {
-    borderBottomColor: '#E2E8F0',
-  },
-  borderDark: {
-    borderBottomColor: '#334155',
-  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  topBarLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderBottomColor: '#E2E8F0',
-  },
-  topBarDark: {
-    backgroundColor: 'rgba(11, 18, 32, 0.95)',
-    borderBottomColor: '#334155',
+    paddingVertical: 12,
+    gap: 12,
   },
   iconBtn: {
-    padding: 6,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerCenter: {
     flex: 1,
-    marginHorizontal: 8,
   },
   topBarTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   topBarSub: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 1,
+    fontSize: 13,
+    fontWeight: '500',
+    marginTop: 2,
   },
   centerContainer: {
     flex: 1,
@@ -936,39 +853,72 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    gap: 14,
+    gap: 12,
     paddingBottom: 48,
   },
-  heroSection: {
-    marginTop: 2,
-    marginBottom: 2,
+  heroCard: {
+    borderRadius: 20,
+    padding: 20,
+    justifyContent: 'center',
   },
-  heroLabel: {
-    fontSize: 12,
-    fontWeight: '500',
+  heroCardLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 6,
   },
-  heroRow: {
+  heroCardRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginTop: 2,
   },
-  heroVal: {
-    fontSize: 32,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+  heroCardVal: {
+    fontSize: 48,
+    fontWeight: '900',
+    letterSpacing: -1,
   },
-  heroUnit: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 4,
+  heroCardUnit: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginLeft: 6,
   },
-  dateRangeText: {
+  kpiRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  kpiCard: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    gap: 4,
+  },
+  kpiLbl: {
     fontSize: 11,
-    fontWeight: '500',
-    marginTop: 2,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  kpiValRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  kpiVal: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  kpiUnit: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  sectionHeading: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 12,
   },
   chartCard: {
-    padding: 14,
+    padding: 18,
     borderRadius: 20,
   },
   chartEmpty: {
@@ -981,7 +931,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   chartContainer: {
-    gap: 8,
+    gap: 12,
   },
   chartContentRow: {
     flexDirection: 'row',
@@ -1009,38 +959,14 @@ const styles = StyleSheet.create({
     right: 0,
     height: 1,
   },
-  gridLineLight: {
-    backgroundColor: '#E2E8F0',
-  },
-  gridLineDark: {
-    backgroundColor: 'rgba(51, 65, 85, 0.45)',
-  },
   chartLineSegment: {
     position: 'absolute',
-    height: 2.5,
-    backgroundColor: '#2563EB',
+    height: 3,
     borderRadius: 1.5,
-  },
-  areaFill: {
-    position: 'absolute',
-    borderBottomLeftRadius: 6,
-    borderBottomRightRadius: 6,
   },
   chartDot: {
     position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#2563EB',
     zIndex: 3,
-  },
-  chartDotActive: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 3,
   },
   xAxisRow: {
     flexDirection: 'row',
@@ -1065,14 +991,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  tooltipBoxLight: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#E2E8F0',
-  },
-  tooltipBoxDark: {
-    backgroundColor: '#263140',
-    borderColor: '#334155',
-  },
   tooltipDate: {
     fontSize: 12,
     fontWeight: '700',
@@ -1084,104 +1002,30 @@ const styles = StyleSheet.create({
   tooltipVal: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#2563EB',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
-  kpiRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  kpiCard: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 6,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-  },
-  kpiIcon: {
-    marginBottom: 1,
-  },
-  kpiVal: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  kpiLbl: {
-    fontSize: 10,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  sectionHeading: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginTop: 2,
-    paddingHorizontal: 2,
-  },
   analyticsCard: {
-    padding: 16,
+    padding: 18,
     borderRadius: 20,
-    gap: 8,
-  },
-  analyticsTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 2,
-  },
-  analyticsTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  analyticsDesc: {
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  boldText: {
-    fontWeight: '700',
   },
   sessionsTableSection: {
-    paddingTop: 4,
-  },
-  tableSubheader: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 6,
+    paddingTop: 2,
   },
   noSessionsText: {
-    fontSize: 12,
+    fontSize: 13,
     fontStyle: 'italic',
     paddingVertical: 8,
   },
   tableContainer: {
     marginTop: 2,
   },
-  tableHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-  },
-  tableBorderLight: {
-    borderBottomColor: '#E2E8F0',
-  },
-  tableBorderDark: {
-    borderBottomColor: 'rgba(51, 65, 85, 0.6)',
-  },
-  tableHeaderCell: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
   rowWrapper: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.25)',
   },
   tableRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 9,
+    paddingVertical: 12,
   },
   dateColRow: {
     flexDirection: 'row',
@@ -1191,7 +1035,7 @@ const styles = StyleSheet.create({
     flex: 1.2,
   },
   colSets: {
-    flex: 0.9,
+    flex: 1,
     textAlign: 'center',
   },
   colWeight: {
@@ -1203,32 +1047,27 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   cellDateText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
   },
   cellSetsText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
   },
   cellWeightText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
   },
   cellVolumeText: {
-    fontSize: 11,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 13,
+    fontWeight: '500',
   },
   expandedSetsBox: {
-    padding: 10,
+    padding: 12,
     borderRadius: 14,
-    marginBottom: 8,
-    gap: 6,
-  },
-  expandedBoxLight: {
-    backgroundColor: '#F1F5F9',
-  },
-  expandedBoxDark: {
-    backgroundColor: 'rgba(38, 49, 64, 0.6)',
+    borderWidth: 1,
+    marginBottom: 10,
+    gap: 8,
   },
   expandedHeading: {
     fontSize: 10,
@@ -1248,14 +1087,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minWidth: 84,
   },
-  setCardLight: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-  },
-  setCardDark: {
-    backgroundColor: '#1D2939',
-    borderColor: '#334155',
-  },
   setCardNum: {
     fontSize: 9,
   },
@@ -1273,31 +1104,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginTop: 2,
   },
-  recordBannerLight: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#FDE68A',
-  },
-  recordBannerDark: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    borderColor: 'rgba(245, 158, 11, 0.3)',
-  },
   recordBannerContent: {
     flex: 1,
   },
   recordBannerTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#F59E0B',
   },
   recordBannerDesc: {
     fontSize: 11,
     marginTop: 2,
     lineHeight: 15,
-  },
-  recordBannerDescLight: {
-    color: '#92400E',
-  },
-  recordBannerDescDark: {
-    color: '#FDE68A',
   },
 });

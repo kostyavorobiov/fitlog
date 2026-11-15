@@ -28,7 +28,7 @@ import AnimatedReanimated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../context/ThemeContext';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -646,7 +646,7 @@ const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
 };
 
 export const WorkoutEditorScreen: React.FC = () => {
-  const isDark = useColorScheme() === 'dark';
+  const { theme, colors, isDark } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id, traineeId } = useLocalSearchParams<{ id: string; traineeId?: string }>();
@@ -2143,7 +2143,7 @@ export const WorkoutEditorScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="small" color="#2563EB" />
           <Text style={[styles.loadingText, isDark ? styles.subDark : styles.subLight]}>
@@ -2156,7 +2156,7 @@ export const WorkoutEditorScreen: React.FC = () => {
 
   if (!workout) {
     return (
-      <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={handleBack} style={styles.iconBtn}>
             <Ionicons name="arrow-back" size={24} color={isDark ? '#F8FAFC' : '#0F172A'} />
@@ -2210,9 +2210,9 @@ export const WorkoutEditorScreen: React.FC = () => {
           onChangeExercise={() => handleChangeExercise(ex.id)}
           isDark={isDark}
         >
-          <View style={[styles.exerciseCard, { overflow: 'hidden' }]}>
+          <View style={[styles.exerciseCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1, overflow: 'hidden' }]}>
             {/* Superset Full Height Left Stripe */}
-            {isSuperset && palette && (
+            {isSuperset && (
               <View
                 pointerEvents="none"
                 style={{
@@ -2220,15 +2220,17 @@ export const WorkoutEditorScreen: React.FC = () => {
                   left: 0,
                   top: 0,
                   bottom: 0,
-                  width: 8,
-                  backgroundColor: palette.borderColor,
-                  zIndex: 1,
+                  width: 4,
+                  backgroundColor: colors.accent,
+                  borderTopLeftRadius: 20,
+                  borderBottomLeftRadius: 20,
+                  zIndex: 10,
                 }}
               />
             )}
 
             {/* Exercise Card Header */}
-            <View style={[styles.exHeader, isExpanded && (isDark ? styles.borderBottomDark : styles.borderBottomLight)]}>
+            <View style={[styles.exHeader, isExpanded && { borderBottomWidth: 1, borderBottomColor: colors.cardBorder, paddingBottom: 10 }]}>
               {/* Index/Reorder, Name & Collapsed Summary */}
               <View style={styles.exHeaderTitleRow}>
                 {/* Vertical Reorder Stepper (Up/Down) */}
@@ -2269,20 +2271,19 @@ export const WorkoutEditorScreen: React.FC = () => {
                   <View style={styles.exTitleContainer}>
                     <Text
                       numberOfLines={2}
-                      style={[styles.exTitleText, isDark ? styles.textDark : styles.textLight]}
+                      style={[styles.exTitleText, { color: colors.text }]}
                     >
                       {ex.exerciseName || 'Вправа'}
                     </Text>
-                    {isSuperset && palette && (
+                    {isSuperset && (
                       <View style={styles.exBadgeRow}>
                         <View
                           style={[
                             styles.supersetBadge,
-                            { backgroundColor: palette.badgeBg, borderColor: palette.badgeBorder },
+                            { backgroundColor: colors.accent, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
                           ]}
                         >
-                          <Ionicons name="link" size={10} color={palette.badgeText} />
-                          <Text style={[styles.supersetBadgeText, { color: palette.badgeText }]}>
+                          <Text style={[styles.supersetBadgeText, { color: colors.accentText, fontWeight: '700', fontSize: 10 }]}>
                             Суперсет
                           </Text>
                         </View>
@@ -2290,7 +2291,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                     )}
                     {!isExpanded && (
                       <View style={styles.collapsedSummaryRow}>
-                        <Text style={[styles.collapsedSummaryText, isDark ? styles.subDark : styles.subLight]}>
+                        <Text style={[styles.collapsedSummaryText, { color: colors.textSecondary }]}>
                           {(ex.sets || []).length} підходи • {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'} повт. • 1RM: {format1RM(getExercise1RM(ex.sets, pastPerf))}
                         </Text>
                       </View>
@@ -2298,7 +2299,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                   </View>
                 </TouchableOpacity>
 
-                {/* Action buttons (Delete, Superset & Toggle) */}
+                {/* Action buttons (Superset Link & Count Badge) */}
                 <View style={styles.exCardActions}>
                   {exercises.length > 1 && (
                     <TouchableOpacity
@@ -2306,26 +2307,52 @@ export const WorkoutEditorScreen: React.FC = () => {
                       onPress={() => handleToggleSuperset(exIndex)}
                       style={[
                         styles.supersetToggleBtn,
-                        isSuperset && palette
-                          ? { backgroundColor: palette.buttonActiveBg, borderColor: palette.buttonActiveBorder }
-                          : (isDark ? styles.actionBtnDark : styles.actionBtnLight),
+                        {
+                          backgroundColor: colors.subCard,
+                          borderColor: colors.cardBorder,
+                          width: 36,
+                          height: 36,
+                          borderRadius: 12,
+                        },
                       ]}
                       hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                     >
                       <Ionicons
-                        name={isSuperset ? 'unlink' : 'link'}
-                        size={15}
-                        color={isSuperset && palette ? palette.buttonActiveText : (isDark ? '#a1a1aa' : '#71717a')}
+                        name={isSuperset ? "link" : "link-outline"}
+                        size={16}
+                        color={isSuperset ? colors.accent : colors.textSecondary}
                       />
                     </TouchableOpacity>
                   )}
 
-                  <ExerciseProgressRing
-                    completed={(ex.sets || []).filter((s) => Boolean(s.completedAt)).length}
-                    total={(ex.sets || []).length}
-                    size={30}
-                    isDark={isDark}
-                  />
+                  {(() => {
+                    const completed = (ex.sets || []).filter((s) => Boolean(s.completedAt)).length;
+                    const total = (ex.sets || []).length;
+                    const isAllDone = total > 0 && completed === total;
+                    return (
+                      <View
+                        style={{
+                          backgroundColor: isAllDone ? colors.accent : colors.subCard,
+                          paddingHorizontal: 10,
+                          paddingVertical: 7,
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: 38,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            fontWeight: '800',
+                            color: isAllDone ? colors.accentText : colors.text,
+                          }}
+                        >
+                          {total > 0 ? `${completed}/${total}` : '0/0'}
+                        </Text>
+                      </View>
+                    );
+                  })()}
                 </View>
               </View>
             </View>
@@ -2333,30 +2360,30 @@ export const WorkoutEditorScreen: React.FC = () => {
             {isExpanded && (
               <>
                 {/* Target Rep Range Dropdown Bar */}
-                <View style={[styles.quickSelectorsRow, isDark ? styles.quickSelectorsRowDark : styles.quickSelectorsRowLight]}>
+                <View style={[styles.quickSelectorsRow, { backgroundColor: colors.subCard, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 8 }]}>
                   <View style={styles.repsDropdownRow}>
-                    <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
-                      Діапазон повторень:
+                    <Text style={[styles.selectorLabel, { color: colors.textSecondary }]}>
+                      ПОВТОРЕНЬ
                     </Text>
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => setActiveRepsPickerWeId(ex.id)}
                       style={[
                         styles.repsDropdownBtn,
-                        isDark ? styles.repsDropdownBtnDark : styles.repsDropdownBtnLight,
+                        { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 },
                       ]}
                     >
-                      <Text style={[styles.repsDropdownBtnText, isDark ? styles.textDark : styles.textLight]}>
+                      <Text style={[styles.repsDropdownBtnText, { color: colors.text }]}>
                         {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'}
                       </Text>
-                      <Ionicons name="chevron-down" size={13} color={isDark ? '#a1a1aa' : '#71717a'} />
+                      <Ionicons name="chevron-down" size={13} color={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
                   <View style={styles.repsDropdownRow}>
-                    <Text style={[styles.selectorLabel, isDark ? styles.subDark : styles.subLight]}>
-                      1RM:
+                    <Text style={[styles.selectorLabel, { color: colors.textSecondary }]}>
+                      1RM
                     </Text>
-                    <Text style={[{ fontSize: 13, fontWeight: '700' }, isDark ? styles.textDark : styles.textLight]}>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text }}>
                       {format1RM(getExercise1RM(ex.sets, pastPerf))}
                     </Text>
                   </View>
@@ -2365,18 +2392,18 @@ export const WorkoutEditorScreen: React.FC = () => {
                 {/* Sets Table */}
                 <View style={styles.setsTable}>
                   {/* Table Header */}
-                  <View style={[styles.tableHeaderRow, isDark ? styles.borderDark : styles.borderLight]}>
-                    <Text style={[styles.thCell, styles.thSet, isDark ? styles.subDark : styles.subLight]}>
-                      Сет
+                  <View style={[styles.tableHeaderRow, { borderBottomColor: colors.cardBorder }]}>
+                    <Text style={[styles.thCell, styles.thSet, { color: colors.textSecondary }]}>
+                      СЕТ
                     </Text>
-                    <Text style={[styles.thCell, styles.thWeight, isDark ? styles.subDark : styles.subLight]}>
-                      Вага (кг)
+                    <Text style={[styles.thCell, styles.thWeight, { color: colors.textSecondary }]}>
+                      ВАГА, КГ
                     </Text>
-                    <Text style={[styles.thCell, styles.thReps, isDark ? styles.subDark : styles.subLight]}>
-                      Повторення
+                    <Text style={[styles.thCell, styles.thReps, { color: colors.textSecondary }]}>
+                      ПОВТОР.
                     </Text>
-                    <Text style={[styles.thCell, styles.thAction, isDark ? styles.subDark : styles.subLight]}>
-                    </Text>
+                    <View style={styles.thDone} />
+                    <View style={styles.thAction} />
                   </View>
 
                   {/* Table Rows */}
@@ -2387,8 +2414,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                         key={s.id || `s_${sIndex}`}
                         style={[
                           styles.setTableRow,
-                          isDone && (isDark ? styles.setRowDoneDark : styles.setRowDoneLight),
-                          sIndex > 0 && [styles.setRowDivider, isDark ? styles.borderDark : styles.borderLight],
+                          sIndex > 0 && { borderTopWidth: 1, borderTopColor: colors.cardBorder },
                         ]}
                       >
                         {/* Set number */}
@@ -2401,7 +2427,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                           <Text
                             style={[
                               styles.setNumberText,
-                              s.isWarmup ? styles.warmupText : (isDark ? styles.textDark : styles.textLight),
+                              { color: s.isWarmup ? colors.accent : colors.text },
                             ]}
                           >
                             {s.setNumber || sIndex + 1}
@@ -2415,16 +2441,16 @@ export const WorkoutEditorScreen: React.FC = () => {
                             <TouchableOpacity
                               activeOpacity={0.6}
                               onPress={() => handleStepAdjust(ex.id, s.id, 'weight', -1)}
-                              style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                              style={[styles.stepBtn, { backgroundColor: colors.subCard }]}
                               hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                             >
-                              <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                -
+                              <Text style={[styles.stepBtnText, { color: colors.text }]}>
+                                −
                               </Text>
                             </TouchableOpacity>
 
                             <TextInput
-                              style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
+                              style={[styles.numberInput, { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text }]}
                               keyboardType="decimal-pad"
                               inputMode="decimal"
                               value={s.weight !== null && s.weight !== undefined ? String(s.weight) : ''}
@@ -2439,10 +2465,10 @@ export const WorkoutEditorScreen: React.FC = () => {
                             <TouchableOpacity
                               activeOpacity={0.6}
                               onPress={() => handleStepAdjust(ex.id, s.id, 'weight', 1)}
-                              style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                              style={[styles.stepBtn, { backgroundColor: colors.subCard }]}
                               hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                             >
-                              <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                              <Text style={[styles.stepBtnText, { color: colors.text }]}>
                                 +
                               </Text>
                             </TouchableOpacity>
@@ -2455,16 +2481,16 @@ export const WorkoutEditorScreen: React.FC = () => {
                             <TouchableOpacity
                               activeOpacity={0.6}
                               onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', -1)}
-                              style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                              style={[styles.stepBtn, { backgroundColor: colors.subCard }]}
                               hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                             >
-                              <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
-                                -
+                              <Text style={[styles.stepBtnText, { color: colors.text }]}>
+                                −
                               </Text>
                             </TouchableOpacity>
 
                             <TextInput
-                              style={[styles.numberInput, isDark ? styles.inputDark : styles.inputLight]}
+                              style={[styles.numberInput, { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text }]}
                               keyboardType="number-pad"
                               inputMode="numeric"
                               value={s.actualReps !== null && s.actualReps !== undefined ? String(s.actualReps) : ''}
@@ -2478,10 +2504,10 @@ export const WorkoutEditorScreen: React.FC = () => {
                             <TouchableOpacity
                               activeOpacity={0.6}
                               onPress={() => handleStepAdjust(ex.id, s.id, 'actualReps', 1)}
-                              style={[styles.stepBtn, isDark ? styles.stepBtnDark : styles.stepBtnLight]}
+                              style={[styles.stepBtn, { backgroundColor: colors.subCard }]}
                               hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                             >
-                              <Text style={[styles.stepBtnText, isDark ? styles.textDark : styles.textLight]}>
+                              <Text style={[styles.stepBtnText, { color: colors.text }]}>
                                 +
                               </Text>
                             </TouchableOpacity>
@@ -2495,11 +2521,30 @@ export const WorkoutEditorScreen: React.FC = () => {
                           style={styles.tdDone}
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                          <Ionicons
-                            name={isDone ? 'checkmark-circle' : 'ellipse-outline'}
-                            size={26}
-                            color={isDone ? '#22C55E' : (isDark ? '#334155' : '#E2E8F0')}
-                          />
+                          {isDone ? (
+                            <View
+                              style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: 12,
+                                backgroundColor: colors.accent,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <Ionicons name="checkmark" size={15} color={colors.accentText} />
+                            </View>
+                          ) : (
+                            <View
+                              style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: 12,
+                                borderWidth: 2,
+                                borderColor: colors.border,
+                              }}
+                            />
+                          )}
                         </TouchableOpacity>
 
                         {/* Remove set */}
@@ -2509,7 +2554,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                           style={styles.tdAction}
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                          <Ionicons name="close" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                          <Ionicons name="close" size={18} color={colors.textSecondary} />
                         </TouchableOpacity>
                       </View>
                     );
@@ -2520,11 +2565,10 @@ export const WorkoutEditorScreen: React.FC = () => {
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => handleAddSet(ex.id)}
-                  style={[styles.addSetBtn, isDark ? styles.borderDark : styles.borderLight]}
+                  style={[styles.addSetBtn, { borderColor: colors.border }]}
                 >
-                  <Ionicons name="add" size={16} color={isDark ? '#F8FAFC' : '#0F172A'} />
-                  <Text style={[styles.addSetBtnText, isDark ? styles.textDark : styles.textLight]}>
-                    Додати підхід
+                  <Text style={[styles.addSetBtnText, { color: colors.text }]}>
+                    + Додати підхід
                   </Text>
                 </TouchableOpacity>
               </>
@@ -2537,7 +2581,7 @@ export const WorkoutEditorScreen: React.FC = () => {
 
   return (
     <ScreenGestureWrapper enableTabSwipe={false} enableBackSwipe={true} onBack={handleBack}>
-      <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+      <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Top Header Bar */}
       <Animated.View
         onLayout={(e) => {
@@ -2548,10 +2592,8 @@ export const WorkoutEditorScreen: React.FC = () => {
         }}
         style={[
           styles.topBar,
-          isDark ? styles.borderDark : styles.borderLight,
-          isDark ? styles.topBarDark : styles.topBarLight,
-          Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
           {
+            backgroundColor: colors.bg,
             marginTop: topBarAnim.interpolate({
               inputRange: [0, 1],
               outputRange: [0, -topBarHeight],
@@ -2567,11 +2609,11 @@ export const WorkoutEditorScreen: React.FC = () => {
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={handleBack}
-          style={styles.iconBtn}
+          style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
           accessibilityRole="button"
           accessibilityLabel="Назад"
         >
-          <Ionicons name="arrow-back" size={22} color={isDark ? '#F8FAFC' : '#0F172A'} />
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
@@ -2585,10 +2627,10 @@ export const WorkoutEditorScreen: React.FC = () => {
             accessibilityRole="button"
             accessibilityLabel="Редагувати назву тренування"
           >
-            <Text numberOfLines={1} style={[styles.topBarTitle, isDark ? styles.textDark : styles.textLight]}>
+            <Text numberOfLines={1} style={[styles.topBarTitle, { color: colors.text }]}>
               {workout.title || 'Тренування'}
             </Text>
-            <Ionicons name="pencil" size={13} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 5 }} />
+            <Ionicons name="pencil" size={13} color={colors.textSecondary} style={{ marginLeft: 5 }} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -2598,7 +2640,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             accessibilityRole="button"
             accessibilityLabel="Вибрати дату тренування"
           >
-            <Text style={[styles.topBarDateText, isDark ? styles.subDark : styles.subLight]}>
+            <Text style={[styles.topBarDateText, { color: colors.textSecondary }]}>
               {formatDateDDMMYYYY(workout.scheduledDate)}
             </Text>
           </TouchableOpacity>
@@ -2611,11 +2653,11 @@ export const WorkoutEditorScreen: React.FC = () => {
               setTemplateName(workout.title || 'Моє тренування');
               setIsTemplateModalOpen(true);
             }}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
             accessibilityRole="button"
             accessibilityLabel="Зберегти як шаблон"
           >
-            <Ionicons name="bookmark-outline" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
+            <Ionicons name="bookmark-outline" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -2686,10 +2728,10 @@ export const WorkoutEditorScreen: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => setIsSelectorOpen(true)}
-            style={[styles.bigAddExerciseBtn, isDark ? styles.borderDark : styles.borderLight]}
+            style={[styles.bigAddExerciseBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
           >
-            <Ionicons name="add" size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
-            <Text style={[styles.bigAddExerciseText, isDark ? styles.textDark : styles.textLight]}>
+            <Ionicons name="add" size={20} color={colors.accent} />
+            <Text style={[styles.bigAddExerciseText, { color: colors.text }]}>
               Додати вправу з каталогу
             </Text>
           </TouchableOpacity>
@@ -2984,15 +3026,20 @@ const styles = StyleSheet.create({
     borderBottomColor: '#334155',
   },
   iconBtn: {
-    padding: 6,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerCenter: {
     flex: 1,
     marginHorizontal: 8,
   },
   topBarTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   topBarSub: {
     fontSize: 11,
@@ -3011,8 +3058,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   topBarDateText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
+    marginTop: 2,
   },
   saveTemplateBtn: {
     flexDirection: 'row',
@@ -3346,8 +3394,9 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   collapsedSummaryText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
+    marginTop: 2,
   },
   exIndexBadge: {
     width: 26,
@@ -3374,9 +3423,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   exTitleText: {
-    fontSize: 15,
-    fontWeight: '700',
-    lineHeight: 20,
+    fontSize: 17,
+    fontWeight: '800',
+    lineHeight: 22,
   },
   exBadgeRow: {
     flexDirection: 'row',
@@ -3652,10 +3701,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 6,
   },
   stepBtn: {
-    width: 28,
+    width: 34,
     height: 34,
     borderRadius: 10,
     alignItems: 'center',
@@ -3706,15 +3755,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingVertical: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderStyle: 'dashed',
-    marginTop: 4,
+    marginTop: 10,
   },
   addSetBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
   },
   bigAddExerciseBtn: {
     flexDirection: 'row',

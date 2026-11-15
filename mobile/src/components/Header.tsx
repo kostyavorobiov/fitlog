@@ -45,7 +45,7 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
   style,
 }) => {
   const router = useRouter();
-  const { isDark } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const handleTitlePress = () => {
     if (onLogoPress) {
@@ -69,7 +69,7 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
     <View
       style={[
         styles.topNavbar,
-        isDark ? styles.topNavbarDark : styles.topNavbarLight,
+        { backgroundColor: colors.bg, borderBottomColor: 'transparent' },
         Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any),
         style,
       ]}
@@ -80,11 +80,11 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleBackPress}
-            style={styles.navBackBtn}
+            style={[styles.navBackBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 }]}
             accessibilityRole="button"
             accessibilityLabel="Назад"
           >
-            <Ionicons name="arrow-back" size={24} color={isDark ? '#F8FAFC' : '#0F172A'} />
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -94,7 +94,7 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
           accessibilityRole="header"
           accessibilityLabel={title || 'FitLog'}
         >
-          <Text style={[styles.navTitleText, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
+          <Text style={[styles.navTitleText, { color: colors.text }]} numberOfLines={1}>
             {title || 'FitLog'}
           </Text>
         </TouchableOpacity>
@@ -106,19 +106,19 @@ export const WebTopNavbar: React.FC<WebTopNavbarProps> = ({
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={onCoachStatusPress}
-            style={[styles.headerIconBtn, isDark ? styles.headerIconBtnDark : styles.headerIconBtnLight]}
+            style={[styles.headerIconBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
             accessibilityRole="button"
             accessibilityLabel="Підопічні"
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
           >
-            <Ionicons name="people-outline" size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
+            <Ionicons name="people-outline" size={20} color={colors.text} />
           </TouchableOpacity>
         )}
         {showLogout && (
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={onLogoutPress}
-            style={[styles.headerIconBtn, isDark ? styles.headerIconBtnDark : styles.headerIconBtnLight]}
+            style={[styles.headerIconBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
             accessibilityRole="button"
             accessibilityLabel="Вийти"
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
@@ -236,9 +236,9 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -252,12 +252,12 @@ const styles = StyleSheet.create({
     borderColor: '#334155',
   },
   topNavbar: {
-    height: 56,
+    height: 60,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
   },
   topNavbarLight: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -270,13 +270,13 @@ const styles = StyleSheet.create({
   navLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
     flex: 1,
   },
   navBackBtn: {
-    padding: 6,
-    marginLeft: -6,
-    borderRadius: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   },
   navTitleText: {
     fontSize: 26,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: -0.4,
   },
   rightActions: {

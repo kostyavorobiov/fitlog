@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
 import { MobileStorage } from '../lib/storage';
+import { Theme, ThemePalette, THEMES } from '../constants/theme';
 
-export type Theme = 'light' | 'dark';
+export type { Theme, ThemePalette };
 
 interface ThemeContextType {
   theme: Theme;
   isDark: boolean;
+  colors: ThemePalette;
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
 }
@@ -18,14 +20,19 @@ export const ThemeContext = createContext<ThemeContextType | undefined>(undefine
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemScheme = useRNColorScheme();
   const [theme, setThemeState] = useState<Theme>(() => {
-    return systemScheme === 'light' ? 'light' : 'dark';
+    return systemScheme === 'light' ? 'paper' : 'night';
   });
 
   useEffect(() => {
     let isMounted = true;
-    MobileStorage.getItem<Theme | null>(THEME_PREF_KEY, null).then((saved) => {
-      if (isMounted && (saved === 'light' || saved === 'dark')) {
-        setThemeState(saved);
+    MobileStorage.getItem<string | null>(THEME_PREF_KEY, null).then((saved) => {
+      if (!isMounted || !saved) return;
+      if (saved === 'dark') {
+        setThemeState('night');
+      } else if (saved === 'light') {
+        setThemeState('paper');
+      } else if (['night', 'paper', 'blue', 'navy'].includes(saved)) {
+        setThemeState(saved as Theme);
       }
     });
     return () => {
@@ -40,14 +47,24 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const toggleTheme = useCallback(async () => {
     setThemeState((prev) => {
-      const next = prev === 'dark' ? 'light' : 'dark';
+      // Toggle cycles: night -> paper -> blue -> navy -> night
+      const nextMap: Record<Theme, Theme> = {
+        night: 'paper',
+        paper: 'blue',
+        blue: 'navy',
+        navy: 'night',
+      };
+      const next = nextMap[prev] || 'night';
       MobileStorage.setItem(THEME_PREF_KEY, next);
       return next;
     });
   }, []);
 
+  const currentTheme = THEMES[theme] || THEMES.night;
+  const isDark = currentTheme.isDark;
+
   return (
-    <ThemeContext.Provider value={{ theme, isDark: theme === 'dark', toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, isDark, colors: currentTheme, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -68,7 +85,7 @@ export const useTheme = (): ThemeContextType => {
 export const useAppColorScheme = (): 'light' | 'dark' => {
   const context = useContext(ThemeContext);
   if (context) {
-    return context.theme;
+    return context.isDark ? 'dark' : 'light';
   }
   const system = useRNColorScheme();
   return system === 'light' ? 'light' : 'dark';

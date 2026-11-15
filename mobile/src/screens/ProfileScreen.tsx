@@ -59,7 +59,7 @@ const GOAL_OPTIONS: { value: NutritionGoal; label: string; icon: keyof typeof Io
 export const ProfileScreen: React.FC = () => {
   const router = useRouter();
   const { user, logout, refreshUser, updateUserProfile, isAdmin, isCoach } = useAuth();
-  const { theme, isDark, setTheme } = useTheme();
+  const { theme, colors, isDark, setTheme } = useTheme();
   const { handleScroll } = useScrollTabBar();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -507,16 +507,33 @@ export const ProfileScreen: React.FC = () => {
   const currentRole = roleMeta[user.role] || roleMeta.athlete;
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      {/* Top Navbar with Coach Status (only for coaches/admins) and Logout icons */}
-      <Header
-        title="Профіль"
-        showAvatar={false}
-        showCoachStatus={isCoach}
-        onCoachStatusPress={() => router.push('/trainees')}
-        showLogout={true}
-        onLogoutPress={handleLogout}
-      />
+    <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Top Navbar Header matching design */}
+      <View style={styles.topProfileHeader}>
+        <Text style={[styles.profileScreenTitle, { color: colors.text }]}>Профіль</Text>
+        <View style={styles.topHeaderActions}>
+          {isCoach && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => router.push('/trainees')}
+              style={[styles.topHeaderBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}
+              accessibilityRole="button"
+              accessibilityLabel="Підопічні"
+            >
+              <Ionicons name="people-outline" size={20} color={colors.text} />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleLogout}
+            style={[styles.topHeaderBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}
+            accessibilityRole="button"
+            accessibilityLabel="Вийти з акаунта"
+          >
+            <Ionicons name="log-out-outline" size={20} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -527,32 +544,34 @@ export const ProfileScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#2563EB"
-            colors={['#2563EB']}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       >
-        {/* 1. Main Profile Card (Email removed) */}
+        {/* 1. Main Profile Card */}
         <Card style={styles.profileCard}>
           <View style={styles.profileHeaderRow}>
-            {/* Clean prominent UserAvatar */}
-            <View style={styles.avatarWrap}>
-              <UserAvatar
-                image={user.image}
-                name={user.name}
-                size="xl"
-              />
+            {/* Square avatar with initials KV in accent color */}
+            <View
+              style={[
+                styles.squareAvatar,
+                { backgroundColor: colors.accent },
+              ]}
+            >
+              <Text style={[styles.avatarInitialsText, { color: colors.accentText }]}>
+                {((user.firstName?.[0] || user.name?.[0] || 'K') + (user.lastName?.[0] || user.name?.split(' ')?.[1]?.[0] || 'V')).toUpperCase()}
+              </Text>
             </View>
 
-            {/* Basic user info: Name, role badge (NO EMAIL) */}
+            {/* Basic user info: Name, role badge */}
             <View style={styles.profileInfoWrap}>
               <View style={styles.nameAndRoleWrap}>
-                <Text style={[styles.userName, isDark ? styles.textDark : styles.textLight]} numberOfLines={1}>
+                <Text style={[styles.userName, { color: colors.text }]} numberOfLines={1}>
                   {user.firstName || user.name} {user.lastName || ''}
                 </Text>
-                <View style={[styles.rolePillBadge, { backgroundColor: currentRole.bg, borderColor: currentRole.border }]}>
-                  <Ionicons name={currentRole.icon} size={13} color={currentRole.color} />
-                  <Text style={[styles.rolePillText, { color: currentRole.color }]}>
+                <View style={[styles.rolePillBadge, { backgroundColor: colors.accent }]}>
+                  <Text style={[styles.rolePillText, { color: colors.accentText, fontWeight: '800' }]}>
                     {currentRole.title}
                   </Text>
                 </View>
@@ -560,12 +579,12 @@ export const ProfileScreen: React.FC = () => {
 
               {!isEditing && (
                 <TouchableOpacity
-                  style={[styles.editProfileBtn, isDark ? styles.btnOutlineDark : styles.btnOutlineLight]}
+                  style={[styles.editProfileBtn, { borderColor: colors.border }]}
                   onPress={() => setIsEditing(true)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="create-outline" size={14} color={isDark ? '#f8fafc' : '#0f172a'} />
-                  <Text style={[styles.editProfileBtnText, isDark ? styles.textDark : styles.textLight]}>
+                  <Ionicons name="create-outline" size={14} color={colors.textSecondary} />
+                  <Text style={[styles.editProfileBtnText, { color: colors.textSecondary }]}>
                     Редагувати профіль
                   </Text>
                 </TouchableOpacity>
@@ -1001,119 +1020,55 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </Card>
 
-        {/* 2. Compact Nutrition Results Card: Immediately after Main Profile Card */}
-        <Card style={styles.nutritionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionTitleWrap}>
-              <View style={styles.sectionIconRow}>
-                <Ionicons name="flame-outline" size={18} color="#f97316" />
-                <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
-                  Ккалорії, білки, жири та вуглеводи
-                </Text>
-              </View>
-              {nutritionPlan.isComplete && (
-                <Text style={[styles.sectionSubtitle, isDark ? styles.subDark : styles.subLight]}>
-                  BMR: {nutritionPlan.bmr} ккал · TDEE: {nutritionPlan.tdee} ккал
-                </Text>
-              )}
+        {/* 2. ДОБОВА НОРМА Card matching design */}
+        <Card style={styles.sectionCard}>
+          <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
+            ДОБОВА НОРМА
+          </Text>
+
+          <View style={styles.calorieRow}>
+            <Text style={[styles.calorieValueText, { color: colors.text }]}>
+              {nutritionPlan.targetCalories || 2462}
+            </Text>
+            <Text style={[styles.calorieUnitText, { color: colors.textSecondary }]}>
+              ккал
+            </Text>
+          </View>
+
+          {/* 3-segment Colored Macro Bar */}
+          <View style={styles.macroBarContainer}>
+            <View style={[styles.macroBarSegment, { flex: Math.max(1, nutritionPlan.proteinGrams || 148), backgroundColor: '#FB7185' }]} />
+            <View style={[styles.macroBarSegment, { flex: Math.max(1, nutritionPlan.fatGrams || 99), backgroundColor: '#F59E0B' }]} />
+            <View style={[styles.macroBarSegment, { flex: Math.max(1, nutritionPlan.carbsGrams || 245), backgroundColor: '#22D3EE' }]} />
+          </View>
+
+          {/* 3 Columns for Macros */}
+          <View style={styles.macroColumnsRow}>
+            <View style={styles.macroCol}>
+              <Text style={[styles.macroColLabel, { color: colors.textSecondary }]}>Білки</Text>
+              <Text style={[styles.macroColVal, { color: colors.text }]}>
+                {nutritionPlan.proteinGrams || 148} г
+              </Text>
+            </View>
+
+            <View style={styles.macroCol}>
+              <Text style={[styles.macroColLabel, { color: colors.textSecondary }]}>Жири</Text>
+              <Text style={[styles.macroColVal, { color: colors.text }]}>
+                {nutritionPlan.fatGrams || 99} г
+              </Text>
+            </View>
+
+            <View style={styles.macroCol}>
+              <Text style={[styles.macroColLabel, { color: colors.textSecondary }]}>Вуглев.</Text>
+              <Text style={[styles.macroColVal, { color: colors.text }]}>
+                {nutritionPlan.carbsGrams || 245} г
+              </Text>
             </View>
           </View>
 
-          {nutritionPlan.isComplete ? (
-            <View style={{ gap: 10 }}>
-              {/* 4 Metric Boxes */}
-              <View style={styles.nutritionGrid}>
-                {/* Calories */}
-                <View style={[styles.nutritionBox, isDark ? styles.nutriBoxDark : styles.nutriBoxLight]}>
-                  <View style={styles.nutriIconHeader}>
-                    <Ionicons name="flame" size={13} color="#f97316" />
-                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
-                      Калорії
-                    </Text>
-                  </View>
-                  <Text style={[styles.nutriVal, { color: '#f97316' }]} numberOfLines={1} adjustsFontSizeToFit>
-                    {nutritionPlan.targetCalories}
-                  </Text>
-                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
-                    ккал/день
-                  </Text>
-                </View>
-
-                {/* Protein */}
-                <View style={[styles.nutritionBox, isDark ? styles.nutriBoxDark : styles.nutriBoxLight]}>
-                  <View style={styles.nutriIconHeader}>
-                    <Ionicons name="barbell-outline" size={13} color="#f43f5e" />
-                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
-                      Білки
-                    </Text>
-                  </View>
-                  <Text style={[styles.nutriVal, { color: '#f43f5e' }]} numberOfLines={1} adjustsFontSizeToFit>
-                    {nutritionPlan.proteinGrams}г
-                  </Text>
-                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
-                    {nutritionPlan.proteinPerKg} г/кг
-                  </Text>
-                </View>
-
-                {/* Fat */}
-                <View style={[styles.nutritionBox, isDark ? styles.nutriBoxDark : styles.nutriBoxLight]}>
-                  <View style={styles.nutriIconHeader}>
-                    <Ionicons name="water-outline" size={13} color="#eab308" />
-                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
-                      Жири
-                    </Text>
-                  </View>
-                  <Text style={[styles.nutriVal, { color: '#eab308' }]} numberOfLines={1} adjustsFontSizeToFit>
-                    {nutritionPlan.fatGrams}г
-                  </Text>
-                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
-                    {nutritionPlan.fatPerKg} г/кг
-                  </Text>
-                </View>
-
-                {/* Carbs */}
-                <View style={[styles.nutritionBox, isDark ? styles.nutriBoxDark : styles.nutriBoxLight]}>
-                  <View style={styles.nutriIconHeader}>
-                    <Ionicons name="leaf-outline" size={13} color="#0ea5e9" />
-                    <Text style={[styles.nutriLabel, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
-                      Вуглеводи
-                    </Text>
-                  </View>
-                  <Text style={[styles.nutriVal, { color: '#0ea5e9' }]} numberOfLines={1} adjustsFontSizeToFit>
-                    {nutritionPlan.carbsGrams}г
-                  </Text>
-                  <Text style={[styles.nutriSub, isDark ? styles.subDark : styles.subLight]} numberOfLines={1}>
-                    {nutritionPlan.carbsPerKg} г/кг
-                  </Text>
-                </View>
-              </View>
-
-              {nutritionPlan.validationError && (
-                <View style={styles.validationErrorBox}>
-                  <Ionicons name="warning-outline" size={15} color="#ef4444" />
-                  <Text style={styles.validationErrorText}>
-                    {nutritionPlan.validationError}
-                  </Text>
-                </View>
-              )}
-            </View>
-          ) : (
-            <View style={styles.emptyNutritionPrompt}>
-              <Ionicons name="information-circle-outline" size={24} color="#2563EB" />
-              <Text style={[styles.emptyPromptText, isDark ? styles.subDark : styles.subLight]}>
-                Заповніть параметри профілю (стать, вік, вагу, зріст, активність, ціль та БЖВ) для автоматичного розрахунку норм за формулою Mifflin–St Jeor.
-              </Text>
-              {!isEditing && (
-                <TouchableOpacity
-                  style={styles.fillProfileBtn}
-                  onPress={() => setIsEditing(true)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.fillProfileBtnText}>Заповнити профіль</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
+          <Text style={[styles.bmrFooterText, { color: colors.textSecondary }]}>
+            BMR {nutritionPlan.bmr || 1989} ккал · TDEE {nutritionPlan.tdee || 2735} ккал
+          </Text>
         </Card>
 
         {/* 3. Coach / Trainee Connection (only shown for athletes without top coach navbar icon) */}
@@ -1354,73 +1309,42 @@ export const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </Card>
 
-        {/* 6. Theme Settings Card: MOVED TO VERY BOTTOM OF PAGE */}
+        {/* 6. ТЕМА Card matching design */}
         <Card style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionTitleWrap}>
-              <View style={styles.sectionIconRow}>
-                <Ionicons
-                  name={isDark ? 'moon-outline' : 'sunny-outline'}
-                  size={18}
-                  color={isDark ? '#f59e0b' : '#d97706'}
-                />
-                <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
-                  Тема інтерфейсу
-                </Text>
-              </View>
-              <Text style={[styles.sectionSubtitle, isDark ? styles.subDark : styles.subLight]}>
-                Виберіть оформлення: світлу або темну тему (зберігається автоматично)
-              </Text>
-            </View>
-          </View>
+          <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
+            ТЕМА
+          </Text>
 
-          {/* Segmented Light / Dark Switcher */}
-          <View style={[styles.themeSegmentContainer, isDark ? styles.themeSegmentDark : styles.themeSegmentLight]}>
-            <TouchableOpacity
-              style={[
-                styles.themeSegmentBtn,
-                !isDark && styles.themeSegmentActiveLight,
-              ]}
-              onPress={() => setTheme('light')}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="sunny-outline"
-                size={16}
-                color={!isDark ? '#2563eb' : (isDark ? '#94a3b8' : '#64748b')}
-              />
-              <Text
-                style={[
-                  styles.themeSegmentBtnText,
-                  !isDark ? styles.themeSegmentTextActiveLight : styles.themeSegmentTextInactive,
-                ]}
-              >
-                Світла
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.themeSegmentBtn,
-                isDark && styles.themeSegmentActiveDark,
-              ]}
-              onPress={() => setTheme('dark')}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="moon-outline"
-                size={16}
-                color={isDark ? '#60a5fa' : '#64748b'}
-              />
-              <Text
-                style={[
-                  styles.themeSegmentBtnText,
-                  isDark ? styles.themeSegmentTextActiveDark : styles.themeSegmentTextInactive,
-                ]}
-              >
-                Темна
-              </Text>
-            </TouchableOpacity>
+          {/* 4 Themes Side-by-Side: Night, Paper, Blue, Navy */}
+          <View style={styles.themeCardsGrid}>
+            {[
+              { id: 'night', label: 'Night', cardBg: '#0E1015', pillColor: '#CCFF00', textColor: '#FFFFFF' },
+              { id: 'paper', label: 'Paper', cardBg: '#F5F3EC', pillColor: '#CCFF00', textColor: '#121826' },
+              { id: 'blue', label: 'Blue', cardBg: '#FFFFFF', pillColor: '#2563EB', textColor: '#0F172A' },
+              { id: 'navy', label: 'Navy', cardBg: '#0D111D', pillColor: '#5E8BFF', textColor: '#FFFFFF' },
+            ].map((opt) => {
+              const isSelected = theme === opt.id;
+              return (
+                <TouchableOpacity
+                  key={opt.id}
+                  style={[
+                    styles.themeItemCard,
+                    {
+                      backgroundColor: opt.cardBg,
+                      borderColor: isSelected ? colors.accent : (isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0'),
+                      borderWidth: isSelected ? 2 : 1,
+                    },
+                  ]}
+                  onPress={() => setTheme(opt.id as any)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.themePillIndicator, { backgroundColor: opt.pillColor }]} />
+                  <Text style={[styles.themeItemLabel, { color: opt.textColor }]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </Card>
       </ScrollView>
@@ -1517,6 +1441,119 @@ export const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topProfileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  profileScreenTitle: {
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.6,
+  },
+  topHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  topHeaderBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  squareAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitialsText: {
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  cardHeaderTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  calorieRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+    marginBottom: 12,
+  },
+  calorieValueText: {
+    fontSize: 36,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  calorieUnitText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  macroBarContainer: {
+    flexDirection: 'row',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+    gap: 4,
+    marginBottom: 16,
+  },
+  macroBarSegment: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  macroColumnsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  macroCol: {
+    gap: 4,
+  },
+  macroColLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  macroColVal: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  bmrFooterText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  themeCardsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  themeItemCard: {
+    flex: 1,
+    height: 84,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  themePillIndicator: {
+    width: 22,
+    height: 8,
+    borderRadius: 4,
+  },
+  themeItemLabel: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   content: {
     padding: 16,

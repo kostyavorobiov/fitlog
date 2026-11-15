@@ -23,6 +23,7 @@ import { getPeriodRange, PeriodRange, formatLocalDate } from '../utils/date';
 import { WorkoutCalendarView } from '../components/WorkoutCalendarView';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { triggerRefreshSuccessHaptic } from '../utils/haptics';
+import { useTheme } from '../context/ThemeContext';
 import {
   calculateAnalytics,
   AnalyticsPeriod,
@@ -31,7 +32,7 @@ import {
 } from '../utils/analytics';
 
 export const AnalyticsScreen: React.FC = () => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors, isDark } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { handleScroll } = useScrollTabBar();
@@ -159,54 +160,53 @@ export const AnalyticsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      {/* Header with Segmented Period Switcher (День | Тиждень | Місяць) */}
-      <Header
-        title="Аналітика"
-        subtitle={
-          traineeName
-            ? `Підопічний: ${traineeName}`
-            : undefined
-        }
-        rightAction={
-          <View style={[styles.periodContainer, isDark ? styles.periodDark : styles.periodLight]}>
-            {(
-              [
-                { key: 'day', label: 'День' },
-                { key: 'week', label: 'Тиждень' },
-                { key: 'month', label: 'Місяць' },
-              ] as const
-            ).map((p) => {
-              const isActive = period === p.key;
-              return (
-                <TouchableOpacity
-                  key={p.key}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    setPeriod(p.key);
-                    setCurrentDate(new Date());
-                  }}
+    <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Top Header matching PDF design */}
+      <View style={styles.topHeader}>
+        <Text style={[styles.screenTitle, { color: colors.text }]}>Аналітика</Text>
+        <Text style={[styles.screenSubtitle, { color: colors.textSecondary }]}>
+          {periodRange.titleUk || 'Листопад 2026'}
+        </Text>
+
+        {/* Period Switcher Pills (День | Тиждень | Місяць) */}
+        <View style={[styles.periodSwitcher, { backgroundColor: colors.subCard }]}>
+          {(
+            [
+              { key: 'day', label: 'День' },
+              { key: 'week', label: 'Тиждень' },
+              { key: 'month', label: 'Місяць' },
+            ] as const
+          ).map((p) => {
+            const isActive = period === p.key;
+            return (
+              <TouchableOpacity
+                key={p.key}
+                activeOpacity={0.8}
+                onPress={() => {
+                  setPeriod(p.key);
+                  setCurrentDate(new Date());
+                }}
+                style={[
+                  styles.periodPill,
+                  isActive && { backgroundColor: colors.accent },
+                ]}
+              >
+                <Text
                   style={[
-                    styles.periodBtn,
-                    isActive && (isDark ? styles.periodBtnActiveDark : styles.periodBtnActiveLight),
+                    styles.periodPillText,
+                    {
+                      color: isActive ? colors.accentText : colors.textSecondary,
+                      fontWeight: isActive ? '700' : '600',
+                    },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.periodBtnText,
-                      isActive
-                        ? (isDark ? styles.periodTextActiveDark : styles.periodTextActiveLight)
-                        : (isDark ? styles.subDark : styles.subLight),
-                    ]}
-                  >
-                    {p.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        }
-      />
+                  {p.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -217,12 +217,75 @@ export const AnalyticsScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#2563eb"
-            colors={['#2563eb']}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       >
-        {/* Interactive Month Calendar with workout dots at the top of Analytics */}
+        {/* 1. ТОННАЖ Card matching PDF */}
+        <Card style={styles.tonnageCard}>
+          <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
+            ТОННАЖ ЗА {period === 'day' ? 'ДЕНЬ' : period === 'month' ? 'МІСЯЦЬ' : 'ТИЖДЕНЬ'}
+          </Text>
+          <View style={styles.tonnageRow}>
+            <View style={styles.tonnageLeft}>
+              <Text style={[styles.tonnageBigNum, { color: colors.text }]}>
+                {analyticsData.periodTons > 0 ? analyticsData.periodTons : (Math.round((analyticsData.periodVolumeKg / 1000) * 10) / 10) || '0'}
+              </Text>
+              <Text style={[styles.tonnageUnit, { color: colors.textSecondary }]}>
+                т
+              </Text>
+            </View>
+
+            <View style={styles.tonnageRight}>
+              <Text style={[styles.tonnageStatRow, { color: colors.text }]}>
+                {analyticsData.periodCompletedSets} підходів
+              </Text>
+              <Text style={[styles.tonnageStatRow, { color: colors.textSecondary }]}>
+                {analyticsData.exercisesList.length} вправ
+              </Text>
+            </View>
+          </View>
+        </Card>
+
+        {/* 2. ГРУПИ М'ЯЗІВ Card matching PDF */}
+        <Card style={styles.musclesCard}>
+          <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
+            ГРУПИ М’ЯЗІВ
+          </Text>
+
+          {/* Multi-segment Colored Horizontal Bar */}
+          <View style={styles.multiBar}>
+            {analyticsData.muscleList.map((m) => (
+              <View
+                key={m.groupKey}
+                style={{
+                  flex: Math.max(1, m.percentage),
+                  backgroundColor: m.color,
+                  height: 10,
+                  borderRadius: 5,
+                }}
+              />
+            ))}
+          </View>
+
+          {/* Muscle Breakdown List */}
+          <View style={styles.musclesListWrap}>
+            {analyticsData.muscleList.map((m) => (
+              <View key={m.groupKey} style={styles.muscleRowItem}>
+                <View style={styles.muscleRowLeft}>
+                  <View style={[styles.muscleDot, { backgroundColor: m.color }]} />
+                  <Text style={[styles.muscleNameText, { color: colors.text }]}>{m.nameUk}</Text>
+                </View>
+                <Text style={[styles.muscleStatsText, { color: colors.textSecondary }]}>
+                  {m.setsCount} підх. · {m.percentage}%
+                </Text>
+              </View>
+            ))}
+          </View>
+        </Card>
+
+        {/* 3. КАЛЕНДАР Card */}
         <WorkoutCalendarView
           workouts={workouts}
           selectedDate={formatLocalDate(currentDate)}
@@ -643,6 +706,110 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  topHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  screenTitle: {
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.6,
+  },
+  screenSubtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  periodSwitcher: {
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: 14,
+  },
+  periodPill: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  periodPillText: {
+    fontSize: 14,
+  },
+  tonnageCard: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 20,
+  },
+  cardHeaderTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  tonnageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  tonnageLeft: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
+  tonnageBigNum: {
+    fontSize: 44,
+    fontWeight: '800',
+    letterSpacing: -1,
+  },
+  tonnageUnit: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  tonnageRight: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  tonnageStatRow: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  musclesCard: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 20,
+  },
+  multiBar: {
+    flexDirection: 'row',
+    height: 10,
+    borderRadius: 5,
+    overflow: 'hidden',
+    gap: 3,
+    marginBottom: 16,
+  },
+  musclesListWrap: {
+    gap: 12,
+  },
+  muscleRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  muscleRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  muscleNameText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  muscleStatsText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
   bgLight: {
     backgroundColor: '#f8fafc',
   },
@@ -1032,10 +1199,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-  },
-  muscleNameText: {
-    fontSize: 13,
-    fontWeight: '600',
   },
   muscleCountWrap: {
     flexDirection: 'row',

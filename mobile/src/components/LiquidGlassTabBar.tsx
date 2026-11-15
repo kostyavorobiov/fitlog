@@ -1,52 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Animated,
   Platform,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSegments } from 'expo-router';
-import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
-import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { useAuth } from '../context/AuthContext';
+import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { useCreateWorkout } from '../context/CreateWorkoutContext';
 import { WorkoutService } from '../services/workoutService';
 
 export interface TabBarRoute {
   key: string;
   name: string;
-  params?: any;
+  params?: object;
 }
 
 export interface TabBarDescriptor {
   options: {
+    tabBarLabel?: string | ((props: { focused: boolean; color: string; position: any }) => React.ReactNode);
     title?: string;
-    tabBarLabel?: string | ((props: any) => React.ReactNode);
     tabBarAccessibilityLabel?: string;
     tabBarButtonTestID?: string;
     tabBarIcon?: (props: { focused: boolean; color: string; size: number }) => React.ReactNode;
-    href?: string | null;
-    [key: string]: any;
   };
-  navigation?: any;
-  route?: any;
-  [key: string]: any;
 }
 
 export interface BottomTabBarProps {
   state?: {
     index: number;
     routes: TabBarRoute[];
-    [key: string]: any;
   };
   descriptors?: Record<string, TabBarDescriptor>;
-  navigation?: any;
-  insets?: any;
+  navigation?: {
+    emit: (event: { type: string; target: string; canPreventDefault?: boolean }) => { defaultPrevented: boolean };
+    navigate: (name: string, params?: object) => void;
+  };
   activeTab?: string;
   onTabChange?: (tab: string) => void;
 }
@@ -58,7 +53,7 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
   activeTab,
   onTabChange,
 }) => {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const segments = useSegments();
@@ -70,7 +65,6 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
     (s) => (s as string) === 'workout' || (s as string) === '[id]'
   );
 
-  // Check if any in-progress workout exists (matches Web hasActiveWorkout indicator)
   useEffect(() => {
     if (!user?.id) {
       setHasActiveWorkout(false);
@@ -88,51 +82,42 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
     };
   }, [user?.id, state?.index, activeTab]);
 
-  // Strictly filter to the 4 designated bottom navigation tabs in order:
-  // 1. Тренування (index), 2. Аналітика (analytics) -- [+] -- 3. Вправи (exercises), 4. Профіль (profile)
-  const BOTTOM_NAV_TABS = ['index', 'analytics', 'exercises', 'profile'];
-  const visibleRoutes = state && descriptors
-    ? BOTTOM_NAV_TABS
-        .map((name) => state.routes.find((r) => r.name === name))
-        .filter((r): r is TabBarRoute => Boolean(r && descriptors[r.key]))
-    : [];
-
   const STANDALONE_ITEMS = [
     {
       name: 'index',
       label: 'Тренування',
       icon: (focused: boolean, color: string) => (
-        <Ionicons name={focused ? 'barbell' : 'barbell-outline'} size={20} color={color} />
+        <Ionicons name={focused ? 'barbell' : 'barbell-outline'} size={22} color={color} />
       ),
     },
     {
       name: 'analytics',
       label: 'Аналітика',
       icon: (focused: boolean, color: string) => (
-        <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} size={20} color={color} />
+        <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} size={22} color={color} />
       ),
     },
     {
       name: 'exercises',
       label: 'Вправи',
       icon: (focused: boolean, color: string) => (
-        <Ionicons name={focused ? 'fitness' : 'fitness-outline'} size={20} color={color} />
+        <Ionicons name={focused ? 'heart' : 'heart-outline'} size={22} color={color} />
       ),
     },
     {
       name: 'profile',
       label: 'Профіль',
       icon: (focused: boolean, color: string) => (
-        <Ionicons name={focused ? 'person' : 'person-outline'} size={20} color={color} />
+        <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
       ),
     },
   ];
 
+  const currentTab = activeTab || 'index';
+
   const renderStandaloneItem = (item: (typeof STANDALONE_ITEMS)[0]) => {
-    const isFocused = (activeTab || 'index') === item.name;
-    const activeColor = isDark ? '#60A5FA' : '#2563EB';
-    const inactiveColor = isDark ? '#94A3B8' : '#64748B';
-    const color = isFocused ? activeColor : inactiveColor;
+    const isFocused = currentTab === item.name;
+    const color = isFocused ? colors.text : colors.textSecondary;
 
     return (
       <TouchableOpacity
@@ -142,16 +127,16 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
         accessibilityLabel={item.label}
         onPress={() => onTabChange?.(item.name)}
         activeOpacity={0.7}
-        style={[
-          styles.tabButton,
-          isFocused && (isDark ? styles.tabButtonActiveDark : styles.tabButtonActiveLight),
-        ]}
+        style={styles.tabButton}
         hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
       >
+        {isFocused && (
+          <View style={[styles.activeIndicator, { backgroundColor: colors.accent }]} />
+        )}
         <View style={styles.iconWrap}>
           {item.icon(isFocused, color)}
           {item.name === 'index' && hasActiveWorkout && !isFocused && (
-            <View style={styles.amberBadgeDot} />
+            <View style={[styles.badgeDot, { backgroundColor: colors.accent }]} />
           )}
         </View>
         <Text
@@ -168,7 +153,12 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
     );
   };
 
-  const hasNativeGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
+  const BOTTOM_NAV_TABS = ['index', 'analytics', 'exercises', 'profile'];
+  const visibleRoutes = state && descriptors
+    ? BOTTOM_NAV_TABS
+        .map((name) => state.routes.find((r) => r.name === name))
+        .filter((r): r is TabBarRoute => Boolean(r && descriptors[r.key]))
+    : [];
 
   const renderTabItem = (route: TabBarRoute) => {
     if (!state || !descriptors) return null;
@@ -196,16 +186,7 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
       }
     };
 
-    const onLongPress = () => {
-      navigation?.emit({
-        type: 'tabLongPress',
-        target: route.key,
-      });
-    };
-
-    const activeColor = isDark ? '#60A5FA' : '#2563EB';
-    const inactiveColor = isDark ? '#94A3B8' : '#64748B';
-    const color = isFocused ? activeColor : inactiveColor;
+    const color = isFocused ? colors.text : colors.textSecondary;
 
     return (
       <TouchableOpacity
@@ -215,22 +196,25 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
         accessibilityLabel={options.tabBarAccessibilityLabel || labelText}
         testID={options.tabBarButtonTestID}
         onPress={onPress}
-        onLongPress={onLongPress}
         activeOpacity={0.7}
-        style={[
-          styles.tabButton,
-          isFocused && (isDark ? styles.tabButtonActiveDark : styles.tabButtonActiveLight),
-        ]}
+        style={styles.tabButton}
         hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
       >
+        {isFocused && (
+          <View style={[styles.activeIndicator, { backgroundColor: colors.accent }]} />
+        )}
         <View style={styles.iconWrap}>
-          {options.tabBarIcon?.({
-            focused: isFocused,
-            color,
-            size: 20,
-          })}
+          {options.tabBarIcon ? (
+            options.tabBarIcon({
+              focused: isFocused,
+              color,
+              size: 22,
+            })
+          ) : (
+            <Ionicons name="apps-outline" size={22} color={color} />
+          )}
           {route.name === 'index' && hasActiveWorkout && !isFocused && (
-            <View style={styles.amberBadgeDot} />
+            <View style={[styles.badgeDot, { backgroundColor: colors.accent }]} />
           )}
         </View>
         <Text
@@ -253,170 +237,131 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
   return (
     <Animated.View
       style={[
-        styles.floatingContainer,
+        styles.bottomBarContainer,
         {
-          bottom: Math.max(insets.bottom, 12),
+          backgroundColor: colors.tabBarBg,
+          borderTopColor: colors.tabBarBorder,
+          paddingBottom: Math.max(insets.bottom, 12),
           transform: [{ translateY }],
         },
       ]}
     >
-      <View
-        style={[
-          styles.glassCard,
-          isDark ? styles.glassCardDark : styles.glassCardLight,
-        ]}
-      >
-        {/* Native Liquid Glass or Translucent Fallback Background */}
-        {hasNativeGlass ? (
-          <GlassView
-            glassEffectStyle="regular"
-            colorScheme={isDark ? 'dark' : 'light'}
-            style={StyleSheet.absoluteFill}
-          />
+      <View style={styles.tabsRow}>
+        {activeTab && onTabChange ? (
+          <>
+            {STANDALONE_ITEMS.slice(0, 2).map(renderStandaloneItem)}
+
+            {/* Central '+' Create Workout Button */}
+            {!isEditingOrViewingWorkout && (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => openCreateModal()}
+                style={[
+                  styles.centerAddBtn,
+                  {
+                    backgroundColor: colors.centerButtonBg,
+                    shadowColor: colors.centerButtonBg,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Створити нове тренування"
+              >
+                <Ionicons name="add" size={32} color={colors.centerButtonIcon} />
+              </TouchableOpacity>
+            )}
+
+            {STANDALONE_ITEMS.slice(2).map(renderStandaloneItem)}
+          </>
         ) : (
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              isDark ? styles.fallbackBgDark : styles.fallbackBgLight,
-              Platform.OS === 'web' && ({ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' } as any),
-            ]}
-          />
+          <>
+            {leftRoutes.map(renderTabItem)}
+
+            {/* Central '+' Create Workout Button */}
+            {!isEditingOrViewingWorkout && (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => openCreateModal()}
+                style={[
+                  styles.centerAddBtn,
+                  {
+                    backgroundColor: colors.centerButtonBg,
+                    shadowColor: colors.centerButtonBg,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Створити нове тренування"
+              >
+                <Ionicons name="add" size={32} color={colors.centerButtonIcon} />
+              </TouchableOpacity>
+            )}
+
+            {rightRoutes.map(renderTabItem)}
+          </>
         )}
-
-        {/* Tab Items Row with Central '+' Action Button */}
-        <View style={styles.tabsRow}>
-          {activeTab && onTabChange ? (
-            <>
-              {STANDALONE_ITEMS.slice(0, 2).map(renderStandaloneItem)}
-
-              {/* Central '+' Create Workout Button (action only, round Ocean Blue accent) */}
-              {!isEditingOrViewingWorkout && (
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={() => openCreateModal()}
-                  style={styles.centerAddBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Створити нове тренування"
-                >
-                  <Ionicons name="add" size={28} color="#FFFFFF" />
-                </TouchableOpacity>
-              )}
-
-              {STANDALONE_ITEMS.slice(2).map(renderStandaloneItem)}
-            </>
-          ) : (
-            <>
-              {leftRoutes.map(renderTabItem)}
-
-              {/* Central '+' Create Workout Button (action only, round Ocean Blue accent) */}
-              {!isEditingOrViewingWorkout && (
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={() => openCreateModal()}
-                  style={styles.centerAddBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Створити нове тренування"
-                >
-                  <Ionicons name="add" size={28} color="#FFFFFF" />
-                </TouchableOpacity>
-              )}
-
-              {rightRoutes.map(renderTabItem)}
-            </>
-          )}
-        </View>
       </View>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  floatingContainer: {
+  bottomBarContainer: {
     position: 'absolute',
-    left: 16,
-    right: 16,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 100,
-    elevation: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
-  },
-  glassCard: {
-    height: 64,
-    borderRadius: 32,
-    overflow: 'hidden',
-    borderWidth: 1,
-    justifyContent: 'center',
-  },
-  glassCardLight: {
-    borderColor: '#E2E8F0',
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-  },
-  glassCardDark: {
-    borderColor: '#334155',
-    backgroundColor: 'rgba(29, 41, 57, 0.92)',
-  },
-  fallbackBgLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-  },
-  fallbackBgDark: {
-    backgroundColor: 'rgba(29, 41, 57, 0.92)',
+    borderTopWidth: 1,
+    paddingTop: 8,
   },
   tabsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingHorizontal: 8,
-    height: '100%',
+    height: 54,
   },
   tabButton: {
     flex: 1,
-    height: 50,
-    borderRadius: 25,
+    height: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
+    position: 'relative',
     gap: 3,
   },
+  activeIndicator: {
+    position: 'absolute',
+    top: -8,
+    width: 24,
+    height: 3,
+    borderRadius: 2,
+  },
   centerAddBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#2563EB',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 4,
-    shadowColor: '#2563EB',
+    marginTop: -22,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 6,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  tabButtonActiveLight: {
-    backgroundColor: 'rgba(37, 99, 235, 0.08)',
-  },
-  tabButtonActiveDark: {
-    backgroundColor: 'rgba(96, 165, 250, 0.12)',
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
   },
   iconWrap: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  amberBadgeDot: {
+  badgeDot: {
     position: 'absolute',
     top: -2,
     right: -4,
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#60A5FA',
   },
   tabLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     letterSpacing: -0.2,
   },
