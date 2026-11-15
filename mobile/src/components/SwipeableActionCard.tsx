@@ -25,6 +25,8 @@ export interface SwipeableActionCardProps {
   isDark: boolean;
   disabled?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
+  cardBackgroundColor?: string;
+  borderColor?: string;
   onEdit?: () => void;
   onCopy?: () => void;
   onDelete: (onCancel?: () => void) => void;
@@ -52,6 +54,8 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
   isDark,
   disabled = false,
   containerStyle,
+  cardBackgroundColor,
+  borderColor,
   onEdit,
   onCopy,
   onDelete,
@@ -62,6 +66,9 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
 }) => {
   const { width: screenWidth } = useWindowDimensions();
   const QUICK_DELETE_THRESHOLD = screenWidth * 0.5;
+
+  const bg = cardBackgroundColor ?? (isDark ? '#1D2939' : '#FFFFFF');
+  const border = borderColor ?? (isDark ? '#334155' : '#E2E8F0');
 
   const hasFirstAction = Boolean(onCopy || onEdit);
   const restingWidth = hasFirstAction
@@ -311,8 +318,8 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
       style={[
         styles.swipeContainer,
         {
-          borderColor: isDark ? '#334155' : '#E2E8F0',
-          backgroundColor: isDark ? '#1D2939' : '#FFFFFF',
+          borderColor: border,
+          backgroundColor: bg,
         },
         containerStyle,
       ]}
@@ -361,7 +368,7 @@ export const SwipeableActionCard: React.FC<SwipeableActionCardProps> = ({
             styles.swipeForeground,
             animatedCardStyle,
             {
-              backgroundColor: isDark ? '#1D2939' : '#FFFFFF',
+              backgroundColor: bg,
             },
           ]}
         >

@@ -47,11 +47,6 @@ const UKRAINIAN_MONTHS_GENITIVE = [
   'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня',
 ];
 
-const UKRAINIAN_MONTHS_SHORT = [
-  'СІЧ', 'ЛЮТ', 'БЕР', 'КВІ', 'ТРА', 'ЧЕР',
-  'ЛИП', 'СЕР', 'ВЕР', 'ЖОВ', 'ЛИС', 'ГРУ',
-];
-
 const UKRAINIAN_MONTHS = [
   'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
   'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень',
@@ -118,6 +113,8 @@ interface SwipeableWorkoutCardProps {
   confirmTitle?: string;
   confirmMessage?: string;
   isDark: boolean;
+  cardBackgroundColor?: string;
+  borderColor?: string;
   children: React.ReactNode;
 }
 
@@ -129,6 +126,8 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
   confirmTitle,
   confirmMessage,
   isDark,
+  cardBackgroundColor,
+  borderColor,
   children,
 }) => {
   return (
@@ -140,6 +139,9 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
       onQuickDelete={onQuickDelete}
       confirmTitle={confirmTitle}
       confirmMessage={confirmMessage}
+      cardBackgroundColor={cardBackgroundColor}
+      borderColor={borderColor}
+      containerStyle={styles.swipeWorkoutContainer}
     >
       {children}
     </SwipeableActionCard>
@@ -155,7 +157,6 @@ export const WorkoutsScreen: React.FC = () => {
   const [workouts, setWorkouts] = useState<WorkoutPlan[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [selectedDayDate, setSelectedDayDate] = useState<string | null>(null);
 
   // Creation modal state
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -371,28 +372,6 @@ export const WorkoutsScreen: React.FC = () => {
     return sortedWorkouts.find((w) => w.status === 'in_progress');
   }, [sortedWorkouts]);
 
-  // Week strip calculation (Monday to Sunday)
-  const weekDays = useMemo(() => {
-    const now = new Date();
-    const currentDay = now.getDay();
-    const diff = currentDay === 0 ? -6 : 1 - currentDay;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() + diff);
-
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      return d;
-    });
-  }, []);
-
-  const weekTitle = useMemo(() => {
-    const start = weekDays[0].getDate();
-    const end = weekDays[6].getDate();
-    const monthAbbr = UKRAINIAN_MONTHS_SHORT[weekDays[6].getMonth()];
-    return `ТИЖДЕНЬ ${start} — ${end} ${monthAbbr}`;
-  }, [weekDays]);
-
   // Group workouts by calendar month (YYYY-MM), sorted newest to oldest
   const monthGroups = useMemo<MonthGroup[]>(() => {
     const map = new Map<string, { label: string; workouts: WorkoutPlan[] }>();
@@ -439,8 +418,6 @@ export const WorkoutsScreen: React.FC = () => {
       [key]: !prev[key],
     }));
   };
-
-  const DAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -512,60 +489,6 @@ export const WorkoutsScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Week Strip Calendar Card */}
-        <View style={[styles.weekCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.weekTitle, { color: colors.textSecondary }]}>{weekTitle}</Text>
-          <View style={styles.weekRow}>
-            {weekDays.map((d, index) => {
-              const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-              const hasWorkout = workouts.some((w) => (w.scheduledDate || '').startsWith(isoDate));
-              const isToday = d.toDateString() === new Date().toDateString();
-              const isSelected = selectedDayDate === isoDate;
-
-              return (
-                <TouchableOpacity
-                  key={index}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setSelectedDayDate(isSelected ? null : isoDate);
-                  }}
-                  style={styles.dayCol}
-                >
-                  <Text style={[styles.dayLabel, { color: colors.textSecondary }]}>
-                    {DAY_LABELS[index]}
-                  </Text>
-                  <View
-                    style={[
-                      styles.dayPill,
-                      {
-                        backgroundColor: hasWorkout
-                          ? colors.accent
-                          : colors.subCard,
-                        borderColor: (isSelected || isToday) ? colors.accent : 'transparent',
-                        borderWidth: (isSelected || isToday) ? 2 : 0,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.dayNumber,
-                        {
-                          color: hasWorkout
-                            ? colors.accentText
-                            : colors.text,
-                          fontWeight: (hasWorkout || isSelected || isToday) ? '800' : '600',
-                        },
-                      ]}
-                    >
-                      {d.getDate()}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
         {isLoading && !isRefreshing ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={colors.accent} />
@@ -632,6 +555,8 @@ export const WorkoutsScreen: React.FC = () => {
                             key={w.id}
                             id={w.id}
                             isDark={isDark}
+                            cardBackgroundColor={colors.card}
+                            borderColor={colors.cardBorder}
                             onCopy={() => handleCopyWorkout(w)}
                             onDelete={(onCancel) => handleDeleteWorkout(w, onCancel)}
                             onQuickDelete={(onCancel) => handleQuickDeleteWorkout(w, onCancel)}
@@ -642,13 +567,7 @@ export const WorkoutsScreen: React.FC = () => {
                                 setSavedActiveTab('index');
                                 router.push({ pathname: '/workout/[id]', params: { id: w.id } });
                               }}
-                              style={[
-                                styles.workoutCard,
-                                {
-                                  backgroundColor: colors.card,
-                                  borderColor: colors.cardBorder,
-                                },
-                              ]}
+                              style={styles.workoutCardInner}
                             >
                               {/* Status Header */}
                               <View style={styles.cardTopRow}>
@@ -657,11 +576,11 @@ export const WorkoutsScreen: React.FC = () => {
                                     styles.statusText,
                                     {
                                       color: isInProgress
-                                        ? colors.accent
+                                        ? colors.text
                                         : isCompleted
                                         ? colors.textSecondary
                                         : colors.textMuted,
-                                      fontWeight: isInProgress ? '800' : '600',
+                                      fontWeight: isInProgress ? '700' : '500',
                                     },
                                   ]}
                                 >
@@ -903,42 +822,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  weekCard: {
-    marginHorizontal: 20,
-    marginBottom: 16,
-    padding: 18,
-    borderRadius: 22,
-    borderWidth: 1,
-  },
-  weekTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    marginBottom: 14,
-  },
-  weekRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dayCol: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  dayLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  dayPill: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayNumber: {
-    fontSize: 15,
-  },
   accordionContainer: {
     gap: 12,
   },
@@ -978,12 +861,15 @@ const styles = StyleSheet.create({
   monthWorkoutsList: {
     gap: 10,
   },
-  workoutCard: {
+  swipeWorkoutContainer: {
     marginHorizontal: 20,
     marginBottom: 10,
-    padding: 18,
     borderRadius: 20,
     borderWidth: 1,
+    overflow: 'hidden',
+  },
+  workoutCardInner: {
+    padding: 16,
   },
   cardTopRow: {
     flexDirection: 'row',

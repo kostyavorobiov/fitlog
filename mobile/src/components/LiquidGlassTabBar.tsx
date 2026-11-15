@@ -117,7 +117,7 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
 
   const renderStandaloneItem = (item: (typeof STANDALONE_ITEMS)[0]) => {
     const isFocused = currentTab === item.name;
-    const color = isFocused ? colors.text : colors.textSecondary;
+    const color = isFocused ? (colors.id === 'blue' ? colors.accent : colors.text) : colors.textSecondary;
 
     return (
       <TouchableOpacity
@@ -186,7 +186,7 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
       }
     };
 
-    const color = isFocused ? colors.text : colors.textSecondary;
+    const color = isFocused ? (colors.id === 'blue' ? colors.accent : colors.text) : colors.textSecondary;
 
     return (
       <TouchableOpacity
