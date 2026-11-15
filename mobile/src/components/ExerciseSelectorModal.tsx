@@ -131,7 +131,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>
-            {isCreatingCustom ? t('modal.new_exercise') : t('modal.select_exercise')}
+            {isCreatingCustom ? t('exercises.create_custom_title', 'Створити вправу') : t('modal.select_exercise')}
           </Text>
           <TouchableOpacity
             style={[styles.closeBtn, { backgroundColor: colors.subCard }]}

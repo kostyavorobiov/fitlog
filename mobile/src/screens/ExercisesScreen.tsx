@@ -505,7 +505,7 @@ export const ExercisesScreen: React.FC = () => {
                     { backgroundColor: colors.card, borderColor: colors.cardBorder },
                   ]}
                 >
-                  {/* Modal Header */}
+                  {/* Modal Header matching CreateWorkoutModal */}
                   <View style={[styles.modalHeaderRow, { borderBottomColor: colors.cardBorder }]}>
                     <View style={styles.modalHeaderLeft}>
                       <View style={[styles.modalIconBadge, { backgroundColor: colors.iconBadgeBg }]}>
@@ -515,9 +515,14 @@ export const ExercisesScreen: React.FC = () => {
                           color={colors.iconBadgeColor}
                         />
                       </View>
-                      <Text style={[styles.modalTitleText, { color: colors.text }]}>
-                        {t('exercises.create_custom_title', 'Створити власну вправу')}
-                      </Text>
+                      <View style={styles.modalHeaderTextWrap}>
+                        <Text style={[styles.modalTitleText, { color: colors.text }]}>
+                          {t('exercises.create_custom_title', 'Створити вправу')}
+                        </Text>
+                        <Text style={[styles.modalSubText, { color: colors.textSecondary }]}>
+                          {t('exercises.create_exercise_sub', 'Додайте нову вправу до каталогу')}
+                        </Text>
+                      </View>
                     </View>
                     <TouchableOpacity
                       onPress={() => setIsCreateOpen(false)}
@@ -606,14 +611,15 @@ export const ExercisesScreen: React.FC = () => {
                       ]}
                       onPress={handleSaveCreate}
                       disabled={isSubmittingCreate}
+                      activeOpacity={0.85}
                     >
                       {isSubmittingCreate ? (
                         <ActivityIndicator size="small" color={colors.primaryBtnText} />
                       ) : (
                         <>
-                          <Ionicons name="checkmark" size={18} color={colors.primaryBtnText} />
+                          <Ionicons name="add" size={19} color={colors.primaryBtnText} />
                           <Text style={[styles.modalSaveText, { color: colors.primaryBtnText }]}>
-                            {t('exercises.save_exercise', 'Зберегти вправу')}
+                            {t('common.create', 'Створити')}
                           </Text>
                         </>
                       )}
@@ -941,9 +947,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  modalHeaderTextWrap: {
+    flex: 1,
+  },
   modalTitleText: {
     fontSize: 17,
     fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  modalSubText: {
+    fontSize: 12,
+    marginTop: 2,
+    lineHeight: 16,
   },
   modalCloseCircle: {
     width: 32,
