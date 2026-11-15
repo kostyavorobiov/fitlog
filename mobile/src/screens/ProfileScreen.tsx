@@ -1377,7 +1377,7 @@ export const ProfileScreen: React.FC = () => {
                   activeOpacity={0.8}
                 >
                   <View style={[styles.themePillIndicator, { backgroundColor: opt.pillColor }]} />
-                  <Text style={[styles.themeItemLabel, { color: opt.textColor }]}>
+                  <Text style={[styles.themeItemLabel, { color: opt.textColor }]} numberOfLines={1}>
                     {opt.label}
                   </Text>
                 </TouchableOpacity>
@@ -1403,7 +1403,7 @@ export const ProfileScreen: React.FC = () => {
                 <TouchableOpacity
                   key={opt.id}
                   style={[
-                    styles.themeItemCard,
+                    styles.langItemCard,
                     {
                       backgroundColor: colors.subCard,
                       borderColor: isSelected ? colors.accent : colors.subCardBorder,
@@ -1413,11 +1413,11 @@ export const ProfileScreen: React.FC = () => {
                   onPress={() => setLanguage(opt.id as any)}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ fontSize: 24, marginBottom: 4 }}>{opt.flag}</Text>
-                  <Text style={[styles.themeItemLabel, { color: colors.text, fontWeight: isSelected ? '700' : '600' }]}>
+                  <Text style={styles.langFlag}>{opt.flag}</Text>
+                  <Text style={[styles.langItemLabel, { color: colors.text, fontWeight: isSelected ? '700' : '600' }]}>
                     {opt.label}
                   </Text>
-                  <Text style={{ fontSize: 11, color: isSelected ? colors.accent : colors.textSecondary, fontWeight: '700', marginTop: 2 }}>
+                  <Text style={[styles.langSubBadge, { color: isSelected ? colors.accent : colors.textSecondary }]}>
                     {opt.sub}
                   </Text>
                 </TouchableOpacity>
@@ -1614,24 +1614,47 @@ const styles = StyleSheet.create({
   themeCardsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 6,
   },
   themeItemCard: {
     flex: 1,
-    height: 84,
-    borderRadius: 18,
+    height: 42,
+    borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 6,
+    paddingHorizontal: 4,
   },
   themePillIndicator: {
-    width: 22,
+    width: 8,
     height: 8,
     borderRadius: 4,
   },
   themeItemLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
+  },
+  langItemCard: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
+  },
+  langFlag: {
+    fontSize: 18,
+  },
+  langItemLabel: {
+    fontSize: 13,
+  },
+  langSubBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    opacity: 0.8,
   },
   content: {
     padding: 16,
