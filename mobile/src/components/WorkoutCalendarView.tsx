@@ -32,8 +32,10 @@ export interface WorkoutCalendarViewProps {
   workouts: WorkoutPlan[];
   selectedDate: string; // YYYY-MM-DD
   onSelectDate: (date: string) => void;
-  isDark: boolean;
+  isDark?: boolean;
   style?: any;
+  displayDate?: Date;
+  hideMonthNav?: boolean;
 }
 
 export const WorkoutCalendarView: React.FC<WorkoutCalendarViewProps> = ({
@@ -41,9 +43,11 @@ export const WorkoutCalendarView: React.FC<WorkoutCalendarViewProps> = ({
   selectedDate,
   onSelectDate,
   style,
+  displayDate,
+  hideMonthNav = false,
 }) => {
   const { colors, isDark } = useTheme();
-  const [currentMonthDate, setCurrentMonthDate] = useState<Date>(() => {
+  const [internalMonthDate, setInternalMonthDate] = useState<Date>(() => {
     if (selectedDate) {
       const parts = selectedDate.split('-').map(Number);
       if (parts.length === 3) {
@@ -53,21 +57,22 @@ export const WorkoutCalendarView: React.FC<WorkoutCalendarViewProps> = ({
     return new Date();
   });
 
-  const year = currentMonthDate.getFullYear();
-  const month = currentMonthDate.getMonth();
+  const activeDate = displayDate || internalMonthDate;
+  const year = activeDate.getFullYear();
+  const month = activeDate.getMonth();
   const todayStr = formatLocalDate(new Date());
 
   const handlePrevMonth = () => {
-    setCurrentMonthDate(new Date(year, month - 1, 1));
+    setInternalMonthDate(new Date(year, month - 1, 1));
   };
 
   const handleNextMonth = () => {
-    setCurrentMonthDate(new Date(year, month + 1, 1));
+    setInternalMonthDate(new Date(year, month + 1, 1));
   };
 
   const handleJumpToToday = () => {
     const today = new Date();
-    setCurrentMonthDate(today);
+    setInternalMonthDate(today);
     onSelectDate(formatLocalDate(today));
   };
 
@@ -108,25 +113,27 @@ export const WorkoutCalendarView: React.FC<WorkoutCalendarViewProps> = ({
         <Text style={[styles.headerUppercaseTitle, { color: colors.textSecondary }]}>
           КАЛЕНДАР
         </Text>
-        <View style={styles.monthNavControls}>
-          <TouchableOpacity
-            onPress={handlePrevMonth}
-            style={[styles.navArrowBtn, { backgroundColor: colors.subCard }]}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-back" size={16} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={[styles.monthNavLabel, { color: colors.text }]}>
-            {UKRAINIAN_MONTHS[month]} {year}
-          </Text>
-          <TouchableOpacity
-            onPress={handleNextMonth}
-            style={[styles.navArrowBtn, { backgroundColor: colors.subCard }]}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-forward" size={16} color={colors.text} />
-          </TouchableOpacity>
-        </View>
+        {!hideMonthNav && (
+          <View style={styles.monthNavControls}>
+            <TouchableOpacity
+              onPress={handlePrevMonth}
+              style={[styles.navArrowBtn, { backgroundColor: colors.subCard }]}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={16} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={[styles.monthNavLabel, { color: colors.text }]}>
+              {UKRAINIAN_MONTHS[month]} {year}
+            </Text>
+            <TouchableOpacity
+              onPress={handleNextMonth}
+              style={[styles.navArrowBtn, { backgroundColor: colors.subCard }]}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-forward" size={16} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Weekdays Row */}
@@ -258,10 +265,10 @@ const styles = StyleSheet.create({
     margin: '1.14%',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 10,
+    borderRadius: 12,
   },
   dayCellNum: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

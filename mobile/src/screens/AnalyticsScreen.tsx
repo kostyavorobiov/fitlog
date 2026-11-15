@@ -7,18 +7,15 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutService } from '../services/workoutService';
-import { WorkoutPlan, MUSCLE_GROUPS } from '../types/workout';
+import { WorkoutPlan } from '../types/workout';
 import { getPeriodRange, PeriodRange, formatLocalDate } from '../utils/date';
 import { WorkoutCalendarView } from '../components/WorkoutCalendarView';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
@@ -27,8 +24,6 @@ import { useTheme } from '../context/ThemeContext';
 import {
   calculateAnalytics,
   AnalyticsPeriod,
-  AggregatedExercise,
-  MuscleGroupStats,
 } from '../utils/analytics';
 
 export const AnalyticsScreen: React.FC = () => {
@@ -51,9 +46,6 @@ export const AnalyticsScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [hasError, setHasError] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [viewTab, setViewTab] = useState<'muscles' | 'exercises'>('muscles');
-  const [selectedExerciseModal, setSelectedExerciseModal] = useState<AggregatedExercise | null>(null);
 
   // Load workouts
   const loadData = useCallback(async () => {
@@ -143,30 +135,52 @@ export const AnalyticsScreen: React.FC = () => {
     return calculateAnalytics(workouts, periodRange);
   }, [workouts, periodRange]);
 
-  // Filtered exercises by search query
-  const filteredExercises = useMemo(() => {
-    if (!searchQuery.trim()) return analyticsData.exercisesList;
-    const q = searchQuery.trim().toLowerCase();
-    return analyticsData.exercisesList.filter((e) =>
-      e.exerciseName.toLowerCase().includes(q)
-    );
-  }, [analyticsData.exercisesList, searchQuery]);
-
-  const formatVolume = (kg: number): string => {
-    if (kg >= 1000) {
-      return `${(kg / 1000).toFixed(1)} т`;
-    }
-    return `${Math.round(kg)} кг`;
-  };
-
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
-      {/* Top Header matching PDF design */}
+      {/* Top Header matching screenshot */}
       <View style={styles.topHeader}>
-        <Text style={[styles.screenTitle, { color: colors.text }]}>Аналітика</Text>
-        <Text style={[styles.screenSubtitle, { color: colors.textSecondary }]}>
-          {periodRange.titleUk || 'Листопад 2026'}
+        <Text style={[styles.screenTitle, { color: colors.text }]}>
+          {traineeName ? `Аналітика: ${traineeName}` : 'Аналітика'}
         </Text>
+
+        {/* Date browsing row: Subtitle with navigation arrows */}
+        <View style={styles.dateNavRow}>
+          <Text style={[styles.screenSubtitle, { color: colors.textSecondary }]}>
+            {periodRange.titleUk || 'Листопад 2026'}
+          </Text>
+
+          <View style={styles.navChevrons}>
+            <TouchableOpacity
+              onPress={handlePrevPeriod}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={[styles.chevronBtn, { backgroundColor: colors.subCard }]}
+              accessibilityRole="button"
+              accessibilityLabel="Попередній період"
+            >
+              <Ionicons name="chevron-back" size={16} color={colors.text} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleNextPeriod}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={[styles.chevronBtn, { backgroundColor: colors.subCard }]}
+              accessibilityRole="button"
+              accessibilityLabel="Наступний період"
+            >
+              <Ionicons name="chevron-forward" size={16} color={colors.text} />
+            </TouchableOpacity>
+
+            {!periodRange.isCurrent && (
+              <TouchableOpacity
+                onPress={handleJumpToToday}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={[styles.todayChip, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
+              >
+                <Text style={[styles.todayChipText, { color: colors.accent }]}>Сьогодні</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
 
         {/* Period Switcher Pills (День | Тиждень | Місяць) */}
         <View style={[styles.periodSwitcher, { backgroundColor: colors.subCard }]}>
@@ -196,7 +210,7 @@ export const AnalyticsScreen: React.FC = () => {
                     styles.periodPillText,
                     {
                       color: isActive ? colors.accentText : colors.textSecondary,
-                      fontWeight: isActive ? '700' : '600',
+                      fontWeight: isActive ? '800' : '600',
                     },
                   ]}
                 >
@@ -222,7 +236,7 @@ export const AnalyticsScreen: React.FC = () => {
           />
         }
       >
-        {/* 1. ТОННАЖ Card matching PDF */}
+        {/* 1. ТОННАЖ Card matching PDF & Screenshot */}
         <Card style={styles.tonnageCard}>
           <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
             ТОННАЖ ЗА {period === 'day' ? 'ДЕНЬ' : period === 'month' ? 'МІСЯЦЬ' : 'ТИЖДЕНЬ'}
@@ -230,7 +244,9 @@ export const AnalyticsScreen: React.FC = () => {
           <View style={styles.tonnageRow}>
             <View style={styles.tonnageLeft}>
               <Text style={[styles.tonnageBigNum, { color: colors.text }]}>
-                {analyticsData.periodTons > 0 ? analyticsData.periodTons : (Math.round((analyticsData.periodVolumeKg / 1000) * 10) / 10) || '0'}
+                {analyticsData.periodTons > 0
+                  ? analyticsData.periodTons
+                  : (Math.round((analyticsData.periodVolumeKg / 1000) * 10) / 10) || '0'}
               </Text>
               <Text style={[styles.tonnageUnit, { color: colors.textSecondary }]}>
                 т
@@ -238,7 +254,7 @@ export const AnalyticsScreen: React.FC = () => {
             </View>
 
             <View style={styles.tonnageRight}>
-              <Text style={[styles.tonnageStatRow, { color: colors.text }]}>
+              <Text style={[styles.tonnageStatRow, { color: colors.textSecondary }]}>
                 {analyticsData.periodCompletedSets} підходів
               </Text>
               <Text style={[styles.tonnageStatRow, { color: colors.textSecondary }]}>
@@ -248,7 +264,7 @@ export const AnalyticsScreen: React.FC = () => {
           </View>
         </Card>
 
-        {/* 2. ГРУПИ М'ЯЗІВ Card matching PDF */}
+        {/* 2. ГРУПИ М'ЯЗІВ Card matching PDF & Screenshot */}
         <Card style={styles.musclesCard}>
           <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
             ГРУПИ М’ЯЗІВ
@@ -256,446 +272,83 @@ export const AnalyticsScreen: React.FC = () => {
 
           {/* Multi-segment Colored Horizontal Bar */}
           <View style={styles.multiBar}>
-            {analyticsData.muscleList.map((m) => (
+            {analyticsData.muscleList.length > 0 ? (
+              analyticsData.muscleList.map((m) => (
+                <View
+                  key={m.groupKey}
+                  style={{
+                    flex: Math.max(1, m.percentage),
+                    backgroundColor: m.color,
+                    height: 12,
+                    borderRadius: 4,
+                  }}
+                />
+              ))
+            ) : (
               <View
-                key={m.groupKey}
                 style={{
-                  flex: Math.max(1, m.percentage),
-                  backgroundColor: m.color,
-                  height: 10,
-                  borderRadius: 5,
+                  flex: 1,
+                  backgroundColor: colors.subCard,
+                  height: 12,
+                  borderRadius: 6,
                 }}
               />
-            ))}
+            )}
           </View>
 
           {/* Muscle Breakdown List */}
           <View style={styles.musclesListWrap}>
-            {analyticsData.muscleList.map((m) => (
-              <View key={m.groupKey} style={styles.muscleRowItem}>
-                <View style={styles.muscleRowLeft}>
-                  <View style={[styles.muscleDot, { backgroundColor: m.color }]} />
-                  <Text style={[styles.muscleNameText, { color: colors.text }]}>{m.nameUk}</Text>
+            {analyticsData.muscleList.length > 0 ? (
+              analyticsData.muscleList.map((m) => (
+                <View key={m.groupKey} style={styles.muscleRowItem}>
+                  <View style={styles.muscleRowLeft}>
+                    <View style={[styles.muscleDot, { backgroundColor: m.color }]} />
+                    <Text style={[styles.muscleNameText, { color: colors.text }]}>{m.nameUk}</Text>
+                  </View>
+                  <Text style={[styles.muscleStatsText, { color: colors.textSecondary }]}>
+                    {m.setsCount} підх. · {m.percentage}%
+                  </Text>
                 </View>
-                <Text style={[styles.muscleStatsText, { color: colors.textSecondary }]}>
-                  {m.setsCount} підх. · {m.percentage}%
-                </Text>
-              </View>
-            ))}
+              ))
+            ) : (
+              <Text style={[styles.emptyMusclesText, { color: colors.textSecondary }]}>
+                Немає виконаних підходів за обраний період
+              </Text>
+            )}
           </View>
         </Card>
 
-        {/* 3. КАЛЕНДАР Card */}
+        {/* 3. КАЛЕНДАР Card matching Screenshot */}
         <WorkoutCalendarView
           workouts={workouts}
           selectedDate={formatLocalDate(currentDate)}
+          displayDate={currentDate}
+          hideMonthNav={true}
           onSelectDate={(dateStr) => {
             const parts = dateStr.split('-').map(Number);
             if (parts.length === 3) {
-              setCurrentDate(new Date(parts[0], parts[1] - 1, parts[2]));
-              setPeriod('day');
+              const nextDate = new Date(parts[0], parts[1] - 1, parts[2]);
+              setCurrentDate(nextDate);
             }
           }}
           isDark={isDark}
         />
 
-        {/* Date Navigation Bar (Allows browsing previous/next day, week, month) */}
-        <Card style={styles.dateNavCard}>
-          <View style={styles.dateNavRow}>
-            <TouchableOpacity
-              onPress={handlePrevPeriod}
-              style={[styles.navArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="chevron-back" size={18} color={isDark ? '#f8fafc' : '#0f172a'} />
-            </TouchableOpacity>
-
-            <View style={styles.dateNavCenter}>
-              <View style={styles.dateNavTitleRow}>
-                <Ionicons name="calendar-outline" size={15} color={isDark ? '#60a5fa' : '#2563eb'} />
-                <Text
-                  numberOfLines={1}
-                  style={[styles.dateNavTitle, isDark ? styles.textDark : styles.textLight]}
-                >
-                  {periodRange.titleUk}
-                </Text>
-              </View>
-              <Text style={[styles.dateNavSub, isDark ? styles.subDark : styles.subLight]}>
-                {period === 'day'
-                  ? 'Календарний день'
-                  : period === 'week'
-                  ? 'Календарний тиждень'
-                  : 'Календарний місяць'}
-              </Text>
-            </View>
-
-            <View style={styles.dateNavRight}>
-              <TouchableOpacity
-                onPress={handleNextPeriod}
-                style={[styles.navArrowBtn, isDark ? styles.btnDark : styles.btnLight]}
-                activeOpacity={0.7}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons name="chevron-forward" size={18} color={isDark ? '#f8fafc' : '#0f172a'} />
-              </TouchableOpacity>
-
-              {!periodRange.isCurrent && (
-                <TouchableOpacity
-                  onPress={handleJumpToToday}
-                  style={[styles.todayBtn, isDark ? styles.todayBtnDark : styles.todayBtnLight]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.todayBtnText, isDark ? styles.todayBtnTextDark : styles.todayBtnTextLight]}>Сьогодні</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+        {/* Loading Indicator */}
+        {isLoading && !isRefreshing && (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="small" color={colors.accent} />
           </View>
-        </Card>
+        )}
 
-        {/* Loading State */}
-        {isLoading && !isRefreshing ? (
-          <View style={styles.stateContainer}>
-            <ActivityIndicator size="small" color={isDark ? '#60a5fa' : '#2563eb'} />
-            <Text style={[styles.stateText, isDark ? styles.subDark : styles.subLight]}>
-              Розрахунок аналітики...
+        {/* Error Notification */}
+        {hasError && (
+          <View style={[styles.errorWrap, { backgroundColor: colors.card, borderColor: colors.danger }]}>
+            <Ionicons name="alert-circle-outline" size={20} color={colors.danger} />
+            <Text style={[styles.errorText, { color: colors.danger }]}>
+              Не вдалося оновити дані. Потягніть вниз для повторної спроби.
             </Text>
           </View>
-        ) : hasError ? (
-          /* Error State */
-          <Card style={styles.errorCard}>
-            <Ionicons name="alert-circle-outline" size={40} color="#ef4444" />
-            <Text style={[styles.errorTitle, isDark ? styles.textDark : styles.textLight]}>
-              Помилка завантаження даних
-            </Text>
-            <Text style={[styles.errorSub, isDark ? styles.subDark : styles.subLight]}>
-              Не вдалося отримати тренування для побудови аналітики.
-            </Text>
-            <TouchableOpacity style={styles.retryBtn} activeOpacity={0.8} onPress={loadData}>
-              <Ionicons name="refresh" size={16} color="#ffffff" />
-              <Text style={styles.retryBtnText}>Спробувати знову</Text>
-            </TouchableOpacity>
-          </Card>
-        ) : (
-          <>
-            {/* 4 KPI Metrics Cards */}
-            <View style={styles.kpiGrid}>
-              {/* Completed Sets */}
-              <Card style={styles.kpiCard}>
-                <View style={styles.kpiHeaderRow}>
-                  <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
-                    <Ionicons name="checkmark-circle-outline" size={18} color="#22c55e" />
-                  </View>
-                  <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
-                    Підходи
-                  </Text>
-                </View>
-                <Text style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}>
-                  {analyticsData.periodCompletedSets}
-                </Text>
-                <Text style={[styles.kpiDesc, isDark ? styles.subDark : styles.subLight]}>
-                  виконано
-                </Text>
-              </Card>
-
-              {/* Active Workouts */}
-              <Card style={styles.kpiCard}>
-                <View style={styles.kpiHeaderRow}>
-                  <View style={[styles.kpiIconWrap, { backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(37, 99, 235, 0.12)' }]}>
-                    <Ionicons name="barbell-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
-                  </View>
-                  <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
-                    Тренування
-                  </Text>
-                </View>
-                <Text style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}>
-                  {analyticsData.workoutsCount}
-                </Text>
-                <Text style={[styles.kpiDesc, isDark ? styles.subDark : styles.subLight]}>
-                  активних
-                </Text>
-              </Card>
-
-              {/* Total Volume */}
-              <Card style={styles.kpiCard}>
-                <View style={styles.kpiHeaderRow}>
-                  <View style={[styles.kpiIconWrap, { backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(37, 99, 235, 0.12)' }]}>
-                    <Ionicons name="flame-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
-                  </View>
-                  <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
-                    Тоннаж
-                  </Text>
-                </View>
-                <Text style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}>
-                  {analyticsData.periodTons > 0
-                    ? `${analyticsData.periodTons} т`
-                    : formatVolume(analyticsData.periodVolumeKg)}
-                </Text>
-                <Text style={[styles.kpiDesc, isDark ? styles.subDark : styles.subLight]}>
-                  піднято
-                </Text>
-              </Card>
-
-              {/* Tracked Exercises */}
-              <Card style={styles.kpiCard}>
-                <View style={styles.kpiHeaderRow}>
-                  <View style={[styles.kpiIconWrap, { backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(37, 99, 235, 0.12)' }]}>
-                    <Ionicons name="trophy-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
-                  </View>
-                  <Text style={[styles.kpiTitle, isDark ? styles.subDark : styles.subLight]}>
-                    Вправи
-                  </Text>
-                </View>
-                <Text style={[styles.kpiValue, isDark ? styles.textDark : styles.textLight]}>
-                  {analyticsData.exercisesList.length}
-                </Text>
-                <Text style={[styles.kpiDesc, isDark ? styles.subDark : styles.subLight]}>
-                  задіяно
-                </Text>
-              </Card>
-            </View>
-
-            {/* Empty State when 0 completed sets */}
-            {analyticsData.periodCompletedSets === 0 ? (
-              <View style={[styles.emptyContainer, isDark ? styles.emptyDark : styles.emptyLight]}>
-                <View style={[styles.emptyIconBox, isDark ? styles.emptyIconBoxDark : styles.emptyIconBoxLight]}>
-                  <Ionicons name="layers-outline" size={26} color={isDark ? '#94a3b8' : '#64748b'} />
-                </View>
-                <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
-                  За обраний період немає завершених підходів
-                </Text>
-                <Text style={[styles.emptySubtitle, isDark ? styles.emptySubtitleDark : styles.emptySubtitleLight]}>
-                  Враховуються лише успішно виконані підходи (відмічені галочкою ✓) у запланованих тренуваннях за цей календарний період.
-                </Text>
-                <TouchableOpacity
-                  style={styles.emptyBtn}
-                  activeOpacity={0.8}
-                  onPress={() => router.push('/(tabs)')}
-                >
-                  <Ionicons name="arrow-back" size={16} color="#ffffff" />
-                  <Text style={styles.emptyBtnText}>
-                    До списку тренувань
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <>
-                {/* Section View Switcher (М'язові групи | Вправи) */}
-                <View style={[styles.filterContainer, isDark ? styles.filterDark : styles.filterLight]}>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setViewTab('muscles')}
-                    style={[
-                      styles.filterBtn,
-                      viewTab === 'muscles' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterBtnText,
-                        viewTab === 'muscles'
-                          ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
-                          : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
-                      ]}
-                    >
-                      Групи м'язів ({analyticsData.muscleList.length})
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setViewTab('exercises')}
-                    style={[
-                      styles.filterBtn,
-                      viewTab === 'exercises' && (isDark ? styles.filterBtnActiveDark : styles.filterBtnActiveLight),
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterBtnText,
-                        viewTab === 'exercises'
-                          ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
-                          : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
-                      ]}
-                    >
-                      Вправи ({analyticsData.exercisesList.length})
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* View Tab 1: Muscle Groups Distribution */}
-                {viewTab === 'muscles' ? (
-                  <Card style={styles.breakdownCard}>
-                    <View style={styles.cardHeader}>
-                      <View>
-                        <Text style={[styles.cardTitle, isDark ? styles.textDark : styles.textLight]}>
-                          Розподіл за групами м’язів
-                        </Text>
-                        <Text style={[styles.cardSub, isDark ? styles.subDark : styles.subLight]}>
-                          Кількість виконаних підходів за період
-                        </Text>
-                      </View>
-
-                      <View style={styles.totalBadge}>
-                        <Text style={styles.totalBadgeText}>
-                          {analyticsData.periodCompletedSets} підх.
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.musclesList}>
-                      {analyticsData.muscleList.map((m) => (
-                        <View key={m.groupKey} style={styles.muscleRow}>
-                          <View style={styles.muscleInfoRow}>
-                            <View style={styles.muscleNameWrap}>
-                              <View
-                                style={[
-                                  styles.muscleDot,
-                                  { backgroundColor: m.color },
-                                ]}
-                              />
-                              <Text style={[styles.muscleNameText, isDark ? styles.textDark : styles.textLight]}>
-                                {m.nameUk}
-                              </Text>
-                            </View>
-
-                            <View style={styles.muscleCountWrap}>
-                              <Text style={[styles.muscleCountText, isDark ? styles.textDark : styles.textLight]}>
-                                {m.setsCount}{' '}
-                                <Text style={styles.countUnitText}>
-                                  {m.setsCount === 1
-                                    ? 'підхід'
-                                    : m.setsCount >= 2 && m.setsCount <= 4
-                                    ? 'підходи'
-                                    : 'підходів'}
-                                </Text>
-                              </Text>
-                              <Text style={[styles.musclePercentText, isDark ? styles.subDark : styles.subLight]}>
-                                ({m.percentage}%)
-                              </Text>
-                            </View>
-                          </View>
-
-                          {/* Progress Bar */}
-                          <View style={[styles.progressTrack, isDark ? styles.trackDark : styles.trackLight]}>
-                            <View
-                              style={[
-                                styles.progressFill,
-                                {
-                                  width: `${Math.max(5, m.percentage)}%`,
-                                  backgroundColor: m.color,
-                                },
-                              ]}
-                            />
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  </Card>
-                ) : (
-                  /* View Tab 2: Exercises Breakdown with Aggregated Sets & PRs */
-                  <Card style={styles.breakdownCard}>
-                    <View style={styles.cardHeader}>
-                      <View>
-                        <Text style={[styles.cardTitle, isDark ? styles.textDark : styles.textLight]}>
-                          Агреговані вправи
-                        </Text>
-                        <Text style={[styles.cardSub, isDark ? styles.subDark : styles.subLight]}>
-                          Підсумок виконаних підходів та ваг за період
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Search Input for Exercises */}
-                    {analyticsData.exercisesList.length > 4 && (
-                      <View style={[styles.searchWrap, isDark ? styles.searchDark : styles.searchLight]}>
-                        <Ionicons name="search" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
-                        <TextInput
-                          style={[styles.searchInput, isDark ? styles.textDark : styles.textLight]}
-                          placeholder="Пошук вправи..."
-                          placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
-                          value={searchQuery}
-                          onChangeText={setSearchQuery}
-                        />
-                        {searchQuery.length > 0 && (
-                          <TouchableOpacity onPress={() => setSearchQuery('')}>
-                            <Ionicons name="close-circle" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    )}
-
-                    <View style={styles.exercisesList}>
-                      {filteredExercises.map((item, idx) => {
-                        const muscle = MUSCLE_GROUPS[item.muscleGroup] || MUSCLE_GROUPS.other;
-                        return (
-                          <TouchableOpacity
-                            key={item.exerciseId || `ex_${idx}`}
-                            activeOpacity={0.7}
-                            onPress={() => {
-                              setSavedActiveTab('analytics');
-                              router.push({
-                                pathname: `/exercise/${item.exerciseId}` as any,
-                                params: {
-                                  name: item.exerciseName,
-                                  muscleGroup: item.muscleGroup,
-                                  fromTab: 'analytics',
-                                },
-                              });
-                            }}
-                            style={[
-                              styles.exerciseItem,
-                              idx > 0 && (isDark ? styles.itemBorderDark : styles.itemBorderLight),
-                            ]}
-                          >
-                            <View style={styles.exLeftCol}>
-                              <Text
-                                numberOfLines={2}
-                                style={[styles.exTitle, isDark ? styles.textDark : styles.textLight]}
-                              >
-                                {item.exerciseName}
-                              </Text>
-                              <View style={styles.exMetaRow}>
-                                <View
-                                  style={[
-                                    styles.muscleBadge,
-                                    { backgroundColor: muscle.badgeBg, borderColor: muscle.badgeBorder },
-                                  ]}
-                                >
-                                  <Text style={[styles.muscleBadgeText, { color: muscle.color }]}>
-                                    {muscle.nameUk}
-                                  </Text>
-                                </View>
-                                {item.maxWeight > 0 && (
-                                  <Text style={[styles.exPrText, isDark ? styles.subDark : styles.subLight]}>
-                                    Макс: <Text style={{ fontWeight: '700' }}>{item.maxWeight} кг</Text>
-                                    {item.repsAtMaxWeight > 0 ? ` × ${item.repsAtMaxWeight}` : ''}
-                                  </Text>
-                                )}
-                              </View>
-                            </View>
-
-                            <View style={styles.exRightCol}>
-                              <Text style={[styles.exSetsCount, isDark ? styles.textDark : styles.textLight]}>
-                                {item.completedSetsCount}
-                              </Text>
-                              <Text style={[styles.exSetsLabel, isDark ? styles.subDark : styles.subLight]}>
-                                {item.completedSetsCount === 1
-                                  ? 'підхід'
-                                  : item.completedSetsCount >= 2 && item.completedSetsCount <= 4
-                                  ? 'підходи'
-                                  : 'підходів'}
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </Card>
-                )}
-              </>
-            )}
-          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -707,87 +360,123 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 12,
+    gap: 8,
   },
   screenTitle: {
-    fontSize: 34,
+    fontSize: 28,
     fontWeight: '800',
-    letterSpacing: -0.6,
+    letterSpacing: -0.5,
+  },
+  dateNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 28,
   },
   screenSubtitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginTop: 4,
-    marginBottom: 16,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  navChevrons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  chevronBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  todayChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginLeft: 4,
+  },
+  todayChipText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   periodSwitcher: {
     flexDirection: 'row',
+    alignItems: 'center',
     padding: 4,
     borderRadius: 14,
+    marginTop: 4,
   },
   periodPill: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
   },
   periodPillText: {
-    fontSize: 14,
+    fontSize: 13,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 120,
+    gap: 12,
   },
   tonnageCard: {
-    marginHorizontal: 20,
-    marginBottom: 16,
     padding: 20,
+    borderRadius: 20,
   },
   cardHeaderTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
+    letterSpacing: 0.8,
     marginBottom: 12,
   },
   tonnageRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
   tonnageLeft: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
+    alignItems: 'flex-end',
   },
   tonnageBigNum: {
-    fontSize: 44,
-    fontWeight: '800',
+    fontSize: 48,
+    fontWeight: '900',
+    lineHeight: 52,
     letterSpacing: -1,
   },
   tonnageUnit: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 6,
+    marginLeft: 4,
   },
   tonnageRight: {
     alignItems: 'flex-end',
-    gap: 4,
+    gap: 3,
   },
   tonnageStatRow: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
   },
   musclesCard: {
-    marginHorizontal: 20,
-    marginBottom: 16,
     padding: 20,
+    borderRadius: 20,
   },
   multiBar: {
     flexDirection: 'row',
-    height: 10,
-    borderRadius: 5,
-    overflow: 'hidden',
+    alignItems: 'center',
     gap: 3,
     marginBottom: 16,
+    height: 12,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   musclesListWrap: {
     gap: 12,
@@ -802,523 +491,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  muscleDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 3,
+  },
   muscleNameText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   muscleStatsText: {
     fontSize: 14,
-    fontWeight: '500',
-  },
-  bgLight: {
-    backgroundColor: '#f8fafc',
-  },
-  bgDark: {
-    backgroundColor: '#0b1220',
-  },
-  periodRow: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  periodContainer: {
-    flexDirection: 'row',
-    padding: 3,
-    borderRadius: 16,
-    gap: 3,
-  },
-  periodLight: {
-    backgroundColor: '#f1f5f9',
-  },
-  periodDark: {
-    backgroundColor: '#263140',
-  },
-  periodBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    borderRadius: 12,
-  },
-  periodBtnActiveLight: {
-    backgroundColor: '#ffffff',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-  },
-  periodBtnActiveDark: {
-    backgroundColor: '#1d2939',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  periodBtnText: {
-    fontSize: 12,
     fontWeight: '600',
   },
-  periodTextActiveLight: {
-    color: '#2563eb',
-    fontWeight: '700',
+  emptyMusclesText: {
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 12,
   },
-  periodTextActiveDark: {
-    color: '#60a5fa',
-    fontWeight: '700',
+  loadingWrap: {
+    paddingVertical: 16,
+    alignItems: 'center',
   },
-  scrollContent: {
-    padding: 16,
-    gap: 14,
-    paddingBottom: 110,
-  },
-  dateNavCard: {
+  errorWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     padding: 12,
-    borderRadius: 18,
-  },
-  dateNavRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  navArrowBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  btnLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
-  },
-  btnDark: {
-    backgroundColor: '#263140',
-    borderColor: '#334155',
-  },
-  dateNavCenter: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dateNavTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dateNavTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  dateNavSub: {
-    fontSize: 11,
-    marginTop: 1,
-  },
-  dateNavRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  todayBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  todayBtnLight: {
-    backgroundColor: 'rgba(37, 99, 235, 0.08)',
-    borderColor: '#e2e8f0',
-  },
-  todayBtnDark: {
-    backgroundColor: 'rgba(37, 99, 235, 0.2)',
-    borderColor: '#334155',
-  },
-  todayBtnText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  todayBtnTextLight: {
-    color: '#2563eb',
-  },
-  todayBtnTextDark: {
-    color: '#60a5fa',
-  },
-  stateContainer: {
-    padding: 40,
-    alignItems: 'center',
-    gap: 8,
-  },
-  stateText: {
-    fontSize: 13,
-  },
-  errorCard: {
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#ef444430',
-  },
-  errorTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  errorSub: {
-    fontSize: 12,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  retryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#ef4444',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
     borderRadius: 14,
-    marginTop: 4,
-  },
-  retryBtnText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  kpiGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  kpiCard: {
-    width: '48.5%',
-    padding: 12,
-    borderRadius: 18,
-    gap: 4,
-  },
-  kpiHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  kpiIconWrap: {
-    width: 26,
-    height: 26,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  kpiTitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  kpiValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginTop: 2,
-  },
-  kpiDesc: {
-    fontSize: 10,
-  },
-  emptyContainer: {
-    paddingVertical: 48,
-    paddingHorizontal: 20,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    marginTop: 4,
-  },
-  emptyLight: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-  },
-  emptyDark: {
-    backgroundColor: '#1d2939',
-    borderColor: '#334155',
-  },
-  emptyIconBox: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyIconBoxLight: {
-    backgroundColor: '#f1f5f9',
-  },
-  emptyIconBoxDark: {
-    backgroundColor: '#263140',
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginTop: 16,
-    lineHeight: 22,
-    maxWidth: 280,
-  },
-  emptyTitleLight: {
-    color: '#0f172a',
-  },
-  emptyTitleDark: {
-    color: '#f8fafc',
-  },
-  emptySubtitle: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 18,
-    maxWidth: 280,
-  },
-  emptySubtitleLight: {
-    color: '#64748b',
-  },
-  emptySubtitleDark: {
-    color: '#94a3b8',
-  },
-  emptyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 16,
-    marginTop: 16,
-    backgroundColor: '#2563eb',
-  },
-  emptyBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    padding: 4,
-    borderRadius: 20,
-    gap: 4,
-  },
-  filterLight: {
-    backgroundColor: '#f1f5f9',
-  },
-  filterDark: {
-    backgroundColor: '#263140',
-  },
-  filterBtn: {
-    flex: 1,
-    paddingVertical: 9,
-    paddingHorizontal: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-  },
-  filterBtnActiveLight: {
-    backgroundColor: '#ffffff',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-  },
-  filterBtnActiveDark: {
-    backgroundColor: '#1d2939',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  filterBtnText: {
-    fontSize: 13,
-  },
-  filterTextActiveLight: {
-    color: '#2563eb',
-    fontWeight: '700',
-  },
-  filterTextActiveDark: {
-    color: '#60a5fa',
-    fontWeight: '700',
-  },
-  filterTextInactiveLight: {
-    color: '#64748b',
-    fontWeight: '600',
-  },
-  filterTextInactiveDark: {
-    color: '#94a3b8',
-    fontWeight: '600',
-  },
-  breakdownCard: {
-    padding: 14,
-    gap: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-  },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  cardSub: {
-    fontSize: 11,
-    marginTop: 2,
-  },
-  totalBadge: {
-    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  totalBadgeText: {
-    color: '#2563eb',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  musclesList: {
-    gap: 10,
-  },
-  muscleRow: {
-    gap: 5,
-  },
-  muscleInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  muscleNameWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  muscleDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  muscleCountWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  muscleCountText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  countUnitText: {
-    fontWeight: '400',
-    fontSize: 11,
-  },
-  musclePercentText: {
-    fontSize: 11,
-  },
-  progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  trackLight: {
-    backgroundColor: '#f1f5f9',
-  },
-  trackDark: {
-    backgroundColor: '#263140',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 40,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 8,
-  },
-  searchLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
-  },
-  searchDark: {
-    backgroundColor: '#263140',
-    borderColor: '#334155',
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    paddingVertical: 0,
-  },
-  exercisesList: {
-    gap: 8,
-  },
-  exerciseItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-  },
-  itemBorderLight: {
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-  },
-  itemBorderDark: {
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-  },
-  exLeftCol: {
-    flex: 1,
-    gap: 4,
-    marginRight: 10,
-  },
-  exTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
-  },
-  exMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  muscleBadge: {
-    paddingHorizontal: 5,
-    paddingVertical: 1.5,
-    borderRadius: 8,
     borderWidth: 1,
   },
-  muscleBadgeText: {
-    fontSize: 9,
+  errorText: {
+    fontSize: 12,
     fontWeight: '600',
-  },
-  exPrText: {
-    fontSize: 11,
-  },
-  exRightCol: {
-    alignItems: 'flex-end',
-    minWidth: 55,
-  },
-  exSetsCount: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  exSetsLabel: {
-    fontSize: 10,
-  },
-  textLight: {
-    color: '#0f172a',
-  },
-  textDark: {
-    color: '#f8fafc',
-  },
-  subLight: {
-    color: '#64748b',
-  },
-  subDark: {
-    color: '#94a3b8',
+    flex: 1,
   },
 });
