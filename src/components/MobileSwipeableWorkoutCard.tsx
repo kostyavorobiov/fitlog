@@ -267,7 +267,7 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
       data-no-swipe="true"
       data-swipe-card="true"
       style={{ touchAction: 'pan-y' }}
-      className={`no-swipe relative overflow-hidden rounded-[20px] border border-slate-200/80 dark:border-[#222634] bg-white dark:bg-[#16171c] shadow-xs transition-all duration-200 hover:border-slate-300 dark:hover:border-zinc-700 ${
+      className={`no-swipe relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-[#1d2939] shadow-xs transition-all duration-200 hover:border-slate-300 dark:hover:border-zinc-700 ${
         isDeleting
           ? 'max-h-0 opacity-0 -translate-x-full my-0 py-0 border-transparent overflow-hidden'
           : ''
@@ -345,9 +345,9 @@ export const MobileSwipeableWorkoutCard: React.FC<MobileSwipeableWorkoutCardProp
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
         onClickCapture={handleCardClick}
-        className={`relative z-10 bg-white dark:bg-[#16171c] h-full border-r border-transparent ${
+        className={`relative z-10 bg-white dark:bg-[#1d2939] h-full border-r border-transparent ${
           offsetX < 0
-            ? 'border-slate-200 dark:border-[#222634] shadow-[-3px_0_10px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_12px_rgba(0,0,0,0.4)]'
+            ? 'border-slate-200 dark:border-zinc-800 shadow-[-3px_0_10px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_12px_rgba(0,0,0,0.4)]'
             : ''
         }`}
       >

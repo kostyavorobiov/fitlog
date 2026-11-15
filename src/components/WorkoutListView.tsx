@@ -234,10 +234,6 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
     }));
   };
 
-  const activeWorkout = useMemo(() => {
-    return sortedWorkouts.find((w) => w.status === 'in_progress');
-  }, [sortedWorkouts]);
-
   return (
     <div className="space-y-3.5 max-w-xl mx-auto animate-fade-in pb-12 touch-pan-y">
       {/* Top Action Button: "+ Нове тренування" (hidden on mobile, handled by mobile bottom navbar central button) */}
@@ -249,43 +245,6 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
         <Plus className="h-4 w-4 stroke-[3]" />
         <span>Нове тренування</span>
       </button>
-
-      {/* Hero Active Workout Banner if in_progress exists */}
-      {activeWorkout && (() => {
-        const exList = activeWorkout.exercises || [];
-        const allSets = exList.flatMap((e) => e.sets || []);
-        const doneSets = allSets.filter((s) => Boolean(s.completedAt)).length;
-        const totalSets = allSets.length;
-        const supersets = new Set(exList.map((e) => e.supersetGroupId).filter(Boolean)).size;
-
-        let dateTag = 'СЬОГОДНІ';
-        if (activeWorkout.scheduledDate) {
-          const parts = activeWorkout.scheduledDate.split('T')[0].split('-');
-          if (parts.length === 3) dateTag = `${parts[2]}/${parts[1]}`;
-        }
-
-        return (
-          <div className="w-full rounded-[24px] bg-[#CCFF00] text-black p-5 sm:p-6 shadow-sm space-y-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-black/80">
-              У ПРОЦЕСІ · {dateTag}
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-black line-clamp-2">
-              {activeWorkout.title || 'Тренування'}
-            </h2>
-            <p className="text-xs sm:text-sm font-semibold text-black/90">
-              {exList.length} вправ · {doneSets} з {totalSets} підходів
-              {supersets > 0 ? ` · ${supersets} суперсети` : ''}
-            </p>
-            <button
-              type="button"
-              onClick={() => onSelectWorkout(activeWorkout)}
-              className="w-full py-3.5 px-4 rounded-xl bg-black text-[#CCFF00] font-bold text-sm sm:text-base hover:bg-black/90 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center"
-            >
-              Продовжити
-            </button>
-          </div>
-        );
-      })()}
 
       {/* Workouts List or Empty State */}
       {workouts.length === 0 ? (
@@ -311,19 +270,19 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                 <button
                   type="button"
                   onClick={() => toggleMonth(group.key)}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-[20px] bg-[#f1f5f9] dark:bg-[#212129] hover:bg-[#e2e8f0] dark:hover:bg-[#2a2b36] border border-[#e2e8f0] dark:border-[#2a2b36] transition-colors cursor-pointer select-none"
+                  className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-[#f1f5f9] dark:bg-[#1d2939] hover:bg-[#e2e8f0] dark:hover:bg-[#263140] border border-[#e2e8f0] dark:border-[#334155] transition-colors cursor-pointer select-none"
                   aria-expanded={isOpen}
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2">
                     <span className="font-bold text-sm sm:text-base text-[#0f172a] dark:text-[#f8fafc]">
                       {group.label}
                     </span>
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-white dark:bg-[#16171c] text-[#64748b] dark:text-[#8e95a5] shadow-xs">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-[#263140] text-[#64748b] dark:text-[#94a3b8] shadow-xs">
                       {group.workouts.length}
                     </span>
                   </div>
                   <ChevronDown
-                    className={`w-4 h-4 text-[#64748b] dark:text-[#8e95a5] transition-transform duration-200 shrink-0 ${
+                    className={`w-4 h-4 text-[#64748b] dark:text-[#94a3b8] transition-transform duration-200 shrink-0 ${
                       isOpen ? 'rotate-180' : ''
                     }`}
                   />
@@ -348,24 +307,26 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                         >
                           <div
                             onClick={() => onSelectWorkout(w)}
-                            className="group bg-white dark:bg-[#16171c] px-4 py-3.5 transition-colors cursor-pointer space-y-1"
+                            className="group bg-white dark:bg-[#1d2939] px-4 py-3.5 transition-colors cursor-pointer space-y-1.5"
                           >
                             {/* Row 1: Status & Coach info */}
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
-                                {w.status === 'in_progress' ? (
-                                  <span className="font-bold text-[#0f172a] dark:text-[#ffffff] flex items-center gap-1">
-                                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-current" /> У процесі
-                                  </span>
-                                ) : isCompleted ? (
-                                  <span className="font-medium text-[#64748b] dark:text-[#8e95a5]">
-                                    Завершено
-                                  </span>
-                                ) : (
-                                  <span className="font-medium text-[#94a3b8] dark:text-[#5c6375]">
-                                    Заплановано
-                                  </span>
-                                )}
+                                <span
+                                  className={`font-semibold ${
+                                    isCompleted
+                                      ? 'text-[#22c55e]'
+                                      : w.status === 'in_progress'
+                                      ? 'text-[#60a5fa]'
+                                      : 'text-[#64748b] dark:text-[#94a3b8]'
+                                  }`}
+                                >
+                                  {isCompleted
+                                    ? 'Завершено'
+                                    : w.status === 'in_progress'
+                                    ? 'У процесі'
+                                    : 'Заплановано'}
+                                </span>
                                 {w.assignedByCoachId && (
                                   <>
                                     <span className="text-[#cbd5e1] dark:text-[#334155]">·</span>
@@ -377,15 +338,27 @@ export const WorkoutListView: React.FC<WorkoutListViewProps> = ({
                               </div>
                             </div>
 
-                            {/* Row 2: Title */}
-                            <h3 className="font-bold text-base sm:text-lg text-[#0f172a] dark:text-[#ffffff] truncate">
-                              {w.title || 'Тренування без назви'}
-                            </h3>
+                            {/* Row 2: Title & Exercise count */}
+                            <div className="flex items-center justify-between gap-2">
+                              <h3 className="font-bold text-sm sm:text-base text-[#0f172a] dark:text-[#f8fafc] truncate">
+                                {w.title || 'Тренування'}
+                              </h3>
+                              <span className="text-xs text-[#64748b] dark:text-[#94a3b8] shrink-0 font-medium">
+                                {w.exercises?.length || 0} вправ
+                              </span>
+                            </div>
 
-                            {/* Row 3: Subtitle Details */}
-                            <p className="text-xs sm:text-sm text-[#64748b] dark:text-[#8e95a5] truncate">
-                              {formatDateDDMMYY(w.scheduledDate)} · {w.exercises?.length || 0} вправ · {totalSets} підходів
-                            </p>
+                            {/* Row 3: Date & Sets info */}
+                            <div className="flex items-center justify-between text-xs text-[#64748b] dark:text-[#94a3b8]">
+                              <span className="font-mono text-[11px] sm:text-xs">
+                                {formatDateDDMMYY(w.scheduledDate)}
+                              </span>
+
+                              <div className="flex items-center gap-1 text-[11px] sm:text-xs">
+                                <Layers className="h-3 w-3" />
+                                <span>{totalSets} підходів</span>
+                              </div>
+                            </div>
                           </div>
                         </MobileSwipeableWorkoutCard>
                       );
