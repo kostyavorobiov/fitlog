@@ -52,7 +52,7 @@ import {
   DEFAULT_REPS_RANGES,
 } from '../types/workout';
 
-import { SupersetPalette, SUPERSET_PALETTES } from '../constants/supersets';
+import { SupersetPalette, SUPERSET_PALETTES, getSupersetPalette } from '../constants/supersets';
 import { getExercise1RM, format1RM, getMinRepsFromRange } from '../utils/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
@@ -437,6 +437,8 @@ interface SwipeableExerciseCardProps {
   id: string;
   disabled?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
+  cardBackgroundColor?: string;
+  borderColor?: string;
   onDelete: (onCancel?: () => void) => void;
   onQuickDelete?: (onCancel?: () => void) => void;
   confirmTitle?: string;
@@ -450,6 +452,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
   id,
   disabled = false,
   containerStyle,
+  cardBackgroundColor,
+  borderColor,
   onDelete,
   onQuickDelete,
   confirmTitle,
@@ -463,6 +467,8 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
       id={id}
       disabled={disabled}
       containerStyle={containerStyle}
+      cardBackgroundColor={cardBackgroundColor}
+      borderColor={borderColor}
       isDark={isDark}
       onEdit={onChangeExercise}
       onDelete={onDelete}
@@ -983,10 +989,10 @@ export const WorkoutEditorScreen: React.FC = () => {
     });
 
     uniqueGroups.forEach((groupId, idx) => {
-      map.set(groupId, SUPERSET_PALETTES[idx % SUPERSET_PALETTES.length]);
+      map.set(groupId, getSupersetPalette(idx, colors.accent, colors.accentText));
     });
     return map;
-  }, [workout?.exercises]);
+  }, [workout?.exercises, colors.accent, colors.accentText]);
 
   interface ExerciseGroup {
     id: string;
@@ -2205,12 +2211,15 @@ export const WorkoutEditorScreen: React.FC = () => {
       <View style={styles.exerciseCardWrap}>
         <SwipeableExerciseCard
           id={ex.id}
+          cardBackgroundColor={colors.card}
+          borderColor={colors.cardBorder}
+          containerStyle={styles.swipeExerciseContainer}
           onDelete={(onCancel) => handleRemoveExercise(ex.id, onCancel)}
           onQuickDelete={(onCancel) => handleQuickDeleteExercise(ex.id, onCancel)}
           onChangeExercise={() => handleChangeExercise(ex.id)}
           isDark={isDark}
         >
-          <View style={[styles.exerciseCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1, overflow: 'hidden' }]}>
+          <View style={styles.exerciseCardInner}>
             {/* Superset Full Height Left Stripe */}
             {isSuperset && (
               <View
@@ -2220,8 +2229,8 @@ export const WorkoutEditorScreen: React.FC = () => {
                   left: 0,
                   top: 0,
                   bottom: 0,
-                  width: 4,
-                  backgroundColor: colors.accent,
+                  width: 5,
+                  backgroundColor: palette?.color || colors.accent,
                   borderTopLeftRadius: 20,
                   borderBottomLeftRadius: 20,
                   zIndex: 10,
@@ -2231,38 +2240,8 @@ export const WorkoutEditorScreen: React.FC = () => {
 
             {/* Exercise Card Header */}
             <View style={[styles.exHeader, isExpanded && { borderBottomWidth: 1, borderBottomColor: colors.cardBorder, paddingBottom: 10 }]}>
-              {/* Index/Reorder, Name & Collapsed Summary */}
+              {/* Name & Collapsed Summary */}
               <View style={styles.exHeaderTitleRow}>
-                {/* Vertical Reorder Stepper (Up/Down) */}
-                <View style={styles.reorderColumn}>
-                  <TouchableOpacity
-                    activeOpacity={0.6}
-                    disabled={exIndex === 0}
-                    onPress={() => handleMoveExercise(exIndex, 'up')}
-                    style={[styles.reorderBtn, exIndex === 0 && { opacity: 0.25 }]}
-                    hitSlop={{ top: 8, bottom: 2, left: 8, right: 8 }}
-                  >
-                    <Ionicons
-                      name="chevron-up"
-                      size={16}
-                      color={exIndex === 0 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    activeOpacity={0.6}
-                    disabled={exIndex === exercises.length - 1}
-                    onPress={() => handleMoveExercise(exIndex, 'down')}
-                    style={[styles.reorderBtn, exIndex === exercises.length - 1 && { opacity: 0.25 }]}
-                    hitSlop={{ top: 2, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons
-                      name="chevron-down"
-                      size={16}
-                      color={exIndex === exercises.length - 1 ? (isDark ? '#52525b' : '#94a3b8') : (isDark ? '#e4e4e7' : '#334155')}
-                    />
-                  </TouchableOpacity>
-                </View>
-
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => handleToggleExpand(ex.id)}
@@ -2280,10 +2259,25 @@ export const WorkoutEditorScreen: React.FC = () => {
                         <View
                           style={[
                             styles.supersetBadge,
-                            { backgroundColor: colors.accent, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+                            {
+                              backgroundColor: palette?.color || colors.accent,
+                              borderRadius: 6,
+                              paddingHorizontal: 8,
+                              paddingVertical: 2,
+                              borderWidth: 0,
+                            },
                           ]}
                         >
-                          <Text style={[styles.supersetBadgeText, { color: colors.accentText, fontWeight: '700', fontSize: 10 }]}>
+                          <Text
+                            style={[
+                              styles.supersetBadgeText,
+                              {
+                                color: palette?.textColor || colors.accentText,
+                                fontWeight: '800',
+                                fontSize: 10,
+                              },
+                            ]}
+                          >
                             Суперсет
                           </Text>
                         </View>
@@ -2292,7 +2286,13 @@ export const WorkoutEditorScreen: React.FC = () => {
                     {!isExpanded && (
                       <View style={styles.collapsedSummaryRow}>
                         <Text style={[styles.collapsedSummaryText, { color: colors.textSecondary }]}>
-                          {(ex.sets || []).length} підходи • {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'} повт. • 1RM: {format1RM(getExercise1RM(ex.sets, pastPerf))}
+                          {(() => {
+                            const setsCount = (ex.sets || []).length;
+                            const setsWord = setsCount === 1 ? 'підхід' : (setsCount >= 2 && setsCount <= 4 ? 'підходи' : 'підходів');
+                            const repsRange = ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12';
+                            const oneRmVal = format1RM(getExercise1RM(ex.sets, pastPerf));
+                            return `${setsCount} ${setsWord} · ${repsRange} повт. · 1RM ${oneRmVal}`;
+                          })()}
                         </Text>
                       </View>
                     )}
@@ -2320,7 +2320,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                       <Ionicons
                         name={isSuperset ? "link" : "link-outline"}
                         size={16}
-                        color={isSuperset ? colors.accent : colors.textSecondary}
+                        color={isSuperset ? (palette?.color || colors.accent) : colors.textSecondary}
                       />
                     </TouchableOpacity>
                   )}
@@ -2339,6 +2339,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                           alignItems: 'center',
                           justifyContent: 'center',
                           minWidth: 38,
+                          height: 36,
                         }}
                       >
                         <Text
@@ -2370,20 +2371,20 @@ export const WorkoutEditorScreen: React.FC = () => {
                       onPress={() => setActiveRepsPickerWeId(ex.id)}
                       style={[
                         styles.repsDropdownBtn,
-                        { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1 },
+                        { backgroundColor: colors.card, borderColor: colors.cardBorder, borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
                       ]}
                     >
-                      <Text style={[styles.repsDropdownBtnText, { color: colors.text }]}>
+                      <Text style={[styles.repsDropdownBtnText, { color: colors.text, fontWeight: '700' }]}>
                         {ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12'}
                       </Text>
                       <Ionicons name="chevron-down" size={13} color={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
                   <View style={styles.repsDropdownRow}>
-                    <Text style={[styles.selectorLabel, { color: colors.textSecondary }]}>
+                    <Text style={[styles.selectorLabel, { color: colors.textSecondary, marginRight: 4 }]}>
                       1RM
                     </Text>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text }}>
+                    <Text style={{ fontSize: 13, fontWeight: '800', color: colors.text }}>
                       {format1RM(getExercise1RM(ex.sets, pastPerf))}
                     </Text>
                   </View>
@@ -3303,6 +3304,16 @@ const styles = StyleSheet.create({
   exerciseCardWrap: {
     borderRadius: 20,
   },
+  swipeExerciseContainer: {
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  exerciseCardInner: {
+    padding: 16,
+    gap: 12,
+  },
   swipeContainer: {
     position: 'relative',
     overflow: 'hidden',
@@ -3447,11 +3458,9 @@ const styles = StyleSheet.create({
   supersetBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 6,
   },
   supersetBadgeText: {
     fontSize: 10,

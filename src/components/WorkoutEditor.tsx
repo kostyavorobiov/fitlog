@@ -63,46 +63,53 @@ const computeWorkoutStatus = (exercises: WorkoutExercise[]): 'completed' | 'in_p
 
 const SUPERSET_PALETTES = [
   {
+    hex: '#CCFF00',
+    border: 'border-[#CCFF00]/50',
+    badge: 'bg-[#CCFF00] text-black font-extrabold',
+    buttonActive: 'border-[#CCFF00] bg-[#CCFF00]/20 text-[#CCFF00]',
+    nameUk: 'Лаймовий',
+  },
+  {
+    hex: '#FF6B4A',
+    border: 'border-[#FF6B4A]/50',
+    badge: 'bg-[#FF6B4A] text-white font-extrabold',
+    buttonActive: 'border-[#FF6B4A] bg-[#FF6B4A]/20 text-[#FF6B4A]',
+    nameUk: 'Кораловий',
+  },
+  {
     hex: '#10b981',
     border: 'border-emerald-500/50',
-    badge: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
-    buttonActive: 'border-emerald-500/60 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25',
+    badge: 'bg-emerald-500 text-white font-extrabold',
+    buttonActive: 'border-emerald-500/60 bg-emerald-500/20 text-emerald-400',
     nameUk: 'Смарагдовий',
   },
   {
-    hex: '#f59e0b',
-    border: 'border-amber-500/50',
-    badge: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
-    buttonActive: 'border-amber-500/60 bg-amber-500/15 text-amber-400 hover:bg-amber-500/25',
-    nameUk: 'Бурштиновий',
-  },
-  {
-    hex: '#6366f1',
-    border: 'border-indigo-500/50',
-    badge: 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30',
-    buttonActive: 'border-indigo-500/60 bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25',
-    nameUk: 'Індиго',
-  },
-  {
-    hex: '#f43f5e',
-    border: 'border-rose-500/50',
-    badge: 'bg-rose-500/15 text-rose-400 border border-rose-500/30',
-    buttonActive: 'border-rose-500/60 bg-rose-500/15 text-rose-400 hover:bg-rose-500/25',
-    nameUk: 'Рожевий',
+    hex: '#8B5CF6',
+    border: 'border-purple-500/50',
+    badge: 'bg-purple-500 text-white font-extrabold',
+    buttonActive: 'border-purple-500/60 bg-purple-500/20 text-purple-400',
+    nameUk: 'Фіолетовий',
   },
   {
     hex: '#06b6d4',
     border: 'border-cyan-500/50',
-    badge: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30',
-    buttonActive: 'border-cyan-500/60 bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25',
+    badge: 'bg-cyan-500 text-white font-extrabold',
+    buttonActive: 'border-cyan-500/60 bg-cyan-500/20 text-cyan-400',
     nameUk: 'Блакитний',
   },
   {
-    hex: '#a855f7',
-    border: 'border-purple-500/50',
-    badge: 'bg-purple-500/15 text-purple-400 border border-purple-500/30',
-    buttonActive: 'border-purple-500/60 bg-purple-500/15 text-purple-400 hover:bg-purple-500/25',
-    nameUk: 'Фіолетовий',
+    hex: '#f43f5e',
+    border: 'border-rose-500/50',
+    badge: 'bg-rose-500 text-white font-extrabold',
+    buttonActive: 'border-rose-500/60 bg-rose-500/20 text-rose-400',
+    nameUk: 'Рожевий',
+  },
+  {
+    hex: '#f59e0b',
+    border: 'border-amber-500/50',
+    badge: 'bg-amber-500 text-black font-extrabold',
+    buttonActive: 'border-amber-500/60 bg-amber-500/20 text-amber-400',
+    nameUk: 'Бурштиновий',
   },
 ];
 
@@ -1351,12 +1358,16 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                           )}
 
                           {!isExpanded && (
-                            <div className="flex items-center gap-1.5 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                              <span>{weItem.sets?.length || 0} підходи</span>
-                              <span>•</span>
+                            <div className="flex items-center gap-1 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                              <span>{(() => {
+                                const setsCount = weItem.sets?.length || 0;
+                                const setsWord = setsCount === 1 ? 'підхід' : (setsCount >= 2 && setsCount <= 4 ? 'підходи' : 'підходів');
+                                return `${setsCount} ${setsWord}`;
+                              })()}</span>
+                              <span>·</span>
                               <span>{weItem.targetRepsRange || weItem.sets?.[0]?.targetRepsRange || '8-12'} повт.</span>
-                              <span>•</span>
-                              <span>1RM: {get1RMForExercise(weItem)}</span>
+                              <span>·</span>
+                              <span>1RM {get1RMForExercise(weItem)}</span>
                             </div>
                           )}
                         </div>
