@@ -29,6 +29,7 @@ import AnimatedReanimated, {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -653,6 +654,7 @@ const ExerciseProgressRing: React.FC<ExerciseProgressRingProps> = ({
 
 export const WorkoutEditorScreen: React.FC = () => {
   const { theme, colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id, traineeId } = useLocalSearchParams<{ id: string; traineeId?: string }>();
@@ -2278,7 +2280,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                               },
                             ]}
                           >
-                            Суперсет
+                            {t('editor.superset', 'Суперсет')}
                           </Text>
                         </View>
                       </View>
@@ -2288,10 +2290,9 @@ export const WorkoutEditorScreen: React.FC = () => {
                         <Text style={[styles.collapsedSummaryText, { color: colors.textSecondary }]}>
                           {(() => {
                             const setsCount = (ex.sets || []).length;
-                            const setsWord = setsCount === 1 ? 'підхід' : (setsCount >= 2 && setsCount <= 4 ? 'підходи' : 'підходів');
                             const repsRange = ex.targetRepsRange || ex.sets?.[0]?.targetRepsRange || '8-12';
                             const oneRmVal = format1RM(getExercise1RM(ex.sets, pastPerf));
-                            return `${setsCount} ${setsWord} · ${repsRange} повт. · 1RM ${oneRmVal}`;
+                            return `${setsCount} ${t('common.sets', 'підходів')} · ${repsRange} ${t('common.reps_short', 'повт.')} · 1RM ${oneRmVal}`;
                           })()}
                         </Text>
                       </View>
@@ -2364,7 +2365,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                 <View style={[styles.quickSelectorsRow, { backgroundColor: colors.subCard, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 8 }]}>
                   <View style={styles.repsDropdownRow}>
                     <Text style={[styles.selectorLabel, { color: colors.textSecondary }]}>
-                      ПОВТОРЕНЬ
+                      {t('common.reps', 'ПОВТОРЕНЬ').toUpperCase()}
                     </Text>
                     <TouchableOpacity
                       activeOpacity={0.7}
@@ -2395,13 +2396,13 @@ export const WorkoutEditorScreen: React.FC = () => {
                   {/* Table Header */}
                   <View style={[styles.tableHeaderRow, { borderBottomColor: colors.cardBorder }]}>
                     <Text style={[styles.thCell, styles.thSet, { color: colors.textSecondary }]}>
-                      СЕТ
+                      {t('editor.set', 'СЕТ')}
                     </Text>
                     <Text style={[styles.thCell, styles.thWeight, { color: colors.textSecondary }]}>
-                      ВАГА, КГ
+                      {t('editor.weight_kg', 'ВАГА, КГ')}
                     </Text>
                     <Text style={[styles.thCell, styles.thReps, { color: colors.textSecondary }]}>
-                      ПОВТОР.
+                      {t('editor.reps', 'ПОВТОР.')}
                     </Text>
                     <View style={styles.thDone} />
                     <View style={styles.thAction} />
@@ -2569,7 +2570,7 @@ export const WorkoutEditorScreen: React.FC = () => {
                   style={[styles.addSetBtn, { borderColor: colors.border }]}
                 >
                   <Text style={[styles.addSetBtnText, { color: colors.text }]}>
-                    + Додати підхід
+                    {t('editor.add_set', '+ Додати підхід')}
                   </Text>
                 </TouchableOpacity>
               </>
@@ -2733,7 +2734,7 @@ export const WorkoutEditorScreen: React.FC = () => {
           >
             <Ionicons name="add" size={20} color={colors.accent} />
             <Text style={[styles.bigAddExerciseText, { color: colors.text }]}>
-              Додати вправу з каталогу
+              {t('editor.add_exercise', 'Додати вправу з каталогу')}
             </Text>
           </TouchableOpacity>
 
@@ -2747,7 +2748,7 @@ export const WorkoutEditorScreen: React.FC = () => {
             ]}
           >
             <Ionicons name="trash-outline" size={17} color="#ef4444" />
-            <Text style={styles.deleteWorkoutBottomBtnText}>Видалити тренування</Text>
+            <Text style={styles.deleteWorkoutBottomBtnText}>{t('editor.delete_workout', 'Видалити тренування')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

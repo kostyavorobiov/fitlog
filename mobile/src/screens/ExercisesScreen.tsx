@@ -21,6 +21,7 @@ import { Header } from '../components/Header';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { triggerRefreshSuccessHaptic } from '../utils/haptics';
@@ -75,6 +76,7 @@ const SwipeableExerciseCard: React.FC<SwipeableExerciseCardProps> = ({
 
 export const ExercisesScreen: React.FC = () => {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const { user, isAdmin } = useAuth();
   const { handleScroll } = useScrollTabBar();
   const router = useRouter();
@@ -292,7 +294,7 @@ export const ExercisesScreen: React.FC = () => {
       style={[styles.container, { backgroundColor: colors.bg }]}
     >
       <Header
-        title="База вправ"
+        title={t('exercises.title', 'База вправ')}
         rightAction={
           <TouchableOpacity
             activeOpacity={0.8}
@@ -301,7 +303,7 @@ export const ExercisesScreen: React.FC = () => {
           >
             <Ionicons name="add" size={16} color={colors.accentText} />
             <Text style={[styles.webAddBtnText, { color: colors.accentText }]}>
-              Додати
+              {t('common.add', 'Додати')}
             </Text>
           </TouchableOpacity>
         }
@@ -333,7 +335,7 @@ export const ExercisesScreen: React.FC = () => {
             />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
-              placeholder="Пошук вправи за назвою..."
+              placeholder={t('exercises.search_placeholder', 'Пошук вправи за назвою...')}
               placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -350,7 +352,7 @@ export const ExercisesScreen: React.FC = () => {
 
         {/* Muscle group tabs */}
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-          М'язові групи
+          {t('analytics.muscle_groups', "М'язові групи")}
         </Text>
 
         <View style={styles.tabsContainer}>
@@ -371,7 +373,7 @@ export const ExercisesScreen: React.FC = () => {
                   : { color: colors.textSecondary },
               ]}
             >
-              Всі ({exercises.length})
+              {t('exercises.all_categories', 'Всі')} ({exercises.length})
             </Text>
           </TouchableOpacity>
 
@@ -397,7 +399,7 @@ export const ExercisesScreen: React.FC = () => {
                       : { color: colors.textSecondary },
                   ]}
                 >
-                  {cat.nameUk} ({count})
+                  {t(`muscles.${cat.id}`, cat.nameUk)} ({count})
                 </Text>
               </TouchableOpacity>
             );

@@ -21,6 +21,7 @@ import { Card } from '../components/Card';
 import { UserAvatar } from '../components/UserAvatar';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { TraineeService } from '../services/traineeService';
 import { CategoryService } from '../services/categoryService';
@@ -60,6 +61,7 @@ export const ProfileScreen: React.FC = () => {
   const router = useRouter();
   const { user, logout, refreshUser, updateUserProfile, isAdmin, isCoach } = useAuth();
   const { theme, colors, isDark, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const { handleScroll } = useScrollTabBar();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -120,6 +122,26 @@ export const ProfileScreen: React.FC = () => {
     const unsubscribe = CategoryService.subscribe(setCategories);
     return () => unsubscribe();
   }, [user?.id]);
+
+  const activityOptions = useMemo(
+    () => [
+      { value: 1.2 as ActivityLevel, label: t('profile.activity_1_2', '1.2 — Мінімальний'), desc: t('profile.activity_1_2_desc', 'Сидячий спосіб життя, мінімум руху') },
+      { value: 1.375 as ActivityLevel, label: t('profile.activity_1_375', '1.375 — Низький'), desc: t('profile.activity_1_375_desc', 'Легкі тренування 1-3 рази на тиждень') },
+      { value: 1.55 as ActivityLevel, label: t('profile.activity_1_55', '1.55 — Помірний'), desc: t('profile.activity_1_55_desc', 'Тренування 3-5 разів на тиждень') },
+      { value: 1.725 as ActivityLevel, label: t('profile.activity_1_725', '1.725 — Високий'), desc: t('profile.activity_1_725_desc', 'Важкі тренування 6-7 разів на тиждень') },
+      { value: 1.9 as ActivityLevel, label: t('profile.activity_1_9', '1.9 — Екстремальний'), desc: t('profile.activity_1_9_desc', 'Дуже важка щоденна фізична праця або 2 тренування на день') },
+    ],
+    [t]
+  );
+
+  const goalOptions = useMemo(
+    () => [
+      { value: 'weight_loss' as NutritionGoal, label: t('profile.goal_loss', 'Схуднення (дефіцит)'), icon: 'trending-down-outline' as const },
+      { value: 'maintenance' as NutritionGoal, label: t('profile.goal_maintenance', 'Підтримка ваги'), icon: 'remove-outline' as const },
+      { value: 'weight_gain' as NutritionGoal, label: t('profile.goal_gain', 'Набір маси (профіцит)'), icon: 'trending-up-outline' as const },
+    ],
+    [t]
+  );
 
   // Synchronize form when user loads/changes without flickering or overwriting edits
   useEffect(() => {
@@ -483,21 +505,21 @@ export const ProfileScreen: React.FC = () => {
     { title: string; color: string; bg: string; border: string; icon: keyof typeof Ionicons.glyphMap }
   > = {
     admin: {
-      title: 'Адміністратор',
+      title: t('profile.role_admin', 'Адміністратор'),
       color: '#ef4444',
       bg: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.08)',
       border: isDark ? 'rgba(239, 68, 68, 0.35)' : 'rgba(239, 68, 68, 0.25)',
       icon: 'shield-checkmark',
     },
     coach: {
-      title: 'Тренер',
+      title: t('profile.role_coach', 'Тренер'),
       color: isDark ? '#60a5fa' : '#2563eb',
       bg: isDark ? 'rgba(37, 99, 235, 0.2)' : 'rgba(37, 99, 235, 0.08)',
       border: isDark ? 'rgba(96, 165, 250, 0.35)' : 'rgba(37, 99, 235, 0.25)',
       icon: 'people-outline',
     },
     athlete: {
-      title: 'Атлет',
+      title: t('profile.role_athlete', 'Атлет'),
       color: isDark ? '#34d399' : '#059669',
       bg: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
       border: isDark ? 'rgba(52, 211, 153, 0.35)' : 'rgba(16, 185, 129, 0.25)',
@@ -510,7 +532,7 @@ export const ProfileScreen: React.FC = () => {
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Top Navbar Header matching design */}
       <View style={styles.topProfileHeader}>
-        <Text style={[styles.profileScreenTitle, { color: colors.text }]}>Профіль</Text>
+        <Text style={[styles.profileScreenTitle, { color: colors.text }]}>{t('profile.title', 'Профіль')}</Text>
         <View style={styles.topHeaderActions}>
           {isCoach && (
             <TouchableOpacity
@@ -518,7 +540,7 @@ export const ProfileScreen: React.FC = () => {
               onPress={() => router.push('/trainees')}
               style={[styles.topHeaderBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}
               accessibilityRole="button"
-              accessibilityLabel="Підопічні"
+              accessibilityLabel={t('profile.trainees', 'Підопічні')}
             >
               <Ionicons name="people-outline" size={20} color={colors.text} />
             </TouchableOpacity>
@@ -528,7 +550,7 @@ export const ProfileScreen: React.FC = () => {
             onPress={handleLogout}
             style={[styles.topHeaderBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}
             accessibilityRole="button"
-            accessibilityLabel="Вийти з акаунта"
+            accessibilityLabel={t('profile.logout', 'Вийти з акаунту')}
           >
             <Ionicons name="log-out-outline" size={20} color={colors.text} />
           </TouchableOpacity>
@@ -585,7 +607,7 @@ export const ProfileScreen: React.FC = () => {
                 >
                   <Ionicons name="create-outline" size={14} color={colors.textSecondary} />
                   <Text style={[styles.editProfileBtnText, { color: colors.textSecondary }]}>
-                    Редагувати профіль
+                    {t('common.edit', 'Редагувати профіль')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -596,33 +618,33 @@ export const ProfileScreen: React.FC = () => {
           {isEditing && (
             <View style={[styles.editForm, isDark ? styles.borderTopDark : styles.borderTopLight]}>
               <Text style={[styles.formTitle, isDark ? styles.subDark : styles.subLight]}>
-                Редагування персональних даних та цілей
+                {t('profile.personal_info', 'Редагування персональних даних та цілей')}
               </Text>
 
               {/* Names */}
               <View style={styles.rowTwoInputs}>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                    Ім'я
+                    {t('profile.first_name', "Ім'я")}
                   </Text>
                   <TextInput
                     style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
                     value={firstName}
                     onChangeText={setFirstName}
-                    placeholder="Ім'я"
+                    placeholder={t('profile.first_name', "Ім'я")}
                     placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                   />
                 </View>
 
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                    Прізвище
+                    {t('profile.last_name', 'Прізвище')}
                   </Text>
                   <TextInput
                     style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
                     value={lastName}
                     onChangeText={setLastName}
-                    placeholder="Прізвище"
+                    placeholder={t('profile.last_name', 'Прізвище')}
                     placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                   />
                 </View>
@@ -631,7 +653,7 @@ export const ProfileScreen: React.FC = () => {
               {/* Role Picker */}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                  Роль користувача
+                  {t('profile.role', 'Роль користувача')}
                 </Text>
                 <View style={styles.rolePickerRow}>
                   {((isAdmin ? ['athlete', 'coach', 'admin'] : ['athlete', 'coach']) as UserRole[]).map((r) => {
@@ -665,7 +687,7 @@ export const ProfileScreen: React.FC = () => {
               {/* Gender */}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                  Стать
+                  {t('profile.gender', 'Стать')}
                 </Text>
                 <View style={styles.rolePickerRow}>
                   {(['male', 'female'] as Gender[]).map((g) => {
@@ -693,7 +715,7 @@ export const ProfileScreen: React.FC = () => {
                             active && { fontWeight: '700' },
                           ]}
                         >
-                          {g === 'male' ? 'Чоловіча' : 'Жіноча'}
+                          {g === 'male' ? t('profile.gender_male', 'Чоловіча') : t('profile.gender_female', 'Жіноча')}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -705,13 +727,13 @@ export const ProfileScreen: React.FC = () => {
               <View style={styles.rowThreeInputs}>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                    Вік (років)
+                    {t('profile.age', 'Вік (років)')}
                   </Text>
                   <TextInput
                     style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
                     value={age}
                     onChangeText={setAge}
-                    placeholder="Вік"
+                    placeholder={t('profile.age', 'Вік')}
                     placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                     keyboardType="numeric"
                   />
@@ -719,7 +741,7 @@ export const ProfileScreen: React.FC = () => {
 
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                    Зріст (см)
+                    {t('profile.height', 'Зріст (см)')}
                   </Text>
                   <TextInput
                     style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
@@ -733,7 +755,7 @@ export const ProfileScreen: React.FC = () => {
 
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                    Вага (кг)
+                    {t('profile.weight', 'Вага (кг)')}
                   </Text>
                   <TextInput
                     style={[styles.inputField, isDark ? styles.inputDark : styles.inputLight]}
@@ -749,10 +771,10 @@ export const ProfileScreen: React.FC = () => {
               {/* Activity Level */}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, isDark ? styles.textDark : styles.textLight]}>
-                  Рівень фізичної активності
+                  {t('profile.activity_level', 'Рівень фізичної активності')}
                 </Text>
                 <View style={{ gap: 6 }}>
-                  {ACTIVITY_OPTIONS.map((opt) => {
+                  {activityOptions.map((opt) => {
                     const active = activityLevel === opt.value;
                     return (
                       <TouchableOpacity
@@ -789,7 +811,7 @@ export const ProfileScreen: React.FC = () => {
               {/* Goal (Dropdown) */}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.text }]}>
-                  Ціль
+                  {t('profile.goal', 'Ціль')}
                 </Text>
                 <TouchableOpacity
                   style={[
@@ -801,12 +823,12 @@ export const ProfileScreen: React.FC = () => {
                 >
                   <View style={styles.goalDropdownTriggerLeft}>
                     <Ionicons
-                      name={GOAL_OPTIONS.find((o) => o.value === goal)?.icon || 'remove-outline'}
+                      name={goalOptions.find((o) => o.value === goal)?.icon || 'remove-outline'}
                       size={18}
                       color={colors.accent}
                     />
                     <Text style={[styles.goalDropdownSelectedText, { color: colors.text }]}>
-                      {GOAL_OPTIONS.find((o) => o.value === goal)?.label || 'Оберіть ціль'}
+                      {goalOptions.find((o) => o.value === goal)?.label || t('profile.select_goal', 'Оберіть ціль')}
                     </Text>
                   </View>
                   <Ionicons
@@ -818,7 +840,7 @@ export const ProfileScreen: React.FC = () => {
 
                 {isGoalDropdownOpen && (
                   <View style={[styles.goalDropdownMenu, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
-                    {GOAL_OPTIONS.map((g) => {
+                    {goalOptions.map((g) => {
                       const active = goal === g.value;
                       return (
                         <TouchableOpacity
@@ -862,7 +884,9 @@ export const ProfileScreen: React.FC = () => {
               {goal !== 'maintenance' && (
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: colors.text }]}>
-                    {goal === 'weight_loss' ? 'Дефіцит калорій (%)' : 'Профіцит калорій (%)'}
+                    {goal === 'weight_loss'
+                      ? t('profile.calorie_deficit', 'Дефіцит калорій (%)')
+                      : t('profile.calorie_surplus', 'Профіцит калорій (%)')}
                   </Text>
                   <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                     <TextInput
@@ -906,7 +930,7 @@ export const ProfileScreen: React.FC = () => {
               <View style={styles.rowTwoInputs}>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, { color: colors.text }]}>
-                    Білки (г/кг)
+                    {t('profile.protein_per_kg', 'Білки (г/кг)')}
                   </Text>
                   <TextInput
                     style={[styles.inputField, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, color: colors.text }]}
@@ -920,7 +944,7 @@ export const ProfileScreen: React.FC = () => {
 
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.inputLabel, { color: colors.text }]}>
-                    Жири (г/кг)
+                    {t('profile.fat_per_kg', 'Жири (г/кг)')}
                   </Text>
                   <TextInput
                     style={[styles.inputField, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, color: colors.text }]}
@@ -937,7 +961,7 @@ export const ProfileScreen: React.FC = () => {
               <View style={[styles.livePreviewCard, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
                 <View style={styles.livePreviewRow}>
                   <Text style={[styles.livePreviewLabel, { color: colors.textSecondary }]}>
-                    Вуглеводи:
+                    {t('profile.carbs', 'Вуглеводи')}:
                   </Text>
                   <Text style={[styles.livePreviewVal, { color: colors.text }]}>
                     {liveFormNutrition.carbsPerKg > 0 ? `${liveFormNutrition.carbsPerKg} г/кг` : '0 г/кг'}
@@ -962,7 +986,7 @@ export const ProfileScreen: React.FC = () => {
                   disabled={isSavingProfile}
                 >
                   <Text style={[styles.cancelBtnText, { color: colors.text }]}>
-                    Скасувати
+                    {t('common.cancel', 'Скасувати')}
                   </Text>
                 </TouchableOpacity>
 
@@ -981,7 +1005,7 @@ export const ProfileScreen: React.FC = () => {
                     <>
                       <Ionicons name="checkmark" size={16} color={colors.accentText} />
                       <Text style={[styles.saveBtnText, { color: colors.accentText }]}>
-                        Зберегти зміни
+                        {t('common.save', 'Зберегти зміни')}
                       </Text>
                     </>
                   )}
@@ -994,7 +1018,7 @@ export const ProfileScreen: React.FC = () => {
           <View style={[styles.profileIdRow, isDark ? styles.borderTopDark : styles.borderTopLight]}>
             <View style={styles.idTextGroup}>
               <Text style={[styles.idLabel, isDark ? styles.subDark : styles.subLight]}>
-                Унікальний ID профілю:
+                {t('profile.profile_id_label', 'Унікальний ID профілю:')}
               </Text>
               <Text style={[styles.idValue, isDark ? styles.textDark : styles.textLight]}>
                 {user.profileCode || user.id}
@@ -1017,7 +1041,7 @@ export const ProfileScreen: React.FC = () => {
                   copiedCode ? { color: '#22c55e' } : (isDark ? styles.textDark : styles.textLight),
                 ]}
               >
-                {copiedCode ? 'Скопійовано' : 'Копіювати ID'}
+                {copiedCode ? t('profile.copied', 'Скопійовано') : t('profile.copy', 'Копіювати ID')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1026,7 +1050,7 @@ export const ProfileScreen: React.FC = () => {
         {/* 2. ДОБОВА НОРМА Card matching design */}
         <Card style={styles.sectionCard}>
           <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
-            ДОБОВА НОРМА
+            {t('profile.daily_norm', 'ДОБОВА НОРМА')}
           </Text>
 
           <View style={styles.calorieRow}>
@@ -1034,7 +1058,7 @@ export const ProfileScreen: React.FC = () => {
               {nutritionPlan.targetCalories || 2462}
             </Text>
             <Text style={[styles.calorieUnitText, { color: colors.textSecondary }]}>
-              ккал
+              {t('profile.kcal_day', 'ккал')}
             </Text>
           </View>
 
@@ -1048,39 +1072,45 @@ export const ProfileScreen: React.FC = () => {
           {/* 3 Columns for Macros */}
           <View style={styles.macroColumnsRow}>
             <View style={styles.macroCol}>
-              <Text style={[styles.macroColLabel, { color: colors.textSecondary }]}>Білки</Text>
+              <Text style={[styles.macroColLabel, { color: colors.textSecondary }]}>
+                {t('profile.protein', 'Білки')}
+              </Text>
               <Text style={[styles.macroColVal, { color: colors.text }]}>
-                {nutritionPlan.proteinGrams || 148} г
+                {nutritionPlan.proteinGrams || 148} {t('common.g', 'г')}
               </Text>
             </View>
 
             <View style={styles.macroCol}>
-              <Text style={[styles.macroColLabel, { color: colors.textSecondary }]}>Жири</Text>
+              <Text style={[styles.macroColLabel, { color: colors.textSecondary }]}>
+                {t('profile.fat', 'Жири')}
+              </Text>
               <Text style={[styles.macroColVal, { color: colors.text }]}>
-                {nutritionPlan.fatGrams || 99} г
+                {nutritionPlan.fatGrams || 99} {t('common.g', 'г')}
               </Text>
             </View>
 
             <View style={styles.macroCol}>
-              <Text style={[styles.macroColLabel, { color: colors.textSecondary }]}>Вуглев.</Text>
+              <Text style={[styles.macroColLabel, { color: colors.textSecondary }]}>
+                {t('profile.carbs', 'Вуглев.')}
+              </Text>
               <Text style={[styles.macroColVal, { color: colors.text }]}>
-                {nutritionPlan.carbsGrams || 245} г
+                {nutritionPlan.carbsGrams || 245} {t('common.g', 'г')}
               </Text>
             </View>
           </View>
 
           <Text style={[styles.bmrFooterText, { color: colors.textSecondary }]}>
-            BMR {nutritionPlan.bmr || 1989} ккал · TDEE {nutritionPlan.tdee || 2735} ккал
+            BMR {nutritionPlan.bmr || 1989} {t('profile.kcal_day', 'ккал')} · TDEE {nutritionPlan.tdee || 2735} {t('profile.kcal_day', 'ккал')}
           </Text>
         </Card>
 
-        {/* 3. Coach / Trainee Connection (only shown for athletes without top coach navbar icon) */}
+        {/* 3. Coach / Trainee Connection */}
         {!isCoach && (
           <Card style={styles.sectionCard}>
             <View style={styles.sectionIconRow}>
               <Ionicons name="people-outline" size={18} color={isDark ? '#60a5fa' : '#2563eb'} />
               <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
-                Ваш тренер
+                {t('profile.your_coach', 'Ваш тренер')}
               </Text>
             </View>
 
@@ -1088,10 +1118,10 @@ export const ProfileScreen: React.FC = () => {
               <View style={styles.coachStatusContent}>
                 <View style={styles.coachHeaderRow}>
                   <Text style={[styles.coachLabel, isDark ? styles.subDark : styles.subLight]}>
-                    Ваш призначений тренер:
+                    {t('profile.your_coach', 'Ваш призначений тренер:')}
                   </Text>
                   <TouchableOpacity onPress={handleUnlinkCoach} activeOpacity={0.7}>
-                    <Text style={styles.unlinkText}>Відкріпитися</Text>
+                    <Text style={styles.unlinkText}>{t('profile.disconnect', 'Відкріпитися')}</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -1110,13 +1140,13 @@ export const ProfileScreen: React.FC = () => {
             ) : (
               <View style={styles.coachStatusContent}>
                 <Text style={[styles.coachStatusDesc, isDark ? styles.subDark : styles.subLight]}>
-                  У вас немає призначеного тренера. Повідомте ваш персональний код тренеру або прикріпіться за його кодом:
+                  {t('profile.no_coach_desc', 'У вас немає призначеного тренера. Повідомте ваш персональний код тренеру або прикріпіться за його кодом:')}
                 </Text>
 
                 <View style={styles.linkCoachRow}>
                   <TextInput
                     style={[styles.linkCoachInput, isDark ? styles.inputDark : styles.inputLight]}
-                    placeholder="Введіть код тренера..."
+                    placeholder={t('profile.enter_coach_code', 'Введіть код тренера...')}
                     placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
                     value={coachCodeInput}
                     onChangeText={setCoachCodeInput}
@@ -1136,7 +1166,7 @@ export const ProfileScreen: React.FC = () => {
                       <ActivityIndicator size="small" color={colors.accentText} />
                     ) : (
                       <Text style={[styles.linkCoachBtnText, { color: colors.accentText }]}>
-                        Прикріпитися
+                        {t('profile.connect', 'Прикріпитися')}
                       </Text>
                     )}
                   </TouchableOpacity>
@@ -1146,7 +1176,7 @@ export const ProfileScreen: React.FC = () => {
           </Card>
         )}
 
-        {/* 4. Rep Ranges Settings Card (Auto-sorted, duplicate/overlap validated, fixed tab switching) */}
+        {/* 4. Rep Ranges Settings Card */}
         <Card style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionTitleWrap}>
@@ -1157,11 +1187,11 @@ export const ProfileScreen: React.FC = () => {
                   color={colors.accent}
                 />
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  Діапазони повторень
+                  {t('profile.rep_ranges', 'Діапазони повторень')}
                 </Text>
               </View>
               <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-                Автоматично впорядковані діапазони підходів для швидкого вибору під час тренувань
+                {t('profile.rep_ranges_desc', 'Автоматично впорядковані діапазони підходів для швидкого вибору під час тренувань')}
               </Text>
             </View>
           </View>
@@ -1192,7 +1222,7 @@ export const ProfileScreen: React.FC = () => {
           <View style={styles.addRangeRow}>
             <TextInput
               style={[styles.addRangeInput, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, color: colors.text }]}
-              placeholder="Напр. 12-15 або 20+"
+              placeholder={t('profile.new_range_placeholder', 'Напр. 12-15 або 20+')}
               placeholderTextColor={colors.textSecondary}
               value={newRepRangeInput}
               onChangeText={setNewRepRangeInput}
@@ -1208,7 +1238,9 @@ export const ProfileScreen: React.FC = () => {
               activeOpacity={0.8}
             >
               <Ionicons name="add" size={18} color={colors.accentText} />
-              <Text style={[styles.addRangeBtnText, { color: colors.accentText }]}>Додати</Text>
+              <Text style={[styles.addRangeBtnText, { color: colors.accentText }]}>
+                {t('common.add', 'Додати')}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -1220,7 +1252,7 @@ export const ProfileScreen: React.FC = () => {
           >
             <Ionicons name="refresh-outline" size={14} color={colors.textSecondary} />
             <Text style={[styles.resetRangesBtnText, { color: colors.textSecondary }]}>
-              Скинути до стандартних
+              {t('profile.reset_ranges', 'Скинути до стандартних')}
             </Text>
           </TouchableOpacity>
         </Card>
@@ -1236,11 +1268,11 @@ export const ProfileScreen: React.FC = () => {
                   color={colors.accent}
                 />
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  Категорії вправ
+                  {t('profile.categories', 'Категорії вправ')}
                 </Text>
               </View>
               <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-                Додавайте власні категорії або видаляйте існуючі (вправи перенесуться в «Інше»)
+                {t('profile.categories_desc', 'Додавайте власні категорії або видаляйте існуючі (вправи перенесуться в «Інше»)')}
               </Text>
             </View>
           </View>
@@ -1253,7 +1285,7 @@ export const ProfileScreen: React.FC = () => {
                 style={[styles.rangePill, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
               >
                 <Text style={[styles.rangePillText, { color: colors.text }]}>
-                  {cat.nameUk}
+                  {t(`muscles.${cat.id}`, cat.nameUk)}
                 </Text>
                 {cat.id !== 'other' && (
                   <TouchableOpacity
@@ -1274,7 +1306,7 @@ export const ProfileScreen: React.FC = () => {
           <View style={styles.addRangeRow}>
             <TextInput
               style={[styles.addRangeInput, { backgroundColor: colors.subCard, borderColor: colors.cardBorder, color: colors.text }]}
-              placeholder="Напр. Прес або Кардіо"
+              placeholder={t('profile.category_name_placeholder', 'Напр. Прес або Кардіо')}
               placeholderTextColor={colors.textSecondary}
               value={newCategoryName}
               onChangeText={setNewCategoryName}
@@ -1294,7 +1326,9 @@ export const ProfileScreen: React.FC = () => {
               ) : (
                 <>
                   <Ionicons name="add" size={18} color={colors.accentText} />
-                  <Text style={[styles.addRangeBtnText, { color: colors.accentText }]}>Додати</Text>
+                  <Text style={[styles.addRangeBtnText, { color: colors.accentText }]}>
+                    {t('common.add', 'Додати')}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
@@ -1308,7 +1342,7 @@ export const ProfileScreen: React.FC = () => {
           >
             <Ionicons name="refresh-outline" size={14} color={colors.textSecondary} />
             <Text style={[styles.resetRangesBtnText, { color: colors.textSecondary }]}>
-              Скинути до стандартних
+              {t('profile.reset_ranges', 'Скинути до стандартних')}
             </Text>
           </TouchableOpacity>
         </Card>
@@ -1316,7 +1350,7 @@ export const ProfileScreen: React.FC = () => {
         {/* 6. ТЕМА Card matching design */}
         <Card style={styles.sectionCard}>
           <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
-            ТЕМА
+            {t('profile.theme', 'ТЕМА')}
           </Text>
 
           {/* 4 Themes Side-by-Side: Night, Paper, Blue, Navy */}
@@ -1345,6 +1379,46 @@ export const ProfileScreen: React.FC = () => {
                   <View style={[styles.themePillIndicator, { backgroundColor: opt.pillColor }]} />
                   <Text style={[styles.themeItemLabel, { color: opt.textColor }]}>
                     {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Card>
+
+        {/* 7. МОВА (Language) Card */}
+        <Card style={styles.sectionCard}>
+          <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
+            {t('profile.language', 'МОВА')}
+          </Text>
+
+          {/* 2 Languages Side-by-Side: Ukrainian, English */}
+          <View style={styles.themeCardsGrid}>
+            {[
+              { id: 'uk', label: 'Українська', sub: 'UA', flag: '🇺🇦' },
+              { id: 'en', label: 'English', sub: 'EN', flag: '🇬🇧' },
+            ].map((opt) => {
+              const isSelected = language === opt.id;
+              return (
+                <TouchableOpacity
+                  key={opt.id}
+                  style={[
+                    styles.themeItemCard,
+                    {
+                      backgroundColor: colors.subCard,
+                      borderColor: isSelected ? colors.accent : colors.subCardBorder,
+                      borderWidth: isSelected ? 2 : 1,
+                    },
+                  ]}
+                  onPress={() => setLanguage(opt.id as any)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ fontSize: 24, marginBottom: 4 }}>{opt.flag}</Text>
+                  <Text style={[styles.themeItemLabel, { color: colors.text, fontWeight: isSelected ? '700' : '600' }]}>
+                    {opt.label}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: isSelected ? colors.accent : colors.textSecondary, fontWeight: '700', marginTop: 2 }}>
+                    {opt.sub}
                   </Text>
                 </TouchableOpacity>
               );

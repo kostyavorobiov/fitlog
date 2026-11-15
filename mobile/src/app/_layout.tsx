@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { AuthService } from '../services/authService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider as AppThemeProvider, useTheme as useAppTheme } from '../context/ThemeContext';
+import { LanguageProvider, useLanguage } from '../context/LanguageContext';
 import { SwipeUndoProvider } from '../context/SwipeUndoContext';
 import { CreateWorkoutProvider } from '../context/CreateWorkoutContext';
 import { ScrollTabBarProvider } from '../context/ScrollTabBarContext';
@@ -119,17 +120,19 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AppThemeProvider>
-          <AuthProvider>
-            <ScrollTabBarProvider>
-              <SwipeUndoProvider>
-                <CreateWorkoutProvider>
-                  <RootNavigator />
-                </CreateWorkoutProvider>
-              </SwipeUndoProvider>
-            </ScrollTabBarProvider>
-          </AuthProvider>
-        </AppThemeProvider>
+        <LanguageProvider>
+          <AppThemeProvider>
+            <AuthProvider>
+              <ScrollTabBarProvider>
+                <SwipeUndoProvider>
+                  <CreateWorkoutProvider>
+                    <RootNavigator />
+                  </CreateWorkoutProvider>
+                </SwipeUndoProvider>
+              </ScrollTabBarProvider>
+            </AuthProvider>
+          </AppThemeProvider>
+        </LanguageProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -13,6 +13,21 @@ export const UKRAINIAN_MONTHS = [
   'Грудень',
 ];
 
+export const ENGLISH_MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
 export const UKRAINIAN_MONTHS_GENITIVE = [
   'січня',
   'лютого',
@@ -28,7 +43,23 @@ export const UKRAINIAN_MONTHS_GENITIVE = [
   'грудня',
 ];
 
+export const ENGLISH_MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
 export const UKRAINIAN_WEEKDAYS_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+export const ENGLISH_WEEKDAYS_SHORT = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 export const UKRAINIAN_WEEKDAYS_FULL = [
   'Неділя',
@@ -38,6 +69,16 @@ export const UKRAINIAN_WEEKDAYS_FULL = [
   'Четвер',
   'П’ятниця',
   'Субота',
+];
+
+export const ENGLISH_WEEKDAYS_FULL = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
 ];
 
 /**
@@ -97,13 +138,18 @@ export const parseLocalDate = (dateStr: string): Date => {
 };
 
 /**
- * Format a YYYY-MM-DD string into Ukrainian full display: e.g. "29 вересня 2026, Вівторок"
+ * Format a YYYY-MM-DD string into localized full display
  */
-export const formatUkFullDate = (dateStr: string): string => {
+export const formatFullDate = (dateStr: string, lang: 'uk' | 'en' = 'uk'): string => {
   try {
     const [y, m, d] = dateStr.split('-').map(Number);
     if (!y || !m || !d) return dateStr;
     const dt = new Date(y, m - 1, d);
+    if (lang === 'en') {
+      const dayOfWeek = ENGLISH_WEEKDAYS_FULL[dt.getDay()];
+      const monthName = ENGLISH_MONTHS[m - 1];
+      return `${d} ${monthName} ${y}, ${dayOfWeek}`;
+    }
     const dayOfWeek = UKRAINIAN_WEEKDAYS_FULL[dt.getDay()];
     const monthName = UKRAINIAN_MONTHS_GENITIVE[m - 1];
     return `${d} ${monthName} ${y}, ${dayOfWeek}`;
@@ -112,11 +158,14 @@ export const formatUkFullDate = (dateStr: string): string => {
   }
 };
 
+export const formatUkFullDate = (dateStr: string): string => formatFullDate(dateStr, 'uk');
+
 export interface PeriodRange {
   type: 'day' | 'week' | 'month';
   startDateStr: string; // YYYY-MM-DD
   endDateStr: string;   // YYYY-MM-DD
   titleUk: string;
+  title: string;
   isCurrent: boolean;
 }
 
@@ -125,7 +174,8 @@ export interface PeriodRange {
  */
 export const getPeriodRange = (
   period: 'day' | 'week' | 'month',
-  currentDate: Date = new Date()
+  currentDate: Date = new Date(),
+  lang: 'uk' | 'en' = 'uk'
 ): PeriodRange => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -144,11 +194,15 @@ export const getPeriodRange = (
     const fullUk = formatUkFullDate(targetDayStr);
     const titleUk = isToday ? `Сьогодні, ${fullUk}` : isYesterday ? `Вчора, ${fullUk}` : fullUk;
 
+    const fullEn = formatFullDate(targetDayStr, 'en');
+    const titleEn = isToday ? `Today, ${fullEn}` : isYesterday ? `Yesterday, ${fullEn}` : fullEn;
+
     return {
       type: 'day',
       startDateStr: targetDayStr,
       endDateStr: targetDayStr,
       titleUk,
+      title: lang === 'en' ? titleEn : titleUk,
       isCurrent: isToday,
     };
   }
@@ -176,11 +230,17 @@ export const getPeriodRange = (
         ? `${mD} — ${sD} ${sM} ${sY}`
         : `${mD} ${mM} — ${sD} ${sM} ${sY}`;
 
+    const titleEn =
+      monday.getMonth() === sunday.getMonth()
+        ? `${mD} — ${sD} ${ENGLISH_MONTHS_SHORT[sunday.getMonth()]} ${sY}`
+        : `${mD} ${ENGLISH_MONTHS_SHORT[monday.getMonth()]} — ${sD} ${ENGLISH_MONTHS_SHORT[sunday.getMonth()]} ${sY}`;
+
     return {
       type: 'week',
       startDateStr: weekStartStr,
       endDateStr: weekEndStr,
       titleUk,
+      title: lang === 'en' ? titleEn : titleUk,
       isCurrent: isCurrentWeek,
     };
   }
@@ -192,12 +252,14 @@ export const getPeriodRange = (
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
 
   const titleUk = `${UKRAINIAN_MONTHS[month]} ${year}`;
+  const titleEn = `${ENGLISH_MONTHS[month]} ${year}`;
 
   return {
     type: 'month',
     startDateStr: monthStartStr,
     endDateStr: monthEndStr,
     titleUk,
+    title: lang === 'en' ? titleEn : titleUk,
     isCurrent: isCurrentMonth,
   };
 };

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -22,6 +23,7 @@ import { UserRole } from '../types/workout';
 
 export const LoginScreen: React.FC = () => {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const { loginWithGoogle, loginWithEmail, registerWithEmail, loginAsDemo } = useAuth();
   const isCloudConnected = isSupabaseConfigured();
 
@@ -117,7 +119,7 @@ export const LoginScreen: React.FC = () => {
               FitLog
             </Text>
             <Text style={[styles.brandSubtitle, { color: colors.textSecondary }]}>
-              Щоденник тренувань та синхронізація
+              {t('auth.subtitle')}
             </Text>
 
             {/* Cloud Status Badge */}
@@ -166,7 +168,7 @@ export const LoginScreen: React.FC = () => {
                 <>
                   <Ionicons name="logo-google" size={22} color="#ea4335" />
                   <Text style={[styles.googleText, { color: colors.text }]}>
-                    Увійти через Google
+                    {t('auth.google_signin')}
                   </Text>
                 </>
               )}
@@ -175,7 +177,7 @@ export const LoginScreen: React.FC = () => {
             <View style={styles.dividerRow}>
               <View style={[styles.line, { backgroundColor: colors.cardBorder }]} />
               <Text style={[styles.dividerText, { color: colors.textSecondary }]}>
-                або через email
+                {t('auth.or_email')}
               </Text>
               <View style={[styles.line, { backgroundColor: colors.cardBorder }]} />
             </View>
@@ -195,7 +197,7 @@ export const LoginScreen: React.FC = () => {
                     mode === 'login' ? { color: colors.text, fontWeight: '700' } : { color: colors.textSecondary },
                   ]}
                 >
-                  Вхід
+                  {t('auth.title_login')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -211,7 +213,7 @@ export const LoginScreen: React.FC = () => {
                     mode === 'register' ? { color: colors.text, fontWeight: '700' } : { color: colors.textSecondary },
                   ]}
                 >
-                  Реєстрація
+                  {t('auth.title_register')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -221,11 +223,11 @@ export const LoginScreen: React.FC = () => {
               <View style={styles.formRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                    Ім’я
+                    {t('auth.first_name')}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
-                    placeholder="Іван"
+                    placeholder={t('auth.first_name_placeholder')}
                     placeholderTextColor={colors.textSecondary}
                     value={firstName}
                     onChangeText={setFirstName}
@@ -233,11 +235,11 @@ export const LoginScreen: React.FC = () => {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                    Прізвище
+                    {t('auth.last_name')}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
-                    placeholder="Франко"
+                    placeholder={t('auth.last_name_placeholder')}
                     placeholderTextColor={colors.textSecondary}
                     value={lastName}
                     onChangeText={setLastName}
@@ -249,7 +251,7 @@ export const LoginScreen: React.FC = () => {
             {/* Email Field */}
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                Email
+                {t('auth.email')}
               </Text>
               <TextInput
                 style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
@@ -266,7 +268,7 @@ export const LoginScreen: React.FC = () => {
             {/* Password Field */}
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                Пароль
+                {t('auth.password')}
               </Text>
               <TextInput
                 style={[styles.input, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, color: colors.text }]}
@@ -282,7 +284,7 @@ export const LoginScreen: React.FC = () => {
             {mode === 'register' && (
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                  Ваша роль
+                  {t('auth.role')}
                 </Text>
                 <View style={styles.roleRow}>
                   <TouchableOpacity
@@ -307,7 +309,7 @@ export const LoginScreen: React.FC = () => {
                           : { color: colors.textSecondary },
                       ]}
                     >
-                      Атлет
+                      {t('auth.role_athlete')}
                     </Text>
                   </TouchableOpacity>
 
@@ -333,7 +335,7 @@ export const LoginScreen: React.FC = () => {
                           : { color: colors.textSecondary },
                       ]}
                     >
-                      Тренер
+                      {t('auth.role_coach')}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -341,7 +343,7 @@ export const LoginScreen: React.FC = () => {
             )}
 
             <Button
-              title={mode === 'login' ? 'Увійти' : 'Створити акаунт'}
+              title={mode === 'login' ? t('auth.btn_login') : t('auth.create_account')}
               loading={loading}
               onPress={handleEmailSubmit}
               style={{ marginTop: 8 }}

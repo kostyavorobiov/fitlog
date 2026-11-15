@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSegments } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { useCreateWorkout } from '../context/CreateWorkoutContext';
@@ -91,6 +92,7 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
   onTabChange,
 }) => {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const segments = useSegments();
@@ -122,28 +124,28 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
   const STANDALONE_ITEMS = [
     {
       name: 'index',
-      label: 'Тренування',
+      label: t('tabs.workouts', 'Тренування'),
       icon: (focused: boolean, color: string) => (
         <Ionicons name={focused ? 'barbell' : 'barbell-outline'} size={22} color={color} />
       ),
     },
     {
       name: 'analytics',
-      label: 'Аналітика',
+      label: t('tabs.analytics', 'Аналітика'),
       icon: (focused: boolean, color: string) => (
         <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} size={22} color={color} />
       ),
     },
     {
       name: 'exercises',
-      label: 'Вправи',
+      label: t('tabs.exercises', 'Вправи'),
       icon: (focused: boolean, color: string) => (
         <MaterialCommunityIcons name="dumbbell" size={22} color={color} />
       ),
     },
     {
       name: 'profile',
-      label: 'Профіль',
+      label: t('tabs.profile', 'Профіль'),
       icon: (focused: boolean, color: string) => (
         <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
       ),
@@ -209,7 +211,18 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
         ? options.title
         : route.name;
 
-    const labelText = typeof label === 'string' ? label : route.name;
+    const translatedName =
+      route.name === 'index'
+        ? t('tabs.workouts', 'Тренування')
+        : route.name === 'analytics'
+        ? t('tabs.analytics', 'Аналітика')
+        : route.name === 'exercises'
+        ? t('tabs.exercises', 'Вправи')
+        : route.name === 'profile'
+        ? t('tabs.profile', 'Профіль')
+        : route.name;
+
+    const labelText = typeof label === 'string' && label !== route.name ? label : translatedName;
 
     const onPress = () => {
       const event = navigation?.emit({

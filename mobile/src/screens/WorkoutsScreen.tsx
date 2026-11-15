@@ -25,11 +25,12 @@ import { Button } from '../components/Button';
 import { WorkoutService } from '../services/workoutService';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
 import { WorkoutPlan } from '../types/workout';
 import { SwipeableActionCard } from '../components/SwipeableActionCard';
 import { DatePickerModal } from '../components/DatePickerModal';
-import { formatDateDDMMYYYY } from '../utils/date';
+import { formatDateDDMMYYYY, ENGLISH_MONTHS, ENGLISH_WEEKDAYS_FULL } from '../utils/date';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -52,22 +53,29 @@ const UKRAINIAN_MONTHS = [
   'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень',
 ];
 
-function formatTodayDateHeader(): string {
+function formatTodayDateHeader(lang: 'uk' | 'en' = 'uk'): string {
   const d = new Date();
+  if (lang === 'en') {
+    const dayName = ENGLISH_WEEKDAYS_FULL[d.getDay()];
+    const dayNum = d.getDate();
+    const monthName = ENGLISH_MONTHS[d.getMonth()];
+    return `${dayName}, ${dayNum} ${monthName}`;
+  }
   const dayName = UKRAINIAN_DAYS[d.getDay()];
   const dayNum = d.getDate();
   const monthName = UKRAINIAN_MONTHS_GENITIVE[d.getMonth()];
   return `${dayName}, ${dayNum} ${monthName}`;
 }
 
-export function getMonthKeyAndLabel(dateStr?: string): { key: string; label: string } {
+export function getMonthKeyAndLabel(dateStr?: string, lang: 'uk' | 'en' = 'uk'): { key: string; label: string } {
+  const monthsList = lang === 'en' ? ENGLISH_MONTHS : UKRAINIAN_MONTHS;
   if (!dateStr) {
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, '0');
     return {
       key: `${y}-${m}`,
-      label: `${UKRAINIAN_MONTHS[now.getMonth()]} ${y}`,
+      label: `${monthsList[now.getMonth()]} ${y}`,
     };
   }
 
@@ -78,7 +86,7 @@ export function getMonthKeyAndLabel(dateStr?: string): { key: string; label: str
     const month = parseInt(parts[1], 10);
     if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
       const key = `${year}-${String(month).padStart(2, '0')}`;
-      const label = `${UKRAINIAN_MONTHS[month - 1]} ${year}`;
+      const label = `${monthsList[month - 1]} ${year}`;
       return { key, label };
     }
   }
@@ -88,14 +96,14 @@ export function getMonthKeyAndLabel(dateStr?: string): { key: string; label: str
     const year = d.getFullYear();
     const month = d.getMonth() + 1;
     const key = `${year}-${String(month).padStart(2, '0')}`;
-    const label = `${UKRAINIAN_MONTHS[d.getMonth()]} ${year}`;
+    const label = `${monthsList[d.getMonth()]} ${year}`;
     return { key, label };
   }
 
   const now = new Date();
   return {
     key: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
-    label: `${UKRAINIAN_MONTHS[now.getMonth()]} ${now.getFullYear()}`,
+    label: `${monthsList[now.getMonth()]} ${now.getFullYear()}`,
   };
 }
 
@@ -150,6 +158,7 @@ const SwipeableWorkoutCard: React.FC<SwipeableWorkoutCardProps> = ({
 
 export const WorkoutsScreen: React.FC = () => {
   const { colors, isDark } = useTheme();
+  const { language, t } = useLanguage();
   const router = useRouter();
   const { user } = useAuth();
   const { handleScroll } = useScrollTabBar();
@@ -376,7 +385,7 @@ export const WorkoutsScreen: React.FC = () => {
   const monthGroups = useMemo<MonthGroup[]>(() => {
     const map = new Map<string, { label: string; workouts: WorkoutPlan[] }>();
     for (const w of sortedWorkouts) {
-      const { key, label } = getMonthKeyAndLabel(w.scheduledDate);
+      const { key, label } = getMonthKeyAndLabel(w.scheduledDate, language);
       if (!map.has(key)) {
         map.set(key, { label, workouts: [] });
       }
@@ -388,7 +397,7 @@ export const WorkoutsScreen: React.FC = () => {
       label: map.get(key)!.label,
       workouts: map.get(key)!.workouts,
     }));
-  }, [sortedWorkouts]);
+  }, [sortedWorkouts, language]);
 
   const currentMonthKey = useMemo(() => {
     const now = new Date();
@@ -437,9 +446,9 @@ export const WorkoutsScreen: React.FC = () => {
       >
         {/* Top Header matching design */}
         <View style={styles.headerSection}>
-          <Text style={[styles.screenTitle, { color: colors.text }]}>Тренування</Text>
+          <Text style={[styles.screenTitle, { color: colors.text }]}>{t('workouts.title', 'Тренування')}</Text>
           <Text style={[styles.screenSubtitle, { color: colors.textSecondary }]}>
-            {formatTodayDateHeader()}
+            {formatTodayDateHeader(language)}
           </Text>
         </View>
 
@@ -453,7 +462,7 @@ export const WorkoutsScreen: React.FC = () => {
               const totalSets = allSets.length;
               const supersets = new Set(exList.map((e) => e.supersetGroupId).filter(Boolean)).size;
 
-              let dateTag = 'СЬОГОДНІ';
+              let dateTag = t('common.today', 'СЬОГОДНІ').toUpperCase();
               if (activeWorkout.scheduledDate) {
                 const parts = activeWorkout.scheduledDate.split('T')[0].split('-');
                 if (parts.length === 3) dateTag = `${parts[2]}/${parts[1]}`;
@@ -462,14 +471,14 @@ export const WorkoutsScreen: React.FC = () => {
               return (
                 <>
                   <Text style={[styles.heroTag, { color: colors.heroCardText }]}>
-                    У ПРОЦЕСІ · {dateTag}
+                    {t('workouts.in_progress', 'У ПРОЦЕСІ').toUpperCase()} · {dateTag}
                   </Text>
                   <Text numberOfLines={2} style={[styles.heroTitle, { color: colors.heroCardText }]}>
-                    {activeWorkout.title || 'Тренування'}
+                    {activeWorkout.title || t('workouts.untitled', 'Тренування')}
                   </Text>
                   <Text style={[styles.heroSubtitle, { color: colors.heroCardText }]}>
-                    {exList.length} вправ · {doneSets} з {totalSets} підходів
-                    {supersets > 0 ? ` · ${supersets} ${supersets === 1 ? 'суперсет' : 'суперсети'}` : ''}
+                    {exList.length} {t('common.exercises_count', 'вправ')} · {doneSets} / {totalSets} {t('common.sets', 'підходів')}
+                    {supersets > 0 ? ` · ${supersets} ${t('editor.superset', 'суперсет')}` : ''}
                   </Text>
                   <TouchableOpacity
                     activeOpacity={0.85}
@@ -480,7 +489,7 @@ export const WorkoutsScreen: React.FC = () => {
                     style={[styles.heroBtn, { backgroundColor: colors.heroBtnBg }]}
                   >
                     <Text style={[styles.heroBtnText, { color: colors.heroBtnText }]}>
-                      Продовжити
+                      {t('workouts.resume', 'Продовжити')}
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -493,17 +502,17 @@ export const WorkoutsScreen: React.FC = () => {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={colors.accent} />
             <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-              Завантаження тренувань...
+              {t('common.loading', 'Завантаження тренувань...')}
             </Text>
           </View>
         ) : workouts.length === 0 ? (
           <View style={[styles.emptyContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
             <Ionicons name="barbell-outline" size={32} color={colors.textSecondary} />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              Тренувань ще немає
+              {t('workouts.no_workouts', 'Тренувань ще немає')}
             </Text>
             <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-              Створіть своє перше тренування для відстеження підходів, ваги та прогресу.
+              {t('workouts.empty_subtitle', 'Створіть своє перше тренування для відстеження підходів, ваги та прогресу.')}
             </Text>
           </View>
         ) : (
@@ -522,7 +531,7 @@ export const WorkoutsScreen: React.FC = () => {
                       { backgroundColor: colors.subCard, borderColor: colors.subCardBorder },
                     ]}
                     accessibilityRole="button"
-                    accessibilityLabel={`${group.label}, ${group.workouts.length} тренувань`}
+                    accessibilityLabel={`${group.label}, ${group.workouts.length} ${t('workouts.count', 'тренувань')}`}
                   >
                     <View style={styles.monthHeaderLeft}>
                       <Text style={[styles.monthTitle, { color: colors.text }]}>
@@ -584,7 +593,11 @@ export const WorkoutsScreen: React.FC = () => {
                                     },
                                   ]}
                                 >
-                                  {isInProgress ? '● У процесі' : isCompleted ? 'Завершено' : 'Заплановано'}
+                                  {isInProgress
+                                    ? `● ${t('workouts.in_progress', 'У процесі')}`
+                                    : isCompleted
+                                    ? t('workouts.completed', 'Завершено')
+                                    : t('workouts.planned', 'Заплановано')}
                                 </Text>
                               </View>
 
@@ -593,12 +606,12 @@ export const WorkoutsScreen: React.FC = () => {
                                 numberOfLines={1}
                                 style={[styles.workoutTitle, { color: colors.text }]}
                               >
-                                {w.title || 'Тренування без назви'}
+                                {w.title || t('workouts.untitled', 'Тренування без назви')}
                               </Text>
 
                               {/* Subtitle Details */}
                               <Text style={[styles.workoutSubtitle, { color: colors.textSecondary }]}>
-                                {formatDateDDMMYY(w.scheduledDate)} · {exercises.length} вправ · {totalSets} підходів
+                                {formatDateDDMMYY(w.scheduledDate)} · {exercises.length} {t('common.exercises_count', 'вправ')} · {totalSets} {t('common.sets', 'підходів')}
                               </Text>
                             </TouchableOpacity>
                           </SwipeableWorkoutCard>

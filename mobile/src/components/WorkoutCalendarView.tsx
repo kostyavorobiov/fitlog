@@ -8,25 +8,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from './Card';
 import { WorkoutPlan } from '../types/workout';
-import { formatLocalDate } from '../utils/date';
+import { formatLocalDate, UKRAINIAN_MONTHS, ENGLISH_MONTHS, UKRAINIAN_WEEKDAYS_SHORT, ENGLISH_WEEKDAYS_SHORT } from '../utils/date';
 import { useTheme } from '../context/ThemeContext';
-
-const UKRAINIAN_MONTHS = [
-  'Січень',
-  'Лютий',
-  'Березень',
-  'Квітень',
-  'Травень',
-  'Червень',
-  'Липень',
-  'Серпень',
-  'Вересень',
-  'Жовтень',
-  'Листопад',
-  'Грудень',
-];
-
-const UKRAINIAN_WEEKDAYS_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+import { useLanguage } from '../context/LanguageContext';
 
 export interface WorkoutCalendarViewProps {
   workouts: WorkoutPlan[];
@@ -47,6 +31,10 @@ export const WorkoutCalendarView: React.FC<WorkoutCalendarViewProps> = ({
   hideMonthNav = false,
 }) => {
   const { colors, isDark } = useTheme();
+  const { language, t } = useLanguage();
+
+  const monthsList = language === 'en' ? ENGLISH_MONTHS : UKRAINIAN_MONTHS;
+  const weekdaysList = language === 'en' ? ENGLISH_WEEKDAYS_SHORT : UKRAINIAN_WEEKDAYS_SHORT;
   const [internalMonthDate, setInternalMonthDate] = useState<Date>(() => {
     if (selectedDate) {
       const parts = selectedDate.split('-').map(Number);
@@ -111,7 +99,7 @@ export const WorkoutCalendarView: React.FC<WorkoutCalendarViewProps> = ({
       {/* Calendar Header matching PDF */}
       <View style={styles.headerTitleRow}>
         <Text style={[styles.headerUppercaseTitle, { color: colors.textSecondary }]}>
-          КАЛЕНДАР
+          {t('analytics.calendar', 'КАЛЕНДАР')}
         </Text>
         {!hideMonthNav && (
           <View style={styles.monthNavControls}>
@@ -123,7 +111,7 @@ export const WorkoutCalendarView: React.FC<WorkoutCalendarViewProps> = ({
               <Ionicons name="chevron-back" size={16} color={colors.text} />
             </TouchableOpacity>
             <Text style={[styles.monthNavLabel, { color: colors.text }]}>
-              {UKRAINIAN_MONTHS[month]} {year}
+              {monthsList[month]} {year}
             </Text>
             <TouchableOpacity
               onPress={handleNextMonth}
@@ -138,7 +126,7 @@ export const WorkoutCalendarView: React.FC<WorkoutCalendarViewProps> = ({
 
       {/* Weekdays Row */}
       <View style={[styles.weekDaysRow, { borderBottomColor: colors.divider }]}>
-        {UKRAINIAN_WEEKDAYS_SHORT.map((day, idx) => (
+        {weekdaysList.map((day, idx) => (
           <View key={day} style={styles.weekDayCol}>
             <Text
               style={[

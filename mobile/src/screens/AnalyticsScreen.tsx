@@ -21,6 +21,7 @@ import { WorkoutCalendarView } from '../components/WorkoutCalendarView';
 import { setSavedActiveTab } from '../components/InstagramTabPager';
 import { triggerRefreshSuccessHaptic } from '../utils/haptics';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   calculateAnalytics,
   AnalyticsPeriod,
@@ -28,6 +29,7 @@ import {
 
 export const AnalyticsScreen: React.FC = () => {
   const { colors, isDark } = useTheme();
+  const { language, t } = useLanguage();
   const router = useRouter();
   const { user } = useAuth();
   const { handleScroll } = useScrollTabBar();
@@ -127,8 +129,8 @@ export const AnalyticsScreen: React.FC = () => {
 
   // Period boundary calculation
   const periodRange: PeriodRange = useMemo(() => {
-    return getPeriodRange(period, currentDate);
-  }, [period, currentDate]);
+    return getPeriodRange(period, currentDate, language);
+  }, [period, currentDate, language]);
 
   // Analytics Computation (Strictly counting completed sets: completedAt != null)
   const analyticsData = useMemo(() => {
@@ -140,13 +142,13 @@ export const AnalyticsScreen: React.FC = () => {
       {/* Top Header matching screenshot */}
       <View style={styles.topHeader}>
         <Text style={[styles.screenTitle, { color: colors.text }]}>
-          {traineeName ? `Аналітика: ${traineeName}` : 'Аналітика'}
+          {traineeName ? `${t('analytics.title', 'Аналітика')}: ${traineeName}` : t('analytics.title', 'Аналітика')}
         </Text>
 
         {/* Date browsing row: Subtitle with navigation arrows */}
         <View style={styles.dateNavRow}>
           <Text style={[styles.screenSubtitle, { color: colors.textSecondary }]}>
-            {periodRange.titleUk || 'Листопад 2026'}
+            {periodRange.title || periodRange.titleUk}
           </Text>
 
           <View style={styles.navChevrons}>
@@ -176,7 +178,9 @@ export const AnalyticsScreen: React.FC = () => {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={[styles.todayChip, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}
               >
-                <Text style={[styles.todayChipText, { color: colors.accent }]}>Сьогодні</Text>
+                <Text style={[styles.todayChipText, { color: colors.accent }]}>
+                  {t('common.today', 'Сьогодні')}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -186,9 +190,9 @@ export const AnalyticsScreen: React.FC = () => {
         <View style={[styles.periodSwitcher, { backgroundColor: colors.subCard }]}>
           {(
             [
-              { key: 'day', label: 'День' },
-              { key: 'week', label: 'Тиждень' },
-              { key: 'month', label: 'Місяць' },
+              { key: 'day', label: t('analytics.day', 'День') },
+              { key: 'week', label: t('analytics.week', 'Тиждень') },
+              { key: 'month', label: t('analytics.month', 'Місяць') },
             ] as const
           ).map((p) => {
             const isActive = period === p.key;
@@ -239,7 +243,11 @@ export const AnalyticsScreen: React.FC = () => {
         {/* 1. ТОННАЖ Card matching PDF & Screenshot */}
         <Card style={styles.tonnageCard}>
           <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
-            ТОННАЖ ЗА {period === 'day' ? 'ДЕНЬ' : period === 'month' ? 'МІСЯЦЬ' : 'ТИЖДЕНЬ'}
+            {period === 'day'
+              ? t('analytics.volume_day', 'ТОННАЖ ЗА ДЕНЬ')
+              : period === 'month'
+              ? t('analytics.volume_month', 'ТОННАЖ ЗА МІСЯЦЬ')
+              : t('analytics.volume_week', 'ТОННАЖ ЗА ТИЖДЕНЬ')}
           </Text>
           <View style={styles.tonnageRow}>
             <View style={styles.tonnageLeft}>
@@ -249,16 +257,16 @@ export const AnalyticsScreen: React.FC = () => {
                   : (Math.round((analyticsData.periodVolumeKg / 1000) * 10) / 10) || '0'}
               </Text>
               <Text style={[styles.tonnageUnit, { color: colors.textSecondary }]}>
-                т
+                {t('common.ton_unit', 'т')}
               </Text>
             </View>
 
             <View style={styles.tonnageRight}>
               <Text style={[styles.tonnageStatRow, { color: colors.textSecondary }]}>
-                {analyticsData.periodCompletedSets} підходів
+                {analyticsData.periodCompletedSets} {t('common.sets', 'підходів')}
               </Text>
               <Text style={[styles.tonnageStatRow, { color: colors.textSecondary }]}>
-                {analyticsData.exercisesList.length} вправ
+                {analyticsData.exercisesList.length} {t('common.exercises_count', 'вправ')}
               </Text>
             </View>
           </View>
@@ -267,7 +275,7 @@ export const AnalyticsScreen: React.FC = () => {
         {/* 2. ГРУПИ М'ЯЗІВ Card matching PDF & Screenshot */}
         <Card style={styles.musclesCard}>
           <Text style={[styles.cardHeaderTitle, { color: colors.textSecondary }]}>
-            ГРУПИ М’ЯЗІВ
+            {t('analytics.muscle_groups', 'ГРУПИ М’ЯЗІВ')}
           </Text>
 
           {/* Multi-segment Colored Horizontal Bar */}
@@ -303,16 +311,18 @@ export const AnalyticsScreen: React.FC = () => {
                 <View key={m.groupKey} style={styles.muscleRowItem}>
                   <View style={styles.muscleRowLeft}>
                     <View style={[styles.muscleDot, { backgroundColor: m.color }]} />
-                    <Text style={[styles.muscleNameText, { color: colors.text }]}>{m.nameUk}</Text>
+                    <Text style={[styles.muscleNameText, { color: colors.text }]}>
+                      {t(`muscles.${m.groupKey}`, m.nameUk)}
+                    </Text>
                   </View>
                   <Text style={[styles.muscleStatsText, { color: colors.textSecondary }]}>
-                    {m.setsCount} підх. · {m.percentage}%
+                    {m.setsCount} {t('common.sets_short', 'підх.')} · {m.percentage}%
                   </Text>
                 </View>
               ))
             ) : (
               <Text style={[styles.emptyMusclesText, { color: colors.textSecondary }]}>
-                Немає виконаних підходів за обраний період
+                {t('analytics.no_data', 'Немає виконаних підходів за обраний період')}
               </Text>
             )}
           </View>

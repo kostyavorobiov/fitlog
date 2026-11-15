@@ -11,11 +11,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import {
   UKRAINIAN_MONTHS,
+  ENGLISH_MONTHS,
   UKRAINIAN_WEEKDAYS_SHORT,
+  ENGLISH_WEEKDAYS_SHORT,
   formatLocalDate,
   formatDateDDMMYYYY,
   parseDateToISO,
 } from '../utils/date';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface DatePickerModalProps {
   visible: boolean;
@@ -37,6 +40,9 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
   onSelectDate,
 }) => {
   const { colors } = useTheme();
+  const { language, t } = useLanguage();
+  const monthsList = language === 'en' ? ENGLISH_MONTHS : UKRAINIAN_MONTHS;
+  const weekdaysList = language === 'en' ? ENGLISH_WEEKDAYS_SHORT : UKRAINIAN_WEEKDAYS_SHORT;
   const effectiveDateValue = value || selectedDate;
 
   const triggerSelect = (iso: string, displayDate: string) => {
@@ -148,7 +154,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
               activeOpacity={0.7}
             >
               <Text style={[styles.chipText, { color: colors.textSecondary }]}>
-                Вчора
+                {t('common.yesterday', 'Вчора')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -156,7 +162,9 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
               style={[styles.chip, { backgroundColor: colors.accent, borderColor: colors.accent }]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.chipPrimaryText, { color: colors.accentText }]}>Сьогодні</Text>
+              <Text style={[styles.chipPrimaryText, { color: colors.accentText }]}>
+                {t('common.today', 'Сьогодні')}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleQuickSelect(1)}
@@ -164,7 +172,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
               activeOpacity={0.7}
             >
               <Text style={[styles.chipText, { color: colors.textSecondary }]}>
-                Завтра
+                {t('common.tomorrow', 'Завтра')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -180,7 +188,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
             </TouchableOpacity>
 
             <Text style={[styles.monthTitle, { color: colors.text }]}>
-              {UKRAINIAN_MONTHS[viewMonth]} {viewYear}
+              {monthsList[viewMonth]} {viewYear}
             </Text>
 
             <TouchableOpacity
@@ -194,7 +202,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
 
           {/* Weekdays Row */}
           <View style={styles.weekDaysRow}>
-            {UKRAINIAN_WEEKDAYS_SHORT.map((day, idx) => (
+            {weekdaysList.map((day, idx) => (
               <View key={day} style={styles.weekDayCol}>
                 <Text
                   style={[

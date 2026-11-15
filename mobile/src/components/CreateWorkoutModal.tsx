@@ -16,6 +16,7 @@ import {
   LayoutAnimation,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { WorkoutTemplate, TemplateService } from '../services/templateService';
 import { useAuth } from '../context/AuthContext';
@@ -47,6 +48,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
   templateUserId,
 }) => {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const { user } = useAuth();
 
   const [mode, setMode] = useState<'empty' | 'template'>('empty');
@@ -247,7 +249,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                           : { color: colors.textSecondary },
                       ]}
                     >
-                      Нове тренування
+                      {t('workouts.new_workout', 'Нове тренування')}
                     </Text>
                   </TouchableOpacity>
 
@@ -272,7 +274,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                           : { color: colors.textSecondary },
                       ]}
                     >
-                      З шаблону {templates.length > 0 ? `(${templates.length})` : ''}
+                      {t('workouts.templates', 'З шаблону')} {templates.length > 0 ? `(${templates.length})` : ''}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -283,23 +285,25 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                       <View style={styles.loadingBox}>
                         <ActivityIndicator size="small" color={colors.accent} />
                         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-                          Завантаження шаблонів...
+                          {t('common.loading', 'Завантаження шаблонів...')}
                         </Text>
                       </View>
                     ) : templates.length === 0 ? (
                       <View style={[styles.emptyTemplatesBox, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}>
                         <Ionicons name="bookmark-outline" size={28} color={colors.textSecondary} />
                         <Text style={[styles.emptyTemplatesTitle, { color: colors.text }]}>
-                          Немає збережених шаблонів
+                          {t('workouts.no_templates', 'Немає збережених шаблонів')}
                         </Text>
                         <Text style={[styles.emptyTemplatesSub, { color: colors.textSecondary }]}>
-                          Збережіть будь-яке тренування як шаблон у верхньому меню редактора.
+                          {t('workouts.templates_sub', 'Збережіть будь-яке тренування як шаблон у верхньому меню редактора.')}
                         </Text>
                         <TouchableOpacity
                           onPress={() => setMode('empty')}
                           style={[styles.switchModeBtn, { backgroundColor: colors.accent }]}
                         >
-                          <Text style={[styles.switchModeBtnText, { color: colors.accentText }]}>Створити порожнє тренування</Text>
+                          <Text style={[styles.switchModeBtnText, { color: colors.accentText }]}>
+                            {t('modal.start_empty', 'Створити порожнє тренування')}
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     ) : (
@@ -376,14 +380,14 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                 {/* Date Field */}
                 <View style={styles.fieldGroup}>
                   <Text style={[styles.inputLabel, { color: colors.text }]}>
-                    Дата тренування
+                    {t('common.date', 'Дата тренування')}
                   </Text>
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={() => setIsDatePickerOpen(true)}
                     style={[styles.input, styles.datePickerBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder }]}
                     accessibilityRole="button"
-                    accessibilityLabel="Оберіть дату тренування"
+                    accessibilityLabel={t('modal.date_picker_title', 'Оберіть дату тренування')}
                   >
                     <Ionicons
                       name="calendar-outline"
@@ -406,7 +410,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     style={[styles.actionBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}
                   >
                     <Text style={[styles.cancelBtnText, { color: colors.text }]}>
-                      Скасувати
+                      {t('common.cancel', 'Скасувати')}
                     </Text>
                   </TouchableOpacity>
 
@@ -422,7 +426,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                       <>
                         <Ionicons name="add" size={19} color={colors.accentText} />
                         <Text style={[styles.createBtnText, { color: colors.accentText }]}>
-                          {mode === 'template' ? 'Створити' : 'Створити'}
+                          {t('common.create', 'Створити')}
                         </Text>
                       </>
                     )}

@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Exercise, MuscleGroup, MUSCLE_GROUPS, ExerciseCategory, DEFAULT_CATEGORIES, getMuscleGroupInfo } from '../types/workout';
@@ -33,6 +34,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   traineeId,
 }) => {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [categories, setCategories] = useState<ExerciseCategory[]>(DEFAULT_CATEGORIES);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -80,7 +82,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
   const handleCreateExercise = async () => {
     const cleanName = customName.trim();
     if (!cleanName) {
-      Alert.alert('Помилка', 'Введіть назву вправи');
+      Alert.alert(t('common.error'), t('modal.enter_name'));
       return;
     }
 
@@ -113,10 +115,10 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
           console.warn('[ExerciseSelectorModal] Failed to select newly created exercise:', selectErr);
         }
       } else {
-        Alert.alert('Помилка', 'Не вдалося створити вправу');
+        Alert.alert(t('common.error'), t('modal.failed_to_create'));
       }
     } catch (e: any) {
-      Alert.alert('Помилка', e?.message || 'Не вдалося створити вправу');
+      Alert.alert(t('common.error'), e?.message || t('modal.failed_to_create'));
     } finally {
       setIsSubmittingCustom(false);
       isSubmittingCustomRef.current = false;
@@ -129,7 +131,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>
-            {isCreatingCustom ? 'Нова вправа' : 'Вибір вправи'}
+            {isCreatingCustom ? t('modal.new_exercise') : t('modal.select_exercise')}
           </Text>
           <TouchableOpacity
             style={styles.closeBtn}
@@ -149,10 +151,10 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
         {isCreatingCustom ? (
           /* Create custom exercise form */
           <View style={styles.createForm}>
-            <Text style={[styles.formLabel, { color: colors.text }]}>Назва вправи</Text>
+            <Text style={[styles.formLabel, { color: colors.text }]}>{t('modal.exercise_name')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.card, borderColor: colors.cardBorder, color: colors.text }]}
-              placeholder="Наприклад: Жим штанги під кутом"
+              placeholder={t('modal.exercise_name_placeholder')}
               placeholderTextColor={colors.textSecondary}
               value={customName}
               onChangeText={setCustomName}
@@ -160,7 +162,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
             />
 
             <Text style={[styles.formLabel, { marginTop: 14, color: colors.text }]}>
-              Група м'язів
+              {t('modal.muscle_group')}
             </Text>
             <View style={styles.muscleChipsWrap}>
               {categories.map((opt) => {
@@ -184,7 +186,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                           : { color: colors.textSecondary },
                       ]}
                     >
-                      {opt.nameUk}
+                      {t(`muscles.${opt.id}`, opt.nameUk)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -205,7 +207,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 <ActivityIndicator size="small" color={colors.accentText} />
               ) : (
                 <Text style={[styles.saveCustomBtnText, { color: colors.accentText }]}>
-                  Додати та обрати
+                  {t('modal.add_and_select')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -219,7 +221,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                 <Ionicons name="search" size={18} color={colors.textSecondary} style={styles.searchIcon} />
                 <TextInput
                   style={[styles.searchInput, { color: colors.text }]}
-                  placeholder="Пошук вправи..."
+                  placeholder={t('exercises.search_placeholder')}
                   placeholderTextColor={colors.textSecondary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -254,7 +256,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                       : { color: colors.textSecondary },
                   ]}
                 >
-                  Всі
+                  {t('exercises.all_filter')}
                 </Text>
               </TouchableOpacity>
 
@@ -280,7 +282,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                           : { color: colors.textSecondary },
                       ]}
                     >
-                      {cat.nameUk}
+                      {t(`muscles.${cat.id}`, cat.nameUk)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -292,7 +294,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
               <View style={styles.centerContainer}>
                 <ActivityIndicator size="small" color={colors.accent} />
                 <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-                  Завантаження вправ...
+                  {t('modal.loading_exercises')}
                 </Text>
               </View>
             ) : (
@@ -321,7 +323,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                             ]}
                           >
                             <Text style={[styles.muscleBadgeText, { color: muscle.color }]}>
-                              {muscle.nameUk}
+                              {t(`muscles.${item.muscleGroup}`, muscle.nameUk)}
                             </Text>
                           </View>
                         </View>
@@ -335,10 +337,10 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                   <View style={styles.emptyContainer}>
                     <Ionicons name="barbell-outline" size={40} color={colors.textSecondary} />
                     <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                      Вправ не знайдено
+                      {t('modal.not_found_exercise')}
                     </Text>
                     <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
-                      Спробуйте інший пошуковий запит або створіть власну вправу.
+                      {t('modal.try_another_search')}
                     </Text>
                     <TouchableOpacity
                       style={[styles.addCustomBtn, { backgroundColor: colors.accent }]}
@@ -350,7 +352,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                     >
                       <Ionicons name="add" size={16} color={colors.accentText} />
                       <Text style={[styles.addCustomBtnText, { color: colors.accentText }]}>
-                        Створити власну вправу
+                        {t('modal.create_custom_btn')}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -367,7 +369,7 @@ export const ExerciseSelectorModal: React.FC<ExerciseSelectorModalProps> = ({
                     >
                       <Ionicons name="add-circle-outline" size={16} color={colors.accent} />
                       <Text style={[styles.footerCustomBtnText, { color: colors.text }]}>
-                        Не знайшли вправу? Створити власну
+                        {t('modal.footer_custom_btn')}
                       </Text>
                     </TouchableOpacity>
                   ) : null
