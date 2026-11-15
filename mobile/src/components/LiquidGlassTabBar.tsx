@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSegments } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useScrollTabBar } from '../context/ScrollTabBarContext';
@@ -138,7 +138,7 @@ export const LiquidGlassTabBar: React.FC<BottomTabBarProps> = ({
       name: 'exercises',
       label: 'Вправи',
       icon: (focused: boolean, color: string) => (
-        <Ionicons name={focused ? 'heart' : 'heart-outline'} size={22} color={color} />
+        <MaterialCommunityIcons name="dumbbell" size={22} color={color} />
       ),
     },
     {
