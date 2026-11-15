@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 import { Button } from '../components/Button';
 import { ExerciseService } from '../services/exerciseService';
@@ -26,6 +27,7 @@ import { setSavedActiveTab, getSavedActiveTab, TabName } from '../components/Ins
 
 export const ExerciseEditScreen: React.FC = () => {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const router = useRouter();
   const { user } = useAuth();
   const params = useLocalSearchParams<{ id?: string; name?: string; muscleGroup?: string; fromTab?: TabName }>();
@@ -97,12 +99,12 @@ export const ExerciseEditScreen: React.FC = () => {
   const handleSave = async () => {
     const cleanName = name.trim();
     if (!cleanName) {
-      Alert.alert('Помилка', 'Назва вправи не може бути порожньою');
+      Alert.alert(t('common.error', 'Помилка'), t('exercises.name_required', 'Назва вправи не може бути порожньою'));
       return;
     }
 
     if (!exercise && !exerciseId) {
-      Alert.alert('Помилка', 'Вправу для редагування не знайдено');
+      Alert.alert(t('common.error', 'Помилка'), t('exercises.not_found', 'Вправу для редагування не знайдено'));
       return;
     }
 
@@ -123,10 +125,10 @@ export const ExerciseEditScreen: React.FC = () => {
         setSavedActiveTab(sourceTab);
         router.back();
       } else {
-        Alert.alert('Помилка', res.error || 'Не вдалося оновити вправу');
+        Alert.alert(t('common.error', 'Помилка'), res.error || t('exercises.failed_to_update', 'Не вдалося оновити вправу'));
       }
     } catch (err: any) {
-      Alert.alert('Помилка', err?.message || 'Помилка при збереженні вправи');
+      Alert.alert(t('common.error', 'Помилка'), err?.message || t('exercises.failed_to_save', 'Помилка при збереженні вправи'));
     } finally {
       setIsSaving(false);
     }
@@ -142,17 +144,17 @@ export const ExerciseEditScreen: React.FC = () => {
             onPress={handleBack}
             style={[styles.iconBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}
             accessibilityRole="button"
-            accessibilityLabel="Назад"
+            accessibilityLabel={t('common.back', 'Назад')}
           >
             <Ionicons name="chevron-back" size={20} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
             <Text numberOfLines={1} style={[styles.topBarTitle, { color: colors.text }]}>
-              Редагування власної вправи
+              {t('exercises.edit_custom_title', 'Редагування власної вправи')}
             </Text>
             <Text style={[styles.topBarSub, { color: colors.textSecondary }]}>
-              {categories.find((c) => c.id === muscleGroup)?.nameUk || MUSCLE_GROUPS[muscleGroup]?.nameUk || 'Категорія'}
+              {t(`muscles.${muscleGroup}`, categories.find((c) => c.id === muscleGroup)?.nameUk || MUSCLE_GROUPS[muscleGroup]?.nameUk || t('common.category', 'Категорія'))}
             </Text>
           </View>
         </View>
@@ -161,7 +163,7 @@ export const ExerciseEditScreen: React.FC = () => {
           <View style={styles.centerContainer}>
             <ActivityIndicator size="small" color={colors.accent} />
             <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-              Завантаження вправи...
+              {t('common.loading', 'Завантаження вправи...')}
             </Text>
           </View>
         ) : (
@@ -177,7 +179,7 @@ export const ExerciseEditScreen: React.FC = () => {
               {/* Exercise Name Input */}
               <View style={styles.fieldGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  Назва вправи *
+                  {t('exercises.name', 'Назва вправи')} *
                 </Text>
                 <TextInput
                   style={[
@@ -186,7 +188,7 @@ export const ExerciseEditScreen: React.FC = () => {
                   ]}
                   value={name}
                   onChangeText={setName}
-                  placeholder="Введіть назву вправи..."
+                  placeholder={t('exercises.name_placeholder', 'Введіть назву вправи...')}
                   placeholderTextColor={colors.textSecondary}
                   autoCorrect={false}
                   maxLength={100}
@@ -196,7 +198,7 @@ export const ExerciseEditScreen: React.FC = () => {
               {/* Muscle Group Chips */}
               <View style={styles.fieldGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  Група м'язів / Категорія *
+                  {t('exercises.category_label', "Група м'язів / Категорія")} *
                 </Text>
                 <View style={styles.chipsWrap}>
                   {categories.map((cat) => {
@@ -221,7 +223,7 @@ export const ExerciseEditScreen: React.FC = () => {
                               : { color: colors.text },
                           ]}
                         >
-                          {cat.nameUk}
+                          {t(`muscles.${cat.id}`, cat.nameUk)}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -232,7 +234,7 @@ export const ExerciseEditScreen: React.FC = () => {
               {/* Description Input */}
               <View style={styles.fieldGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  Опис або нотатки (опціонально)
+                  {t('exercises.description_optional', 'Опис або нотатки (опціонально)')}
                 </Text>
                 <TextInput
                   style={[
@@ -241,7 +243,7 @@ export const ExerciseEditScreen: React.FC = () => {
                   ]}
                   value={description}
                   onChangeText={setDescription}
-                  placeholder="Додайте техніку виконання або нотатки..."
+                  placeholder={t('exercises.notes_placeholder', 'Додайте техніку виконання або нотатки...')}
                   placeholderTextColor={colors.textSecondary}
                   multiline
                   numberOfLines={4}
@@ -257,7 +259,7 @@ export const ExerciseEditScreen: React.FC = () => {
                   style={[styles.cancelBtn, { backgroundColor: colors.subCard, borderColor: colors.subCardBorder, borderWidth: 1 }]}
                 >
                   <Text style={[styles.cancelBtnText, { color: colors.text }]}>
-                    Скасувати
+                    {t('common.cancel', 'Скасувати')}
                   </Text>
                 </TouchableOpacity>
 
@@ -275,7 +277,7 @@ export const ExerciseEditScreen: React.FC = () => {
                     <ActivityIndicator size="small" color={colors.primaryBtnText} />
                   ) : (
                     <Text style={[styles.saveBtnText, { color: colors.primaryBtnText }]}>
-                      Зберегти зміни
+                      {t('exercises.save_changes', 'Зберегти зміни')}
                     </Text>
                   )}
                 </TouchableOpacity>

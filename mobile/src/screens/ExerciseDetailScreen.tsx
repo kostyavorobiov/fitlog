@@ -18,6 +18,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Card } from '../components/Card';
 import { ScreenGestureWrapper } from '../components/ScreenGestureWrapper';
 import { setSavedActiveTab, getSavedActiveTab, TabName } from '../components/InstagramTabPager';
@@ -52,6 +53,7 @@ interface SessionRow {
 
 export const ExerciseDetailScreen: React.FC = () => {
   const { theme, colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const router = useRouter();
   const { user } = useAuth();
 
@@ -448,17 +450,17 @@ export const ExerciseDetailScreen: React.FC = () => {
             onPress={handleBack}
             style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
             accessibilityRole="button"
-            accessibilityLabel="Назад"
+            accessibilityLabel={t('common.back', 'Назад')}
           >
             <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
             <Text numberOfLines={1} style={[styles.topBarTitle, { color: colors.text }]}>
-              {exerciseName || 'Вправа'}
+              {exerciseName || t('tabs.exercises', 'Вправа')}
             </Text>
             <Text style={[styles.topBarSub, { color: colors.textSecondary }]}>
-              {traineeName ? `Підопічний: ${traineeName} · ${muscleInfo.nameUk}` : muscleInfo.nameUk}
+              {traineeName ? `${t('profile.trainees', 'Підопічний')}: ${traineeName} · ${t(`muscles.${muscleGroup}`, muscleInfo.nameUk)}` : t(`muscles.${muscleGroup}`, muscleInfo.nameUk)}
             </Text>
           </View>
         </Animated.View>
@@ -467,7 +469,7 @@ export const ExerciseDetailScreen: React.FC = () => {
           <View style={styles.centerContainer}>
             <ActivityIndicator size="small" color={colors.accent} />
             <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-              Завантаження статистики вправи...
+              {t('common.loading', 'Завантаження статистики вправи...')}
             </Text>
           </View>
         ) : (
@@ -480,14 +482,14 @@ export const ExerciseDetailScreen: React.FC = () => {
             {/* Hero 1RM Card - Design from Page 13 */}
             <View style={[styles.heroCard, { backgroundColor: colors.heroCardBg }]}>
               <Text style={[styles.heroCardLabel, { color: colors.heroCardText }]}>
-                РОЗРАХУНКОВИЙ 1ПМ
+                {t('exercises.calc_1rm', 'РОЗРАХУНКОВИЙ 1ПМ')}
               </Text>
               <View style={styles.heroCardRow}>
                 <Text style={[styles.heroCardVal, { color: colors.heroCardText }]}>
                   {stats.best1RM > 0 ? stats.best1RM : '—'}
                 </Text>
                 <Text style={[styles.heroCardUnit, { color: colors.heroCardText }]}>
-                  кг
+                  {t('common.kg', 'кг')}
                 </Text>
               </View>
             </View>
@@ -497,14 +499,14 @@ export const ExerciseDetailScreen: React.FC = () => {
               {/* Record (PR) */}
               <Card style={styles.kpiCard}>
                 <Text style={[styles.kpiLbl, { color: colors.textSecondary }]}>
-                  РЕКОРД
+                  {t('exercises.record', 'РЕКОРД')}
                 </Text>
                 <View style={styles.kpiValRow}>
                   <Text style={[styles.kpiVal, { color: colors.text }]}>
                     {stats.personalBest > 0 ? stats.personalBest : '—'}
                   </Text>
                   <Text style={[styles.kpiUnit, { color: colors.textSecondary }]}>
-                    {' '}кг
+                    {' '}{t('common.kg', 'кг')}
                   </Text>
                 </View>
               </Card>
@@ -512,14 +514,14 @@ export const ExerciseDetailScreen: React.FC = () => {
               {/* Average Weight */}
               <Card style={styles.kpiCard}>
                 <Text style={[styles.kpiLbl, { color: colors.textSecondary }]}>
-                  СЕРЕДНЄ
+                  {t('exercises.average', 'СЕРЕДНЄ')}
                 </Text>
                 <View style={styles.kpiValRow}>
                   <Text style={[styles.kpiVal, { color: colors.text }]}>
                     {stats.avgWeight > 0 ? stats.avgWeight : '—'}
                   </Text>
                   <Text style={[styles.kpiUnit, { color: colors.textSecondary }]}>
-                    {' '}кг
+                    {' '}{t('common.kg', 'кг')}
                   </Text>
                 </View>
               </Card>
@@ -527,7 +529,7 @@ export const ExerciseDetailScreen: React.FC = () => {
               {/* Total Sets */}
               <Card style={styles.kpiCard}>
                 <Text style={[styles.kpiLbl, { color: colors.textSecondary }]}>
-                  ПІДХОДІВ
+                  {t('common.sets', 'ПІДХОДІВ').toUpperCase()}
                 </Text>
                 <Text style={[styles.kpiVal, { color: colors.text }]}>
                   {stats.totalSets}
@@ -538,14 +540,14 @@ export const ExerciseDetailScreen: React.FC = () => {
             {/* Interactive Chart Card - Design from Page 13 */}
             <Card style={styles.chartCard}>
               <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>
-                ВАГА ПО ТРЕНУВАННЯХ
+                {t('exercises.weight_by_workouts', 'ВАГА ПО ТРЕНУВАННЯХ')}
               </Text>
 
               {allPoints.length === 0 ? (
                 <View style={styles.chartEmpty}>
                   <Ionicons name="barbell-outline" size={32} color={colors.textSecondary} />
                   <Text style={[styles.chartEmptyText, { color: colors.textSecondary }]}>
-                    Немає даних для побудови графіка
+                    {t('exercises.no_chart_data', 'Немає даних для побудови графіка')}
                   </Text>
                 </View>
               ) : (
@@ -702,7 +704,7 @@ export const ExerciseDetailScreen: React.FC = () => {
                         </Text>
                       </View>
                       <Text style={[styles.tooltipVal, { color: colors.accent }]}>
-                        {allPoints[activeTooltipIdx].value} кг ({allPoints[activeTooltipIdx].setsCount} підх.)
+                        {allPoints[activeTooltipIdx].value} {t('common.kg', 'кг')} ({allPoints[activeTooltipIdx].setsCount} {t('common.sets_short', 'підх.')})
                       </Text>
                     </View>
                   )}
@@ -713,13 +715,13 @@ export const ExerciseDetailScreen: React.FC = () => {
             {/* Recent Sessions Card - Design from Page 13 */}
             <Card style={styles.analyticsCard}>
               <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>
-                ОСТАННІ ТРЕНУВАННЯ
+                {t('exercises.recent_sessions', 'ОСТАННІ ТРЕНУВАННЯ')}
               </Text>
 
               <View style={styles.sessionsTableSection}>
                 {last5Sessions.length === 0 ? (
                   <Text style={[styles.noSessionsText, { color: colors.textSecondary }]}>
-                    Ще немає записів
+                    {t('exercises.no_sessions', 'Ще немає записів')}
                   </Text>
                 ) : (
                   <View style={styles.tableContainer}>
@@ -747,11 +749,11 @@ export const ExerciseDetailScreen: React.FC = () => {
                             </View>
 
                             <Text style={[styles.colSets, styles.cellSetsText, { color: colors.text }]}>
-                              {session.setsCount} підх.
+                              {session.setsCount} {t('common.sets_short', 'підх.')}
                             </Text>
 
                             <Text style={[styles.colWeight, styles.cellWeightText, { color: colors.text }]}>
-                              {session.maxWeight > 0 ? `${session.maxWeight} кг` : '—'}
+                              {session.maxWeight > 0 ? `${session.maxWeight} ${t('common.kg', 'кг')}` : '—'}
                             </Text>
 
                             <Text style={[styles.colVolume, styles.cellVolumeText, { color: colors.textSecondary }]}>
@@ -763,7 +765,7 @@ export const ExerciseDetailScreen: React.FC = () => {
                           {isExpanded && session.sets.length > 0 && (
                             <View style={[styles.expandedSetsBox, { backgroundColor: colors.subCard, borderColor: colors.cardBorder }]}>
                               <Text style={[styles.expandedHeading, { color: colors.textSecondary }]}>
-                                ВИКОНАНІ ПІДХОДИ:
+                                {t('exercises.completed_sets', 'ВИКОНАНІ ПІДХОДИ:')}
                               </Text>
                               <View style={styles.setsGrid}>
                                 {session.sets.map((set, setIdx) => (
@@ -772,10 +774,10 @@ export const ExerciseDetailScreen: React.FC = () => {
                                     style={[styles.setCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
                                   >
                                     <Text style={[styles.setCardNum, { color: colors.textSecondary }]}>
-                                      Сет {set.setNumber || setIdx + 1}
+                                      {t('exercises.set_label', 'Сет')} {set.setNumber || setIdx + 1}
                                     </Text>
                                     <Text style={[styles.setCardVal, { color: colors.text }]}>
-                                      {set.weight} кг × {set.actualReps}
+                                      {set.weight} {t('common.kg', 'кг')} × {set.actualReps}
                                     </Text>
                                   </View>
                                 ))}
@@ -795,7 +797,7 @@ export const ExerciseDetailScreen: React.FC = () => {
               <View style={[styles.recordBanner, { backgroundColor: isDark ? 'rgba(245, 217, 10, 0.12)' : 'rgba(37, 99, 235, 0.12)', borderColor: colors.accent }]}>
                 <Ionicons name="trophy" size={20} color={colors.accent} />
                 <View style={styles.recordBannerContent}>
-                  <Text style={[styles.recordBannerTitle, { color: colors.accent }]}>Особистий рекорд!</Text>
+                  <Text style={[styles.recordBannerTitle, { color: colors.accent }]}>{t('exercises.record', 'Особистий рекорд!')}</Text>
                   <Text style={[styles.recordBannerDesc, { color: colors.text }]}>
                     Ви встановили новий рекорд у цій вправі на останньому тренуванні!
                   </Text>

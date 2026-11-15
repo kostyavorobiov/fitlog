@@ -208,10 +208,10 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     </View>
                     <View style={styles.headerTextWrap}>
                       <Text style={[styles.modalTitle, { color: colors.text }]}>
-                        {modalTitle || 'Нове тренування'}
+                        {modalTitle || t('modal.new_workout_title', 'Нове тренування')}
                       </Text>
                       <Text style={[styles.modalSub, { color: colors.textSecondary }]}>
-                        {modalSub || 'Створіть порожнє або з збереженого шаблону'}
+                        {modalSub || t('modal.new_workout_sub', 'Створіть порожнє або з збереженого шаблону')}
                       </Text>
                     </View>
                   </View>
@@ -220,7 +220,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     style={[styles.closeBtn, { backgroundColor: colors.subCard }]}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     accessibilityRole="button"
-                    accessibilityLabel="Закрити"
+                    accessibilityLabel={t('common.close', 'Закрити')}
                   >
                     <Ionicons name="close" size={16} color={colors.textSecondary} />
                   </TouchableOpacity>
@@ -313,7 +313,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                     ) : (
                       <View style={styles.templateListWrap}>
                         <Text style={[styles.inputLabel, { color: colors.text }]}>
-                          Оберіть шаблон *
+                          {t('modal.select_template', 'Оберіть шаблон')} *
                         </Text>
                         <ScrollView style={{ maxHeight: 180 }} showsVerticalScrollIndicator={false}>
                           {templates.map((tpl) => {
@@ -323,10 +323,10 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                                 key={tpl.id}
                                 id={tpl.id}
                                 isDark={isDark}
-                                confirmTitle="Видалити шаблон"
+                                confirmTitle={t('workouts.delete_template_confirm', 'Видалити шаблон')}
                                 confirmMessage={`Ви дійсно бажаєте видалити шаблон "${tpl.title}"?`}
                                 onDelete={(onCancel) => handleDeleteTemplate(tpl.id, onCancel)}
-                                deleteLabel="Видалити"
+                                deleteLabel={t('common.delete', 'Видалити')}
                                 containerStyle={[
                                   styles.templateSwipeContainer,
                                   isSelected && { borderColor: colors.activeTabBg, borderWidth: 1.5 },
@@ -348,7 +348,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                                       {tpl.title}
                                     </Text>
                                     <Text style={[styles.templateCardSub, { color: colors.textSecondary }]} numberOfLines={1}>
-                                      {tpl.exercises?.length || 0} вправ • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
+                                      {tpl.exercises?.length || 0} {t('common.exercises_count', 'вправ')} • {tpl.exercises?.map((e) => e.exerciseName).filter(Boolean).slice(0, 3).join(', ')}
                                     </Text>
                                   </View>
                                   <View
@@ -375,7 +375,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                   /* Title Field (without quick presets) */
                   <View style={styles.fieldGroup}>
                     <Text style={[styles.inputLabel, { color: colors.text }]}>
-                      Назва тренування *
+                      {t('modal.workout_title_label', 'Назва тренування')} *
                     </Text>
                     <TextInput
                       style={[
@@ -387,7 +387,7 @@ export const CreateWorkoutModal: React.FC<CreateWorkoutModalProps> = ({
                           color: colors.text,
                         },
                       ]}
-                      placeholder="наприклад: Груди та Тріцепс"
+                      placeholder={t('modal.workout_title_placeholder', 'наприклад: Груди та Тріцепс')}
                       placeholderTextColor={colors.textSecondary}
                       value={title}
                       onChangeText={setTitle}

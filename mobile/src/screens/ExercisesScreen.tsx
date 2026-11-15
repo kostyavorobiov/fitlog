@@ -354,7 +354,7 @@ export const ExercisesScreen: React.FC = () => {
 
         {/* Muscle group tabs */}
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-          ГРУПИ М'ЯЗІВ
+          {t('analytics.muscle_groups', "ГРУПИ М'ЯЗІВ")}
         </Text>
 
         <View style={styles.tabsContainer}>
@@ -413,7 +413,7 @@ export const ExercisesScreen: React.FC = () => {
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color={colors.accent} />
             <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-              Завантаження вправ...
+              {t('common.loading', 'Завантаження вправ...')}
             </Text>
           </View>
         ) : filteredExercises.length === 0 ? (
@@ -422,7 +422,7 @@ export const ExercisesScreen: React.FC = () => {
               <Ionicons name="barbell-outline" size={26} color={colors.accent} />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              Вправ не знайдено
+              {t('exercises.no_exercises', 'Вправ не знайдено')}
             </Text>
             <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               {searchQuery
@@ -436,7 +436,7 @@ export const ExercisesScreen: React.FC = () => {
             >
               <Ionicons name="add" size={16} color={colors.primaryBtnText} />
               <Text style={[styles.emptyBtnText, { color: colors.primaryBtnText }]}>
-                Створити власну вправу
+                {t('exercises.create_custom_title', 'Створити власну вправу')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -516,7 +516,7 @@ export const ExercisesScreen: React.FC = () => {
                         />
                       </View>
                       <Text style={[styles.modalTitleText, { color: colors.text }]}>
-                        Створити власну вправу
+                        {t('exercises.create_custom_title', 'Створити власну вправу')}
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -524,7 +524,7 @@ export const ExercisesScreen: React.FC = () => {
                       style={[styles.modalCloseCircle, { backgroundColor: colors.subCard }]}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       accessibilityRole="button"
-                      accessibilityLabel="Закрити"
+                      accessibilityLabel={t('common.close', 'Закрити')}
                     >
                       <Ionicons name="close" size={16} color={colors.textSecondary} />
                     </TouchableOpacity>
@@ -532,7 +532,7 @@ export const ExercisesScreen: React.FC = () => {
 
                   <View style={styles.fieldGroup}>
                     <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                      Назва вправи *
+                      {t('exercises.name', 'Назва вправи')} *
                     </Text>
                     <TextInput
                       style={[
@@ -544,7 +544,7 @@ export const ExercisesScreen: React.FC = () => {
                           color: colors.text,
                         },
                       ]}
-                      placeholder="Наприклад: Жим штанги під кутом"
+                      placeholder={t('exercises.name_placeholder_sample', 'Наприклад: Жим штанги під кутом')}
                       placeholderTextColor={colors.textSecondary}
                       value={createName}
                       onChangeText={setCreateName}
@@ -554,7 +554,7 @@ export const ExercisesScreen: React.FC = () => {
 
                   <View style={[styles.fieldGroup, { marginTop: 14 }]}>
                     <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                      Група м'язів / Категорія *
+                      {t('exercises.category_label', "Група м'язів / Категорія")} *
                     </Text>
                     <View style={styles.muscleChipsWrap}>
                       {categories.map((cat) => {
