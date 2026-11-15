@@ -337,7 +337,7 @@ export const ExercisesScreen: React.FC = () => {
             />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
-              placeholder="Пошук вправ..."
+              placeholder={t('exercises.search_placeholder', 'Пошук вправ...')}
               placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -354,7 +354,7 @@ export const ExercisesScreen: React.FC = () => {
 
         {/* Muscle group tabs */}
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-          {t('analytics.muscle_groups', "ГРУПИ М'ЯЗІВ")}
+          {t('exercises.muscle_groups', "Групи м'язів")}
         </Text>
 
         <View style={styles.tabsContainer}>
@@ -426,8 +426,8 @@ export const ExercisesScreen: React.FC = () => {
             </Text>
             <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               {searchQuery
-                ? `Вправ із назвою «${searchQuery}» не знайдено.`
-                : 'У цій категорії поки що немає вправ.'}
+                ? (t('modal.not_found_exercise', 'Вправ не знайдено') + ` (${searchQuery})`)
+                : t('exercises.empty_category', 'У цій категорії поки що немає вправ.')}
             </Text>
             <TouchableOpacity
               style={[styles.emptyBtn, { backgroundColor: colors.primaryBtnBg }]}
